@@ -3,19 +3,29 @@ import SwiftUI
 @main
 struct RestwertApp: App {
     @State private var store = Store()
+    @State private var account = Account()
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(store)
+                .environment(account)
                 .preferredColorScheme(.light)
-                .tint(.ink)
+                .tint(Color.ink)
                 .onOpenURL { url in store.incomingURL = url }
+                .task {
+                    account.attach(store)
+                    await account.syncNow()
+                }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await account.syncNow() } }
         }
     }
 }
 
-enum Tab: Hashable { case home, bon, merchants, settings }
+enum AppTab: Hashable { case home, bon, merchants, settings }
 
 enum Route: Hashable {
     case card(UUID)
@@ -34,13 +44,18 @@ struct ImportRequest: Identifiable {
 struct ContentView: View {
     @Environment(Store.self) private var store
     @AppStorage("onboarded") private var onboarded = false
-    @State private var tab: Tab = .home
+    @AppStorage("authDecided") private var authDecided = false
+    @State private var tab: AppTab = .home
     @State private var path = NavigationPath()
     @State private var addRequest: ImportRequest?
 
     var body: some View {
         if !onboarded {
             OnboardingView { withAnimation(.snappy) { onboarded = true } }
+                .transition(.opacity)
+        } else if !authDecided {
+            AuthView(isFirstRun: true) { withAnimation(.snappy) { authDecided = true } }
+                .transition(.move(edge: .trailing).combined(with: .opacity))
         } else {
             NavigationStack(path: $path) {
                 Group {
@@ -83,7 +98,7 @@ struct ContentView: View {
 }
 
 struct TabBar: View {
-    @Binding var tab: Tab
+    @Binding var tab: AppTab
     var onScan: () -> Void
 
     var body: some View {
@@ -110,9 +125,10 @@ struct TabBar: View {
         .overlay(alignment: .top) { Rectangle().fill(Color.line).frame(height: 1) }
     }
 
-    private func item(_ t: Tab, _ icon: String, _ label: String) -> some View {
+    private func item(_ t: AppTab, _ icon: String, _ label: String) -> some View {
         Button { tab = t } label: {
             Image(systemName: icon)
+                .symbolEffect(.bounce, value: tab == t)
                 .font(.system(size: 21, weight: .semibold))
                 .foregroundStyle(tab == t ? Color.ink : Color(hex: 0xA3A6AE))
                 .frame(maxWidth: .infinity, minHeight: 48)
@@ -138,8 +154,11 @@ struct OnboardingView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 32, style: .continuous).fill(Color.fill)
                 ForEach(0..<3, id: \.self) { i in
+                    let wobble: CGFloat = (float ? -8 : 8) * (i % 2 == 0 ? 1 : -1)
+                    let dx: CGFloat = CGFloat(i) * 34 - 34
+                    let dy: CGFloat = CGFloat(i) * 78 - 78 + wobble
                     FloatingCard(color: Pastel.all[i], number: ["856 279", "412 008", "731 554"][i])
-                        .offset(x: CGFloat(i) * 34 - 34, y: CGFloat(i) * 78 - 78 + (float ? -8 : 8) * (i % 2 == 0 ? 1 : -1))
+                        .offset(x: dx, y: dy)
                 }
             }
             .frame(maxHeight: .infinity)

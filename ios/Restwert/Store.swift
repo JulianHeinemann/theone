@@ -9,12 +9,17 @@ final class Store {
     var tests: [TestResult] = []
     /// Datei, die über „Teilen → Restwert“ oder „Öffnen in“ angekommen ist.
     var incomingURL: URL?
+    /// IDs gelöschter Gutscheine, damit sie beim Sync nicht wieder auftauchen.
+    var deletedIDs: Set<UUID> = []
+    /// Wird nach jeder lokalen Änderung aufgerufen (z. B. um zu synchronisieren).
+    @ObservationIgnored var onChange: (@MainActor () -> Void)?
 
     private let fileURL: URL
 
     private struct Snapshot: Codable {
         var cards: [GiftCard]
         var tests: [TestResult]
+        var deleted: [UUID]?
     }
 
     init() {
@@ -31,19 +36,62 @@ final class Store {
            let snap = try? JSONDecoder().decode(Snapshot.self, from: data) {
             cards = snap.cards
             tests = snap.tests
+            deletedIDs = Set(snap.deleted ?? [])
         } else {
             seedExamples()
         }
     }
 
-    func save() {
+    func save(notify: Bool = true) {
         do {
-            let data = try JSONEncoder().encode(Snapshot(cards: cards, tests: tests))
+            let data = try JSONEncoder().encode(Snapshot(cards: cards, tests: tests, deleted: Array(deletedIDs)))
             try data.write(to: fileURL, options: [.atomic, .completeFileProtection])
         } catch {
             print("Restwert: Speichern fehlgeschlagen:", error)
         }
         Task { await scheduleReminders() }
+        if notify { onChange?() }
+    }
+
+    // MARK: Sync
+
+    struct SyncData: Codable {
+        var cards: [GiftCard]
+        var tests: [TestResult]
+        var deleted: [UUID]
+    }
+
+    /// Was auf den Server geht: ohne Fotos und PINs, ohne Beispiele.
+    func syncPayload() -> SyncData {
+        let safe = cards.filter { !$0.isExample }.map { c -> GiftCard in
+            var x = c
+            x.photo = nil
+            x.pin = ""
+            return x
+        }
+        return SyncData(cards: safe, tests: tests.filter { !$0.isExample }, deleted: Array(deletedIDs))
+    }
+
+    /// Server-Stand einmischen: neuere Änderung gewinnt, Löschungen gelten überall, PIN und Foto bleiben lokal.
+    func merge(_ remote: SyncData) {
+        deletedIDs.formUnion(remote.deleted)
+        var byID = Dictionary(cards.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        for r in remote.cards {
+            if let local = byID[r.id] {
+                if r.modifiedAt > local.modifiedAt {
+                    var merged = r
+                    merged.pin = local.pin
+                    merged.photo = local.photo
+                    byID[r.id] = merged
+                }
+            } else {
+                byID[r.id] = r
+            }
+        }
+        cards = byID.values.filter { !deletedIDs.contains($0.id) }.sorted { $0.expires < $1.expires }
+        let knownTests = Set(tests.map(\.id))
+        tests += remote.tests.filter { !knownTests.contains($0.id) }
+        save(notify: false)
     }
 
     // MARK: Queries
@@ -57,7 +105,7 @@ final class Store {
     func soonCount(warnDays: Int) -> Int { cards.filter { $0.status(warnDays: warnDays) == .expiringSoon }.count }
     var soonCount: Int { soonCount(warnDays: warnDays) }
 
-    func cards(sortedBy order: SortOrder) -> [GiftCard] {
+    func cards(sortedBy order: CardSortOrder) -> [GiftCard] {
         cards.sorted { a, b in
             // Offene Gutscheine zuerst, Eingelöste und Abgelaufene ans Ende
             let ra = a.isOpen && a.daysLeft >= 0, rb = b.isOpen && b.daysLeft >= 0
@@ -80,15 +128,19 @@ final class Store {
 
     // MARK: Mutations
 
+    private func touch(_ i: Int) { cards[i].modifiedAt = .now }
+
     func upsert(_ card: GiftCard) {
         var c = card
         c.isExample = false
+        c.modifiedAt = .now
         if let i = cards.firstIndex(where: { $0.id == c.id }) { cards[i] = c } else { cards.append(c) }
         save()
     }
 
     func delete(_ id: UUID) {
         cards.removeAll { $0.id == id }
+        deletedIDs.insert(id)
         save()
     }
 
@@ -97,6 +149,7 @@ final class Store {
         guard let i = cards.firstIndex(where: { $0.id == id }), amount > 0 else { return nil }
         let newBalance = max(0, ((cards[i].balance - amount) * 100).rounded() / 100)
         cards[i].balance = newBalance
+        touch(i)
         cards[i].history.append(Redemption(date: .now, amount: amount, store: storeName, note: note, balanceAfter: newBalance))
         save()
         return newBalance
@@ -106,6 +159,7 @@ final class Store {
     func markRedeemed(_ id: UUID, store storeName: String = "") {
         guard let i = cards.firstIndex(where: { $0.id == id }) else { return }
         cards[i].redeemedAt = .now
+        touch(i)
         cards[i].history.append(Redemption(date: .now, amount: 0, store: storeName, note: "\(cards[i].kind.label) eingelöst", balanceAfter: cards[i].balance))
         save()
     }
@@ -114,6 +168,7 @@ final class Store {
         guard let i = cards.firstIndex(where: { $0.id == id }) else { return }
         cards[i].location = location
         cards[i].locationNote = note
+        touch(i)
         save()
     }
 
@@ -133,6 +188,7 @@ final class Store {
     }
 
     func resetAll() {
+        deletedIDs.formUnion(cards.filter { !$0.isExample }.map(\.id))
         cards = []
         tests = []
         save()

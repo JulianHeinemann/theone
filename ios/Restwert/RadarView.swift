@@ -61,8 +61,12 @@ struct RadarChart: View {
                 }
                 ForEach(Array(cards.enumerated()), id: \.element.id) { idx, card in
                     let f = Self.fraction(forDays: card.daysLeft)
-                    let angle = Double(idx) * 137.5 * .pi / 180 - .pi / 2
-                    let dot = (compact ? 10 : 16) + (compact ? 10 : 22) * sqrt(card.balance / maxBalance)
+                    let angle: Double = Double(idx) * 137.5 * Double.pi / 180 - Double.pi / 2
+                    let dotBase: CGFloat = compact ? 10 : 16
+                    let dotRange: CGFloat = compact ? 10 : 22
+                    let dot: CGFloat = dotBase + dotRange * CGFloat(sqrt(card.balance / maxBalance))
+                    let px: CGFloat = center.x + CGFloat(cos(angle)) * radius * CGFloat(f)
+                    let py: CGFloat = center.y + CGFloat(sin(angle)) * radius * CGFloat(f)
                     let urgent = card.daysLeft <= 30
                     Button { withAnimation(.snappy) { selected = card.id } } label: {
                         ZStack {
@@ -77,7 +81,7 @@ struct RadarChart: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(compact)
-                    .position(x: center.x + CGFloat(cos(angle)) * radius * f, y: center.y + CGFloat(sin(angle)) * radius * f)
+                    .position(x: px, y: py)
                     .accessibilityLabel("\(card.name), \(card.balance.euro), \(card.daysLeft < 0 ? "abgelaufen" : "noch \(card.daysLeft) Tage")")
                 }
             }

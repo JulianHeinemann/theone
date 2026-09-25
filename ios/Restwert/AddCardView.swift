@@ -275,7 +275,7 @@ struct AddCardView: View {
                         }
                         Text("Anderer Shop …").tag("other")
                     }
-                    .labelsHidden().tint(.ink)
+                    .labelsHidden().tint(Color.ink)
                 }
                 .padding(.horizontal, 14).padding(.vertical, 8)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -308,7 +308,7 @@ struct AddCardView: View {
                         Picker("Barcode", selection: $format) {
                             ForEach(CodeFormat.allCases) { Text($0.label).tag($0) }
                         }
-                        .labelsHidden().tint(.ink)
+                        .labelsHidden().tint(Color.ink)
                     }
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -323,7 +323,7 @@ struct AddCardView: View {
                     Picker("Aufbewahrungsort", selection: $location) {
                         ForEach(StorageLocation.allCases) { Label($0.label, systemImage: $0.symbol).tag($0) }
                     }
-                    .labelsHidden().tint(.ink)
+                    .labelsHidden().tint(Color.ink)
                 }
                 .padding(.horizontal, 14).padding(.vertical, 8)
                 .frame(maxWidth: .infinity, alignment: .leading)

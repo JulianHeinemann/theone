@@ -108,6 +108,7 @@ struct CheckoutView: View {
 }
 
 /// Eingabefeld im Stil der grauen Kästen mit kleiner Beschriftung.
+@MainActor
 func field(_ label: String, _ placeholder: String, _ text: Binding<String>, keyboard: UIKeyboardType = .default) -> some View {
     VStack(alignment: .leading, spacing: 2) {
         Text(label).font(.system(size: 12, weight: .semibold)).foregroundStyle(Color.muted)

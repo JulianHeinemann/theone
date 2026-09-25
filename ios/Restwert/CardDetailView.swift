@@ -121,7 +121,7 @@ struct CardDetailView: View {
                 Button { Task { await togglePin(card) } } label: {
                     HStack {
                         Image(systemName: pinVisible ? "lock.open" : "faceid")
-                        Text(pinVisible ? "PIN \(card.pin)" : "PIN anzeigen").font(.system(size: 15, weight: .bold, design: pinVisible ? .monospaced : .default))
+                        Text(pinVisible ? "PIN \(card.pin)" : "PIN anzeigen").font(.system(size: 15, weight: .bold, design: pinVisible ? Font.Design.monospaced : Font.Design.default))
                         Spacer()
                     }
                     .foregroundStyle(Color.ink).padding(14)
@@ -382,7 +382,7 @@ struct CardBon: View {
                        card.kind.isValueBased ? "+" + card.value.euro : card.headline, bold: false)
                 ForEach(card.history.sorted { $0.date < $1.date }) { r in
                     bonRow(r.store.isEmpty ? (r.amount > 0 ? "Eingelöst" : r.note) : r.store,
-                           r.date.dayMonthYear + (r.note.isEmpty || r.amount == 0 ? "" : " · \(r.note)") + (card.kind.isValueBased ? " · Rest \(r.balanceAfter.euro)" : ""),
+                           subline(r),
                            r.amount > 0 ? "−" + r.amount.euro : "✓", bold: false)
                 }
                 if card.history.isEmpty {
@@ -396,6 +396,13 @@ struct CardBon: View {
             ZigZag(top: false).fill(Color.paper).frame(height: 10)
         }
         .shadow(color: Color.ink.opacity(0.08), radius: 12, y: 6)
+    }
+
+    private func subline(_ r: Redemption) -> String {
+        var s: String = r.date.dayMonthYear
+        if !(r.note.isEmpty || r.amount == 0) { s += " · \(r.note)" }
+        if card.kind.isValueBased { s += " · Rest \(r.balanceAfter.euro)" }
+        return s
     }
 
     private func bonRow(_ title: String, _ sub: String, _ amount: String, bold: Bool) -> some View {

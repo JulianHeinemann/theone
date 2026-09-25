@@ -193,7 +193,7 @@ enum VoucherStatus {
     }
 }
 
-enum SortOrder: String, CaseIterable, Identifiable {
+enum CardSortOrder: String, CaseIterable, Identifiable {
     case expiry, value, shop
 
     var id: String { rawValue }
@@ -230,6 +230,8 @@ struct GiftCard: Codable, Identifiable, Hashable {
     var photo: Data?
     var isExample = false
     var history: [Redemption] = []
+    /// Letzte Änderung, entscheidet beim Sync, welche Version gewinnt.
+    var modifiedAt: Date = .now
 
     func status(warnDays: Int) -> VoucherStatus {
         if redeemedAt != nil || (kind.isValueBased && balance <= 0) { return .redeemed }
@@ -294,6 +296,7 @@ extension GiftCard {
         photo = try c.decodeIfPresent(Data.self, forKey: .photo)
         isExample = try c.decodeIfPresent(Bool.self, forKey: .isExample) ?? false
         history = try c.decodeIfPresent([Redemption].self, forKey: .history) ?? []
+        modifiedAt = try c.decodeIfPresent(Date.self, forKey: .modifiedAt) ?? received
     }
 }
 

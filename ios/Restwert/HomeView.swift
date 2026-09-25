@@ -5,10 +5,10 @@ struct HomeView: View {
     @Binding var path: NavigationPath
     var onAdd: () -> Void
     @State private var selected: UUID?
-    @AppStorage("sortOrder") private var sortRaw = SortOrder.expiry.rawValue
+    @AppStorage("sortOrder") private var sortRaw = CardSortOrder.expiry.rawValue
     @AppStorage("warnDays") private var warnDays = 30
 
-    private var sorted: [GiftCard] { store.cards(sortedBy: SortOrder(rawValue: sortRaw) ?? .expiry) }
+    private var sorted: [GiftCard] { store.cards(sortedBy: CardSortOrder(rawValue: sortRaw) ?? .expiry) }
     private var soon: Int { store.soonCount(warnDays: warnDays) }
 
     private var currentCard: GiftCard? {
@@ -139,15 +139,17 @@ struct HomeView: View {
 
     private var list: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Deine Gutscheine", trailing: "nach " + (SortOrder(rawValue: sortRaw) ?? .expiry).label)
+            SectionHeader(title: "Deine Gutscheine", trailing: "nach " + (CardSortOrder(rawValue: sortRaw) ?? .expiry).label)
             if store.cards.isEmpty {
                 Text("Fotografier die Rückseite einer Gutscheinkarte, importier eine E-Mail oder scanne einen handgeschriebenen Gutschein.")
                     .font(.system(size: 15)).foregroundStyle(Color.muted)
             }
             ForEach(sorted) { c in
                 Button { path.append(Route.card(c.id)) } label: { CardRow(card: c, warnDays: warnDays) }.buttonStyle(.plain)
+                    .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .scale(scale: 0.9).combined(with: .opacity)))
             }
         }
+        .animation(.spring(duration: 0.45, bounce: 0.25), value: sorted.map(\.id))
     }
 }
 

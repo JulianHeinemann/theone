@@ -84,10 +84,14 @@ struct MerchantsView: View {
 
 struct SettingsView: View {
     @Environment(Store.self) private var store
+    @Environment(Account.self) private var account
+    @State private var showAuth = false
+    @State private var confirmDeleteAccount = false
+    @State private var accountError: String?
     @AppStorage("reminders") private var reminders = true
     @AppStorage("pinLock") private var pinLock = true
     @AppStorage("onboarded") private var onboarded = true
-    @AppStorage("sortOrder") private var sortRaw = SortOrder.expiry.rawValue
+    @AppStorage("sortOrder") private var sortRaw = CardSortOrder.expiry.rawValue
     @AppStorage("warnDays") private var warnDays = 30
     @State private var confirmReset = false
 
@@ -95,6 +99,7 @@ struct SettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Einstellungen").font(.system(size: 32, weight: .heavy)).padding(.top, 8)
+                accountCard
                 VStack(spacing: 0) {
                     Toggle(isOn: $reminders) {
                         VStack(alignment: .leading, spacing: 2) {
@@ -120,7 +125,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Liste sortieren nach").font(.system(size: 13)).foregroundStyle(Color.muted)
                         Picker("Sortierung", selection: $sortRaw) {
-                            ForEach(SortOrder.allCases) { Text($0.label).tag($0.rawValue) }
+                            ForEach(CardSortOrder.allCases) { Text($0.label).tag($0.rawValue) }
                         }
                         .pickerStyle(.segmented)
                     }
@@ -155,8 +160,75 @@ struct SettingsView: View {
             .padding(.horizontal, 16).padding(.bottom, 30)
         }
         .background(Color.page.ignoresSafeArea())
+        .sheet(isPresented: $showAuth) { AuthView() }
+        .confirmationDialog("Konto und alle Daten auf dem Server endgültig löschen?", isPresented: $confirmDeleteAccount, titleVisibility: .visible) {
+            Button("Konto löschen", role: .destructive) {
+                Task {
+                    do { try await account.deleteAccount() } catch { accountError = error.localizedDescription }
+                }
+            }
+        }
         .confirmationDialog("Alle Karten, Einlösungen und Tests löschen?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("Alles löschen", role: .destructive) { store.resetAll() }
         }
+    }
+}
+
+extension SettingsView {
+    @ViewBuilder
+    var accountCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if let user = account.user {
+                HStack(spacing: 14) {
+                    Text((user.name.isEmpty ? user.email : user.name).initials)
+                        .font(.system(size: 16, weight: .heavy)).foregroundStyle(Color.ink)
+                        .frame(width: 48, height: 48).background(Color.brandYellow, in: Circle())
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(user.name.isEmpty ? "Dein Konto" : user.name).font(.system(size: 17, weight: .bold))
+                        Text(user.email).font(.system(size: 13)).foregroundStyle(Color.muted)
+                    }
+                    Spacer()
+                }
+                HStack(spacing: 8) {
+                    switch account.syncState {
+                    case .syncing:
+                        ProgressView().controlSize(.small)
+                        Text("Synchronisiere …")
+                    case .failed(let msg):
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Color.warn)
+                        Text(msg).lineLimit(2)
+                    case .idle:
+                        Image(systemName: "checkmark.icloud.fill").foregroundStyle(Color.good)
+                        Text(account.lastSync.map { "Zuletzt synchronisiert \($0.formatted(.relative(presentation: .named)))" } ?? "Noch nicht synchronisiert")
+                    }
+                    Spacer()
+                }
+                .font(.system(size: 13.5)).foregroundStyle(Color.ink2)
+                HStack(spacing: 10) {
+                    Button("Jetzt synchronisieren") { Task { await account.syncNow() } }
+                        .buttonStyle(FilledButtonStyle(background: .fill, foreground: .ink))
+                    Button("Abmelden") { account.logout() }
+                        .buttonStyle(FilledButtonStyle(background: .fill, foreground: .ink))
+                }
+                Button("Konto löschen") { confirmDeleteAccount = true }
+                    .font(.system(size: 14, weight: .bold)).foregroundStyle(Color.bad)
+                if let accountError { Text(accountError).font(.system(size: 13)).foregroundStyle(Color.bad) }
+            } else {
+                HStack(spacing: 14) {
+                    Image(systemName: "icloud").font(.system(size: 20, weight: .semibold))
+                        .frame(width: 48, height: 48).background(Color.brandYellow, in: Circle())
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Kein Konto").font(.system(size: 17, weight: .bold))
+                        Text("Alles liegt nur auf diesem iPhone.").font(.system(size: 13)).foregroundStyle(Color.muted)
+                    }
+                    Spacer()
+                }
+                Button("Anmelden oder Konto erstellen") { showAuth = true }
+                    .buttonStyle(FilledButtonStyle())
+            }
+        }
+        .padding(16)
+        .cardSurface(radius: 24)
+        .animation(.snappy, value: account.user)
     }
 }
