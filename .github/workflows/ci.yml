@@ -55,9 +55,9 @@ jobs:
         working-directory: ios
         run: |
           set -o pipefail
-          xcodebuild -project Restwert.xcodeproj -target Restwert -configuration Debug \
-            -sdk iphonesimulator -arch arm64 \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build 2>&1 | tee build.log | grep -E "error:|warning: .*(isolat|Sendable)|BUILD (SUCCEEDED|FAILED)" || true
+          xcodebuild -project Restwert.xcodeproj -scheme Restwert -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build 2>&1 | tee build.log | grep -E "error:|warning: .*(isolat|Sendable|deprecated)|BUILD (SUCCEEDED|FAILED)" || true
           grep -q "BUILD SUCCEEDED" build.log
       - name: Build-Log hochladen
         if: always()

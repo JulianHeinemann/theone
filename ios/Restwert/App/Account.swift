@@ -2,13 +2,14 @@ import Foundation
 import Observation
 import Security
 import UIKit
+import RestwertKit
 
 enum APIConfig {
     /// Railway-Backend. Für eigene Deployments hier anpassen.
     static let baseURL = URL(string: "https://api-production-9130.up.railway.app")!
 }
 
-struct APIUser: Codable, Equatable {
+struct APIUser: Codable, Equatable, Sendable {
     let id: String
     let email: String
     let name: String
@@ -20,7 +21,6 @@ struct APIError: LocalizedError {
 }
 
 /// Konto und Synchronisation. Ohne Konto bleibt alles lokal.
-@MainActor
 @Observable
 final class Account {
     enum SyncState: Equatable { case idle, syncing, failed(String) }
@@ -39,10 +39,9 @@ final class Account {
     var isLoggedIn: Bool { user != nil }
 
     init() {
-        if let data = UserDefaults.standard.data(forKey: "apiUser") {
+        if Keychain.token != nil, let data = UserDefaults.standard.data(forKey: "apiUser") {
             user = try? JSONDecoder().decode(APIUser.self, from: data)
         }
-        if Keychain.token == nil { user = nil }
         lastSync = UserDefaults.standard.object(forKey: "lastSync") as? Date
     }
 
@@ -51,16 +50,20 @@ final class Account {
         store.onChange = { [weak self] in self?.schedulePush() }
     }
 
-    // MARK: Auth
+    // MARK: Anmeldung
+
+    private struct Credentials: Encodable { let email: String; let password: String; var name: String? }
+    private struct AuthResponse: Decodable { let token: String; let user: APIUser }
+    private struct Empty: Codable {}
 
     func register(email: String, password: String, name: String) async throws {
-        let res: AuthResponse = try await request("POST", "/api/auth/register", body: ["email": email, "password": password, "name": name])
+        let res: AuthResponse = try await send("POST", "/api/auth/register", body: Credentials(email: email, password: password, name: name))
         signIn(res)
         await syncNow()
     }
 
     func login(email: String, password: String) async throws {
-        let res: AuthResponse = try await request("POST", "/api/auth/login", body: ["email": email, "password": password])
+        let res: AuthResponse = try await send("POST", "/api/auth/login", body: Credentials(email: email, password: password))
         signIn(res)
         await syncNow()
     }
@@ -75,12 +78,9 @@ final class Account {
     }
 
     func deleteAccount() async throws {
-        let _: Empty = try await request("DELETE", "/api/me")
+        let _: Empty = try await send("DELETE", "/api/me", body: Optional<Empty>.none)
         logout()
     }
-
-    private struct AuthResponse: Decodable { let token: String; let user: APIUser }
-    private struct Empty: Decodable {}
 
     private func signIn(_ res: AuthResponse) {
         Keychain.token = res.token
@@ -90,16 +90,17 @@ final class Account {
 
     // MARK: Sync
 
-    private struct SyncGet: Decodable { let data: Store.SyncData?; let updatedAt: String? }
-    private struct SyncPut: Decodable { let updatedAt: String }
-    private struct Conflict: Decodable { let data: Store.SyncData; let updatedAt: String }
+    private struct SyncGet: Decodable { let data: SyncData?; let updatedAt: String? }
+    private struct SyncPut: Encodable { let data: SyncData; let device: String; let baseUpdatedAt: String? }
+    private struct SyncPutResponse: Decodable { let updatedAt: String }
+    private struct Conflict: Decodable { let data: SyncData; let updatedAt: String }
 
     /// Server holen, einmischen, eigenen Stand hochladen.
     func syncNow() async {
         guard isLoggedIn, let store else { return }
         syncState = .syncing
         do {
-            let remote: SyncGet = try await request("GET", "/api/sync")
+            let remote: SyncGet = try await send("GET", "/api/sync", body: Optional<Empty>.none)
             if let data = remote.data { store.merge(data) }
             serverUpdatedAt = remote.updatedAt
             try await push()
@@ -115,37 +116,37 @@ final class Account {
         pushTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(2))
             guard !Task.isCancelled, let self else { return }
-            self.syncState = .syncing
+            syncState = .syncing
             do {
-                try await self.push()
-                self.finish()
+                try await push()
+                finish()
             } catch {
                 // Abgebrochen (neue Änderung oder Abmelden): kein Fehler anzeigen
                 guard !Task.isCancelled else { return }
-                self.syncState = .failed(error.localizedDescription)
+                syncState = .failed(error.localizedDescription)
             }
         }
     }
 
     private func push(retry: Bool = true) async throws {
         guard let store else { return }
-        var body: [String: Any] = ["data": try jsonObject(store.syncPayload()), "device": UIDevice.current.model]
-        if let base = serverUpdatedAt { body["baseUpdatedAt"] = base }
+        let body = SyncPut(data: store.syncPayload, device: UIDevice.current.model, baseUpdatedAt: serverUpdatedAt)
         do {
-            let res: SyncPut = try await request("PUT", "/api/sync", body: body)
+            let res: SyncPutResponse = try await send("PUT", "/api/sync", body: body)
             serverUpdatedAt = res.updatedAt
         } catch HTTPFailure.conflict(let data) where retry {
-            // Anderes Gerät war schneller: einmischen und erneut senden
-            let c = try Self.decoder.decode(Conflict.self, from: data)
-            store.merge(c.data)
-            serverUpdatedAt = c.updatedAt
+            // Ein anderes Gerät war schneller: einmischen und erneut senden
+            let conflict = try APICoding.decoder.decode(Conflict.self, from: data)
+            store.merge(conflict.data)
+            serverUpdatedAt = conflict.updatedAt
             try await push(retry: false)
         }
     }
 
     private func finish() {
-        lastSync = .now
-        UserDefaults.standard.set(lastSync, forKey: "lastSync")
+        let now = Date.now
+        lastSync = now
+        UserDefaults.standard.set(now, forKey: "lastSync")
         syncState = .idle
     }
 
@@ -156,31 +157,16 @@ final class Account {
         var errorDescription: String? { "Auf einem anderen Gerät wurde inzwischen etwas geändert." }
     }
 
-    private static let encoder: JSONEncoder = {
-        let e = JSONEncoder()
-        e.dateEncodingStrategy = .iso8601
-        return e
-    }()
-
-    private static let decoder: JSONDecoder = {
-        let d = JSONDecoder()
-        d.dateDecodingStrategy = .iso8601
-        return d
-    }()
-
-    private func jsonObject<T: Encodable>(_ value: T) throws -> Any {
-        try JSONSerialization.jsonObject(with: Self.encoder.encode(value))
-    }
-
-    private func request<T: Decodable>(_ method: String, _ path: String, body: [String: Any]? = nil) async throws -> T {
-        var req = URLRequest(url: APIConfig.baseURL.appendingPathComponent(path))
+    private func send<Body: Encodable, Response: Decodable>(_ method: String, _ path: String, body: Body?) async throws -> Response {
+        var req = URLRequest(url: APIConfig.baseURL.appending(path: path))
         req.httpMethod = method
         req.timeoutInterval = 20
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token = Keychain.token { req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
-        if let body { req.httpBody = try JSONSerialization.data(withJSONObject: body) }
+        if let body { req.httpBody = try APICoding.encoder.encode(body) }
 
-        let (data, response): (Data, URLResponse)
+        let data: Data
+        let response: URLResponse
         do {
             (data, response) = try await URLSession.shared.data(for: req)
         } catch {
@@ -190,11 +176,11 @@ final class Account {
         if status == 409, path == "/api/sync" { throw HTTPFailure.conflict(data) }
         if status == 401, user != nil, !path.hasPrefix("/api/auth") { logout() }
         guard (200..<300).contains(status) else {
-            let msg = (try? JSONDecoder().decode([String: String].self, from: data))?["error"]
-            throw APIError(message: msg ?? "Serverfehler (\(status)).")
+            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"]
+            throw APIError(message: message ?? "Serverfehler (\(status)).")
         }
-        if status == 204 || data.isEmpty, let empty = Empty() as? T { return empty }
-        return try Self.decoder.decode(T.self, from: data)
+        if data.isEmpty, let empty = Empty() as? Response { return empty }
+        return try APICoding.decoder.decode(Response.self, from: data)
     }
 }
 
@@ -206,18 +192,20 @@ enum Keychain {
 
     static var token: String? {
         get {
-            let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
-                                    kSecAttrAccount as String: account, kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
+            let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
+                                        kSecAttrAccount as String: account, kSecReturnData as String: true,
+                                        kSecMatchLimit as String: kSecMatchLimitOne]
             var out: AnyObject?
-            guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let data = out as? Data else { return nil }
+            guard SecItemCopyMatching(query as CFDictionary, &out) == errSecSuccess, let data = out as? Data else { return nil }
             return String(data: data, encoding: .utf8)
         }
         set {
-            let base: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
+            let base: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
+                                       kSecAttrAccount as String: account]
             SecItemDelete(base as CFDictionary)
-            guard let newValue, let data = newValue.data(using: .utf8) else { return }
+            guard let newValue else { return }
             var add = base
-            add[kSecValueData as String] = data
+            add[kSecValueData as String] = Data(newValue.utf8)
             add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
             SecItemAdd(add as CFDictionary, nil)
         }
