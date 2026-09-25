@@ -120,6 +120,8 @@ final class Account {
                 try await self.push()
                 self.finish()
             } catch {
+                // Abgebrochen (neue Änderung oder Abmelden): kein Fehler anzeigen
+                guard !Task.isCancelled else { return }
                 self.syncState = .failed(error.localizedDescription)
             }
         }
@@ -149,7 +151,10 @@ final class Account {
 
     // MARK: HTTP
 
-    private enum HTTPFailure: Error { case conflict(Data) }
+    private enum HTTPFailure: LocalizedError {
+        case conflict(Data)
+        var errorDescription: String? { "Auf einem anderen Gerät wurde inzwischen etwas geändert." }
+    }
 
     private static let encoder: JSONEncoder = {
         let e = JSONEncoder()
