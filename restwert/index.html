@@ -1,451 +1,301 @@
 <title>Restwert</title>
 <meta name="description" content="Gutscheinkarten fotografieren, Restguthaben führen und an der Kasse ohne Plastikkarte testen.">
-<meta name="theme-color" content="#110D12">
+<meta name="theme-color" content="#0E0E10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap">
 <style>
-/* Restwert · "Schatulle": one committed dark world (velvet, jewel-toned cards, champagne foil). */
+/* Clean fintech look after the user's references: light surfaces, black + yellow accents, pastel folder cards, ticket detail. Single committed light theme. */
 :root{
-  color-scheme:dark;
-  --velvet:#110D12;
-  --velvet-2:#1A141B;
-  --glass:rgba(255,255,255,.055);
-  --glass-2:rgba(255,255,255,.09);
-  --hair:rgba(255,255,255,.09);
-  --ink:#F4EEE6;
-  --ink-2:#CFC6C9;
-  --muted:#8F8590;
-  --gold:#DDBB7E;
-  --gold-2:#A98452;
-  --foil:linear-gradient(115deg,#8C6A3E 0%,#F3DDAE 22%,#B48D58 42%,#FFF1CF 58%,#9E7A48 78%,#E8CF9A 100%);
-  --ok:#7FD6A8;
-  --bad:#FF8F8F;
-  --warn:#F2C27A;
-  --paper:#F6F2EA;
-  --serif:"Instrument Serif","Iowan Old Style","Palatino Linotype",Georgia,serif;
-  --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+  --page:#F1F2F4;
+  --white:#FFFFFF;
+  --fill:#F5F6F8;
+  --ink:#0E0E10;
+  --ink-2:#3A3C42;
+  --muted:#8A8D96;
+  --line:#E7E8EB;
+  --dark:#0E0E10;
+  --dark-2:#1C1C20;
+  --dark-3:#2A2A30;
+  --yellow:#FFE14D;
+  --blue:#2451FF;
+  --green:#1E9E5A;
+  --green-soft:#CFF0DC;
+  --red:#E0413A;
+  --red-soft:#FBDCDA;
+  --orange:#E98A1E;
+  --orange-soft:#FDE8CC;
+  --display:"Urbanist","Avenir Next",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --ease:cubic-bezier(.2,.8,.2,1);
-  --spring:cubic-bezier(.34,1.4,.5,1);
+  --shadow:0 1px 2px rgba(14,14,16,.04),0 10px 30px rgba(14,14,16,.07);
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{min-height:100%}
-body{
-  margin:0;color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;
-  background-color:var(--velvet);
-  background-image:
-    radial-gradient(90% 55% at 50% -8%,rgba(221,187,126,.13),rgba(221,187,126,0) 60%),
-    radial-gradient(70% 50% at 100% 100%,rgba(120,60,110,.18),rgba(120,60,110,0) 70%),
-    var(--noise,none);
-  background-attachment:fixed;
-  padding-inline:16px;
-}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;padding-inline:16px}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer;-webkit-tap-highlight-color:transparent}
 a{color:inherit}
-:focus-visible{outline:2px solid var(--gold);outline-offset:3px;border-radius:12px}
+:focus-visible{outline:2.5px solid var(--blue);outline-offset:2px;border-radius:12px}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.app{max-width:440px;margin:0 auto;padding-block:18px 140px}
+.app{max-width:440px;margin:0 auto}
+.screen{padding-block:14px 120px;animation:enter .38s var(--ease) both}
+.screen.no-nav{padding-bottom:32px}
+@keyframes enter{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+.screen.up{animation-name:up}
+@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+h1,h2,h3{font-family:var(--display);margin:0;letter-spacing:-.02em}
 
-/* ---------- Top ---------- */
-.top{display:flex;align-items:center;justify-content:space-between;gap:12px;height:44px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:600;letter-spacing:.02em}
-.brand i{width:22px;height:14px;border-radius:3px;background:var(--foil);box-shadow:0 0 0 1px rgba(255,255,255,.2) inset;display:block}
-.ghost-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--hair);background:var(--glass);display:grid;place-items:center;color:var(--ink-2)}
-.ghost-btn svg{width:18px;height:18px}
+/* ---------- Common bits ---------- */
+.bar{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:8px;min-height:52px}
+.bar h2{text-align:center;font-size:21px;font-weight:700}
+.rbtn{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--white);display:grid;place-items:center;color:var(--ink)}
+.rbtn svg{width:20px;height:20px}
+.rbtn.dark{background:transparent;border-color:rgba(255,255,255,.18);color:#fff}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:58px;border-radius:18px;border:0;font-weight:700;font-size:16px;padding:14px 20px}
+.btn svg{width:20px;height:20px}
+.btn.black{background:var(--ink);color:#fff}
+.btn.yellow{background:var(--yellow);color:var(--ink)}
+.btn.mint{background:var(--green-soft);color:#0F5A33}
+.btn.soft{background:var(--white);color:var(--ink);border:1px solid var(--line)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.link{background:none;border:0;padding:0;color:var(--ink);font-weight:700;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.link svg{width:16px;height:16px}
+.muted{color:var(--muted)}
+.tile{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;flex:none;font-family:var(--display);font-weight:800;font-size:15px;color:var(--ink);background:var(--tbg,#EEE)}
+.tile svg{width:20px;height:20px}
+.row{display:flex;align-items:center;gap:14px;padding:12px;border-radius:20px;background:var(--fill);width:100%;border:0;text-align:left}
+button.row:active{transform:scale(.99)}
+.row .g{flex:1;min-width:0}
+.row .t{font-weight:700;font-size:15.5px;line-height:1.25}
+.row .s{font-size:13px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.row .a{font-family:var(--display);font-weight:800;font-size:17px;white-space:nowrap;text-align:right}
+.row .a small{display:block;font-family:var(--body);font-weight:600;font-size:12px;color:var(--muted)}
+.list{display:flex;flex-direction:column;gap:10px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin:26px 2px 12px}
+.sec-h h3{font-size:20px;font-weight:700}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.chip.green{background:var(--green-soft);color:#0F6B3A}.chip.red{background:var(--red-soft);color:#A12620}.chip.orange{background:var(--orange-soft);color:#8E4F07}.chip.grey{background:var(--line);color:var(--ink-2)}
+.seg{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:none;border:0;background:none;color:var(--muted);padding:10px 16px;border-radius:14px;font-weight:600;font-size:14.5px}
+.seg button[aria-pressed="true"]{background:var(--white);color:var(--ink);box-shadow:var(--shadow)}
 
-/* ---------- Total ---------- */
-.total{padding:26px 2px 22px}
-.kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:500}
-.sum{font-family:var(--serif);font-weight:400;font-size:clamp(64px,20vw,88px);line-height:.9;letter-spacing:-.02em;margin:10px 0 0;font-variant-numeric:lining-nums tabular-nums}
-.sum .c{font-size:.46em;letter-spacing:0;color:var(--ink-2)}
-.sum .e{font-style:italic;font-size:.5em;color:var(--gold);margin-left:.08em}
-.sum-sub{margin-top:12px;color:var(--ink-2);font-size:15px;max-width:34ch}
-.sum-sub b{color:var(--ink);font-weight:600}
-.meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-.pillnote{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;padding:6px 11px;border-radius:999px;background:var(--glass);border:1px solid var(--hair);color:var(--ink-2)}
-.pillnote .d{width:6px;height:6px;border-radius:50%;background:currentColor}
-.pillnote.warn{color:var(--warn)}.pillnote.bad{color:var(--bad)}.pillnote.ok{color:var(--ok)}
+/* ---------- Pastel folder card ---------- */
+.pcard{position:relative;margin-top:14px;border-radius:24px;background:var(--bg);color:var(--ink);padding:18px 20px 18px;aspect-ratio:1.72;display:flex;flex-direction:column;justify-content:space-between;isolation:isolate;border:0;text-align:left;width:100%}
+.pcard::before{content:"";position:absolute;left:0;top:-13px;width:40%;height:34px;background:var(--bg);border-radius:20px 26px 0 0;clip-path:polygon(0 0,82% 0,100% 100%,0 100%);z-index:-1}
+.pcard::after{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;opacity:.55;pointer-events:none;
+  background:radial-gradient(circle at 92% 8%,transparent 0 58px,rgba(255,255,255,.7) 59px 60px,transparent 61px 96px,rgba(255,255,255,.6) 97px 98px,transparent 99px 138px,rgba(255,255,255,.45) 139px 140px,transparent 141px)}
+.pc-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.pc-l{font-size:13px;color:rgba(14,14,16,.6);font-weight:600}
+.pc-amt{font-family:var(--display);font-weight:800;font-size:32px;letter-spacing:-.02em;line-height:1.05;margin-top:2px;font-variant-numeric:tabular-nums}
+.pc-name{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pc-sub{font-size:12px;color:rgba(14,14,16,.62);font-weight:700;white-space:nowrap;background:rgba(255,255,255,.55);padding:4px 9px;border-radius:999px}
+.pc-bot{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.pc-num{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06em;display:flex;gap:14px;flex-wrap:wrap}
+.pc-mark{display:flex;flex:none}
+.pc-mark i{width:24px;height:24px;border-radius:50%;background:rgba(14,14,16,.78)}
+.pc-mark i+i{margin-left:-9px;background:rgba(14,14,16,.38)}
+.pc-ex{position:absolute;left:20px;top:-6px;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(14,14,16,.55)}
 
-/* ---------- Card (ID-1: 85.60 × 53.98 mm) ---------- */
-.stack{position:relative;display:flex;flex-direction:column;perspective:1400px;transition:opacity .35s var(--ease)}
-.card-wrap{position:relative;width:100%;aspect-ratio:1.586;border:0;padding:0;background:none;text-align:left;display:block;
-  transition:transform .5s var(--spring),opacity .35s var(--ease)}
-.stack .card-wrap + .card-wrap{margin-top:calc(72px - 63.05%)}
-.stack .card-wrap:hover{transform:translateY(-6px)}
-.card3d{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .8s var(--ease);
-  transform:rotateX(var(--rx,0deg)) rotateY(calc(var(--ry,0deg) + var(--flip,0deg)))}
-.card3d.flipped{--flip:180deg}
-.face{position:absolute;inset:0;border-radius:4.2% / 6.7%;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;isolation:isolate}
-.front{
-  color:#fff;background:linear-gradient(150deg,var(--c1),var(--c2) 70%,var(--c3));
-  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 -1px 0 rgba(0,0,0,.35) inset,0 18px 40px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.4);
-}
-.front::before{ /* guilloche */
-  content:"";position:absolute;inset:0;z-index:-1;opacity:.22;mix-blend-mode:soft-light;
-  background:
-    repeating-radial-gradient(ellipse at 88% 18%,transparent 0 6px,rgba(255,255,255,.95) 6.5px 7px),
-    repeating-conic-gradient(from 0deg at 12% 120%,rgba(255,255,255,.0) 0 2deg,rgba(255,255,255,.55) 2deg 2.4deg);
-}
-.front::after{ /* moving sheen */
-  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;mix-blend-mode:overlay;
-  background:radial-gradient(60% 80% at var(--mx,30%) var(--my,10%),rgba(255,255,255,.55),rgba(255,255,255,0) 60%),
-             linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.18) calc(var(--mx,30%) + 5%),rgba(255,255,255,0) calc(var(--mx,30%) + 25%));
-}
-.f-inner{position:absolute;inset:0;padding:6.2% 6.8%;display:flex;flex-direction:column;justify-content:space-between;z-index:2}
-.f-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.f-merchant{font-weight:600;font-size:17px;letter-spacing:-.005em;text-shadow:0 1px 0 rgba(0,0,0,.25)}
-.f-bal{font-family:var(--serif);font-size:30px;line-height:.95;text-align:right;font-variant-numeric:lining-nums tabular-nums;text-shadow:0 1px 0 rgba(0,0,0,.25)}
-.f-bal small{font-size:.55em}
-.f-mid{display:flex;align-items:center;gap:14px}
-.foil-chip{width:13%;aspect-ratio:1.3;border-radius:18%;background:var(--foil);box-shadow:0 0 0 1px rgba(0,0,0,.25) inset,0 1px 2px rgba(0,0,0,.35);position:relative;overflow:hidden}
-.foil-chip::after{content:"";position:absolute;inset:22% 0;border-top:1px solid rgba(0,0,0,.25);border-bottom:1px solid rgba(0,0,0,.25)}
-.f-num{font-family:var(--mono);font-size:14px;letter-spacing:.18em;opacity:.92;text-shadow:0 1px 0 rgba(0,0,0,.3)}
-.f-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
-.f-label{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.7}
-.f-val{font-family:var(--mono);font-size:12.5px;letter-spacing:.06em;margin-top:2px}
-.fuse{height:2px;border-radius:2px;background:rgba(255,255,255,.2);margin-top:6px;width:110px;overflow:hidden}
-.fuse i{display:block;height:100%;background:var(--foil)}
-.f-status{font-size:11px;font-weight:600;padding:5px 9px;border-radius:999px;background:rgba(0,0,0,.28);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap}
-.f-example{position:absolute;right:6.8%;top:44%;font-size:10px;letter-spacing:.18em;text-transform:uppercase;opacity:.65}
+/* ---------- Home ---------- */
+.dark-top{background:var(--dark);color:#fff;margin-inline:-16px;padding:14px 16px 58px;border-radius:0 0 0 0}
+.dark-top .hdr{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:8px}
+.hdr-c{text-align:center}
+.hdr-c b{display:block;font-family:var(--display);font-size:17px;font-weight:700}
+.hdr-c span{font-size:12.5px;color:rgba(255,255,255,.55)}
+.bell{position:relative}
+.bell .dot{position:absolute;top:11px;right:12px;width:8px;height:8px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 2px var(--dark)}
+.total{margin:26px 2px 18px}
+.total .l{font-size:14px;color:rgba(255,255,255,.6);font-weight:600}
+.total .v{font-family:var(--display);font-weight:800;font-size:clamp(44px,13vw,56px);letter-spacing:-.03em;line-height:1.05;margin-top:4px;font-variant-numeric:tabular-nums}
+.total .v small{font-size:.5em;color:rgba(255,255,255,.6);margin-left:4px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.stat b{display:block;font-family:var(--display);font-weight:800;font-size:22px}
+.stat span{font-size:13px;color:rgba(255,255,255,.6);display:inline-flex;align-items:center;gap:6px}
+.stat svg{width:15px;height:15px}
+.carousel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin-inline:-16px;padding:6px 16px 4px;scrollbar-width:none}
+.carousel::-webkit-scrollbar{display:none}
+.carousel>.pcard{flex:0 0 86%;scroll-snap-align:center}
+.carousel .add-slot{flex:0 0 22%;scroll-snap-align:end;margin-top:14px;border-radius:24px;border:1.5px dashed rgba(255,255,255,.25);background:none;color:rgba(255,255,255,.7);display:grid;place-items:center}
+.carousel .add-slot svg{width:26px;height:26px}
+.dots{display:flex;justify-content:center;gap:6px;margin-top:14px}
+.dots i{width:6px;height:6px;border-radius:6px;background:rgba(255,255,255,.25);transition:width .25s,background .25s}
+.dots i.on{width:22px;background:var(--yellow)}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:22px}
+.q{display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:0;color:#fff;font-size:13px;font-weight:600}
+.q span{width:62px;height:62px;border-radius:50%;background:var(--dark-3);display:grid;place-items:center;color:#fff;transition:transform .2s var(--ease)}
+.q:active span{transform:scale(.92)}
+.q.y span{background:var(--yellow);color:var(--ink)}
+.q svg{width:24px;height:24px}
+.sheet{position:relative;background:var(--white);margin-inline:-16px;margin-top:-30px;border-radius:32px 32px 0 0;padding:12px 16px 20px;min-height:52vh}
+.sheet .handle{width:44px;height:5px;border-radius:5px;background:var(--ink);margin:0 auto 4px;opacity:.9}
+.home-body{background:var(--white)}
+.empty{text-align:center;padding:26px 10px;color:var(--muted);display:flex;flex-direction:column;gap:12px;align-items:center}
+.empty b{color:var(--ink);font-family:var(--display);font-size:20px}
 
-.back{transform:rotateY(180deg);background:var(--paper);color:#161214;box-shadow:0 18px 40px rgba(0,0,0,.55)}
-.stripe{position:absolute;left:0;right:0;top:9%;height:17%;background:linear-gradient(180deg,#1b1a1c,#0b0b0c)}
-.b-inner{position:absolute;inset:32% 6% 5%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px}
-.b-inner svg{width:100%;height:auto;max-height:72%;display:block}
-.b-num{font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-align:center;overflow-wrap:anywhere}
-.b-hint{position:absolute;left:6%;bottom:4%;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8a8084}
-.b-code{font-family:var(--mono);font-size:19px;letter-spacing:.1em;text-align:center;overflow-wrap:anywhere}
-.b-fmt{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8a8084;text-align:center}
+/* ---------- Onboarding ---------- */
+.onb{min-height:calc(100vh - 28px);display:flex;flex-direction:column;gap:22px;padding-block:34px 24px}
+.onb h1{font-size:46px;font-weight:800;line-height:1.02;letter-spacing:-.035em;text-wrap:balance}
+.onb p{margin:0;color:var(--ink-2);font-size:16.5px;max-width:30ch}
+.illu{position:relative;flex:1;min-height:300px;border-radius:32px;background:var(--fill);overflow:hidden;perspective:900px}
+.fc{position:absolute;width:62%;aspect-ratio:1.6;border-radius:22px;background:var(--bg);box-shadow:0 30px 40px rgba(14,14,16,.12);padding:16px 18px;
+  transform:rotateX(52deg) rotateZ(-32deg);transform-style:preserve-3d;animation:float 6s ease-in-out infinite}
+.fc b{font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:.06em}
+.fc .n{position:absolute;left:18px;bottom:14px;font-family:var(--display);font-weight:600;letter-spacing:.1em;font-size:13px;opacity:.7}
+.fc .ci{position:absolute;right:18px;bottom:14px;width:30px;height:22px;border-radius:6px;border:1.5px solid rgba(14,14,16,.5)}
+.fc .mk{position:absolute;right:16px;top:16px;display:flex}.fc .mk i{width:18px;height:18px;border-radius:50%;background:rgba(14,14,16,.7)}.fc .mk i+i{margin-left:-7px;background:rgba(14,14,16,.35)}
+.fc.a{--bg:#E4D7FB;left:10%;top:10%;animation-delay:0s}
+.fc.b{--bg:#CDEFE3;left:24%;top:38%;animation-delay:-2s}
+.fc.c{--bg:#F1EFD9;left:34%;top:62%;animation-delay:-4s}
+@keyframes float{0%,100%{translate:0 0}50%{translate:0 -10px}}
+.go{display:flex;align-items:center;justify-content:space-between;background:var(--ink);color:#fff;border:0;border-radius:18px;padding:8px 8px 8px 24px;min-height:64px;font-weight:700;font-size:17px;width:100%}
+.go span.ar{width:62px;height:48px;border-radius:12px;background:#fff;color:var(--ink);display:grid;place-items:center}
+.go svg{width:26px;height:26px}
+.skip{align-self:center;background:none;border:0;color:var(--muted);font-weight:600}
 
-/* ---------- Focus view ---------- */
-.focus{display:flex;flex-direction:column;gap:18px;animation:rise .5s var(--ease) both}
-@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.focus-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.back-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:0;color:var(--ink-2);padding:8px 2px;font-weight:500}
-.back-btn svg{width:18px;height:18px}
-.focus .card-wrap{cursor:pointer}
-.tap-hint{text-align:center;font-size:12.5px;color:var(--muted);margin-top:-6px}
-.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.act{display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:0;color:var(--ink-2);font-size:12.5px;font-weight:500;padding:4px 0}
-.act span{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:var(--glass);border:1px solid var(--hair);color:var(--ink);transition:transform .2s var(--spring),background .2s}
-.act:active span{transform:scale(.92)}
-.act.primary span{background:var(--foil);color:#241a0c;border-color:transparent;box-shadow:0 10px 26px rgba(221,187,126,.25)}
-.act svg{width:22px;height:22px}
-.sheetlike{background:var(--glass);border:1px solid var(--hair);border-radius:24px;padding:6px 18px}
-.line{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 0;border-top:1px solid var(--hair)}
-.line:first-child{border-top:0}
-.line .k{color:var(--muted);font-size:14px}
-.line .v{text-align:right;font-weight:500;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.line .v.mono{font-family:var(--mono);font-size:13.5px;letter-spacing:.06em}
-.advice{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:20px;background:var(--glass);border:1px solid var(--hair);font-size:14px;color:var(--ink-2)}
-.advice .dot{flex:none;width:8px;height:8px;border-radius:50%;margin-top:7px;background:var(--gold);box-shadow:0 0 0 4px rgba(221,187,126,.15)}
-.advice b{color:var(--ink);font-weight:600}
-.text-links{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;font-size:14px}
-.tl{background:none;border:0;padding:6px 0;color:var(--ink-2);text-decoration:underline;text-decoration-color:rgba(255,255,255,.25);text-underline-offset:4px}
-.tl.danger{color:var(--bad)}
+/* ---------- Ticket (detail + checkout) ---------- */
+.ticket{background:var(--white);border-radius:28px;box-shadow:var(--shadow);overflow:hidden;margin-top:14px}
+.tk-pad{padding:18px}
+.tk-head{display:flex;align-items:center;gap:14px}
+.tk-head .g{flex:1;min-width:0}
+.tk-head .t{font-family:var(--display);font-weight:700;font-size:19px}
+.tk-head .s{font-size:13px;color:var(--muted)}
+.tk-amt{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:18px}
+.tk-amt .big{font-family:var(--display);font-weight:800;font-size:44px;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.tk-amt .of{font-size:13px;color:var(--muted);text-align:right}
+.tk-amt .of b{display:block;font-family:var(--display);font-size:18px;color:var(--ink)}
+.meter{height:6px;border-radius:6px;background:var(--fill);margin-top:14px;overflow:hidden}
+.meter i{display:block;height:100%;border-radius:6px;background:var(--ink)}
+.cells{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.cell{background:var(--fill);border-radius:16px;padding:12px;min-width:0;border:0;text-align:left}
+.cell b{display:block;font-family:var(--display);font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell span{font-size:12px;color:var(--muted)}
+.info{display:flex;gap:12px;align-items:flex-start;background:var(--fill);border-radius:18px;padding:14px;margin-top:10px;font-size:14px;color:var(--ink-2)}
+.info svg{width:18px;height:18px;flex:none;margin-top:1px}
+.info b{color:var(--ink)}
+.perf{position:relative;height:28px}
+.perf::before{content:"";position:absolute;left:22px;right:22px;top:50%;border-top:2px dashed var(--line)}
+.perf i{position:absolute;top:0;width:28px;height:28px;border-radius:50%;background:var(--page)}
+.perf i:first-child{left:-14px}.perf i:last-child{right:-14px}
+.bc{display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 18px 20px}
+.bc svg{width:100%;height:auto;display:block}
+.bc .num{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.12em;text-align:center;overflow-wrap:anywhere}
+.bc .fmt{font-size:12px;color:var(--muted);text-align:center}
+.bc .code{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:.08em;text-align:center;overflow-wrap:anywhere;padding:14px 0 4px}
+.bc img{max-width:100%;border-radius:12px}
+.del{display:block;margin:18px auto 0;background:none;border:0;color:var(--red);font-weight:700}
+.confirm{margin-top:10px;background:var(--red-soft);color:#8E1F1A;border-radius:16px;padding:12px 14px;font-size:14px}
+.confirm button{background:none;border:0;color:inherit;font-weight:800;text-decoration:underline;padding:0}
 
-/* ---------- Section headings ---------- */
-.h-block{padding:26px 2px 16px}
-.h-block h2{font-family:var(--serif);font-weight:400;font-size:44px;line-height:1;margin:8px 0 10px;letter-spacing:-.01em;text-wrap:balance}
-.h-block h2 em{color:var(--gold)}
-.h-block p{margin:0;color:var(--ink-2);max-width:40ch}
-.sub-h{display:flex;align-items:baseline;justify-content:space-between;margin:34px 2px 12px}
-.sub-h h3{margin:0;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:500}
-.sub-h span{font-size:13px;color:var(--muted)}
+/* ---------- Keypad ---------- */
+.kp-screen{display:flex;flex-direction:column;min-height:calc(100vh - 14px);min-height:calc(100dvh - 14px)}
+.amount{margin:30px 2px 0}
+.amount .l{font-size:15px;color:var(--muted);font-weight:600}
+.amount .v{font-family:var(--display);font-weight:800;font-size:clamp(46px,14vw,60px);letter-spacing:-.03em;line-height:1.1;display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-top:6px}
+.amount .v .cur{color:var(--muted)}
+.caret{width:3px;height:.9em;background:var(--yellow);border-radius:2px;animation:blink 1s steps(1) infinite;margin-left:4px}
+@keyframes blink{50%{opacity:0}}
+.amount .hint{font-size:13px;color:var(--muted);margin-top:8px}
+.amount .hint.bad{color:var(--red)}
+.qchips{display:flex;gap:8px;overflow-x:auto;margin:16px -16px 26px;padding-inline:16px;scrollbar-width:none}
+.qchips::-webkit-scrollbar{display:none}
+.qchips button{flex:none;border:0;background:var(--fill);border-radius:14px;padding:12px 18px;font-weight:700;font-family:var(--display);font-size:16px}
+.pad{margin:auto -16px 0;background:var(--dark);border-radius:32px 32px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.key{height:62px;border:0;background:none;color:#fff;font-family:var(--display);font-weight:600;font-size:28px;border-radius:50%;justify-self:center;width:62px;display:grid;place-items:center;transition:background .15s}
+.key:active,.key.hit{background:var(--blue)}
+.key svg{width:26px;height:26px}
 
-/* Upcoming strip */
-.strip{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:4px;margin-inline:-16px;padding-inline:16px;scrollbar-width:none}
-.strip::-webkit-scrollbar{display:none}
-.due{flex:0 0 auto;scroll-snap-align:start;min-width:150px;background:var(--glass);border:1px solid var(--hair);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:6px;text-align:left;color:var(--ink)}
-.due .days{font-family:var(--serif);font-size:34px;line-height:1}
-.due .days small{font-family:var(--sans);font-size:12px;color:var(--muted);margin-left:4px}
-.due .who{font-size:13.5px;color:var(--ink-2)}
-.due.warn .days{color:var(--warn)}.due.bad .days{color:var(--bad)}
-
-/* Empty */
-.empty-slot{aspect-ratio:1.586;border-radius:4.2% / 6.7%;border:1.5px dashed rgba(255,255,255,.18);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;color:var(--ink-2);background:rgba(255,255,255,.02)}
-.empty-slot b{font-family:var(--serif);font-weight:400;font-size:28px;color:var(--ink)}
-
-/* ---------- Buttons ---------- */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:14px 22px;border-radius:999px;border:0;font-weight:600;font-size:15.5px}
-.btn svg{width:19px;height:19px}
-.btn.gold{background:var(--foil);color:#241a0c;box-shadow:0 12px 30px rgba(221,187,126,.22)}
-.btn.glass{background:var(--glass-2);color:var(--ink);border:1px solid var(--hair)}
-.btn.block{width:100%}
-.btn.sm{min-height:40px;padding:8px 16px;font-size:14px}
-
-/* ---------- Nav ---------- */
-.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px)}
-.seg{display:flex;padding:5px;border-radius:999px;background:rgba(30,24,31,.72);border:1px solid var(--hair);backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);box-shadow:0 18px 40px rgba(0,0,0,.45)}
-.seg button{border:0;background:none;color:var(--muted);padding:11px 15px;border-radius:999px;font-weight:500;font-size:14px;white-space:nowrap;transition:background .25s,color .25s}
-.seg button[aria-selected="true"]{background:var(--glass-2);color:var(--ink)}
-.scan-fab{width:56px;height:56px;border-radius:50%;border:0;background:var(--foil);color:#241a0c;display:grid;place-items:center;box-shadow:0 14px 34px rgba(221,187,126,.3),0 0 0 1px rgba(255,255,255,.25) inset;flex:none}
-.scan-fab svg{width:24px;height:24px}
-
-/* ---------- Sheets ---------- */
-.scrim{position:fixed;inset:0;z-index:40;background:rgba(5,3,6,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .25s}
-.scrim.on{opacity:1}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;max-height:94%;overflow:auto;overscroll-behavior:contain;
-  background:linear-gradient(180deg,#221A23,#171219);border-top:1px solid var(--hair);border-radius:30px 30px 0 0;
-  padding:10px 16px calc(28px + env(safe-area-inset-bottom,0px));transform:translateY(100%);transition:transform .38s var(--ease)}
-.sheet.on{transform:none}
-.sheet-in{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
-.grab{width:40px;height:5px;border-radius:5px;background:rgba(255,255,255,.18);margin:0 auto 4px}
-.sheet-h{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.sheet-h h3{margin:0;font-family:var(--serif);font-weight:400;font-size:34px;line-height:1}
-
-/* Scanner frame */
-.scanner{position:relative;aspect-ratio:1.586;border-radius:4.2% / 6.7%;overflow:hidden;border:0;padding:0;width:100%;
-  background:rgba(255,255,255,.03);color:var(--ink-2);display:grid;place-items:center;text-align:center}
-.scanner::before{content:"";position:absolute;inset:0;border-radius:inherit;border:1.5px dashed rgba(255,255,255,.22);pointer-events:none}
-.corner{position:absolute;width:26px;height:26px;border-color:var(--gold);border-style:solid;border-width:0}
-.corner.tl{top:12px;left:12px;border-top-width:2px;border-left-width:2px;border-top-left-radius:10px}
-.corner.tr{top:12px;right:12px;border-top-width:2px;border-right-width:2px;border-top-right-radius:10px}
-.corner.bl{bottom:12px;left:12px;border-bottom-width:2px;border-left-width:2px;border-bottom-left-radius:10px}
-.corner.br{bottom:12px;right:12px;border-bottom-width:2px;border-right-width:2px;border-bottom-right-radius:10px}
+/* ---------- Scanner / form ---------- */
+.scanner{position:relative;display:block;width:100%;aspect-ratio:1.55;border-radius:28px;background:var(--dark);overflow:hidden;cursor:pointer;margin-top:14px}
+.scanner .frame{position:absolute;inset:15% 12%;border:2px solid #fff;border-radius:18px}
+.scanner .l1{position:absolute;left:0;top:42%;width:12%;height:34%;border:2px solid #F3A6D6;border-left:0;border-bottom:0;border-radius:0 16px 0 0}
+.scanner .l2{position:absolute;right:0;top:30%;width:12%;border-top:2px solid #9DB8FF}
+.scanner .l3{position:absolute;left:40%;top:0;height:15%;border-left:2px solid #9DB8FF}
+.scanner .cta{position:absolute;inset:15% 12%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;text-align:center;padding:10px}
+.scanner .cta .ring{width:56px;height:56px;border-radius:50%;background:var(--yellow);color:var(--ink);display:grid;place-items:center}
+.scanner .cta svg{width:24px;height:24px}
+.scanner .cta b{font-family:var(--display);font-size:18px}
+.scanner .cta span{font-size:13px;color:rgba(255,255,255,.6)}
 .scanner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.scan-cta{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px}
-.scan-cta .ring{width:58px;height:58px;border-radius:50%;background:var(--foil);color:#241a0c;display:grid;place-items:center}
-.scan-cta .ring svg{width:24px;height:24px}
-.scan-cta b{color:var(--ink);font-weight:600;font-size:16px}
-.beam{position:absolute;left:0;right:0;height:38%;top:-40%;pointer-events:none;
-  background:linear-gradient(180deg,rgba(221,187,126,0),rgba(221,187,126,.28) 85%,rgba(255,236,190,.9) 100%)}
-.scanner.scanning .beam{animation:beam 1.1s var(--ease) infinite}
+.beam{position:absolute;left:0;right:0;top:-30%;height:28%;background:linear-gradient(180deg,rgba(255,225,77,0),rgba(255,225,77,.35) 85%,var(--yellow));opacity:0}
+.scanner.scanning .beam{opacity:1;animation:beam 1s var(--ease) infinite}
 @keyframes beam{to{top:102%}}
-.scan-result{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink-2);min-height:22px;flex-wrap:wrap}
-.tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;background:var(--glass-2)}
-.tag.ok{color:var(--ok)}.tag.warn{color:var(--warn)}.tag.bad{color:var(--bad)}.tag.gold{color:var(--gold)}
-.alt-links{display:flex;gap:18px;justify-content:center;font-size:14px}
-.alt-links label{cursor:pointer;color:var(--ink-2);text-decoration:underline;text-decoration-color:rgba(255,255,255,.25);text-underline-offset:4px}
+.scan-links{display:flex;justify-content:center;gap:22px;margin-top:12px;font-size:14px;font-weight:700}
+.scan-links label{cursor:pointer}
+.scan-msg{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:10px;font-size:13.5px;color:var(--muted);min-height:22px;text-align:center}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.fbox{background:var(--fill);border-radius:16px;padding:10px 14px 8px;display:flex;flex-direction:column;min-width:0}
+.fbox.full{grid-column:1/-1}
+.fbox label{font-size:12px;color:var(--muted);font-weight:600}
+.fbox input,.fbox select{border:0;background:transparent;padding:2px 0 4px;font-weight:600;font-size:16px;width:100%;outline:none;min-height:30px;-webkit-appearance:none;appearance:none}
+.fbox select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230E0E10' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 0 center;background-size:18px;padding-right:22px}
+.fbox:focus-within{box-shadow:0 0 0 2px var(--ink) inset}
+.fine{font-size:12.5px;color:var(--muted);margin:10px 4px 0}
+.err{margin-top:12px;background:var(--red-soft);color:#8E1F1A;border-radius:16px;padding:12px 14px;font-size:14px}
 
-/* Forms */
-.form{display:flex;flex-direction:column;gap:12px}
-.fld{display:flex;flex-direction:column;gap:7px}
-.fld label{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;padding-left:4px}
-.fld input,.fld select{width:100%;min-height:54px;border-radius:18px;border:1px solid var(--hair);background:rgba(255,255,255,.045);padding:13px 16px;outline:none;transition:border-color .2s,background .2s}
-.fld input:focus,.fld select:focus{border-color:rgba(221,187,126,.6);background:rgba(255,255,255,.07)}
-.fld input.mono{font-family:var(--mono);letter-spacing:.06em}
-.fld select option,.fld select optgroup{background:#1E181F;color:var(--ink)}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.fine{margin:0;font-size:12.5px;color:var(--muted);padding-inline:4px}
-.err{padding:12px 16px;border-radius:16px;background:rgba(255,143,143,.1);color:var(--bad);font-size:14px}
-.money-in{display:flex;align-items:center;gap:6px;justify-content:center;font-family:var(--serif);font-size:64px;line-height:1}
-.money-in input{width:5.2ch;background:none;border:0;border-bottom:1px solid var(--hair);text-align:right;font-family:var(--serif);font-size:64px;color:var(--ink);padding:0;outline:none}
-.money-in input:focus{border-bottom-color:var(--gold)}
-.money-in span{color:var(--gold);font-style:italic;font-size:.6em}
+/* ---------- Merchants / tests ---------- */
+.page-h{margin:10px 2px 16px}
+.page-h h1{font-size:34px;font-weight:800;line-height:1.05;text-wrap:balance}
+.page-h p{margin:8px 0 0;color:var(--muted)}
+.search{width:100%;min-height:54px;border-radius:18px;border:1px solid var(--line);background:var(--white);padding:12px 16px 12px 48px;outline:none;font-weight:500;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A8D96' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='M16 16l4 4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:16px 50%;background-size:20px}
+.search:focus{border-color:var(--ink)}
+.panel{background:var(--white);border-radius:28px;padding:14px;box-shadow:var(--shadow)}
+.two-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bigstat{background:var(--white);border-radius:24px;padding:16px;box-shadow:var(--shadow)}
+.bigstat b{display:block;font-family:var(--display);font-weight:800;font-size:34px;line-height:1.1}
+.bigstat span{font-size:13.5px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.bigstat svg{width:16px;height:16px}
+.rate{background:var(--dark);color:#fff;border-radius:28px;padding:18px;margin-bottom:10px}
+.rate .l{font-size:13.5px;color:rgba(255,255,255,.6)}
+.rate .v{font-family:var(--display);font-weight:800;font-size:48px;line-height:1.05}
+.bars{display:flex;align-items:flex-end;gap:8px;height:90px;margin-top:14px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.bars i{display:block;width:100%;max-width:26px;border-radius:8px;background:rgba(255,255,255,.14)}
+.bars i.on{background:var(--yellow)}
+.bars span{font-size:10.5px;color:rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
-/* ---------- Receipt (Kassentest) ---------- */
-.receipt-wrap{padding:6px 4px 0}
-.receipt{
-  position:relative;background:var(--paper);color:#1b1719;padding:26px 22px 30px;font-family:var(--mono);font-size:13px;line-height:1.55;
-  box-shadow:0 30px 60px rgba(0,0,0,.5);transform:rotate(-.6deg);
-  -webkit-mask:radial-gradient(circle at 7px 0,transparent 6px,#000 6.5px) 0 0/14px 51% repeat-x,radial-gradient(circle at 7px 100%,transparent 6px,#000 6.5px) 0 100%/14px 51% repeat-x;
-          mask:radial-gradient(circle at 7px 0,transparent 6px,#000 6.5px) 0 0/14px 51% repeat-x,radial-gradient(circle at 7px 100%,transparent 6px,#000 6.5px) 0 100%/14px 51% repeat-x;
-}
-.r-center{text-align:center}
-.r-title{font-family:var(--serif);font-size:30px;letter-spacing:0;line-height:1}
-.r-dash{border:0;border-top:1.5px dashed #b8afa7;margin:12px 0}
-.r-row{display:flex;justify-content:space-between;gap:12px}
-.r-row .l{min-width:0;overflow-wrap:anywhere}
-.r-small{font-size:11.5px;color:#6f666a}
-.r-ok{font-weight:500}
-.r-bad{text-decoration:line-through;text-decoration-thickness:1.5px}
-.r-total{font-size:15px;font-weight:500}
-.barcode-deco{height:34px;margin:14px auto 0;width:70%;background:repeating-linear-gradient(90deg,#1b1719 0 2px,transparent 2px 4px,#1b1719 4px 5px,transparent 5px 8px,#1b1719 8px 11px,transparent 11px 12px)}
+/* ---------- Bottom nav ---------- */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--white);border-top:1px solid var(--line);padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px))}
+.nav-in{max-width:440px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
+.nb{background:none;border:0;display:grid;place-items:center;height:52px;color:#A3A6AE}
+.nb svg{width:24px;height:24px}
+.nb[aria-current="page"]{color:var(--ink)}
+.nb.scan{width:64px;height:60px;border-radius:18px;background:var(--ink);color:#fff;justify-self:center;margin-top:-18px;box-shadow:0 10px 24px rgba(14,14,16,.3)}
+.nb.scan svg{width:26px;height:26px}
 
-/* ---------- Merchants ---------- */
-.search{width:100%;min-height:52px;border-radius:999px;border:1px solid var(--hair);background:var(--glass);padding:12px 18px 12px 46px;outline:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238F8590' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='M16 16l4 4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:16px 50%;background-size:19px}
-.search:focus{border-color:rgba(221,187,126,.5)}
-.legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 4px}
-.legend button{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;border:1px solid var(--hair);background:var(--glass);color:var(--ink-2);font-size:13px;text-align:left}
-.legend button[aria-pressed="true"]{border-color:rgba(221,187,126,.55);color:var(--ink)}
-.sw{width:9px;height:9px;border-radius:50%;flex:none}
-.sw.yes{background:var(--ok)}.sw.code{background:#9DB7FF}.sw.app{background:#D6A8FF}.sw.unclear{background:var(--warn)}
-.m-list{margin-top:10px}
-.m-row{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:16px 2px;border-top:1px solid var(--hair)}
-.m-row:first-child{border-top:0}
-.m-row .sw{margin-top:7px}
-.m-name{font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.m-tip{color:var(--ink-2);font-size:14px;margin-top:2px}
-.m-link{font-size:13px;margin-top:6px;color:var(--muted)}
-.m-link a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(221,187,126,.35)}
+/* ---------- Checkout overlay ---------- */
+.co-q{text-align:center;font-family:var(--display);font-weight:800;font-size:24px;margin-top:22px}
+.co-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.co-b{display:flex;align-items:center;gap:12px;border:0;border-radius:20px;padding:12px;background:var(--white);box-shadow:var(--shadow);font-weight:700;font-size:15.5px}
+.co-b .tile{width:40px;height:40px;border-radius:12px}
+.co-b[aria-pressed="true"].ok{box-shadow:0 0 0 2px var(--green) inset}
+.co-b[aria-pressed="true"].no{box-shadow:0 0 0 2px var(--red) inset}
+.pin-btn{background:none;border:0;color:var(--muted);font-weight:700;text-decoration:underline;text-underline-offset:3px}
 
-/* ---------- Checkout (always white for scanners) ---------- */
-.checkout{position:fixed;inset:0;z-index:70;background:#fff;color:#0d0b0c;overflow:auto;padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(22px + env(safe-area-inset-bottom,0px));animation:flash .35s var(--ease)}
-@keyframes flash{from{opacity:0}to{opacity:1}}
-.co{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px;min-height:100%}
-.co-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.co-m{font-family:var(--serif);font-size:38px;line-height:1}
-.co-b{color:#5f5a5c;margin-top:6px}
-.co-x{width:44px;height:44px;border-radius:50%;border:1px solid #e6e2dd;background:#fff;display:grid;place-items:center;color:#111}
-.co-x svg{width:18px;height:18px}
-.co-code{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:250px}
-.co-code svg{width:100%;height:auto;max-height:44vh}
-.co-num{font-family:var(--mono);font-size:18px;letter-spacing:.14em;text-align:center;overflow-wrap:anywhere}
-.co-fmt{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8a8084;text-align:center}
-.co-q{text-align:center;font-family:var(--serif);font-size:28px;line-height:1.1}
-.co-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.co-btn{min-height:58px;border-radius:999px;border:1.5px solid #e6e2dd;background:#fff;color:#111;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px}
-.co-btn svg{width:20px;height:20px}
-.co-btn.ok[aria-pressed="true"]{background:#0f7a4a;border-color:#0f7a4a;color:#fff}
-.co-btn.bad[aria-pressed="true"]{background:#b3261e;border-color:#b3261e;color:#fff}
-.co-form{display:flex;flex-direction:column;gap:10px}
-.co-form input{width:100%;min-height:52px;border-radius:16px;border:1px solid #ddd6cf;padding:12px 16px;background:#faf8f5;color:#111}
-.co-form label{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#7a7275;padding-left:4px}
-.co-save{min-height:56px;border-radius:999px;border:0;background:#141013;color:#fff;font-weight:600}
-.co-pin{background:none;border:0;color:#5f5a5c;text-decoration:underline;text-underline-offset:4px;font-family:var(--mono)}
-
-.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,14px);z-index:90;padding:12px 18px;border-radius:999px;
-  background:rgba(40,32,41,.92);border:1px solid var(--hair);backdrop-filter:blur(12px);color:var(--ink);font-weight:500;font-size:14px;opacity:0;transition:opacity .25s,transform .25s var(--ease);pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translate(-50%,14px);z-index:90;background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;font-weight:600;font-size:14px;opacity:0;transition:opacity .2s,transform .25s var(--ease);pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .toast.on{opacity:1;transform:translate(-50%,0)}
-
-@media (max-width:370px){.seg button{padding:10px 11px;font-size:13px}}
+@media (max-width:360px){.q span{width:54px;height:54px}.pc-amt{font-size:27px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 
-<div class="app" id="app">
-  <header class="top">
-    <div class="brand"><i aria-hidden="true"></i>Restwert</div>
-    <button class="ghost-btn" id="btn-info" aria-label="Über die Testversion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.01"/></svg></button>
-  </header>
+<div class="app" id="app"></div>
 
-  <!-- SCHUBLADE -->
-  <main id="view-wallet">
-    <div id="wallet-home">
-      <section class="total" aria-live="polite">
-        <div class="kicker">In deiner Schublade</div>
-        <div class="sum" id="sum">0<span class="c">,00</span><span class="e">€</span></div>
-        <div class="sum-sub" id="sum-sub"></div>
-        <div class="meta-row" id="meta-row"></div>
-      </section>
-      <div class="stack" id="stack"></div>
-      <div id="upcoming-wrap" hidden>
-        <div class="sub-h"><h3>Bald fällig</h3><span id="upcoming-count"></span></div>
-        <div class="strip" id="upcoming"></div>
-      </div>
-      <div id="example-wrap" hidden style="margin-top:26px;text-align:center">
-        <p class="fine" style="margin-bottom:10px">Das sind Beispielkarten zum Ausprobieren.</p>
-        <button class="btn glass sm" id="btn-clear-examples">Beispiele entfernen</button>
-      </div>
-    </div>
-    <div id="wallet-focus" hidden></div>
-  </main>
-
-  <!-- KASSENTEST -->
-  <main id="view-tests" hidden>
-    <div class="h-block">
-      <div class="kicker">Kassentest</div>
-      <h2>Nimmt die Kasse <em>das Handy</em>?</h2>
-      <p>Zeig den Barcode vom Display statt der Plastikkarte. Jedes Ergebnis landet auf deinem Bon.</p>
-    </div>
-    <div class="receipt-wrap"><div class="receipt" id="receipt"></div></div>
-    <div style="display:flex;justify-content:center;margin-top:22px"><button class="btn glass sm" id="btn-copy-tests">Bon kopieren</button></div>
-  </main>
-
-  <!-- HÄNDLER -->
-  <main id="view-merchants" hidden>
-    <div class="h-block">
-      <div class="kicker">Recherche · 25.09.2026</div>
-      <h2>Wo geht es <em>ohne Plastik</em>?</h2>
-      <p>Rund 45 Karten in Deutschland. Offiziell bestätigt kein Händler, dass ein Foto der Plastikkarte reicht. Dafür gibt es den Kassentest.</p>
-    </div>
-    <label class="vh" for="m-search">Händler suchen</label>
-    <input class="search" id="m-search" type="search" placeholder="Händler suchen" autocomplete="off">
-    <div class="legend" id="legend"></div>
-    <div class="m-list" id="m-list"></div>
-  </main>
-</div>
-
-<nav class="nav" aria-label="Bereiche">
-  <div class="seg" role="tablist">
-    <button role="tab" aria-selected="true" data-tab="wallet">Schublade</button>
-    <button role="tab" aria-selected="false" data-tab="tests">Kassentest</button>
-    <button role="tab" aria-selected="false" data-tab="merchants">Händler</button>
+<nav class="nav" id="nav" aria-label="Bereiche">
+  <div class="nav-in">
+    <button class="nb" data-go="home" aria-label="Start"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3.5 9.4V20a1 1 0 0 0 1 1h5.2v-6.2h4.6V21h5.2a1 1 0 0 0 1-1V9.4z"/></svg></button>
+    <button class="nb" data-go="tests" aria-label="Kassentest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9.5 10.5l2 2 3.5-4"/></svg></button>
+    <button class="nb scan" data-go="add" aria-label="Karte scannen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M4 12h16"/></svg></button>
+    <button class="nb" data-go="merchants" aria-label="Händler"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 9l1.6-5h12.8L20 9"/><path d="M4 9h16v1.5a3 3 0 0 1-5.3 1.9 3 3 0 0 1-5.4 0A3 3 0 0 1 4 10.5z"/><path d="M5.5 13.5V20h13v-6.5"/></svg></button>
+    <button class="nb" data-go="info" aria-label="Einstellungen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
   </div>
-  <button class="scan-fab" data-add aria-label="Karte scannen">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 12h8"/></svg>
-  </button>
 </nav>
-
-<div class="scrim" id="scrim" hidden></div>
-
-<!-- ADD -->
-<section class="sheet" id="sheet-add" role="dialog" aria-modal="true" aria-labelledby="add-h" hidden>
-  <div class="sheet-in">
-    <div class="grab"></div>
-    <div class="sheet-h"><h3 id="add-h">Neue Karte</h3><button class="ghost-btn" data-close aria-label="Schließen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <label class="scanner" id="scanner" for="file-camera">
-      <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
-      <img id="scan-img" alt="Foto der Karte" hidden>
-      <span class="scan-cta" id="scan-cta">
-        <span class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
-        <b>Rückseite fotografieren</b>
-        <span>Der Barcode wird automatisch erkannt</span>
-      </span>
-      <span class="beam"></span>
-    </label>
-    <input class="vh" id="file-camera" type="file" accept="image/*" capture="environment">
-    <input class="vh" id="file-gallery" type="file" accept="image/*">
-    <div class="alt-links"><label for="file-gallery">Aus Fotos wählen</label><label for="f-number" id="manual-link">Nummer abtippen</label></div>
-    <div class="scan-result" id="scan-result"></div>
-    <form class="form" id="add-form" novalidate>
-      <div class="fld"><label for="f-merchant">Händler</label><select id="f-merchant"></select></div>
-      <div class="fld" id="f-custom-wrap" hidden><label for="f-custom">Name des Händlers</label><input id="f-custom" type="text" autocomplete="off" placeholder="z. B. Buchhandlung am Markt"></div>
-      <div id="m-advice"></div>
-      <div class="fld"><label for="f-number">Kartennummer oder Code</label><input id="f-number" class="mono" type="text" autocomplete="off" placeholder="wird beim Scannen ausgefüllt"></div>
-      <div class="two">
-        <div class="fld"><label for="f-value">Wert (€)</label><input id="f-value" type="text" inputmode="decimal" placeholder="50,00" autocomplete="off"></div>
-        <div class="fld"><label for="f-balance">Restguthaben</label><input id="f-balance" type="text" inputmode="decimal" placeholder="wie Wert" autocomplete="off"></div>
-      </div>
-      <div class="two">
-        <div class="fld"><label for="f-pin">PIN</label><input id="f-pin" class="mono" type="text" inputmode="numeric" autocomplete="off" placeholder="optional"></div>
-        <div class="fld"><label for="f-format">Barcode</label>
-          <select id="f-format"><option value="CODE128">Code 128</option><option value="EAN13">EAN-13</option><option value="EAN8">EAN-8</option><option value="ITF">ITF</option><option value="CODE39">Code 39</option><option value="UPC">UPC-A</option><option value="QR">QR-Code</option><option value="PDF417">PDF417</option><option value="DATAMATRIX">Data Matrix</option><option value="TEXT">Nur Code</option></select>
-        </div>
-      </div>
-      <div class="two">
-        <div class="fld"><label for="f-bought">Bekommen</label><input id="f-bought" type="date"></div>
-        <div class="fld"><label for="f-expires">Gültig bis</label><input id="f-expires" type="date"></div>
-      </div>
-      <p class="fine">Steht kein Datum auf der Karte, gilt meist die gesetzliche Frist: drei Jahre ab Ende des Kaufjahres (§ 195 BGB).</p>
-      <div class="err" id="form-err" role="alert" hidden></div>
-      <button class="btn gold block" type="submit" id="btn-save">In die Schublade legen</button>
-    </form>
-  </div>
-</section>
-
-<!-- SPEND -->
-<section class="sheet" id="sheet-spend" role="dialog" aria-modal="true" aria-labelledby="spend-h" hidden>
-  <div class="sheet-in">
-    <div class="grab"></div>
-    <div class="sheet-h"><h3 id="spend-h">Einkauf abziehen</h3><button class="ghost-btn" data-close aria-label="Schließen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <form class="form" id="spend-form" novalidate>
-      <label class="vh" for="spend-amount">Betrag</label>
-      <div class="money-in"><input id="spend-amount" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off"><span>€</span></div>
-      <p class="fine" style="text-align:center" id="spend-left"></p>
-      <button class="btn gold block" type="submit">Abziehen</button>
-    </form>
-  </div>
-</section>
-
-<!-- INFO -->
-<section class="sheet" id="sheet-info" role="dialog" aria-modal="true" aria-labelledby="info-h" hidden>
-  <div class="sheet-in">
-    <div class="grab"></div>
-    <div class="sheet-h"><h3 id="info-h">Testversion</h3><button class="ghost-btn" data-close aria-label="Schließen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <p style="margin:0;color:var(--ink-2)">Restwert prüft, ob Gutscheinkarten ohne Plastikkarte funktionieren. Karte fotografieren, an der Kasse den Barcode vom Handy zeigen und das Ergebnis eintragen.</p>
-    <div class="advice"><span class="dot" style="background:var(--warn);box-shadow:0 0 0 4px rgba(242,194,122,.15)"></span><span>Die Daten liegen nur in diesem Browser und sind in der Testversion <b>nicht verschlüsselt</b>. Nummer und PIN sind wie Bargeld. Lösch Karten nach dem Test.</span></div>
-    <div class="advice"><span class="dot"></span><span>An der Kasse die <b>Helligkeit auf Maximum</b> stellen. Manche Scanner lesen Displays schlecht.</span></div>
-    <div class="text-links"><button class="tl" id="btn-export">Daten kopieren</button><button class="tl danger" id="btn-reset">Alles löschen</button></div>
-    <div class="err" id="reset-confirm" hidden>Wirklich alle Karten und Tests löschen? <button class="tl danger" id="btn-reset-yes">Ja, löschen</button></div>
-  </div>
-</section>
-
-<div class="checkout" id="checkout" role="dialog" aria-modal="true" aria-label="An der Kasse zeigen" hidden><div class="co" id="co"></div></div>
+<input class="vh" id="file-camera" type="file" accept="image/*" capture="environment" aria-label="Karte fotografieren">
+<input class="vh" id="file-gallery" type="file" accept="image/*" aria-label="Foto auswählen">
 <div class="toast" id="toast" role="status"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js"></script>
@@ -502,30 +352,40 @@ const M=[
 ];
 const MI=Object.fromEntries(M.map(m=>[m.id,m]));
 const CAT={
-  yes:{label:"Handy offiziell",long:"Digitale Karte am Handy offiziell möglich"},
-  code:{label:"Nur Code",long:"Keine Plastikkarte nötig, Code online einlösen"},
-  app:{label:"Händler-App",long:"Nur über die App des Händlers"},
-  unclear:{label:"Ungetestet",long:"Offiziell unklar, hier hilft der Kassentest"}
+  yes:{label:"Handy offiziell",long:"Digitale Karte am Handy offiziell möglich",chip:"green"},
+  code:{label:"Nur Code",long:"Keine Plastikkarte nötig, Code online einlösen",chip:"grey"},
+  app:{label:"Händler-App",long:"Nur über die App des Händlers",chip:"orange"},
+  unclear:{label:"Ungetestet",long:"Offiziell unklar, hier hilft der Kassentest",chip:"orange"}
 };
 const CAT_ORDER=["yes","code","app","unclear"];
-/* Jewel tones: [c1, c2, c3] */
-const GEMS=[["#0F5E4B","#0B3F33","#06231D"],["#23489A","#162F6B","#0B1A40"],["#8E2143","#5F152D","#360B19"],["#5E2E8C","#3E1E60","#231036"],
-  ["#2A2A30","#1A1A1F","#0E0E12"],["#9A5B1E","#6A3D12","#3A2008"],["#11707A","#0B4C53","#052A2E"],["#A0476A","#6E2F48","#3E1928"]];
-function gem(key){let h=7;for(const c of key)h=(h*31+c.charCodeAt(0))>>>0;return GEMS[h%GEMS.length]}
-const ICON={
-  x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
-  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
-  flip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15"/><path d="M4 20v-5h5"/></svg>',
-  scan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 9v6M11 9v6M14 9v6M16.5 9v6"/></svg>',
-  minus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12h7"/></svg>',
-  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
-  cross:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>'
+const PASTEL=["#E4D7FB","#CDEFE3","#F1EFD9","#C9EEF0","#FBE1CF","#F9D8E8","#E6F5C9","#D9E2FB"];
+function pastel(key){let h=11;for(const c of key)h=(h*31+c.charCodeAt(0))>>>0;return PASTEL[h%PASTEL.length]}
+const I={
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
+  arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></svg>',
+  ext:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>',
+  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  bars:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 9v6M11 9v6M14 9v6M16.5 9v6"/></svg>',
+  minus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 12h12"/></svg>',
+  store:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 9l1.6-5h12.8L20 9"/><path d="M4 9h16v1.5a3 3 0 0 1-5.3 1.9 3 3 0 0 1-5.4 0A3 3 0 0 1 4 10.5z"/><path d="M5.5 13.5V20h13v-6.5"/></svg>',
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  cross:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>',
+  camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l6-6 4 4 6-6M15 8h5v5"/></svg>',
+  down:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8l6 6 4-4 6 6M15 16h5v-5"/></svg>',
+  del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11v12H9l-6-6z"/><path d="M12 10l4 4M16 10l-4 4"/></svg>'
 };
 
 /* ---------- Speicher ---------- */
-const KEY="restwert.v1";
+const KEY="restwert.v1",ONB="restwert.onboarded";
 function load(){try{const r=localStorage.getItem(KEY);if(r){const s=JSON.parse(r);if(s&&Array.isArray(s.cards)&&Array.isArray(s.tests))return s}}catch(e){}return null}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){toast("Speichern im Browser nicht möglich")}}
+function getFlag(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function setFlag(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 
 /* ---------- Helfer ---------- */
 const $=s=>document.querySelector(s);
@@ -533,31 +393,24 @@ const eur=new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"});
 const num2=new Intl.NumberFormat("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2});
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const fmtDate=d=>d?new Date(d+"T12:00:00").toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"}):"–";
-const fmtMonth=d=>d?new Date(d+"T12:00:00").toLocaleDateString("de-DE",{month:"2-digit",year:"2-digit"}):"–";
 function parseMoney(v){if(v==null)return null;const s=String(v).trim().replace(/\s|€/g,"");if(!s)return null;const n=Number(s.includes(",")?s.replace(/\./g,"").replace(",","."):s);return isFinite(n)?Math.round(n*100)/100:NaN}
 function legalExpiry(b){const y=(b?new Date(b+"T12:00:00"):new Date()).getFullYear();return (y+3)+"-12-31"}
 function daysLeft(e){if(!e)return null;return Math.ceil((new Date(e+"T23:59:59")-new Date())/864e5)}
 function uid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function groups(n){const s=String(n||"").replace(/\s+/g,"");if(!/^\d+$/.test(s))return [s];const g=s.match(/.{1,4}/g)||[];return g.length>4?[g[0],"••••","••••",g[g.length-1]]:g}
 function groupNum(n){const s=String(n||"").replace(/\s+/g,"");return /^\d+$/.test(s)?s.replace(/(.{4})(?=.)/g,"$1 "):s}
-function lastDigits(n){const s=String(n||"").replace(/\s+/g,"");return s?"•••• "+s.slice(-4):"—"}
 function mName(c){return c.merchant==="other"?(c.customName||"Anderer Händler"):(MI[c.merchant]?.n||"Karte")}
-function euroParts(v){const s=num2.format(v);const i=s.lastIndexOf(",");return [s.slice(0,i),s.slice(i)]}
-function fuse(c){if(!c.expires)return 1;const start=c.bought?new Date(c.bought+"T12:00:00"):new Date();const end=new Date(c.expires+"T23:59:59");const t=(end-new Date())/(end-start||1);return Math.max(0,Math.min(1,t))}
+function initials(n){const w=n.replace(/[^A-Za-zÄÖÜäöüß0-9& ]/g,"").trim().split(/\s+/);return (w.length>1?w[0][0]+w[1][0]:n.slice(0,2)).toUpperCase()}
+function keyOf(c){return c.merchant+(c.customName||"")}
 let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("on"),2300)}
 async function copyText(t){try{await navigator.clipboard.writeText(t);toast("Kopiert")}catch(e){toast("Kopieren nicht möglich")}}
-const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-function vt(fn){if(document.startViewTransition&&!reduce)document.startViewTransition(fn);else fn()}
-
-/* Velvet noise texture, generated once */
-(function(){try{const c=document.createElement("canvas");c.width=c.height=140;const x=c.getContext("2d");const d=x.createImageData(140,140);
-  for(let i=0;i<d.data.length;i+=4){const v=Math.random()*255;d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=10}
-  x.putImageData(d,0,0);document.body.style.setProperty("--noise",`url(${c.toDataURL()})`)}catch(e){}})();
+function expText(c){const d=daysLeft(c.expires);if(d==null)return "";return d<0?`seit ${-d} Tagen abgelaufen`:`noch ${d} Tage`}
 
 /* ---------- Beispieldaten ---------- */
 function seed(){const y=new Date().getFullYear();return {cards:[
-  {id:uid(),example:true,merchant:"thalia",number:"6300981274561234",format:"CODE128",pin:"4821",value:25,balance:12.4,bought:(y-1)+"-12-20",expires:(y+2)+"-12-31"},
   {id:uid(),example:true,merchant:"ikea",number:"6275980123456789012",format:"CODE128",pin:"",value:50,balance:50,bought:(y-3)+"-05-11",expires:y+"-12-31"},
+  {id:uid(),example:true,merchant:"thalia",number:"6300981274561234",format:"CODE128",pin:"4821",value:25,balance:12.4,bought:(y-1)+"-12-20",expires:(y+2)+"-12-31"},
   {id:uid(),example:true,merchant:"douglas",number:"4099875102233441",format:"CODE128",pin:"1337",value:40,balance:23.85,bought:(y-1)+"-06-02",expires:(y+2)+"-12-31"},
   {id:uid(),example:true,merchant:"amazon",number:"AQ7K-9XWP-3HTR",format:"TEXT",pin:"",value:30,balance:30,bought:y+"-02-14",expires:(y+3)+"-12-31"}
 ],tests:[
@@ -569,21 +422,27 @@ let state=load();if(!state){state=seed();save()}
 /* ---------- Barcode ---------- */
 const ONE_D=["CODE128","EAN13","EAN8","ITF","CODE39","UPC"];
 function labelFmt(f){return({CODE128:"Code 128",EAN13:"EAN-13",EAN8:"EAN-8",ITF:"ITF",CODE39:"Code 39",UPC:"UPC-A",QR:"QR-Code",PDF417:"PDF417",DATAMATRIX:"Data Matrix",TEXT:"Nur Code"})[f]||f}
-/* returns {node, used} */
 function codeNode(c,o){
   o=o||{};const fmt=c.format||"CODE128",val=String(c.number||"").replace(/\s+/g,"");
   if(!val||fmt==="TEXT")return null;
-  if(fmt==="QR"&&window.ZXing&&ZXing.BrowserQRCodeSvgWriter){try{const s=new ZXing.BrowserQRCodeSvgWriter().write(val,o.qr||200,o.qr||200);s.setAttribute("role","img");s.setAttribute("aria-label","QR-Code");return {node:s,used:"QR"}}catch(e){}}
+  if(fmt==="QR"&&window.ZXing&&ZXing.BrowserQRCodeSvgWriter){try{const s=new ZXing.BrowserQRCodeSvgWriter().write(val,o.qr||220,o.qr||220);s.style.maxWidth=(o.qr||220)+"px";s.setAttribute("role","img");s.setAttribute("aria-label","QR-Code");return {node:s,used:"QR"}}catch(e){}}
   if(ONE_D.includes(fmt)&&window.JsBarcode){
     const s=document.createElementNS("http://www.w3.org/2000/svg","svg");
-    const base={displayValue:false,margin:o.m??6,height:o.h||80,width:o.w||2,background:o.bg||"transparent",lineColor:"#111"};let ok=true,used=fmt;
+    const base={displayValue:false,margin:o.m??4,height:o.h||90,width:o.w||2,background:"#ffffff",lineColor:"#0E0E10"};let ok=true,used=fmt;
     try{JsBarcode(s,val,{...base,format:fmt,valid:v=>{ok=v}})}catch(e){ok=false}
     if(!ok){used="CODE128";try{JsBarcode(s,val,{...base,format:"CODE128"})}catch(e){return null}}
     const w=parseFloat(s.getAttribute("width")),h=parseFloat(s.getAttribute("height"));
-    if(w&&h){s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.removeAttribute("width");s.removeAttribute("height");s.setAttribute("preserveAspectRatio","xMidYMid meet")}
+    if(w&&h){s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.removeAttribute("width");s.removeAttribute("height");s.setAttribute("preserveAspectRatio","none");s.style.height=(o.hpx||96)+"px"}
     s.setAttribute("role","img");s.setAttribute("aria-label","Barcode "+labelFmt(used));return {node:s,used};
   }
   return null;
+}
+function fillCode(box,c,o){
+  box.innerHTML="";const code=codeNode(c,o);
+  if(code){box.append(code.node);const n=document.createElement("div");n.className="num";n.textContent=groupNum(c.number);box.append(n);const f=document.createElement("div");f.className="fmt";f.textContent=labelFmt(code.used)+(o&&o.bright?" · Helligkeit auf Maximum":"");box.append(f)}
+  else{const n=document.createElement("div");n.className="code";n.textContent=c.number||"Keine Nummer";box.append(n);const f=document.createElement("div");f.className="fmt";
+    f.textContent=c.format==="TEXT"?"Code zum Eintippen":labelFmt(c.format)+": Barcode nicht verfügbar, Nummer nutzen";box.append(f);
+    if(c.photo&&c.format!=="TEXT"){const i=document.createElement("img");i.src=c.photo;i.alt="Foto der Karte";box.append(i)}}
 }
 
 /* ---------- Decoding ---------- */
@@ -603,259 +462,362 @@ async function decodeImage(img){
   return null;
 }
 
-/* ---------- Karte bauen ---------- */
-function cardFace(c,opts){
-  opts=opts||{};const [c1,c2,c3]=gem(c.merchant+(c.customName||""));const d=daysLeft(c.expires);const m=MI[c.merchant]||MI.other;
-  const [a,b]=euroParts(c.balance||0);
-  const status=d!=null&&d<0?"Abgelaufen":d!=null&&d<=120?`Noch ${d} Tage`:CAT[m.cat].label;
-  const wrap=document.createElement(opts.button?"button":"div");wrap.className="card-wrap";if(opts.button)wrap.type="button";
-  wrap.style.setProperty("--c1",c1);wrap.style.setProperty("--c2",c2);wrap.style.setProperty("--c3",c3);
-  wrap.setAttribute("aria-label",`${mName(c)}, Restguthaben ${eur.format(c.balance||0)}`);
-  wrap.innerHTML=`<div class="card3d">
-    <div class="face front"><div class="f-inner">
-      <div class="f-top"><div class="f-merchant">${esc(mName(c))}</div><div class="f-bal">${esc(a)}<small>${esc(b)} €</small></div></div>
-      <div class="f-mid"><span class="foil-chip"></span><span class="f-num">${esc(lastDigits(c.number))}</span></div>
-      <div class="f-bottom"><div><div class="f-label">Gültig bis</div><div class="f-val">${esc(fmtMonth(c.expires))}</div><div class="fuse"><i style="width:${Math.round(fuse(c)*100)}%"></i></div></div><span class="f-status">${esc(status)}</span></div>
-    </div>${c.example?'<span class="f-example">Beispiel</span>':""}</div>
-    <div class="face back"><div class="stripe"></div><div class="b-inner"></div><div class="b-hint">Rückseite · tippen zum Umdrehen</div></div>
-  </div>`;
-  const bi=wrap.querySelector(".b-inner");
-  const code=codeNode(c,{h:70,w:2});
-  if(code){bi.append(code.node);const n=document.createElement("div");n.className="b-num";n.textContent=groupNum(c.number);bi.append(n);const f=document.createElement("div");f.className="b-fmt";f.textContent=labelFmt(code.used)+(c.pin?" · PIN im Detail":"");bi.append(f)}
-  else{const n=document.createElement("div");n.className="b-code";n.textContent=c.number||"Keine Nummer";bi.append(n);const f=document.createElement("div");f.className="b-fmt";f.textContent=c.format==="TEXT"?"Code zum Eintippen":labelFmt(c.format)+" · Barcode lädt nicht, Nummer nutzen";bi.append(f)}
-  attachSheen(wrap);
-  return wrap;
+/* ---------- Karte ---------- */
+function pcard(c,tag){
+  const el=document.createElement(tag||"div");el.className="pcard";if(tag==="button")el.type="button";el.style.setProperty("--bg",pastel(keyOf(c)));
+  const d=daysLeft(c.expires);const sub=d!=null&&d<=120?(d<0?"Abgelaufen":`Noch ${d} Tage`):CAT[(MI[c.merchant]||MI.other).cat].label;
+  el.setAttribute("aria-label",`${mName(c)}, Restguthaben ${eur.format(c.balance||0)}`);
+  el.innerHTML=`${c.example?'<span class="pc-ex">Beispiel</span>':""}
+    <div class="pc-top"><div class="pc-name">${esc(mName(c))}</div><div class="pc-sub">${esc(sub)}</div></div>
+    <div><div class="pc-l">Restguthaben</div><div class="pc-amt">${esc(eur.format(c.balance||0))}</div></div>
+    <div class="pc-bot"><div class="pc-num">${groups(c.number).map(g=>`<span>${esc(g)}</span>`).join("")}</div><div class="pc-mark"><i></i><i></i></div></div>`;
+  return el;
 }
-function attachSheen(el){
-  if(reduce)return;const inner=el.querySelector(".card3d");
-  el.addEventListener("pointermove",e=>{const r=el.getBoundingClientRect();const x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
-    inner.style.setProperty("--mx",(x*100).toFixed(1)+"%");inner.style.setProperty("--my",(y*100).toFixed(1)+"%");
-    inner.style.setProperty("--ry",((x-.5)*10).toFixed(2)+"deg");inner.style.setProperty("--rx",((.5-y)*8).toFixed(2)+"deg")});
-  el.addEventListener("pointerleave",()=>{inner.style.setProperty("--ry","0deg");inner.style.setProperty("--rx","0deg")});
+function cardRow(c){
+  const b=document.createElement("button");b.type="button";b.className="row";const d=daysLeft(c.expires);
+  b.innerHTML=`<span class="tile" style="--tbg:${pastel(keyOf(c))}">${esc(initials(mName(c)))}</span>
+    <span class="g"><span class="t" style="display:block">${esc(mName(c))}</span><span class="s">Gültig bis ${esc(fmtDate(c.expires))}${d!=null&&d<=120?` · <b style="color:${d<0?"var(--red)":"var(--orange)"}">${esc(expText(c))}</b>`:""}</span></span>
+    <span class="a">${esc(eur.format(c.balance||0))}<small>von ${esc(eur.format(c.value||0))}</small></span>`;
+  b.onclick=()=>go("detail",{id:c.id});return b;
 }
 
-/* ---------- Ansichten ---------- */
-let tab="wallet",focusId=null,legendFilter=null;
-function setTab(t){tab=t;document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===t)));
-  $("#view-wallet").hidden=t!=="wallet";$("#view-tests").hidden=t!=="tests";$("#view-merchants").hidden=t!=="merchants";render();window.scrollTo({top:0})}
-function render(){if(tab==="wallet")renderWallet();else if(tab==="tests")renderReceipt();else renderMerchants()}
-
-let shownTotal=0;
-function animateSum(to){
-  const el=$("#sum");const from=shownTotal;shownTotal=to;const t0=performance.now(),dur=reduce?0:900;
-  const paint=v=>{const [a,b]=euroParts(v);el.innerHTML=`${esc(a)}<span class="c">${esc(b)}</span><span class="e">€</span>`};
-  if(!dur){paint(to);return}
-  (function step(t){const k=Math.min(1,(t-t0)/dur);const e=1-Math.pow(1-k,3);paint(from+(to-from)*e);if(k<1)requestAnimationFrame(step)})(t0);
+/* ---------- Router ---------- */
+const TABS=["home","tests","merchants","info"];
+let hist=[],cur=null,params={},homeIndex=0;
+function go(name,p,opts){opts=opts||{};if(cur&&!opts.replace)hist.push({name:cur,params});cur=name;params=p||{};show(opts.anim)}
+function back(){const h=hist.pop();if(h){cur=h.name;params=h.params;show()}else{cur="home";params={};show()}}
+function tab(name){hist=[];cur=name;params={};show()}
+function show(anim){
+  const app=$("#app");app.innerHTML="";const s=document.createElement("section");s.className="screen"+(anim==="up"||["add","keypad","checkout","onboarding"].includes(cur)?" up":"");
+  if(cur==="keypad")s.style.paddingBottom="0";
+  app.append(s);(SCREENS[cur]||SCREENS.home)(s);
+  const tabbed=TABS.includes(cur);$("#nav").hidden=!tabbed;if(!tabbed)s.classList.add("no-nav");
+  document.querySelectorAll(".nb[data-go]").forEach(b=>{if(b.dataset.go===cur)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  document.body.style.background=cur==="home"?"var(--white)":"var(--page)";
+  window.scrollTo(0,0);
 }
+document.querySelectorAll(".nb[data-go]").forEach(b=>b.addEventListener("click",()=>{const g=b.dataset.go;if(g==="add")go("add");else tab(g)}));
 function sorted(){return [...state.cards].sort((a,b)=>(a.expires||"9999").localeCompare(b.expires||"9999"))}
+function topbar(title,right){return `<div class="bar"><button class="rbtn" data-back aria-label="Zurück">${I.back}</button><h2>${esc(title)}</h2>${right||"<span></span>"}</div>`}
+function wireBack(s){s.querySelectorAll("[data-back]").forEach(b=>b.onclick=back)}
 
-function renderWallet(){
-  $("#wallet-home").hidden=!!focusId;$("#wallet-focus").hidden=!focusId;
-  if(focusId){renderFocus();return}
-  const cards=sorted();const total=cards.reduce((s,c)=>s+(+c.balance||0),0);animateSum(total);
-  const value=cards.reduce((s,c)=>s+(+c.value||0),0);
-  $("#sum-sub").innerHTML=cards.length?`auf <b>${cards.length} ${cards.length===1?"Karte":"Karten"}</b>. Das sind <b>${value?Math.round(total/value*100):0} %</b> von dem, was du geschenkt bekommen hast.`:"Leg deine erste Gutscheinkarte hinein.";
-  const soon=cards.filter(c=>c.balance>0&&daysLeft(c.expires)!=null&&daysLeft(c.expires)>=0&&daysLeft(c.expires)<=120);
-  const gone=cards.filter(c=>c.balance>0&&daysLeft(c.expires)!=null&&daysLeft(c.expires)<0);
-  const ok=state.tests.filter(t=>t.res==="ok").length;
-  $("#meta-row").innerHTML=[soon.length?`<span class="pillnote warn"><span class="d"></span>${soon.length} läuft bald ab</span>`:"",
-    gone.length?`<span class="pillnote bad"><span class="d"></span>${gone.length} abgelaufen</span>`:"",
-    state.tests.length?`<span class="pillnote ok"><span class="d"></span>${ok} von ${state.tests.length} Kassentests geklappt</span>`:""].join("");
-  const st=$("#stack");st.innerHTML="";
-  if(!cards.length){st.innerHTML=`<button class="empty-slot" data-add type="button"><b>Die Schublade ist leer</b><span>Fotografier die Rückseite einer Gutscheinkarte.</span></button>`}
-  cards.forEach(c=>{const el=cardFace(c,{button:true});el.style.viewTransitionName="card-"+c.id;el.addEventListener("click",()=>openFocus(c.id));st.append(el)});
-  const up=cards.filter(c=>c.balance>0&&daysLeft(c.expires)!=null&&daysLeft(c.expires)<=400).slice(0,8);
-  $("#upcoming-wrap").hidden=!up.length;$("#upcoming-count").textContent=up.length?eur.format(up.reduce((s,c)=>s+c.balance,0)):"";
-  $("#upcoming").innerHTML=up.map(c=>{const d=daysLeft(c.expires);return `<button class="due ${d<0?"bad":d<=120?"warn":""}" data-id="${c.id}" type="button"><span class="days">${d<0?-d:d}<small>${d<0?"Tage drüber":"Tage"}</small></span><span class="who">${esc(mName(c))} · ${esc(eur.format(c.balance))}</span></button>`}).join("");
-  $("#upcoming").querySelectorAll(".due").forEach(b=>b.addEventListener("click",()=>openFocus(b.dataset.id)));
-  $("#example-wrap").hidden=!cards.some(c=>c.example);
-}
+const SCREENS={};
 
-function openFocus(id){vt(()=>{focusId=id;renderWallet();window.scrollTo({top:0})})}
-function closeFocus(){vt(()=>{focusId=null;renderWallet()})}
-
-function renderFocus(){
-  const c=state.cards.find(x=>x.id===focusId);if(!c){focusId=null;renderWallet();return}
-  const m=MI[c.merchant]||MI.other;const d=daysLeft(c.expires);
-  const box=$("#wallet-focus");box.innerHTML="";
-  const head=document.createElement("div");head.className="focus";
-  head.innerHTML=`<div class="focus-head"><button class="back-btn" id="f-back">${ICON.back} Schublade</button><span class="kicker">${esc(CAT[m.cat].label)}</span></div>`;
-  const card=cardFace(c);card.style.viewTransitionName="card-"+c.id;card.setAttribute("role","button");card.tabIndex=0;
-  const inner=card.querySelector(".card3d");const flip=()=>inner.classList.toggle("flipped");
-  card.addEventListener("click",flip);card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();flip()}});
-  head.append(card);
-  const rest=document.createElement("div");rest.style.cssText="display:flex;flex-direction:column;gap:18px";
-  rest.innerHTML=`
-    <p class="tap-hint">Tippe auf die Karte, um sie umzudrehen</p>
-    <div class="actions">
-      <button class="act" id="a-flip"><span>${ICON.flip}</span>Umdrehen</button>
-      <button class="act primary" id="a-pay"><span>${ICON.scan}</span>An der Kasse</button>
-      <button class="act" id="a-spend"><span>${ICON.minus}</span>Abziehen</button>
+/* ---------- Onboarding ---------- */
+SCREENS.onboarding=s=>{
+  s.innerHTML=`<div class="onb">
+    <h1>Kein Gutschein verfällt mehr.</h1>
+    <p>Restwert holt deine Gutscheinkarten aus der Schublade aufs Handy. Mit Restguthaben, Ablaufdatum und Barcode für die Kasse.</p>
+    <div class="illu" aria-hidden="true">
+      <div class="fc a"><b>RESTWERT</b><span class="mk"><i></i><i></i></span><span class="n">••• 856 279</span></div>
+      <div class="fc b"><b>RESTWERT</b><span class="mk"><i></i><i></i></span><span class="n">••• 856 279</span><span class="ci"></span></div>
+      <div class="fc c"><b>RESTWERT</b><span class="mk"><i></i><i></i></span><span class="n">••• 412 008</span><span class="ci"></span></div>
     </div>
-    <div class="advice"><span class="dot"></span><span><b>${esc(CAT[m.cat].long)}.</b> ${esc(m.tip)}</span></div>
-    <div class="sheetlike">
-      <div class="line"><span class="k">Restguthaben</span><span class="v">${esc(eur.format(c.balance||0))} von ${esc(eur.format(c.value||0))}</span></div>
-      <div class="line"><span class="k">Gültig bis</span><span class="v">${esc(fmtDate(c.expires))}${d!=null?`<br><span style="color:${d<0?"var(--bad)":d<=120?"var(--warn)":"var(--muted)"};font-size:13px">${d<0?"seit "+(-d)+" Tagen abgelaufen":"noch "+d+" Tage"}</span>`:""}</span></div>
-      <div class="line"><span class="k">Nummer</span><span class="v mono">${esc(groupNum(c.number))}</span></div>
-      <div class="line"><span class="k">PIN</span><span class="v">${c.pin?'<button class="tl" id="a-pin">Anzeigen</button>':"–"}</span></div>
-      <div class="line"><span class="k">Guthaben prüfen</span><span class="v">${m.url?`<a href="${esc(m.url)}" target="_blank" rel="noopener" style="color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(221,187,126,.35)">Beim Händler</a>`:'<span style="color:var(--muted)">nur an der Kasse</span>'}</span></div>
+    <button class="go" id="onb-go">Los geht's<span class="ar">${I.arrow}</span></button>
+  </div>`;
+  s.querySelector("#onb-go").onclick=()=>{setFlag(ONB,"1");hist=[];cur="home";params={};show()};
+};
+
+/* ---------- Home ---------- */
+SCREENS.home=s=>{
+  const cards=sorted();const total=cards.reduce((a,c)=>a+(+c.balance||0),0);const value=cards.reduce((a,c)=>a+(+c.value||0),0);
+  const soon=cards.filter(c=>c.balance>0&&daysLeft(c.expires)!=null&&daysLeft(c.expires)<=120);
+  const [eu,ce]=(()=>{const x=num2.format(total);const i=x.lastIndexOf(",");return [x.slice(0,i),x.slice(i)]})();
+  const date=new Date().toLocaleDateString("de-DE",{weekday:"long",day:"2-digit",month:"short"});
+  s.innerHTML=`<div class="dark-top">
+      <div class="hdr"><button class="rbtn dark" id="h-menu" aria-label="Einstellungen">${I.grid}</button>
+        <div class="hdr-c"><b>Restwert</b><span>${esc(date)}</span></div>
+        <button class="rbtn dark bell" id="h-bell" aria-label="${soon.length} Karten laufen bald ab">${I.bell}${soon.length?'<span class="dot"></span>':""}</button></div>
+      <div class="total"><div class="l">Guthaben in deiner Schublade</div><div class="v">${esc(eu)}<small>${esc(ce)} €</small></div>
+        <div class="stats">
+          <div class="stat"><b>${cards.length}</b><span>Karten · ${value?Math.round(total/value*100):0} % übrig</span></div>
+          <div class="stat"><b>${soon.length}</b><span>läuft bald ab ${soon.length?`<span style="color:var(--yellow)">${I.down}</span>`:""}</span></div>
+        </div></div>
+      <div class="carousel" id="car"></div>
+      <div class="dots" id="dots"></div>
+      <div class="quick">
+        <button class="q y" id="q-scan"><span>${I.plus}</span>Scannen</button>
+        <button class="q" id="q-pay"><span>${I.bars}</span>An der Kasse</button>
+        <button class="q" id="q-spend"><span>${I.minus}</span>Abziehen</button>
+        <button class="q" id="q-shops"><span>${I.store}</span>Händler</button>
+      </div>
     </div>
-    <div class="text-links"><button class="tl" id="a-edit">Bearbeiten</button><button class="tl danger" id="a-del">Löschen</button></div>
-    <div class="err" id="a-del-confirm" hidden>Karte endgültig löschen? <button class="tl danger" id="a-del-yes">Ja, löschen</button></div>`;
-  head.append(rest);box.append(head);
-  $("#f-back").onclick=closeFocus;$("#a-flip").onclick=flip;$("#a-pay").onclick=()=>openCheckout(c.id);$("#a-spend").onclick=()=>openSpend(c.id);
-  const p=$("#a-pin");if(p)p.onclick=()=>{const on=p.textContent!=="Anzeigen";p.textContent=on?"Anzeigen":c.pin;p.style.fontFamily=on?"":"var(--mono)"};
-  $("#a-edit").onclick=()=>openAdd(c.id);$("#a-del").onclick=()=>{$("#a-del-confirm").hidden=false};
-  $("#a-del-yes").onclick=()=>{state.cards=state.cards.filter(x=>x.id!==c.id);save();focusId=null;renderWallet();toast("Karte gelöscht")};
-}
+    <div class="sheet"><div class="handle"></div>
+      <div class="sec-h" style="margin-top:14px"><h3>${soon.length?"Bald fällig":"Deine Karten"}</h3><span class="muted" style="font-weight:600">${esc(eur.format(total))}</span></div>
+      <div class="list" id="h-list"></div>
+      <div id="h-ex" hidden style="text-align:center;margin-top:18px"><button class="link" id="h-clear" style="color:var(--muted)">Beispielkarten entfernen</button></div>
+    </div>`;
+  const car=s.querySelector("#car"),dots=s.querySelector("#dots");
+  if(!cards.length){car.innerHTML="";const e=document.createElement("button");e.className="pcard";e.type="button";e.style.setProperty("--bg","#2A2A30");e.style.color="#fff";e.style.flex="0 0 100%";
+    e.innerHTML=`<div class="pc-top"><div><div class="pc-l" style="color:rgba(255,255,255,.6)">Noch leer</div><div class="pc-amt">0,00 €</div></div></div><div class="pc-bot"><div style="font-weight:700">Erste Karte scannen</div><span style="width:24px;height:24px">${I.plus}</span></div>`;
+    e.onclick=()=>go("add");car.append(e)}
+  cards.forEach(c=>{const el=pcard(c,"button");el.onclick=()=>go("detail",{id:c.id});car.append(el)});
+  if(cards.length){const a=document.createElement("button");a.className="add-slot";a.type="button";a.setAttribute("aria-label","Karte hinzufügen");a.innerHTML=I.plus;a.onclick=()=>go("add");car.append(a)}
+  dots.innerHTML=cards.map((_,i)=>`<i class="${i===homeIndex?"on":""}"></i>`).join("");
+  const cardEls=[...car.querySelectorAll(".pcard")];
+  if(cardEls[homeIndex])requestAnimationFrame(()=>{car.scrollLeft=cardEls[homeIndex].offsetLeft-16});
+  car.addEventListener("scroll",()=>{let best=0,bd=1e9;cardEls.forEach((el,i)=>{const d=Math.abs(el.offsetLeft-16-car.scrollLeft);if(d<bd){bd=d;best=i}});
+    if(best!==homeIndex){homeIndex=best;[...dots.children].forEach((d,i)=>d.classList.toggle("on",i===best))}},{passive:true});
+  const curCard=()=>cards[Math.min(homeIndex,cards.length-1)];
+  s.querySelector("#q-scan").onclick=()=>go("add");
+  s.querySelector("#q-pay").onclick=()=>{const c=curCard();c?go("checkout",{id:c.id}):go("add")};
+  s.querySelector("#q-spend").onclick=()=>{const c=curCard();c?go("keypad",{id:c.id}):go("add")};
+  s.querySelector("#q-shops").onclick=()=>tab("merchants");
+  s.querySelector("#h-menu").onclick=()=>tab("info");
+  s.querySelector("#h-bell").onclick=()=>{toast(soon.length?`${soon.length} ${soon.length===1?"Karte läuft":"Karten laufen"} in den nächsten 120 Tagen ab`:"Nichts läuft bald ab")};
+  const list=s.querySelector("#h-list");const rows=(soon.length?soon.concat(cards.filter(c=>!soon.includes(c))):cards);
+  if(!rows.length)list.innerHTML=`<div class="empty"><b>Die Schublade ist leer</b><span>Fotografier die Rückseite einer Gutscheinkarte. Der Barcode wird automatisch erkannt.</span></div>`;
+  rows.forEach(c=>list.append(cardRow(c)));
+  s.querySelector("#h-ex").hidden=!cards.some(c=>c.example);
+  s.querySelector("#h-clear").onclick=()=>{state.cards=state.cards.filter(c=>!c.example);state.tests=state.tests.filter(t=>!t.example);homeIndex=0;save();show();toast("Beispiele entfernt")};
+};
 
-/* ---------- Kassenbon ---------- */
-function renderReceipt(){
-  const t=[...state.tests].sort((a,b)=>a.d.localeCompare(b.d));const ok=t.filter(x=>x.res==="ok").length;
-  const now=new Date();
-  const rows=t.map(x=>{const n=x.merchant==="other"?(x.customName||"Anderer Händler"):(MI[x.merchant]?.n||"Händler");
-    return `<div class="r-row"><span class="l ${x.res==="ok"?"r-ok":"r-bad"}">${esc(n.toUpperCase())}${x.example?" *":""}</span><span>${x.res==="ok"?"OK":"ABGEL."}</span></div>
-      <div class="r-small">${esc(fmtDate(x.d))} · ${esc(labelFmt(x.format||"CODE128"))}${x.store?" · "+esc(x.store):""}${x.note?" · "+esc(x.note):""}${x.amount?" · "+esc(eur.format(x.amount)):""}</div>`}).join('<div style="height:8px"></div>');
-  $("#receipt").innerHTML=`
-    <div class="r-center"><div class="r-title">Restwert</div><div class="r-small" style="margin-top:6px">KASSENTEST · BARCODE VOM DISPLAY</div></div>
-    <hr class="r-dash">
-    <div class="r-row r-small"><span>${esc(now.toLocaleDateString("de-DE"))}</span><span>${esc(now.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}))}</span></div>
-    <hr class="r-dash">
-    ${t.length?rows:'<div class="r-center r-small" style="padding:10px 0">NOCH KEINE POSTEN<br>Öffne eine Karte und tippe „An der Kasse“.</div>'}
-    <hr class="r-dash">
-    <div class="r-row r-total"><span>GEKLAPPT</span><span>${ok}</span></div>
-    <div class="r-row r-total"><span>ABGELEHNT</span><span>${t.length-ok}</span></div>
-    <div class="r-row r-small" style="margin-top:4px"><span>QUOTE</span><span>${t.length?Math.round(ok/t.length*100):0} %</span></div>
-    ${t.some(x=>x.example)?'<div class="r-small" style="margin-top:8px">* Beispielposten</div>':""}
-    <hr class="r-dash">
-    <div class="r-center r-small">VIELEN DANK FÜRS TESTEN</div>
-    <div class="barcode-deco"></div>`;
-}
+/* ---------- Detail (Ticket) ---------- */
+SCREENS.detail=s=>{
+  const c=state.cards.find(x=>x.id===params.id);if(!c){back();return}
+  const m=MI[c.merchant]||MI.other;const pct=c.value?Math.max(0,Math.min(100,c.balance/c.value*100)):0;const d=daysLeft(c.expires);
+  s.innerHTML=`${topbar("Gutschein",`<button class="rbtn" id="d-edit" aria-label="Bearbeiten">${I.edit}</button>`)}
+    <div class="ticket">
+      <div class="tk-pad">
+        <div class="tk-head"><span class="tile" style="--tbg:${pastel(keyOf(c))}">${esc(initials(mName(c)))}</span>
+          <div class="g"><div class="t">${esc(mName(c))}</div><div class="s">${esc(CAT[m.cat].label)}</div></div>
+          ${c.example?'<span class="chip grey">Beispiel</span>':""}</div>
+        <div class="tk-amt"><div><div class="muted" style="font-size:13px;font-weight:600">Restguthaben</div><div class="big">${esc(eur.format(c.balance||0))}</div></div>
+          <div class="of">Wert<b>${esc(eur.format(c.value||0))}</b></div></div>
+        <div class="meter"><i style="width:${pct}%"></i></div>
+        <div class="cells">
+          <div class="cell"><b>${esc(fmtDate(c.expires))}</b><span style="${d!=null&&d<=120?"color:"+(d<0?"var(--red)":"var(--orange)"):""}">${esc(expText(c)||"Gültig bis")}</span></div>
+          <button class="cell" id="d-pin" type="button"><b>${c.pin?"••••":"–"}</b><span>${c.pin?"PIN anzeigen":"Keine PIN"}</span></button>
+          <div class="cell"><b>${esc(labelFmt(c.format))}</b><span>Barcode</span></div>
+        </div>
+        <div class="info">${I.info}<span><b>${esc(CAT[m.cat].long)}.</b> ${esc(m.tip)}</span></div>
+      </div>
+      <div class="perf"><i></i><i></i></div>
+      <div class="bc" id="d-code"></div>
+      <div style="text-align:center;padding:0 18px 20px">${m.url?`<a class="link" href="${esc(m.url)}" target="_blank" rel="noopener">Guthaben beim Händler prüfen ${I.ext}</a>`:'<span class="muted" style="font-weight:600">Guthaben nur an der Kasse abfragbar</span>'}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:18px">
+      <button class="btn black" id="d-pay">${I.bars} An der Kasse zeigen</button>
+      <div class="btn-row"><button class="btn yellow" id="d-spend">${I.minus} Abziehen</button><button class="btn mint" id="d-test">${I.check} Testen</button></div>
+    </div>
+    <button class="del" id="d-del">Karte löschen</button>
+    <div class="confirm" id="d-confirm" hidden>Karte endgültig löschen? <button id="d-yes">Ja, löschen</button></div>`;
+  wireBack(s);fillCode(s.querySelector("#d-code"),c,{h:90,w:2,hpx:84,qr:200});
+  const pin=s.querySelector("#d-pin");if(c.pin)pin.onclick=()=>{const b=pin.querySelector("b"),sp=pin.querySelector("span");const on=b.textContent!=="••••";b.textContent=on?"••••":c.pin;sp.textContent=on?"PIN anzeigen":"PIN verbergen"};
+  s.querySelector("#d-edit").onclick=()=>go("add",{id:c.id});
+  s.querySelector("#d-pay").onclick=()=>go("checkout",{id:c.id});
+  s.querySelector("#d-test").onclick=()=>go("checkout",{id:c.id});
+  s.querySelector("#d-spend").onclick=()=>go("keypad",{id:c.id});
+  s.querySelector("#d-del").onclick=()=>{s.querySelector("#d-confirm").hidden=false};
+  s.querySelector("#d-yes").onclick=()=>{state.cards=state.cards.filter(x=>x.id!==c.id);homeIndex=0;save();hist=[];cur="home";params={};show();toast("Karte gelöscht")};
+};
 
-/* ---------- Händler ---------- */
-function renderMerchants(){
-  $("#legend").innerHTML=CAT_ORDER.map(k=>`<button type="button" data-cat="${k}" aria-pressed="${legendFilter===k}"><span class="sw ${k}"></span>${esc(CAT[k].label)}</button>`).join("");
-  $("#legend").querySelectorAll("button").forEach(b=>b.onclick=()=>{legendFilter=legendFilter===b.dataset.cat?null:b.dataset.cat;renderMerchants()});
-  const q=($("#m-search").value||"").trim().toLowerCase();
-  const items=M.filter(m=>m.id!=="other"&&(!legendFilter||m.cat===legendFilter)&&(!q||m.n.toLowerCase().includes(q)))
-    .sort((a,b)=>CAT_ORDER.indexOf(a.cat)-CAT_ORDER.indexOf(b.cat)||a.n.localeCompare(b.n,"de"));
-  $("#m-list").innerHTML=items.map(m=>{const mine=state.tests.filter(t=>t.merchant===m.id&&!t.example),okN=mine.filter(t=>t.res==="ok").length;
-    const own=mine.length?`<span class="tag ${okN*2>=mine.length?"ok":"bad"}">Dein Test ${okN}/${mine.length}</span>`:"";
-    return `<div class="m-row"><span class="sw ${m.cat}"></span><div><div class="m-name">${esc(m.n)} ${own}</div><div class="m-tip">${esc(m.tip)}</div>
-      <div class="m-link">${m.url?`<a href="${esc(m.url)}" target="_blank" rel="noopener">Guthaben-Seite</a>`:"Guthaben nur an der Kasse"}</div></div></div>`}).join("")
-    ||'<p class="fine" style="padding:18px 4px">Kein Treffer. Leg die Karte als „Anderer Händler“ an und teste sie an der Kasse.</p>';
-}
+/* ---------- Keypad ---------- */
+SCREENS.keypad=s=>{
+  const c=state.cards.find(x=>x.id===params.id);if(!c){back();return}
+  let v="";
+  s.innerHTML=`<div class="kp-screen">${topbar("Einkauf abziehen")}
+    <div class="row" style="margin-top:14px;background:var(--white);box-shadow:var(--shadow)"><span class="tile" style="--tbg:${pastel(keyOf(c))}">${esc(initials(mName(c)))}</span>
+      <span class="g"><span class="t" style="display:block">${esc(mName(c))}</span><span class="s">${esc(eur.format(c.balance||0))} verfügbar</span></span></div>
+    <div class="amount"><div class="l">Betrag eingeben</div><div class="v" id="k-v" aria-live="polite"></div><div class="hint" id="k-h">Wird vom Restguthaben abgezogen</div></div>
+    <div class="qchips"><button data-q="5">5 €</button><button data-q="10">10 €</button><button data-q="20">20 €</button><button data-q="50">50 €</button><button data-q="all">Alles</button></div>
+    <div class="pad"><div class="keys" id="keys"></div><button class="btn yellow" id="k-go">Abziehen</button></div></div>`;
+  wireBack(s);
+  const keys=["1","2","3","4","5","6","7","8","9",",","0","del"];
+  s.querySelector("#keys").innerHTML=keys.map(k=>`<button class="key" data-k="${k}" aria-label="${k==="del"?"Löschen":k}">${k==="del"?I.del:k}</button>`).join("");
+  const vEl=s.querySelector("#k-v"),hEl=s.querySelector("#k-h");
+  const paint=()=>{const n=parseMoney(v||"0");const txt=v?v:"0";vEl.innerHTML=`<span>${esc(txt)}</span><span class="caret"></span><span class="cur">&nbsp;€</span>`;
+    if(n>c.balance){hEl.textContent=`Mehr als das Restguthaben von ${eur.format(c.balance)}`;hEl.className="hint bad"}else{hEl.textContent=n>0?`Danach übrig: ${eur.format(Math.max(0,c.balance-n))}`:"Wird vom Restguthaben abgezogen";hEl.className="hint"}};
+  const press=k=>{if(k==="del")v=v.slice(0,-1);else if(k===","){if(!v.includes(","))v=(v||"0")+","}else{if(v.includes(",")&&v.split(",")[1].length>=2)return;if(v==="0")v="";if(v.replace(",","").length>=7)return;v+=k}paint()};
+  s.querySelectorAll(".key").forEach(b=>b.onclick=()=>{press(b.dataset.k);b.classList.add("hit");setTimeout(()=>b.classList.remove("hit"),140)});
+  s.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{v=b.dataset.q==="all"?num2.format(c.balance).replace(/\./g,""):b.dataset.q;paint()});
+  const onKey=e=>{if(cur!=="keypad"){document.removeEventListener("keydown",onKey);return}if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key===","||e.key===".")press(",");else if(e.key==="Backspace")press("del");else if(e.key==="Enter")s.querySelector("#k-go").click()};
+  document.addEventListener("keydown",onKey);
+  s.querySelector("#k-go").onclick=()=>{const n=parseMoney(v);if(!n||n<=0){toast("Gib einen Betrag ein");return}
+    c.balance=Math.max(0,Math.round((c.balance-n)*100)/100);save();back();toast(`${eur.format(n)} abgezogen · ${eur.format(c.balance)} übrig`)};
+  paint();
+};
 
-/* ---------- Sheets ---------- */
-let openEl=null;
-function openSheet(el){closeSheet(true);const s=$("#scrim");s.hidden=false;el.hidden=false;requestAnimationFrame(()=>{s.classList.add("on");el.classList.add("on")});openEl=el;document.body.style.overflow="hidden"}
-function closeSheet(instant){if(!openEl)return;const el=openEl;openEl=null;const s=$("#scrim");s.classList.remove("on");el.classList.remove("on");
-  const done=()=>{el.hidden=true;if(!openEl)s.hidden=true};instant?done():setTimeout(done,380);document.body.style.overflow=""}
-$("#scrim").addEventListener("click",()=>closeSheet());
-document.addEventListener("click",e=>{if(e.target.closest("[data-close]"))closeSheet();if(e.target.closest("[data-add]"))openAdd()});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("#checkout").hidden)closeCheckout();else if(openEl)closeSheet();else if(focusId)closeFocus()}});
+/* ---------- Checkout ---------- */
+let wakeLock=null;
+SCREENS.checkout=s=>{
+  const c=state.cards.find(x=>x.id===params.id);if(!c){back();return}
+  s.innerHTML=`${topbar("An der Kasse")}
+    <div class="ticket">
+      <div class="tk-pad"><div class="tk-head"><span class="tile" style="--tbg:${pastel(keyOf(c))}">${esc(initials(mName(c)))}</span>
+        <div class="g"><div class="t">${esc(mName(c))}</div><div class="s">Restguthaben ${esc(eur.format(c.balance||0))}</div></div></div></div>
+      <div class="perf"><i></i><i></i></div>
+      <div class="bc" id="co-code" style="padding-top:14px"></div>
+      ${c.pin?'<div style="text-align:center;padding:0 0 18px"><button class="pin-btn" id="co-pin">PIN anzeigen</button></div>':""}
+    </div>
+    <div class="co-q">Hat es geklappt?</div>
+    <div class="co-btns">
+      <button class="co-b ok" id="co-ok" aria-pressed="false"><span class="tile" style="--tbg:var(--green-soft);color:var(--green)">${I.check}</span>Geklappt</button>
+      <button class="co-b no" id="co-no" aria-pressed="false"><span class="tile" style="--tbg:var(--red-soft);color:var(--red)">${I.cross}</span>Abgelehnt</button>
+    </div>
+    <form id="co-form" hidden>
+      <div class="fgrid">
+        <div class="fbox full" id="co-amt-wrap"><label for="co-amt">Bezahlter Betrag, wird abgezogen</label><input id="co-amt" type="text" inputmode="decimal" placeholder="z. B. 18,50" autocomplete="off"></div>
+        <div class="fbox full"><label for="co-store">Filiale</label><input id="co-store" type="text" placeholder="optional" autocomplete="off"></div>
+        <div class="fbox full"><label for="co-note">Notiz</label><input id="co-note" type="text" placeholder="optional, z. B. Kasse wollte PIN" autocomplete="off"></div>
+      </div>
+      <button class="btn black" type="submit" style="margin-top:14px">Ergebnis speichern</button>
+    </form>`;
+  wireBack(s);fillCode(s.querySelector("#co-code"),c,{h:140,w:3,hpx:150,qr:260,bright:true});
+  const p=s.querySelector("#co-pin");if(p)p.onclick=()=>{p.textContent="PIN "+c.pin;p.disabled=true};
+  let res=null;const pick=r=>{res=r;s.querySelector("#co-ok").setAttribute("aria-pressed",String(r==="ok"));s.querySelector("#co-no").setAttribute("aria-pressed",String(r==="fail"));
+    s.querySelector("#co-form").hidden=false;s.querySelector("#co-amt-wrap").hidden=r!=="ok";setTimeout(()=>s.querySelector("#co-form").scrollIntoView({behavior:"smooth",block:"center"}),60)};
+  s.querySelector("#co-ok").onclick=()=>pick("ok");s.querySelector("#co-no").onclick=()=>pick("fail");
+  s.querySelector("#co-form").onsubmit=e=>{e.preventDefault();let amount=null;
+    if(res==="ok"){const v=parseMoney(s.querySelector("#co-amt").value);if(v!=null&&!isNaN(v)&&v>0){amount=v;c.balance=Math.max(0,Math.round((c.balance-v)*100)/100)}}
+    state.tests.push({id:uid(),merchant:c.merchant,customName:c.customName||"",card:c.id,d:today(),res,store:s.querySelector("#co-store").value.trim(),note:s.querySelector("#co-note").value.trim(),format:c.format,amount});
+    save();releaseWake();back();toast(res==="ok"?"Gespeichert: geklappt":"Gespeichert: abgelehnt")};
+  s.querySelectorAll("[data-back]").forEach(b=>b.addEventListener("click",releaseWake));
+  (async()=>{try{if("wakeLock" in navigator)wakeLock=await navigator.wakeLock.request("screen")}catch(e){wakeLock=null}})();
+};
+function releaseWake(){try{wakeLock&&wakeLock.release()}catch(e){}wakeLock=null}
 
-/* ---------- Hinzufügen ---------- */
-let editId=null,pendingPhoto=null;
-$("#f-merchant").innerHTML='<option value="">Händler wählen</option>'+CAT_ORDER.map(k=>`<optgroup label="${esc(CAT[k].label)}">`+
-  M.filter(m=>m.cat===k&&m.id!=="other").sort((a,b)=>a.n.localeCompare(b.n,"de")).map(m=>`<option value="${m.id}">${esc(m.n)}</option>`).join("")+"</optgroup>").join("")+'<option value="other">Anderer Händler …</option>';
-function merchantAdvice(){const id=$("#f-merchant").value;$("#f-custom-wrap").hidden=id!=="other";
-  if(!id){$("#m-advice").innerHTML="";return}const m=MI[id];
-  $("#m-advice").innerHTML=`<div class="advice"><span class="dot"></span><span><b>${esc(CAT[m.cat].long)}.</b> ${esc(m.tip)}</span></div>`;
-  if(!editId&&!$("#f-number").dataset.scanned)$("#f-format").value=m.fmt}
-$("#f-merchant").addEventListener("change",merchantAdvice);
-$("#f-bought").addEventListener("change",()=>{if(!$("#f-expires").dataset.touched)$("#f-expires").value=legalExpiry($("#f-bought").value)});
-$("#f-expires").addEventListener("input",()=>{$("#f-expires").dataset.touched="1"});
-function resetScanner(){$("#scan-img").hidden=true;$("#scan-cta").hidden=false;$("#scanner").classList.remove("scanning");$("#scan-result").innerHTML=""}
-function openAdd(id){
-  editId=id||null;pendingPhoto=null;$("#add-form").reset();$("#form-err").hidden=true;delete $("#f-number").dataset.scanned;delete $("#f-expires").dataset.touched;resetScanner();
-  $("#add-h").textContent=editId?"Karte bearbeiten":"Neue Karte";$("#btn-save").textContent=editId?"Änderungen speichern":"In die Schublade legen";
-  if(editId){const c=state.cards.find(x=>x.id===editId);
-    $("#f-merchant").value=c.merchant;$("#f-custom").value=c.customName||"";$("#f-number").value=c.number||"";$("#f-format").value=c.format||"CODE128";$("#f-pin").value=c.pin||"";
-    $("#f-value").value=num2.format(c.value||0);$("#f-balance").value=num2.format(c.balance||0);$("#f-bought").value=c.bought||"";$("#f-expires").value=c.expires||"";
-    $("#f-expires").dataset.touched="1";$("#f-number").dataset.scanned="1";if(c.photo){pendingPhoto=c.photo;$("#scan-img").src=c.photo;$("#scan-img").hidden=false;$("#scan-cta").hidden=true}}
-  else{$("#f-bought").value=today();$("#f-expires").value=legalExpiry(today())}
-  merchantAdvice();openSheet($("#sheet-add"));
-}
+/* ---------- Add / Edit ---------- */
+let pendingPhoto=null,scanTarget=null;
+SCREENS.add=s=>{
+  const editing=params.id?state.cards.find(x=>x.id===params.id):null;pendingPhoto=editing?.photo||null;
+  const opts='<option value="">Händler wählen</option>'+CAT_ORDER.map(k=>`<optgroup label="${esc(CAT[k].label)}">`+M.filter(m=>m.cat===k&&m.id!=="other").sort((a,b)=>a.n.localeCompare(b.n,"de")).map(m=>`<option value="${m.id}">${esc(m.n)}</option>`).join("")+"</optgroup>").join("")+'<option value="other">Anderer Händler …</option>';
+  s.innerHTML=`${topbar(editing?"Karte bearbeiten":"Karte scannen")}
+    <label class="scanner" id="scanner" for="file-camera">
+      <span class="l1"></span><span class="l2"></span><span class="l3"></span><span class="frame"></span>
+      <img id="scan-img" alt="Foto der Karte" hidden>
+      <span class="cta" id="scan-cta"><span class="ring">${I.camera}</span><b>Rückseite fotografieren</b><span>Der Barcode wird automatisch erkannt</span></span>
+      <span class="beam"></span>
+    </label>
+    <div class="scan-links"><label for="file-gallery">Aus Fotos wählen</label><label for="f-number">Nummer abtippen</label></div>
+    <div class="scan-msg" id="scan-msg"></div>
+    <form id="add-form" novalidate>
+      <div class="fgrid">
+        <div class="fbox full"><label for="f-merchant">Händler</label><select id="f-merchant">${opts}</select></div>
+        <div class="fbox full" id="f-custom-wrap" hidden><label for="f-custom">Name des Händlers</label><input id="f-custom" type="text" placeholder="z. B. Buchhandlung am Markt" autocomplete="off"></div>
+        <div class="fbox full"><label for="f-number">Kartennummer oder Code</label><input id="f-number" type="text" placeholder="wird beim Scannen ausgefüllt" autocomplete="off"></div>
+        <div class="fbox"><label for="f-value">Wert</label><input id="f-value" type="text" inputmode="decimal" placeholder="50,00 €" autocomplete="off"></div>
+        <div class="fbox"><label for="f-balance">Restguthaben</label><input id="f-balance" type="text" inputmode="decimal" placeholder="wie Wert" autocomplete="off"></div>
+        <div class="fbox"><label for="f-pin">PIN</label><input id="f-pin" type="text" inputmode="numeric" placeholder="optional" autocomplete="off"></div>
+        <div class="fbox"><label for="f-format">Barcode</label><select id="f-format"><option value="CODE128">Code 128</option><option value="EAN13">EAN-13</option><option value="EAN8">EAN-8</option><option value="ITF">ITF</option><option value="CODE39">Code 39</option><option value="UPC">UPC-A</option><option value="QR">QR-Code</option><option value="PDF417">PDF417</option><option value="DATAMATRIX">Data Matrix</option><option value="TEXT">Nur Code</option></select></div>
+        <div class="fbox"><label for="f-bought">Bekommen am</label><input id="f-bought" type="date"></div>
+        <div class="fbox"><label for="f-expires">Gültig bis</label><input id="f-expires" type="date"></div>
+      </div>
+      <div id="m-info"></div>
+      <p class="fine">Steht kein Datum auf der Karte, gilt meist die gesetzliche Frist: drei Jahre ab Ende des Kaufjahres (§ 195 BGB).</p>
+      <div class="err" id="f-err" role="alert" hidden></div>
+      <button class="btn black" type="submit" style="margin-top:16px">${editing?"Änderungen speichern":"Karte speichern"}</button>
+    </form>`;
+  wireBack(s);scanTarget=s;
+  const $$=q=>s.querySelector(q);let scanned=!!editing,touched=!!editing;
+  const info=()=>{const id=$$("#f-merchant").value;$$("#f-custom-wrap").hidden=id!=="other";if(!id){$$("#m-info").innerHTML="";return}const m=MI[id];
+    $$("#m-info").innerHTML=`<div class="info">${I.info}<span><b>${esc(CAT[m.cat].long)}.</b> ${esc(m.tip)}</span></div>`;if(!scanned)$$("#f-format").value=m.fmt};
+  $$("#f-merchant").onchange=info;
+  $$("#f-bought").onchange=()=>{if(!touched)$$("#f-expires").value=legalExpiry($$("#f-bought").value)};
+  $$("#f-expires").oninput=()=>{touched=true};
+  s.markScanned=()=>{scanned=true};
+  if(editing){$$("#f-merchant").value=editing.merchant;$$("#f-custom").value=editing.customName||"";$$("#f-number").value=editing.number||"";$$("#f-format").value=editing.format||"CODE128";
+    $$("#f-pin").value=editing.pin||"";$$("#f-value").value=num2.format(editing.value||0);$$("#f-balance").value=num2.format(editing.balance||0);$$("#f-bought").value=editing.bought||"";$$("#f-expires").value=editing.expires||"";
+    if(editing.photo){$$("#scan-img").src=editing.photo;$$("#scan-img").hidden=false;$$("#scan-cta").hidden=true}}
+  else{$$("#f-bought").value=today();$$("#f-expires").value=legalExpiry(today())}
+  info();
+  $$("#add-form").onsubmit=e=>{e.preventDefault();const err=$$("#f-err");const fail=m=>{err.textContent=m;err.hidden=false;err.scrollIntoView({behavior:"smooth",block:"center"})};
+    const merchant=$$("#f-merchant").value;if(!merchant)return fail("Wähl einen Händler aus.");
+    const customName=$$("#f-custom").value.trim();if(merchant==="other"&&!customName)return fail("Gib den Namen des Händlers ein.");
+    const number=$$("#f-number").value.trim();if(!number)return fail("Fotografier die Karte oder tipp die Nummer ab.");
+    const value=parseMoney($$("#f-value").value);if(value==null||isNaN(value)||value<=0)return fail("Gib den Wert der Karte ein, z. B. 50,00.");
+    let balance=parseMoney($$("#f-balance").value);if(balance==null)balance=value;if(isNaN(balance)||balance<0)return fail("Das Restguthaben ist keine gültige Zahl.");
+    const data={merchant,customName:merchant==="other"?customName:"",number,format:$$("#f-format").value,pin:$$("#f-pin").value.trim(),value,balance,
+      bought:$$("#f-bought").value||"",expires:$$("#f-expires").value||legalExpiry($$("#f-bought").value),photo:pendingPhoto||null};
+    let id;if(editing){Object.assign(editing,data,{example:false});id=editing.id}else{id=uid();state.cards.push({id,...data})}
+    save();scanTarget=null;
+    const sortedIds=sorted().map(x=>x.id);homeIndex=Math.max(0,sortedIds.indexOf(id));
+    hist=[{name:"home",params:{}}];cur="detail";params={id};show();toast(editing?"Gespeichert":"Karte gespeichert");
+  };
+};
 async function handleImage(file){
-  if(!file)return;const sc=$("#scanner"),out=$("#scan-result");let url;
-  try{url=URL.createObjectURL(file)}catch(e){out.innerHTML='<span class="tag bad">Foto ließ sich nicht öffnen</span>';return}
+  const s=scanTarget;if(!file||!s||cur!=="add")return;const $$=q=>s.querySelector(q);const sc=$$("#scanner"),msg=$$("#scan-msg");let url;
+  try{url=URL.createObjectURL(file)}catch(e){msg.innerHTML='<span class="chip red">Foto ließ sich nicht öffnen</span>';return}
   try{const img=await loadImage(url);pendingPhoto=toCanvas(img,900,0).toDataURL("image/jpeg",.72);
-    $("#scan-img").src=pendingPhoto;$("#scan-img").hidden=false;$("#scan-cta").hidden=true;sc.classList.add("scanning");out.innerHTML='<span class="tag gold">Suche Barcode …</span>';
-    const [r]=await Promise.all([decodeImage(img),new Promise(res=>setTimeout(res,reduce?0:900))]);sc.classList.remove("scanning");
-    if(r){$("#f-number").value=r.text;$("#f-format").value=r.format;$("#f-number").dataset.scanned="1";out.innerHTML=`<span class="tag ok">${ICON.check.replace('<svg','<svg width="14" height="14"')} ${esc(labelFmt(r.format))} erkannt</span><span>Jetzt Händler und Wert ergänzen.</span>`}
-    else out.innerHTML='<span class="tag warn">Kein Barcode gefunden</span><span>Näher und gerade fotografieren oder die Nummer abtippen.</span>';
-  }catch(e){sc.classList.remove("scanning");out.innerHTML='<span class="tag bad">Foto ließ sich nicht lesen</span>'}
+    $$("#scan-img").src=pendingPhoto;$$("#scan-img").hidden=false;$$("#scan-cta").hidden=true;sc.classList.add("scanning");msg.innerHTML='<span class="chip grey">Suche Barcode …</span>';
+    const [r]=await Promise.all([decodeImage(img),new Promise(res=>setTimeout(res,850))]);sc.classList.remove("scanning");
+    if(r){$$("#f-number").value=r.text;$$("#f-format").value=r.format;s.markScanned&&s.markScanned();msg.innerHTML=`<span class="chip green">${esc(labelFmt(r.format))} erkannt</span><span>Jetzt Händler und Wert ergänzen.</span>`}
+    else msg.innerHTML='<span class="chip orange">Kein Barcode gefunden</span><span>Näher und gerade fotografieren oder die Nummer abtippen.</span>';
+  }catch(e){sc.classList.remove("scanning");msg.innerHTML='<span class="chip red">Foto ließ sich nicht lesen</span>'}
   finally{URL.revokeObjectURL(url)}
 }
 $("#file-camera").addEventListener("change",e=>{handleImage(e.target.files[0]);e.target.value=""});
 $("#file-gallery").addEventListener("change",e=>{handleImage(e.target.files[0]);e.target.value=""});
-document.addEventListener("paste",e=>{if($("#sheet-add").hidden)return;const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith("image/"));if(it){e.preventDefault();handleImage(it.getAsFile())}});
-$("#add-form").addEventListener("submit",e=>{
-  e.preventDefault();const err=$("#form-err");const fail=m=>{err.textContent=m;err.hidden=false};
-  const merchant=$("#f-merchant").value;if(!merchant)return fail("Wähl einen Händler aus.");
-  const customName=$("#f-custom").value.trim();if(merchant==="other"&&!customName)return fail("Gib den Namen des Händlers ein.");
-  const number=$("#f-number").value.trim();if(!number)return fail("Fotografier die Karte oder tipp die Nummer ab.");
-  const value=parseMoney($("#f-value").value);if(value==null||isNaN(value)||value<=0)return fail("Gib den Wert der Karte ein, z. B. 50,00.");
-  let balance=parseMoney($("#f-balance").value);if(balance==null)balance=value;if(isNaN(balance)||balance<0)return fail("Das Restguthaben ist keine gültige Zahl.");
-  const data={merchant,customName:merchant==="other"?customName:"",number,format:$("#f-format").value,pin:$("#f-pin").value.trim(),value,balance,
-    bought:$("#f-bought").value||"",expires:$("#f-expires").value||legalExpiry($("#f-bought").value),photo:pendingPhoto||null};
-  const was=!!editId;let id=editId;
-  if(editId){Object.assign(state.cards.find(x=>x.id===editId),data,{example:false})}else{id=uid();state.cards.push({id,...data})}
-  save();closeSheet();if(tab!=="wallet")setTab("wallet");focusId=null;renderWallet();toast(was?"Gespeichert":"Liegt in der Schublade");
-  if(!was)setTimeout(()=>openFocus(id),450);else openFocus(id);
-});
+document.addEventListener("paste",e=>{if(cur!=="add")return;const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith("image/"));if(it){e.preventDefault();handleImage(it.getAsFile())}});
 
-/* ---------- Abziehen ---------- */
-let spendId=null;
-function openSpend(id){spendId=id;const c=state.cards.find(x=>x.id===id);$("#spend-form").reset();$("#spend-left").textContent=`Aktuell ${eur.format(c.balance||0)} auf der Karte`;openSheet($("#sheet-spend"));setTimeout(()=>$("#spend-amount").focus(),380)}
-$("#spend-form").addEventListener("submit",e=>{e.preventDefault();const c=state.cards.find(x=>x.id===spendId);const v=parseMoney($("#spend-amount").value);
-  if(!c)return;if(v==null||isNaN(v)||v<=0){toast("Gib einen Betrag ein, z. B. 12,95");return}
-  c.balance=Math.max(0,Math.round((c.balance-v)*100)/100);save();closeSheet();renderWallet();toast(`${eur.format(v)} abgezogen · ${eur.format(c.balance)} übrig`)});
+/* ---------- Kassentest ---------- */
+let testFilter="all";
+SCREENS.tests=s=>{
+  const all=[...state.tests].sort((a,b)=>b.d.localeCompare(a.d));const ok=all.filter(t=>t.res==="ok").length,no=all.length-ok;
+  const per={};all.forEach(t=>{const n=t.merchant==="other"?(t.customName||"Andere"):(MI[t.merchant]?.n||"?");per[n]=per[n]||{ok:0,n:0};per[n].n++;if(t.res==="ok")per[n].ok++});
+  const names=Object.keys(per).slice(0,7);const max=Math.max(1,...names.map(n=>per[n].n));
+  s.innerHTML=`<div class="page-h"><h1>Kassentest</h1><p>Zeig den Barcode vom Handy statt der Plastikkarte und halte fest, ob die Kasse ihn nimmt.</p></div>
+    <div class="rate"><div class="l">Quote</div><div class="v">${all.length?Math.round(ok/all.length*100):0} %</div>
+      <div class="bars">${names.length?names.map(n=>`<div><i class="${per[n].ok*2>=per[n].n?"on":""}" style="height:${Math.round(per[n].n/max*56)+8}px"></i><span>${esc(n)}</span></div>`).join(""):'<span style="font-size:13px;color:rgba(255,255,255,.55)">Noch keine Tests</span>'}</div></div>
+    <div class="two-stats">
+      <div class="bigstat"><b>${ok}</b><span>Geklappt <span style="color:var(--green)">${I.up}</span></span></div>
+      <div class="bigstat"><b>${no}</b><span>Abgelehnt <span style="color:var(--red)">${I.down}</span></span></div>
+    </div>
+    <div class="sec-h"><h3>Ergebnisse</h3><button class="link" id="t-copy">Kopieren</button></div>
+    <div class="seg" id="t-seg"><button data-f="all">Alle</button><button data-f="ok">Geklappt</button><button data-f="fail">Abgelehnt</button></div>
+    <div class="list" id="t-list" style="margin-top:12px"></div>`;
+  const draw=()=>{s.querySelectorAll("#t-seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.f===testFilter)));
+    const rows=all.filter(t=>testFilter==="all"||t.res===testFilter);const l=s.querySelector("#t-list");
+    l.innerHTML=rows.length?rows.map(t=>{const n=t.merchant==="other"?(t.customName||"Anderer Händler"):(MI[t.merchant]?.n||"Händler");
+      return `<div class="row" style="background:var(--white);box-shadow:var(--shadow)"><span class="tile" style="--tbg:${t.res==="ok"?"var(--green-soft)":"var(--red-soft)"};color:${t.res==="ok"?"var(--green)":"var(--red)"}">${t.res==="ok"?I.check:I.cross}</span>
+        <span class="g"><span class="t" style="display:block">${esc(n)}${t.example?' <span class="chip grey">Beispiel</span>':""}</span><span class="s">${esc(fmtDate(t.d))} · ${esc(labelFmt(t.format||"CODE128"))}${t.store?" · "+esc(t.store):""}${t.note?" · "+esc(t.note):""}</span></span>
+        <span class="a" style="font-size:15px;color:${t.res==="ok"?"var(--green)":"var(--red)"}">${t.res==="ok"?(t.amount?"−"+esc(eur.format(t.amount)):"OK"):"Nein"}</span></div>`}).join("")
+      :'<div class="empty"><b>Noch nichts hier</b><span>Öffne eine Karte und tippe auf „An der Kasse zeigen“.</span></div>'};
+  s.querySelectorAll("#t-seg button").forEach(b=>b.onclick=()=>{testFilter=b.dataset.f;draw()});draw();
+  s.querySelector("#t-copy").onclick=()=>{const lines=[...state.tests].sort((a,b)=>a.d.localeCompare(b.d)).map(t=>{const n=t.merchant==="other"?(t.customName||"Anderer Händler"):(MI[t.merchant]?.n||"Händler");
+    return [fmtDate(t.d),n,t.res==="ok"?"geklappt":"abgelehnt",labelFmt(t.format||"CODE128"),t.store,t.note,t.example?"Beispiel":""].filter(Boolean).join(" | ")});
+    copyText(lines.length?"Restwert Kassentest\n"+lines.join("\n"):"Noch keine Tests")};
+};
 
-/* ---------- Kasse ---------- */
-let wakeLock=null;
-async function openCheckout(id){
-  const c=state.cards.find(x=>x.id===id);if(!c)return;
-  $("#co").innerHTML=`
-    <div class="co-top"><div><div class="co-m">${esc(mName(c))}</div><div class="co-b">Restguthaben ${esc(eur.format(c.balance||0))}</div></div><button class="co-x" id="co-x" aria-label="Schließen">${ICON.x}</button></div>
-    <div class="co-code" id="co-code"></div>
-    <div class="co-q">Hat es geklappt?</div>
-    <div class="co-row"><button class="co-btn ok" id="co-ok" aria-pressed="false">${ICON.check} Geklappt</button><button class="co-btn bad" id="co-bad" aria-pressed="false">${ICON.cross} Abgelehnt</button></div>
-    <form class="co-form" id="co-form" hidden>
-      <div id="co-amt-wrap"><label for="co-amt">Bezahlter Betrag, wird abgezogen</label><input id="co-amt" type="text" inputmode="decimal" placeholder="z. B. 18,50" autocomplete="off"></div>
-      <div><label for="co-store">Filiale</label><input id="co-store" type="text" placeholder="optional, z. B. Köln Hohe Straße" autocomplete="off"></div>
-      <div><label for="co-note">Notiz</label><input id="co-note" type="text" placeholder="optional, z. B. Kasse wollte PIN" autocomplete="off"></div>
-      <button class="co-save" type="submit">Auf den Bon</button>
-    </form>`;
-  const box=$("#co-code");const code=codeNode(c,{h:140,w:3,m:12,bg:"#ffffff",qr:300});
-  if(code){box.append(code.node);const n=document.createElement("div");n.className="co-num";n.textContent=groupNum(c.number);box.append(n);const f=document.createElement("div");f.className="co-fmt";f.textContent=labelFmt(code.used)+" · Helligkeit auf Maximum";box.append(f)}
-  else{const n=document.createElement("div");n.className="co-num";n.style.fontSize="26px";n.textContent=c.number;box.append(n);const f=document.createElement("div");f.className="co-fmt";f.textContent=c.format==="TEXT"?"Code zum Eintippen":"Barcode nicht verfügbar · Nummer ansagen";box.append(f);if(c.photo){const i=document.createElement("img");i.src=c.photo;i.alt="Foto der Karte";i.style.cssText="max-width:100%;border-radius:12px";box.append(i)}}
-  if(c.pin){const p=document.createElement("button");p.className="co-pin";p.textContent="PIN anzeigen";p.onclick=()=>{p.textContent="PIN "+c.pin;p.disabled=true};box.append(p)}
-  let res=null;
-  const pick=r=>{res=r;$("#co-ok").setAttribute("aria-pressed",String(r==="ok"));$("#co-bad").setAttribute("aria-pressed",String(r==="fail"));$("#co-form").hidden=false;$("#co-amt-wrap").hidden=r!=="ok";setTimeout(()=>(r==="ok"?$("#co-amt"):$("#co-store")).focus(),60)};
-  $("#co-ok").onclick=()=>pick("ok");$("#co-bad").onclick=()=>pick("fail");$("#co-x").onclick=closeCheckout;
-  $("#co-form").onsubmit=e=>{e.preventDefault();let amount=null;
-    if(res==="ok"){const v=parseMoney($("#co-amt").value);if(v!=null&&!isNaN(v)&&v>0){amount=v;c.balance=Math.max(0,Math.round((c.balance-v)*100)/100)}}
-    state.tests.push({id:uid(),merchant:c.merchant,customName:c.customName||"",card:c.id,d:today(),res,store:$("#co-store").value.trim(),note:$("#co-note").value.trim(),format:c.format,amount});
-    save();closeCheckout();render();toast(res==="ok"?"Auf dem Bon: geklappt":"Auf dem Bon: abgelehnt")};
-  $("#checkout").hidden=false;document.body.style.overflow="hidden";
-  try{if("wakeLock" in navigator)wakeLock=await navigator.wakeLock.request("screen")}catch(e){wakeLock=null}
-}
-function closeCheckout(){$("#checkout").hidden=true;if(!openEl)document.body.style.overflow="";try{wakeLock&&wakeLock.release()}catch(e){}wakeLock=null}
+/* ---------- Händler ---------- */
+let mFilter="all";
+SCREENS.merchants=s=>{
+  s.innerHTML=`<div class="page-h"><h1>Wo geht es ohne Plastik?</h1><p>Recherche vom 25.09.2026 zu rund 45 Karten in Deutschland.</p></div>
+    <label class="vh" for="m-q">Händler suchen</label><input class="search" id="m-q" type="search" placeholder="Händler suchen" autocomplete="off">
+    <div class="seg" id="m-seg" style="margin-top:12px"><button data-f="all">Alle</button>${CAT_ORDER.map(k=>`<button data-f="${k}">${esc(CAT[k].label)}</button>`).join("")}</div>
+    <div class="list" id="m-list" style="margin-top:12px"></div>`;
+  const draw=()=>{s.querySelectorAll("#m-seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.f===mFilter)));
+    const q=s.querySelector("#m-q").value.trim().toLowerCase();
+    const items=M.filter(m=>m.id!=="other"&&(mFilter==="all"||m.cat===mFilter)&&(!q||m.n.toLowerCase().includes(q))).sort((a,b)=>CAT_ORDER.indexOf(a.cat)-CAT_ORDER.indexOf(b.cat)||a.n.localeCompare(b.n,"de"));
+    s.querySelector("#m-list").innerHTML=items.length?items.map(m=>{const mine=state.tests.filter(t=>t.merchant===m.id&&!t.example),okN=mine.filter(t=>t.res==="ok").length;
+      return `<div class="row" style="align-items:flex-start;background:var(--white);box-shadow:var(--shadow)"><span class="tile" style="--tbg:${pastel(m.id)}">${esc(initials(m.n))}</span>
+        <span class="g"><span class="t" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${esc(m.n)} <span class="chip ${CAT[m.cat].chip}">${esc(CAT[m.cat].label)}</span>${mine.length?`<span class="chip ${okN*2>=mine.length?"green":"red"}">Dein Test ${okN}/${mine.length}</span>`:""}</span>
+        <span class="s" style="display:block;color:var(--ink-2)">${esc(m.tip)}</span>
+        <span class="s" style="display:block;margin-top:6px">${m.url?`<a class="link" style="font-size:13px" href="${esc(m.url)}" target="_blank" rel="noopener">Guthaben-Seite ${I.ext}</a>`:"Guthaben nur an der Kasse"}</span></span></div>`}).join("")
+      :'<div class="empty"><b>Kein Treffer</b><span>Leg die Karte als „Anderer Händler“ an und teste sie an der Kasse.</span></div>'};
+  s.querySelectorAll("#m-seg button").forEach(b=>b.onclick=()=>{mFilter=b.dataset.f;draw()});s.querySelector("#m-q").oninput=draw;draw();
+};
 
-/* ---------- Sonstiges ---------- */
-document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{focusId=null;setTab(b.dataset.tab)}));
-$("#m-search").addEventListener("input",renderMerchants);
-$("#btn-clear-examples").addEventListener("click",()=>{state.cards=state.cards.filter(c=>!c.example);state.tests=state.tests.filter(t=>!t.example);save();render();toast("Beispiele entfernt")});
-$("#btn-info").addEventListener("click",()=>{$("#reset-confirm").hidden=true;openSheet($("#sheet-info"))});
-$("#btn-reset").addEventListener("click",()=>{$("#reset-confirm").hidden=false});
-$("#btn-reset-yes").addEventListener("click",()=>{state={cards:[],tests:[]};save();focusId=null;closeSheet();render();toast("Alles gelöscht")});
-$("#btn-export").addEventListener("click",()=>copyText(JSON.stringify({cards:state.cards.map(({photo,pin,...c})=>({...c,pin:pin?"(gesetzt)":""})),tests:state.tests},null,2)));
-$("#btn-copy-tests").addEventListener("click",()=>{const lines=[...state.tests].sort((a,b)=>a.d.localeCompare(b.d)).map(t=>{const n=t.merchant==="other"?(t.customName||"Anderer Händler"):(MI[t.merchant]?.n||"Händler");
-  return [fmtDate(t.d),n,t.res==="ok"?"geklappt":"abgelehnt",labelFmt(t.format||"CODE128"),t.store,t.note,t.example?"Beispiel":""].filter(Boolean).join(" | ")});
-  copyText(lines.length?"Restwert Kassentest\n"+lines.join("\n"):"Noch keine Tests")});
+/* ---------- Info ---------- */
+SCREENS.info=s=>{
+  s.innerHTML=`<div class="page-h"><h1>Testversion</h1><p>Restwert prüft, ob Gutscheinkarten ohne Plastikkarte funktionieren.</p></div>
+    <div class="list">
+      <div class="info" style="margin:0;background:var(--white);box-shadow:var(--shadow)">${I.info}<span><b>Nur auf diesem Gerät.</b> Die Daten liegen im Browser und sind in der Testversion nicht verschlüsselt. Nummer und PIN sind wie Bargeld. Lösch Karten nach dem Test.</span></div>
+      <div class="info" style="margin:0;background:var(--white);box-shadow:var(--shadow)">${I.bars}<span><b>An der Kasse:</b> Helligkeit auf Maximum. Manche Scanner lesen Displays schlecht.</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+      <button class="btn soft" id="i-onb">Einführung ansehen</button>
+      <button class="btn soft" id="i-export">Daten kopieren</button>
+      <button class="btn soft" id="i-reset" style="color:var(--red)">Alles löschen</button>
+      <div class="confirm" id="i-confirm" hidden>Wirklich alle Karten und Tests löschen? <button id="i-yes">Ja, löschen</button></div>
+    </div>`;
+  s.querySelector("#i-onb").onclick=()=>go("onboarding");
+  s.querySelector("#i-export").onclick=()=>copyText(JSON.stringify({cards:state.cards.map(({photo,pin,...c})=>({...c,pin:pin?"(gesetzt)":""})),tests:state.tests},null,2));
+  s.querySelector("#i-reset").onclick=()=>{s.querySelector("#i-confirm").hidden=false};
+  s.querySelector("#i-yes").onclick=()=>{state={cards:[],tests:[]};homeIndex=0;save();tab("home");toast("Alles gelöscht")};
+};
 
-render();
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!TABS.includes(cur)&&cur!=="onboarding"){releaseWake();back()}});
+cur=getFlag(ONB)?"home":"onboarding";show();
 })();
 </script>
