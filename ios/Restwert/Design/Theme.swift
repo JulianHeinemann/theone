@@ -4,7 +4,7 @@ import RestwertKit
 // MARK: - Farben
 
 extension Color {
-    init(hex: UInt32) {
+    nonisolated init(hex: UInt32) {
         self.init(.sRGB,
                   red: Double((hex >> 16) & 0xFF) / 255,
                   green: Double((hex >> 8) & 0xFF) / 255,
@@ -30,7 +30,7 @@ extension Color {
     static let paper = Color(hex: 0xFBF9F4)
 }
 
-enum Pastel {
+nonisolated enum Pastel {
     static let all: [Color] = [0xE4D7FB, 0xCDEFE3, 0xF1EFD9, 0xC9EEF0, 0xFBE1CF, 0xF9D8E8, 0xE6F5C9, 0xD9E2FB].map { Color(hex: $0) }
 
     static func color(for key: String) -> Color {
