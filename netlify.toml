@@ -1,0 +1,21 @@
+# Statische Web-App + Landingpage auf Netlify.
+# Die API läuft auf Railway; /api wird dorthin weitergeleitet.
+[build]
+  publish = "netlify-dist"
+  command = "mkdir -p netlify-dist/app && cp -r server/public/* netlify-dist/ && cp -r restwert/* netlify-dist/app/"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://RAILWAY_DOMAIN/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/datenschutz"
+  to = "/datenschutz.html"
+  status = 200
+
+[[redirects]]
+  from = "/impressum"
+  to = "/impressum.html"
+  status = 200
