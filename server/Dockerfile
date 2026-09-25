@@ -6,7 +6,6 @@ COPY server/package.json server/package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY server/src ./src
 COPY server/public ./public
-COPY restwert ./web
 USER node
 EXPOSE 3000
 CMD ["node", "src/index.js"]
