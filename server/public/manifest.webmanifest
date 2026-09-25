@@ -1,0 +1,14 @@
+{
+  "name": "Restwert",
+  "short_name": "Restwert",
+  "description": "Gutscheine scannen, Restwert führen, rechtzeitig einlösen.",
+  "lang": "de",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "background_color": "#F1F2F4",
+  "theme_color": "#F1F2F4",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}

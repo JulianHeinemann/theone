@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
@@ -10,6 +11,15 @@ import { hashPassword, verifyPassword, signToken, requireAuth, validateCredentia
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const MAX_SNAPSHOT_BYTES = 8 * 1024 * 1024;
+
+export function wrapFragment(body) {
+  if (/^\s*<!doctype/i.test(body)) return body;
+  return '<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+    + '<link rel="manifest" href="/manifest.webmanifest">\n'
+    + '<link rel="apple-touch-icon" href="/icon-512.png">\n'
+    + '</head>\n<body>\n' + body + '\n</body>\n</html>\n';
+}
 
 function publicUser(row) {
   return { id: row.id, email: row.email, name: row.name, createdAt: row.created_at };
@@ -24,7 +34,7 @@ export function createApp({ webDir } = {}) {
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {
-        'script-src': ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
+        'script-src': ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", 'https://cdn.jsdelivr.net', 'https://cdnjs.cloudflare.com'],
         'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         'font-src': ["'self'", 'https://fonts.gstatic.com'],
         'img-src': ["'self'", 'data:', 'blob:'],
@@ -130,7 +140,17 @@ export function createApp({ webDir } = {}) {
 
   // ---- Web: Landingpage, Datenschutz, Web-App ----
   app.use(express.static(path.join(here, '..', 'public'), { extensions: ['html'] }));
-  if (webDir) app.use('/app', express.static(webDir, { extensions: ['html'] }));
+  if (webDir) {
+    // Die Web-App ist als Fragment geschrieben (ohne <html>/<head>); hier wird sie vollständig ausgeliefert.
+    app.get(['/app', '/app/', '/app/index.html'], async (req, res, next) => {
+      if (req.path === '/app') return res.redirect(301, '/app/');
+      try {
+        const body = await fs.readFile(path.join(webDir, 'index.html'), 'utf8');
+        res.type('html').set('Cache-Control', 'no-cache').send(wrapFragment(body));
+      } catch (e) { next(e); }
+    });
+    app.use('/app', express.static(webDir, { extensions: ['html'], index: false }));
+  }
 
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Nicht gefunden.' }));
 
