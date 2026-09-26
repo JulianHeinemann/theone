@@ -132,7 +132,7 @@ struct HomeView: View {
         let on = filter == value
         return Button { withAnimation(.snappy) { filter = value } } label: {
             Text(title).font(.scaled(14, weight: .semibold))
-                .foregroundStyle(on ? Color.white : Color.ink)
+                .foregroundStyle(on ? Color.onInk : Color.ink)
                 .padding(.horizontal, 14).frame(minHeight: 36)
                 .background(on ? Color.ink : Color.surface, in: .capsule)
         }
@@ -220,15 +220,15 @@ private struct TotalHeader: View {
 
     private var full: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Guthaben auf allen Karten").font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink.opacity(0.7))
+            Text("Guthaben auf allen Karten").font(.scaled(15, weight: .medium)).foregroundStyle(Color.onBrand.opacity(0.7))
             Text(total.euro)
                 .font(.scaled(60, weight: .bold)).kerning(-2).monospacedDigit()
                 .contentTransition(.numericText(value: total))
                 .animation(.snappy, value: total)
                 .minimumScaleFactor(0.6).lineLimit(1)
-            Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink.opacity(0.75))
+            Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.onBrand.opacity(0.75))
             if let codesNote {
-                Text(codesNote).font(.scaled(14)).foregroundStyle(Color.ink.opacity(0.75))
+                Text(codesNote).font(.scaled(14)).foregroundStyle(Color.onBrand.opacity(0.75))
             }
         }
     }
@@ -246,13 +246,13 @@ private struct TotalHeader: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(total.euro).font(.scaled(34, weight: .bold)).monospacedDigit()
                         .minimumScaleFactor(0.6).lineLimit(1)
-                    Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink.opacity(0.75))
+                    Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.onBrand.opacity(0.75))
                 }
             } else {
                 full
             }
         }
-        .foregroundStyle(Color.ink)
+        .foregroundStyle(Color.onBrand)
         .padding(typeSize.isAccessibilitySize ? 14 : 20)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.brandYellow, in: .rect(cornerRadius: 22, style: .continuous))

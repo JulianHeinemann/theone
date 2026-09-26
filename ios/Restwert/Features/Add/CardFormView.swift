@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 import LocalAuthentication
 import RestwertKit
 
@@ -33,6 +34,10 @@ struct CardFormView: View {
     @State private var shake = 0
     @State private var showMore = false
     @State private var pinRevealed = false
+    @State private var shopText = ""
+    @State private var photoItem: PhotosPickerItem?
+    @State private var showCamera = false
+    @State private var showPhoto = false
     @AppStorage("pinLock") private var pinLock = true
 
     init(outcome: ScanOutcome? = nil, editing: GiftCard? = nil, onSaved: @escaping (GiftCard) -> Void) {
@@ -44,7 +49,7 @@ struct CardFormView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                kindPicker
+                photoSlot
                 fields
                 Text("Kein Datum auf dem Gutschein? Dann gilt er meist drei Jahre, gerechnet ab Ende des Kaufjahres. Das Datum ist schon so vorausgefüllt.")
                     .font(.scaled(13)).foregroundStyle(Color.ink2).padding(.horizontal, 4)
@@ -79,6 +84,23 @@ struct CardFormView: View {
             guard !loaded else { return }
             loaded = true
             if let editing { load(editing); showMore = true } else if let outcome { apply(outcome) }
+            if shopText.isEmpty, let m = Merchant.byID[merchantID] { shopText = merchantID == "other" ? customName : m.name }
+        }
+        .onChange(of: shopText) { _, text in matchShop(text) }
+        .onChange(of: photoItem) { _, item in
+            guard let item else { return }
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
+                    photo = image.thumbnailJPEG()
+                }
+                photoItem = nil
+            }
+        }
+        .sheet(isPresented: $showCamera) {
+            CameraPicker { image in photo = image.thumbnailJPEG() }.ignoresSafeArea()
+        }
+        .fullScreenCover(isPresented: $showPhoto) {
+            if let photo, let image = UIImage(data: photo) { PhotoViewer(image: image) }
         }
         .onChange(of: received) { _, new in if editing == nil { expires = GiftCard.legalExpiry(from: new) } }
         .onChange(of: merchantID) { _, id in
@@ -120,23 +142,87 @@ struct CardFormView: View {
         }
     }
 
+    /// Foto zuerst: reicht auch allein, z. B. für Papiergutscheine ohne Barcode.
+    private var photoSlot: some View {
+        HStack(spacing: 14) {
+            if let photo, let image = UIImage(data: photo) {
+                Button { showPhoto = true } label: {
+                    Image(uiImage: image).resizable().scaledToFill()
+                        .frame(width: 84, height: 84).clipShape(.rect(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Foto ansehen")
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Foto gespeichert").font(.scaled(16, weight: .semibold))
+                    HStack(spacing: 16) {
+                        PhotosPicker("Ersetzen", selection: $photoItem, matching: .images)
+                        Button("Entfernen", role: .destructive) { self.photo = nil }
+                    }
+                    .font(.scaled(14, weight: .medium))
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Foto vom Gutschein").font(.scaled(16, weight: .semibold))
+                    Text("Reicht auch allein, z. B. für Papierzettel ohne Barcode. An der Kasse zeigst du dann das Foto.")
+                        .font(.scaled(13)).foregroundStyle(Color.ink2)
+                    HStack(spacing: 8) {
+                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                            Button { showCamera = true } label: { Label("Foto machen", systemImage: "camera") }
+                                .buttonStyle(.bordered)
+                        }
+                        PhotosPicker(selection: $photoItem, matching: .images) { Label("Aus Fotos", systemImage: "photo") }
+                            .buttonStyle(.bordered)
+                    }
+                    .font(.scaled(14, weight: .semibold)).tint(Color.ink)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(Color.surface, in: .rect(cornerRadius: 16, style: .continuous))
+        .padding(.top, 8)
+    }
+
+    /// Freitext mit Vorschlägen: bekannte Händler werden erkannt, alles andere ist ein eigener Laden.
+    private var shopSuggestions: [Merchant] {
+        let t = shopText.trimmingCharacters(in: .whitespaces)
+        guard t.count >= 1, Merchant.byID[merchantID]?.name != t else { return [] }
+        return Merchant.all.filter { $0.name.localizedCaseInsensitiveContains(t) }.prefix(4).map { $0 }
+    }
+
+    private func matchShop(_ text: String) {
+        let t = text.trimmingCharacters(in: .whitespaces)
+        if t.isEmpty { merchantID = ""; customName = ""; return }
+        if let m = Merchant.all.first(where: { $0.name.compare(t, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame }) {
+            merchantID = m.id
+            customName = ""
+        } else {
+            merchantID = "other"
+            customName = t
+        }
+    }
+
     private var fields: some View {
         VStack(spacing: 2) {
-            LabeledBox(label: "Shop") {
-                Picker("Shop", selection: $merchantID) {
-                    Text("Shop wählen").tag("")
-                    ForEach(MerchantCategory.allCases) { cat in
-                        Section(cat.label) {
-                            ForEach(Merchant.sorted(in: cat)) { m in Text(m.name).tag(m.id) }
+            LabeledField(label: "Laden", placeholder: "z. B. dm, Café am Markt, Google Play", text: $shopText)
+            if !shopSuggestions.isEmpty {
+                ScrollView(.horizontal) {
+                    HStack(spacing: 8) {
+                        ForEach(shopSuggestions) { m in
+                            Button { shopText = m.name } label: {
+                                HStack(spacing: 6) {
+                                    MerchantMark(merchantID: m.id, name: m.name, size: 22)
+                                    Text(m.name).font(.scaled(14, weight: .medium))
+                                }
+                                .padding(.horizontal, 10).padding(.vertical, 6)
+                                .background(Color.fill, in: .capsule)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
-                    Text("Anderer Shop …").tag("other")
+                    .padding(.vertical, 6)
                 }
-                .labelsHidden().tint(Color.ink)
-            }
-            if merchantID == "other" {
-                LabeledField(label: "Name des Shops", placeholder: "z. B. Buchhandlung am Markt", text: $customName)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                .scrollIndicators(.hidden)
             }
             if let m = Merchant.byID[merchantID], merchantID != "other" {
                 HStack(alignment: .top, spacing: 8) {
@@ -146,37 +232,35 @@ struct CardFormView: View {
                 .font(.scaled(13)).foregroundStyle(Color.muted).padding(.horizontal, 4).padding(.vertical, 6)
                 .transition(.opacity)
             }
-
             if kind.isValueBased {
-                HStack(spacing: 16) {
-                    LabeledField(label: "Startwert in €", placeholder: "50,00", text: $valueText, keyboard: .decimalPad)
-                    LabeledField(label: "Guthaben jetzt", placeholder: "wie Startwert", text: $balanceText, keyboard: .decimalPad)
-                }
+                LabeledField(label: "Betrag in €", placeholder: "z. B. 25,00", text: $valueText, keyboard: .decimalPad)
             } else {
                 HStack(spacing: 16) {
                     LabeledField(label: "Rabatt in %", placeholder: "z. B. 15", text: $percentText, keyboard: .decimalPad)
                     LabeledField(label: "oder Wert in €", placeholder: "optional", text: $valueText, keyboard: .decimalPad)
                 }
             }
-            LabeledField(label: kind == .discountCode ? "Rabattcode" : "Code bzw. Kartennummer",
-                         placeholder: "wird beim Scannen ausgefüllt", text: $number)
-            if kind == .giftCard {
-                pinField
-            }
             dateBox("Gültig bis", $expires)
+            LabeledField(label: kind == .discountCode ? "Rabattcode" : "Code oder Kartennummer (falls vorhanden)",
+                         placeholder: "wird beim Scannen ausgefüllt", text: $number)
             Button {
                 withAnimation(.snappy) { showMore.toggle() }
             } label: {
                 HStack {
-                    Text(showMore ? "Weniger" : "Mehr Details (für wen, Barcode-Typ, Kaufdatum, Ort)")
+                    Text(showMore ? "Weniger" : "Mehr (Art, PIN, schon benutzt, für wen, Ort)")
                     Spacer()
                     Image(systemName: "chevron.down").rotationEffect(.degrees(showMore ? 180 : 0))
                 }
                 .font(.scaled(14, weight: .medium)).foregroundStyle(Color.ink2)
-                .padding(.horizontal, 4).padding(.vertical, 6).contentShape(.rect)
+                .padding(.horizontal, 4).padding(.vertical, 10).contentShape(.rect)
             }
             .buttonStyle(.plain)
             if showMore {
+                kindPicker.padding(.bottom, 6)
+                if kind.isValueBased {
+                    LabeledField(label: "Guthaben jetzt, falls schon benutzt", placeholder: "wie Betrag", text: $balanceText, keyboard: .decimalPad)
+                }
+                if kind == .giftCard { pinField }
                 LabeledField(label: "Für wen?", placeholder: "leer = für mich, z. B. Mia oder Oma", text: $owner)
                 Toggle(isOn: $forGifting) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -186,7 +270,7 @@ struct CardFormView: View {
                 }
                 .tint(Color.ink)
                 .padding(.horizontal, 4).padding(.vertical, 10)
-                LabeledBox(label: "Barcode-Typ") {
+                LabeledBox(label: "Barcode-Typ (wird meist automatisch erkannt)") {
                     Picker("Barcode-Typ", selection: $format) {
                         ForEach(CodeFormat.allCases) { Text($0.label).tag($0) }
                     }
@@ -297,18 +381,17 @@ struct CardFormView: View {
 
     private func validate() -> [String] {
         var e: [String] = []
-        if merchantID.isEmpty { e.append("Wähl einen Shop aus.") }
-        if merchantID == "other" && customName.trimmingCharacters(in: .whitespaces).isEmpty { e.append("Gib den Namen des Shops ein.") }
-        if number.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            e.append("Der Code fehlt. Scann den Gutschein oder tipp den Code ein.")
+        if shopText.trimmingCharacters(in: .whitespaces).isEmpty { e.append("Gib den Laden ein.") }
+        if number.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && photo == nil {
+            e.append("Fotografier den Gutschein oder tipp den Code ab.")
         }
         let value = parseMoney(valueText)
         let balance = parseMoney(balanceText)
         let percent = parseMoney(percentText)
         if kind.isValueBased {
-            if (value ?? 0) <= 0 { e.append("Gib den Wert in Euro ein, z. B. 50,00.") }
-            if !balanceText.isEmpty && balance == nil { e.append("Der Restwert ist keine gültige Zahl.") }
-            if let v = value, let b = balance, b > v { e.append("Der Restwert ist größer als der Wert.") }
+            if (value ?? 0) <= 0 { e.append("Gib den Betrag in Euro ein, z. B. 25,00.") }
+            if !balanceText.isEmpty && balance == nil { e.append("„Guthaben jetzt“ ist keine gültige Zahl.") }
+            if let v = value, let b = balance, b > v { e.append("„Guthaben jetzt“ ist größer als der Betrag.") }
         } else {
             if percent == nil && value == nil { e.append("Gib einen Rabatt in % oder einen Wert in € ein.") }
             if let p = percent, p <= 0 || p > 100 { e.append("Der Rabatt muss zwischen 1 und 100 % liegen.") }
@@ -334,7 +417,7 @@ struct CardFormView: View {
         card.merchantID = merchantID
         card.customName = merchantID == "other" ? customName.trimmingCharacters(in: .whitespaces) : ""
         card.number = code
-        card.format = format
+        card.format = code.isEmpty ? .text : format
         card.pin = kind == .giftCard ? pin.trimmingCharacters(in: .whitespaces) : ""
         card.value = value
         card.balance = kind.isValueBased ? balance : value
@@ -349,5 +432,56 @@ struct CardFormView: View {
         store.upsert(card)
         Task { await store.requestNotifications() }
         onSaved(card)
+    }
+}
+
+/// Kamera für ein Foto des Gutscheins (Papier, Karte, Bildschirm).
+struct CameraPicker: UIViewControllerRepresentable {
+    var onImage: (UIImage) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ picker: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: CameraPicker
+        init(_ parent: CameraPicker) { self.parent = parent }
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage { parent.onImage(image) }
+            parent.dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { parent.dismiss() }
+    }
+}
+
+/// Foto bildschirmfüllend, zoombar, z. B. zum Vorzeigen an der Kasse.
+struct PhotoViewer: View {
+    let image: UIImage
+    @Environment(\.dismiss) private var dismiss
+    @State private var scale: CGFloat = 1
+
+    var body: some View {
+        Image(uiImage: image).resizable().scaledToFit()
+            .scaleEffect(scale)
+            .gesture(MagnifyGesture().onChanged { scale = max(1, $0.magnification) }.onEnded { _ in withAnimation { scale = 1 } })
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black.ignoresSafeArea())
+            .overlay(alignment: .topTrailing) {
+                Button("Schließen", systemImage: "xmark") { dismiss() }
+                    .labelStyle(.iconOnly).font(.system(size: 17, weight: .bold))
+                    .buttonStyle(.glass).buttonBorderShape(.circle).controlSize(.large)
+                    .padding(16)
+            }
+            .accessibilityLabel("Foto des Gutscheins")
     }
 }

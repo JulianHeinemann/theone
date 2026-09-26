@@ -116,8 +116,28 @@ final class Store {
     @discardableResult
     func redeem(_ id: UUID, amount: Double, store storeName: String = "", note: String = "") -> UUID? {
         guard amount > 0 else { return nil }
-        update(id) { _ = $0.redeem(amount, store: storeName, note: note) }
+        update(id) {
+            _ = $0.redeem(amount, store: storeName, note: note)
+            $0.pendingSince = nil
+        }
         return card(id)?.history.last?.id
+    }
+
+    /// Neuen Stand setzen (laut Bon oder nach Aufladung); gibt den Verlaufseintrag für „Rückgängig“ zurück.
+    @discardableResult
+    func setBalance(_ id: UUID, to value: Double) -> UUID? {
+        let before = card(id)?.history.count ?? 0
+        update(id) {
+            $0.setBalance(value)
+            $0.pendingSince = nil
+        }
+        guard let c = card(id), c.history.count > before else { return nil }
+        return c.history.last?.id
+    }
+
+    /// „Später eintragen“ an der Kasse: merken und nachfragen.
+    func setPending(_ id: UUID, _ pending: Bool) {
+        update(id) { $0.pendingSince = pending ? .now : nil }
     }
 
     /// Letzten Abzug zurücknehmen: Eintrag entfernen, Betrag wieder gutschreiben.
@@ -154,6 +174,7 @@ final class Store {
     @discardableResult
     func addTest(card: GiftCard, success: Bool, store storeName: String, note: String, amount: Double?) -> UUID? {
         var entry: UUID?
+        if !success { update(card.id) { $0.pendingSince = nil } }
         if success, let amount, amount > 0 {
             entry = redeem(card.id, amount: min(amount, card.balance), store: storeName, note: "An der Kasse")
         }
@@ -180,9 +201,9 @@ final class Store {
 
     private struct Backup: Codable { var cards: [GiftCard]; var tests: [TestResult] }
 
-    /// Vollständige Sicherung als Datei (mit PINs, ohne Fotos), zum Aufbewahren in Dateien oder iCloud Drive.
+    /// Vollständige Sicherung als Datei (mit PINs und Fotos), zum Aufbewahren in Dateien oder iCloud Drive.
     func backupFile() -> URL? {
-        let own = cards.filter { !$0.isExample }.map { c -> GiftCard in var x = c; x.photo = nil; return x }
+        let own = cards.filter { !$0.isExample }
         let enc = APICoding.encoder
         guard let data = try? enc.encode(Backup(cards: own, tests: tests.filter { !$0.isExample })) else { return nil }
         let url = URL.temporaryDirectory.appending(path: "Restwert-Sicherung-\(Date.now.formatted(.iso8601.year().month().day())).restwert.json")
@@ -274,37 +295,46 @@ final class Store {
 
     func scheduleReminders() async {
         let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests()
+        // Nur eigene Ablauf-Erinnerungen neu planen; „Betrag offen“-Nachfragen bleiben stehen.
+        let pending = await center.pendingNotificationRequests().map(\.identifier).filter { !$0.hasSuffix("-later") && !$0.hasSuffix("-snooze") }
+        center.removePendingNotificationRequests(withIdentifiers: pending)
         guard UserDefaults.standard.object(forKey: "reminders") as? Bool ?? true else { return }
         let status = await center.notificationSettings().authorizationStatus
         guard status == .authorized || status == .provisional else { return }
+        center.setNotificationCategories([ReminderPrefs.category])
         let cal = Calendar.current
-        let leadDays = ReminderPrefs.days
         let hour = ReminderPrefs.hour
-        for c in cards where c.isActive && !c.isExample {
-            for days in leadDays {
-                guard let fire = cal.date(byAdding: .day, value: -days, to: c.expires), fire > .now else { continue }
-                var comps = cal.dateComponents([.year, .month, .day], from: fire)
-                comps.hour = hour
-                let content = UNMutableNotificationContent()
-                content.title = days == 1 ? "\(c.name): läuft morgen ab" : "\(c.name): noch \(days) Tage"
-                content.body = "\(c.headline) verfällt am \(c.expires.dayMonthYear). Jetzt einlösen."
-                content.sound = .default
-                let request = UNNotificationRequest(identifier: "\(c.id.uuidString)-\(days)", content: content,
-                                                    trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
-                try? await center.add(request)
+        for c in cards where c.isActive && !c.isExample && !c.forGifting {
+            var planned = 0
+            for days in ReminderPrefs.days {
+                guard let day = cal.date(byAdding: .day, value: -days, to: c.expires),
+                      let fire = cal.date(bySettingHour: hour, minute: 0, second: 0, of: day), fire > .now else { continue }
+                await add(center, c, id: "\(days)", at: fire,
+                          title: days == 1 ? "\(c.name): läuft morgen ab" : "\(c.name): noch \(days) Tage")
+                planned += 1
+            }
+            // Kurzfristig angelegt und alle Vorläufe schon vorbei: trotzdem einmal erinnern.
+            if planned == 0, let fire = ReminderPrefs.fallback(expires: c.expires, hour: hour) {
+                await add(center, c, id: "fallback", at: fire,
+                          title: c.daysLeft == 0 ? "\(c.name): läuft heute ab" : "\(c.name): läuft bald ab")
             }
             if let custom = c.reminderAt, custom > .now {
-                let content = UNMutableNotificationContent()
-                content.title = "\(c.name): deine Erinnerung"
-                content.body = "\(c.headline) übrig, gültig bis \(c.expires.dayMonthYear)."
-                content.sound = .default
-                let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: custom)
-                let request = UNNotificationRequest(identifier: "\(c.id.uuidString)-custom", content: content,
-                                                    trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
-                try? await center.add(request)
+                await add(center, c, id: "custom", at: custom, title: "\(c.name): deine Erinnerung")
             }
         }
+    }
+
+    private func add(_ center: UNUserNotificationCenter, _ c: GiftCard, id: String, at date: Date, title: String) async {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = "\(c.headline) gültig bis \(c.expires.dayMonthYear). Jetzt einlösen."
+        content.sound = .default
+        content.categoryIdentifier = ReminderPrefs.category.identifier
+        content.userInfo = ["card": c.id.uuidString]
+        let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        let request = UNNotificationRequest(identifier: "\(c.id.uuidString)-\(id)", content: content,
+                                            trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
+        try? await center.add(request)
     }
 }
 
@@ -320,6 +350,24 @@ enum ReminderPrefs {
     }
 
     static var hour: Int { UserDefaults.standard.object(forKey: hourKey) as? Int ?? 10 }
+
+    /// Mitteilung mit „Morgen erinnern“.
+    static let category = UNNotificationCategory(
+        identifier: "expiry",
+        actions: [UNNotificationAction(identifier: "snooze", title: "Morgen erinnern", options: [])],
+        intentIdentifiers: [])
+
+    /// Nächster sinnvoller Termin, wenn alle Vorläufe vorbei sind: heute zur Uhrzeit, sonst morgen,
+    /// am Ablauftag notfalls in einer Stunde – aber nie nach dem Ablauf und nie nachts.
+    static func fallback(expires: Date, hour: Int, now: Date = .now) -> Date? {
+        let cal = Calendar.current
+        guard let end = cal.date(bySettingHour: 21, minute: 0, second: 0, of: expires), end > now else { return nil }
+        if let today = cal.date(bySettingHour: hour, minute: 0, second: 0, of: now), today > now, today <= end { return today }
+        if let next = cal.date(byAdding: .day, value: 1, to: now),
+           let tomorrow = cal.date(bySettingHour: hour, minute: 0, second: 0, of: next), tomorrow <= end { return tomorrow }
+        let soon = now.addingTimeInterval(3600)
+        return soon <= end && cal.component(.hour, from: soon) >= 8 ? soon : nil
+    }
 
     static func describe(days: [Int], hour: Int) -> String {
         guard !days.isEmpty else { return "Keine Vorlaufzeit gewählt" }

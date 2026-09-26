@@ -252,6 +252,25 @@ struct SyncTests {
     }
 }
 
+@Suite("Korrektur und Aufladen")
+struct BalanceTests {
+    @Test("Neuer Stand laut Bon: Differenz im Verlauf, Aufladung erhöht den Startwert")
+    func setBalance() {
+        var c = card(value: 50)
+        c.setBalance(37.5)
+        #expect(c.balance == 37.5)
+        #expect(c.history.last?.amount == 12.5)
+        c.setBalance(80)
+        #expect(c.balance == 80)
+        #expect(c.value == 80)
+        #expect(c.history.last?.amount == -42.5)
+        #expect(c.history.last?.note == "Aufgeladen")
+        let before = c.history.count
+        c.setBalance(80)
+        #expect(c.history.count == before)
+    }
+}
+
 @Suite("iCloud-Nutzlast")
 struct CloudPayloadTests {
     @Test("Verschlüsselt, ohne Klartext, PIN und Foto; mit richtigem Schlüssel lesbar")

@@ -69,7 +69,7 @@ struct MerchantsView: View {
     private func segment(_ title: String, _ on: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title).font(.scaled(14.5, weight: .semibold))
-                .foregroundStyle(on ? Color.white : Color.ink)
+                .foregroundStyle(on ? Color.onInk : Color.ink)
                 .padding(.horizontal, 16).padding(.vertical, 10)
         }
         .buttonStyle(.plain)

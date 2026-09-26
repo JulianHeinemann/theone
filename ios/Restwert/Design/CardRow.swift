@@ -55,6 +55,11 @@ struct CardRow: View {
                     Image(systemName: "gift").font(.scaled(13)).foregroundStyle(Color.ink2)
                         .accessibilityLabel("zum Verschenken")
                 }
+                if card.pendingSince != nil && card.isActive {
+                    Text("Betrag offen").font(.scaled(12, weight: .semibold)).foregroundStyle(Color.warn)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Color.warnSoft, in: .capsule)
+                }
                 if !card.owner.isEmpty {
                     Text("für \(card.owner)").font(.scaled(13)).foregroundStyle(Color.ink2).lineLimit(1)
                 }

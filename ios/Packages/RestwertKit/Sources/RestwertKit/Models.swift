@@ -109,9 +109,9 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         Merchant("eventim", "Eventim", .codeOnly, .text, "https://www.eventim.de/helpcenter/?faq=2288", check: .form, "Online mit 16-stelliger Nummer."),
         Merchant("ticketmaster", "Ticketmaster", .codeOnly, .text, "https://sites.prepaytec.com/chopinweb/balanceCheck.do?customerCode=2013119751813114&loc=de&showCvc=1&showExpiryDate=1&brandingCode=bal_enq_tmgermany", check: .form, "Nummer plus 3-stelliger Sicherheitscode."),
         Merchant("ikea", "IKEA", .official, .code128, "https://www.ikea.com/de/de/gift-cards/", check: .form, "Digitale Karte wird vom Handy gescannt. Guthaben online nur mit Login."),
-        Merchant("thalia", "Thalia", .official, .code128, "https://www.thalia.de/geschenkkarte/", check: .form, "Thalia bietet die Karte auch für Apple und Google Wallet an."),
+        Merchant("thalia", "Thalia", .official, .code128, "https://www.thalia.de/geschenkkarte/", check: .form, "Digitale Karte wird vom Handy gescannt. 17-stellige Nummer und PIN für online."),
         Merchant("zara", "Zara", .official, .code128, "https://www.zara.com/de/de/z-zara-card/balance", check: .form, "E-Karte gilt in Filialen."),
-        Merchant("tkmaxx", "TK Maxx", .official, .code128, "https://wbiprod.storedvalue.com/wbir/clients/tkmaxx-de", check: .form, "TK Maxx bietet digitale Gutscheine auch fürs Wallet an. An der Kasse vorzeigen."),
+        Merchant("tkmaxx", "TK Maxx", .official, .code128, "https://wbiprod.storedvalue.com/wbir/clients/tkmaxx-de", check: .form, "Digitalen Gutschein an der Kasse vorzeigen."),
         Merchant("decathlon", "Decathlon", .official, .code128, "https://www.decathlon.de/services/giftcard/balance", check: .form, "Offiziell auch digital auf dem Smartphone."),
         Merchant("douglas", "Douglas", .official, .code128, "https://www.douglas.de/de/cp/helpv2wherecanicheckthebalanceofmygiftcard/help-where-can-i-check-the-balance-of-my-gift-card", check: .form, "eGift digital oder ausgedruckt. Online mit 17-stelliger Nummer und PIN."),
         Merchant("hm", "H&M", .official, .code128, "https://www2.hm.com/de_de/customer-service/geschenkkarten.html", check: .form, "E-Geschenkkarte am Handy zeigen."),
@@ -266,6 +266,8 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     public var owner: String = ""
     /// Zum Verschenken gedacht: zählt nicht zum eigenen Guthaben.
     public var forGifting: Bool = false
+    /// An der Kasse benutzt, Betrag aber noch nicht eingetragen („Später eintragen“).
+    public var pendingSince: Date?
 
     public init(id: UUID = UUID(), kind: VoucherKind = .giftCard, merchantID: String, customName: String = "", number: String,
                 format: CodeFormat, pin: String = "", value: Double, balance: Double, percent: Double? = nil,
@@ -334,6 +336,19 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
         return balance
     }
 
+    /// Guthaben direkt auf einen neuen Stand setzen (laut Bon oder nach Aufladung). Die Differenz steht im Verlauf.
+    @discardableResult
+    public mutating func setBalance(_ newBalance: Double, note: String = "", at date: Date = .now) -> Double {
+        let target = max(0, (newBalance * 100).rounded() / 100)
+        let diff = ((balance - target) * 100).rounded() / 100
+        guard diff != 0 else { return balance }
+        balance = target
+        if target > value { value = target }
+        history.append(Redemption(date: date, amount: diff, store: "", note: note.isEmpty ? (diff < 0 ? "Aufgeladen" : "Stand korrigiert") : note, balanceAfter: balance))
+        modifiedAt = date
+        return balance
+    }
+
     /// Rabattcodes und Coupons als Ganzes einlösen.
     public mutating func markRedeemed(store: String = "", at date: Date = .now) {
         redeemedAt = date
@@ -343,7 +358,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case id, kind, merchantID, customName, number, format, pin, value, balance, percent, received, expires
-        case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt, archivedAt, reminderAt, owner, forGifting
+        case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt, archivedAt, reminderAt, owner, forGifting, pendingSince
     }
 
     /// Tolerantes Dekodieren, damit ältere Speicherstände nach Updates lesbar bleiben.
@@ -372,6 +387,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
         reminderAt = try c.decodeIfPresent(Date.self, forKey: .reminderAt)
         owner = try c.decodeIfPresent(String.self, forKey: .owner) ?? ""
         forGifting = try c.decodeIfPresent(Bool.self, forKey: .forGifting) ?? false
+        pendingSince = try c.decodeIfPresent(Date.self, forKey: .pendingSince)
     }
 }
 

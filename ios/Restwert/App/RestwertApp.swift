@@ -1,9 +1,11 @@
 import SwiftUI
 import LocalAuthentication
+import UserNotifications
 import RestwertKit
 
 @main
 struct RestwertApp: App {
+    @UIApplicationDelegateAdaptor(NotificationHandler.self) private var notifications
     @State private var store = Store()
     @State private var cloud = CloudSync()
     @State private var router = Router()
@@ -15,10 +17,10 @@ struct RestwertApp: App {
                 .environment(store)
                 .environment(cloud)
                 .environment(router)
-                .preferredColorScheme(.light)
                 .tint(Color.ink)
                 .onOpenURL { url in router.openImport(url) }
                 .task {
+                    NotificationHandler.openCard = { [router] id in router.showCard(id) }
                     cloud.attach(store)
                     await cloud.syncNow()
                 }
@@ -214,6 +216,9 @@ struct ToastView: View {
             Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.good)
             Text(toast.message).font(.scaled(15, weight: .medium)).lineLimit(2)
             Spacer(minLength: 8)
+            if UIAccessibility.isVoiceOverRunning {
+                Button("Schließen", systemImage: "xmark") { onClose() }.labelStyle(.iconOnly)
+            }
             if let undo = toast.undo {
                 Button("Rückgängig") {
                     undo()
@@ -222,12 +227,15 @@ struct ToastView: View {
                 .font(.scaled(15, weight: .bold))
             }
         }
-        .foregroundStyle(.white)
-        .tint(Color.brandYellow)
+        .foregroundStyle(Color.onInk)
+        .tint(Color.onInk)
         .padding(.horizontal, 16).padding(.vertical, 14)
         .background(Color.ink, in: .rect(cornerRadius: 16, style: .continuous))
         .shadow(color: Color.ink.opacity(0.2), radius: 16, y: 6)
         .task {
+            // Vorlesen, und mit VoiceOver ohne Zeitlimit stehen lassen, damit „Rückgängig“ erreichbar bleibt.
+            AccessibilityNotification.Announcement(toast.undo == nil ? toast.message : "\(toast.message). Rückgängig möglich.").post()
+            guard !UIAccessibility.isVoiceOverRunning else { return }
             try? await Task.sleep(for: .seconds(8))
             onClose()
         }
@@ -257,6 +265,35 @@ struct LockScreen: View {
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { onUnlock(); return }
         if (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Restwert entsperren")) == true {
             onUnlock()
+        }
+    }
+}
+
+// MARK: - Mitteilungen
+
+/// Tippen auf eine Erinnerung öffnet den Gutschein; „Morgen erinnern“ plant sie einen Tag später neu.
+final class NotificationHandler: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    @MainActor static var openCard: ((UUID) -> Void)?
+
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        UNUserNotificationCenter.current().delegate = self
+        return true
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        [.banner, .sound]
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        let content = response.notification.request.content
+        guard let raw = content.userInfo["card"] as? String, let id = UUID(uuidString: raw) else { return }
+        if response.actionIdentifier == "snooze" {
+            let copy = content.mutableCopy() as? UNMutableNotificationContent ?? UNMutableNotificationContent()
+            let request = UNNotificationRequest(identifier: "\(raw)-snooze", content: copy,
+                                                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 24 * 3600, repeats: false))
+            try? await center.add(request)
+        } else {
+            await MainActor.run { Self.openCard?(id) }
         }
     }
 }

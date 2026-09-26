@@ -242,7 +242,7 @@ struct ViewfinderTeaser: View {
         .foregroundStyle(.white)
         .padding(20)
         .frame(maxWidth: .infinity, minHeight: 190, alignment: .leading)
-        .background(Color.ink, in: .rect(cornerRadius: 22, style: .continuous))
+        .background(Color(light: 0x0E0E10, dark: 0x26262B), in: .rect(cornerRadius: 22, style: .continuous))
         .contentShape(.rect)
     }
 }

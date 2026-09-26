@@ -13,22 +13,37 @@ extension Color {
                   opacity: 1)
     }
 
-    static let page = Color(hex: 0xF1F2F4)
-    static let surface = Color.white
-    static let fill = Color(hex: 0xF5F6F8)
-    static let ink = Color(hex: 0x0E0E10)
-    static let ink2 = Color(hex: 0x3A3C42)
-    static let muted = Color(hex: 0x696C74)
-    static let line = Color(hex: 0xE7E8EB)
+    /// Farbe mit eigenem Wert für den Dunkelmodus.
+    nonisolated init(light: UInt32, dark: UInt32) {
+        func ui(_ hex: UInt32) -> UIColor {
+            UIColor(red: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
+                    blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
+        }
+        self.init(uiColor: UIColor { $0.userInterfaceStyle == .dark ? ui(dark) : ui(light) })
+    }
+
+    static let page = Color(light: 0xF1F2F4, dark: 0x0B0B0D)
+    static let surface = Color(light: 0xFFFFFF, dark: 0x1C1C1F)
+    static let fill = Color(light: 0xF5F6F8, dark: 0x2A2A2F)
+    static let ink = Color(light: 0x0E0E10, dark: 0xF2F2F4)
+    static let ink2 = Color(light: 0x3A3C42, dark: 0xC9CAD0)
+    static let muted = Color(light: 0x696C74, dark: 0x9C9EA6)
+    static let line = Color(light: 0xE7E8EB, dark: 0x34353B)
+    /// Text auf `ink`-Flächen (Hauptknopf, aktive Chips): weiß im Hellen, schwarz im Dunkeln.
+    static let onInk = Color(light: 0xFFFFFF, dark: 0x0E0E10)
+    /// Text auf Markengelb: immer dunkel.
+    static let onBrand = Color(hex: 0x0E0E10)
     static let brandYellow = Color(hex: 0xFFE14D)
     static let keyBlue = Color(hex: 0x2451FF)
-    static let good = Color(hex: 0x1F7A4D)
-    static let goodSoft = Color(hex: 0xCFF0DC)
-    static let bad = Color(hex: 0xE0413A)
-    static let badSoft = Color(hex: 0xFBDCDA)
-    static let warn = Color(hex: 0xB42318)
-    static let warnSoft = Color(hex: 0xFDECE8)
-    static let paper = Color(hex: 0xFBF9F4)
+    static let good = Color(light: 0x1F7A4D, dark: 0x4CC38A)
+    static let goodSoft = Color(light: 0xCFF0DC, dark: 0x163A28)
+    static let bad = Color(light: 0xE0413A, dark: 0xFF6B63)
+    static let badSoft = Color(light: 0xFBDCDA, dark: 0x3D1614)
+    static let warn = Color(light: 0xB42318, dark: 0xFF8A75)
+    static let warnSoft = Color(light: 0xFDECE8, dark: 0x3A1712)
+    static let paper = Color(light: 0xFBF9F4, dark: 0x24221E)
+    static let disabledFill = Color(light: 0xE6E6EA, dark: 0x2C2C31)
+    static let disabledText = Color(light: 0x6E717A, dark: 0x9C9EA6)
 }
 
 extension MerchantCategory {
@@ -83,15 +98,15 @@ extension VoucherStatus {
 /// Kräftiger Haupt-Button in Markenfarbe (Schwarz oder Gelb).
 struct FilledButtonStyle: ButtonStyle {
     var background: Color = .ink
-    var foreground: Color = .white
+    var foreground: Color = .onInk
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.scaled(16, weight: .bold))
             .frame(maxWidth: .infinity, minHeight: 56)
-            .foregroundStyle(isEnabled ? foreground : Color(hex: 0x6E717A))
-            .background(isEnabled ? background : Color(hex: 0xE6E6EA), in: .rect(cornerRadius: 18, style: .continuous))
+            .foregroundStyle(isEnabled ? foreground : Color.disabledText)
+            .background(isEnabled ? background : Color.disabledFill, in: .rect(cornerRadius: 18, style: .continuous))
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.spring(duration: 0.25, bounce: 0.4), value: configuration.isPressed)
     }
@@ -99,7 +114,7 @@ struct FilledButtonStyle: ButtonStyle {
 
 extension ButtonStyle where Self == FilledButtonStyle {
     static var primary: FilledButtonStyle { FilledButtonStyle() }
-    static var accent: FilledButtonStyle { FilledButtonStyle(background: .brandYellow, foreground: .ink) }
+    static var accent: FilledButtonStyle { FilledButtonStyle(background: .brandYellow, foreground: .onBrand) }
     static var quiet: FilledButtonStyle { FilledButtonStyle(background: .surface, foreground: .ink) }
 }
 

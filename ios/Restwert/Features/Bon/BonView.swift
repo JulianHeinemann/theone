@@ -127,7 +127,7 @@ struct BonView: View {
                     .font(.scaled(13, design: .monospaced)).foregroundStyle(Color.ink2)
             }
             Spacer()
-            Text(line.redemption.amount > 0 ? "−" + line.redemption.amount.euro : "✓")
+            Text(line.redemption.amount > 0 ? "−" + line.redemption.amount.euro : line.redemption.amount < 0 ? "+" + (-line.redemption.amount).euro : "✓")
                 .font(.scaled(14, weight: .bold, design: .monospaced))
         }
         .foregroundStyle(Color.ink)

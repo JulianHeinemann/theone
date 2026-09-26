@@ -95,7 +95,7 @@ struct SettingsView: View {
             } header: {
                 Text("Sicherung")
             } footer: {
-                Text("Deine Gutscheine sind im iCloud-Backup deines iPhones enthalten. Zusätzlich kannst du eine Sicherungsdatei speichern, z. B. in iCloud Drive. Sie enthält PINs, aber keine Fotos – bewahre sie sicher auf.")
+                Text("Deine Gutscheine sind im iCloud-Backup deines iPhones enthalten. Zusätzlich kannst du eine Sicherungsdatei speichern, z. B. in iCloud Drive. Sie enthält PINs und Fotos – bewahre sie sicher auf.")
             }
             .foregroundStyle(Color.ink)
 
@@ -104,8 +104,13 @@ struct SettingsView: View {
                 if store.hasExamples {
                     Button("Beispiele entfernen", systemImage: "wand.and.stars") { withAnimation { store.clearExamples() } }
                 }
+                NavigationLink {
+                    PrivacyExplainer()
+                } label: {
+                    Label("So schützt Restwert deine Daten", systemImage: "lock.shield")
+                }
                 Link(destination: APIConfig.baseURL.appending(path: "datenschutz")) {
-                    Label("Datenschutz", systemImage: "hand.raised")
+                    Label("Datenschutzerklärung", systemImage: "hand.raised")
                 }
                 Link(destination: APIConfig.baseURL.appending(path: "impressum")) {
                     Label("Impressum", systemImage: "info.circle")
@@ -244,6 +249,39 @@ struct ReminderSettingsView: View {
             }
         }
         .navigationTitle("Erinnerungen")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Nachprüfbare Angaben, wo welche Daten liegen – in Alltagssprache.
+struct PrivacyExplainer: View {
+    private let rows: [(icon: String, title: String, text: String)] = [
+        ("iphone", "Auf deinem iPhone", "Gutscheine, Fotos und Verlauf liegen in einer Datei, die iOS verschlüsselt, solange das iPhone gesperrt ist."),
+        ("person.crop.circle.badge.xmark", "Kein Konto, kein Server von uns", "Es gibt keine Anmeldung und keine Datenbank bei uns. Wir sehen nicht, welche Gutscheine du hast."),
+        ("lock.icloud", "iCloud-Sync (freiwillig)", "Jeder Gutschein wird auf dem iPhone mit AES-256 verschlüsselt, bevor er in dein eigenes iCloud geht. Der Schlüssel liegt nur in deinem iCloud-Schlüsselbund. Weder wir noch Apple können mitlesen."),
+        ("key", "PINs", "PINs liegen im Schlüsselbund, nie in einer Datenbank, und werden nur nach Face ID angezeigt."),
+        ("text.viewfinder", "Scannen", "Barcode- und Texterkennung laufen auf dem iPhone. Fotos werden nirgendwohin geschickt."),
+        ("chart.bar.xaxis", "Keine Tracker, keine Werbung", "Die App enthält keine Analyse- oder Werbe-Software."),
+        ("externaldrive", "Sicherung", "Die Sicherungsdatei enthält PINs und Fotos. Speichere sie nur dort, wo du auch Passwörter aufbewahren würdest."),
+    ]
+
+    var body: some View {
+        List {
+            ForEach(rows, id: \.title) { row in
+                Label {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(row.title).font(.scaled(16, weight: .semibold))
+                        Text(row.text).font(.scaled(14)).foregroundStyle(Color.ink2)
+                    }
+                    .padding(.vertical, 4)
+                } icon: {
+                    Image(systemName: row.icon).foregroundStyle(Color.ink)
+                }
+            }
+        }
+        .scrollContentBackground(.hidden)
+        .pageBackground()
+        .navigationTitle("Deine Daten")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

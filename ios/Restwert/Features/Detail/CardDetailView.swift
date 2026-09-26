@@ -18,6 +18,7 @@ struct CardDetailView: View {
     @State private var stampVisible = false
     @State private var copied = false
     @State private var success = 0
+    @State private var showPhoto = false
 
     var body: some View {
         Group {
@@ -37,6 +38,9 @@ struct CardDetailView: View {
             VStack(spacing: 16) {
                 if !card.isActive && !card.isArchived {
                     archiveBanner(card, status)
+                }
+                if card.pendingSince != nil && card.isActive {
+                    pendingBanner(card)
                 }
                 summary(card, status)
                 if card.isActive {
@@ -63,6 +67,9 @@ struct CardDetailView: View {
             .padding(.horizontal, 16).padding(.bottom, 30)
         }
         .scrollIndicators(.hidden)
+        .fullScreenCover(isPresented: $showPhoto) {
+            if let data = card.photo, let image = UIImage(data: data) { PhotoViewer(image: image) }
+        }
         .toolbar(.hidden, for: .tabBar)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -139,6 +146,28 @@ struct CardDetailView: View {
         }
     }
 
+    /// Nach „Später eintragen“ an der Kasse: Betrag nachtragen oder verwerfen.
+    private func pendingBanner(_ card: GiftCard) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Betrag offen", systemImage: "clock.badge.exclamationmark").font(.scaled(16, weight: .semibold))
+            Text("Du hast \(card.name) an der Kasse benutzt, aber noch keinen Betrag eingetragen.")
+                .font(.scaled(14)).foregroundStyle(Color.ink2)
+            HStack(spacing: 8) {
+                NavigationLink(value: Route.keypad(card.id)) {
+                    Text("Jetzt eintragen").modifier(SecondaryPill())
+                }
+                .buttonStyle(.plain)
+                Button { store.setPending(card.id, false) } label: {
+                    Text("Nicht bezahlt").modifier(SecondaryPill())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .foregroundStyle(Color.ink)
+        .padding(14)
+        .background(Color.warnSoft, in: .rect(cornerRadius: 18, style: .continuous))
+    }
+
     /// Aufgebraucht oder abgelaufen: direkt oben anbieten, den Gutschein aus der Liste zu nehmen.
     private func archiveBanner(_ card: GiftCard, _ status: VoucherStatus) -> some View {
         HStack(spacing: 12) {
@@ -203,7 +232,40 @@ struct CardDetailView: View {
         .buttonStyle(.plain)
     }
 
+    @ViewBuilder
     private func codeTicket(_ card: GiftCard) -> some View {
+        if card.number.isEmpty {
+            photoTicket(card)
+        } else {
+            barcodeTicket(card)
+        }
+    }
+
+    /// Papiergutschein ohne Code: das Foto ist der Gutschein.
+    private func photoTicket(_ card: GiftCard) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Original").font(.scaled(16, weight: .bold))
+            if let data = card.photo, let image = UIImage(data: data) {
+                Button { showPhoto = true } label: {
+                    Image(uiImage: image).resizable().scaledToFit()
+                        .frame(maxWidth: .infinity, maxHeight: 260)
+                        .clipShape(.rect(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Foto des Gutscheins groß anzeigen")
+                Text("An der Kasse das Foto zeigen oder das Original mitnehmen.").font(.scaled(13)).foregroundStyle(Color.ink2)
+            } else {
+                Text("Kein Foto und kein Code gespeichert. Tipp oben auf den Stift, um eins hinzuzufügen.")
+                    .font(.scaled(14)).foregroundStyle(Color.ink2)
+            }
+        }
+        .foregroundStyle(Color.ink)
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .cardSurface(radius: 28)
+    }
+
+    private func barcodeTicket(_ card: GiftCard) -> some View {
         VStack(spacing: 0) {
             HStack {
                 Text("Code").font(.scaled(16, weight: .bold))
@@ -225,7 +287,7 @@ struct CardDetailView: View {
                 }
                 .buttonStyle(.glassProminent)
                 .tint(Color.brandYellow)
-                .foregroundStyle(Color.ink)
+                .foregroundStyle(Color.onBrand)
             }
             .padding(.horizontal, 18).padding(.top, 16).padding(.bottom, 4)
             Perforation()
@@ -233,6 +295,10 @@ struct CardDetailView: View {
                 BarcodeView(number: card.number, format: card.format, height: 84)
                 if card.format != .text {
                     Text(card.number.grouped).font(.scaled(17, weight: .bold)).kerning(2).textSelection(.enabled)
+                }
+                if card.photo != nil {
+                    Button("Original-Foto ansehen", systemImage: "photo") { showPhoto = true }
+                        .font(.scaled(14, weight: .medium)).foregroundStyle(Color.ink2).padding(.top, 4)
                 }
             }
             .padding(.horizontal, 18).padding(.bottom, 18)
@@ -249,12 +315,12 @@ struct CardDetailView: View {
                 Image(systemName: "minus.circle.fill").font(.scaled(24))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Einkauf eintragen").font(.scaled(17, weight: .bold))
-                    Text("Betrag wird vom Guthaben abgezogen").font(.scaled(14)).foregroundStyle(Color.ink2)
+                    Text("Betrag wird vom Guthaben abgezogen").font(.scaled(14)).foregroundStyle(Color.onBrand.opacity(0.75))
                 }
                 Spacer()
-                Image(systemName: "chevron.right").font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink2)
+                Image(systemName: "chevron.right").font(.scaled(14, weight: .semibold)).foregroundStyle(Color.onBrand.opacity(0.75))
             }
-            .foregroundStyle(Color.ink)
+            .foregroundStyle(Color.onBrand)
             .padding(16)
             .background(Color.brandYellow, in: .rect(cornerRadius: 18, style: .continuous))
         }
@@ -343,7 +409,7 @@ struct LocationSheet: View {
                                 .symbolEffect(.bounce, value: location == loc)
                             Text(loc.label).font(.scaled(13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
                         }
-                        .foregroundStyle(Color.ink)
+                        .foregroundStyle(location == loc ? Color.onBrand : Color.ink)
                         .frame(maxWidth: .infinity, minHeight: 84)
                         .background(location == loc ? Color.brandYellow : Color.fill, in: .rect(cornerRadius: 18, style: .continuous))
                     }
@@ -380,7 +446,7 @@ struct CardBon: View {
                     card.kind.isValueBased ? "+" + card.value.euro : card.headline)
                 ForEach(card.history.sorted { $0.date < $1.date }) { r in
                     row(r.store.isEmpty ? (r.amount > 0 ? "Eingelöst" : r.note) : r.store, subline(r),
-                        r.amount > 0 ? "−" + r.amount.euro : "✓")
+                        r.amount > 0 ? "−" + r.amount.euro : r.amount < 0 ? "+" + (-r.amount).euro : "✓")
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 if card.history.isEmpty {
