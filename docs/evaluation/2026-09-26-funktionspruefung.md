@@ -64,7 +64,7 @@ Empfohlene Reihenfolge:
 
 ## Bestätigte Fehler
 
-Status: ⏳ in Arbeit (7 Reparaturpakete)
+Status: ✅ behoben in 7 Reparaturpaketen (Commits 9f0c3f7 … e27a608) plus Nacharbeiten. Offen/teilweise: Rückgängig nach „Später eintragen → Eintragen“ plant die Nachfrage nicht neu; Zoom aus Ablaufterminen erst nach Anbindung (erledigt in 434f358).
 
 | Schwere | Funktion | Ort | Fehler |
 |---|---|---|---|
