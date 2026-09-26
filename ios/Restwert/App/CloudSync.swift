@@ -30,12 +30,12 @@ final class CloudSync {
     private(set) var state: State = .off
     private(set) var lastSync: Date?
 
-    var isEnabled: Bool {
-        get { UserDefaults.standard.bool(forKey: "iCloudSync") }
-        set {
-            UserDefaults.standard.set(newValue, forKey: "iCloudSync")
-            state = newValue ? .idle : .off
-            if newValue { Task { await syncNow() } }
+    /// Beobachtet, damit die Oberfläche sofort folgt; gespiegelt in UserDefaults („iCloudSync“, liest auch der Store).
+    var isEnabled: Bool = UserDefaults.standard.bool(forKey: "iCloudSync") {
+        didSet {
+            UserDefaults.standard.set(isEnabled, forKey: "iCloudSync")
+            state = isEnabled ? .idle : .off
+            if isEnabled { Task { await syncNow() } }
         }
     }
 
@@ -45,6 +45,10 @@ final class CloudSync {
     @ObservationIgnored private weak var store: Store?
     @ObservationIgnored private var pushTask: Task<Void, Never>?
     @ObservationIgnored private var running = false
+    /// Während eines laufenden Abgleichs angefordert: danach noch einmal abgleichen.
+    @ObservationIgnored private var resyncRequested = false
+    /// iCloud-Daten werden gerade gelöscht: kein Abgleich, der die Zone wieder anlegen könnte.
+    @ObservationIgnored private var deleting = false
     @ObservationIgnored private lazy var database = CKContainer(identifier: Self.containerID).privateCloudDatabase
 
     init() {
@@ -70,9 +74,20 @@ final class CloudSync {
 
     @MainActor
     func syncNow() async {
-        guard isEnabled, !running, let store else { return }
+        guard isEnabled, !deleting, let store else { return }
+        // Läuft schon ein Abgleich, danach noch einmal, damit Änderungen von währenddessen hochgehen.
+        guard !running else { resyncRequested = true; return }
+        store.reloadIfNeeded()
+        guard store.isLoaded else { return }
         running = true
-        defer { running = false }
+        resyncRequested = false
+        defer {
+            running = false
+            if resyncRequested {
+                resyncRequested = false
+                Task { await syncNow() }
+            }
+        }
         state = .syncing
         do {
             let status = try await CKContainer(identifier: Self.containerID).accountStatus()
@@ -82,31 +97,67 @@ final class CloudSync {
                     : "iCloud ist gerade nicht erreichbar.")
                 return
             }
-            try await ensureZone()
-            let remote = try await fetchAll()
-            guard let key = SyncKey.current(remoteHasData: !remote.blobs.isEmpty) else {
-                // Daten sind schon in iCloud, aber der Schlüssel ist noch nicht per Schlüsselbund angekommen.
-                state = .waitingForKey
-                return
+            do {
+                try await pass(store)
+            } catch let error as CKError where Self.zoneIsGone(error) && isEnabled && !deleting {
+                // Zone wurde gelöscht (anderes Gerät, Apple-ID, iCloud-Einstellungen): neu anlegen und einmal wiederholen.
+                UserDefaults.standard.removeObject(forKey: "iCloudZoneReady")
+                try await pass(store)
             }
-            let decoded = decode(remote, key: key)
-            store.merge(SyncData(cards: decoded.cards, tests: decoded.tests, deleted: Array(remote.tombstones)))
-            let plan = CloudPlan.upload(localCards: store.cards, localTests: store.tests, localDeleted: store.deletedIDs,
-                                        remoteModified: decoded.modified, remoteTests: Set(decoded.tests.map(\.id)),
-                                        remoteTombstones: remote.tombstones)
-            try await upload(plan, key: key)
+            if resyncRequested { return }
             lastSync = .now
             UserDefaults.standard.set(lastSync, forKey: "iCloudLastSync")
             state = .idle
+        } catch is WaitingForKey {
+            state = .waitingForKey
         } catch {
             state = .failed(Self.describe(error))
         }
     }
 
-    /// Alles in iCloud löschen (Zone entfernen). Lokale Daten bleiben.
+    private struct WaitingForKey: Error {}
+
+    /// Ein Durchgang: Zone sicherstellen, lesen, einmischen, hochladen.
     @MainActor
-    func deleteCloudData() async throws {
-        _ = try await database.modifyRecordZones(saving: [], deleting: [Self.zone])
+    private func pass(_ store: Store) async throws {
+        try await ensureZone()
+        let remote = try await fetchAll()
+        guard let key = SyncKey.current(remoteHasData: !remote.blobs.isEmpty) else {
+            // Daten sind schon in iCloud, aber der Schlüssel ist noch nicht per Schlüsselbund angekommen.
+            throw WaitingForKey()
+        }
+        let decoded = decode(remote, key: key)
+        store.merge(SyncData(cards: decoded.cards, tests: decoded.tests, deleted: Array(remote.tombstones)))
+        let plan = CloudPlan.upload(localCards: store.cards, localTests: store.tests, localDeleted: store.deletedIDs,
+                                    remoteModified: decoded.modified, remoteTests: Set(decoded.tests.map(\.id)),
+                                    remoteTombstones: remote.tombstones)
+        try await upload(plan, key: key)
+    }
+
+    private static func zoneIsGone(_ error: CKError) -> Bool {
+        if error.code == .zoneNotFound || error.code == .userDeletedZone { return true }
+        guard error.code == .partialFailure, let items = error.partialErrorsByItemID?.values else { return false }
+        return items.contains { ($0 as? CKError).map { $0.code == .zoneNotFound || $0.code == .userDeletedZone } ?? false }
+    }
+
+    /// Alles in iCloud löschen (Zone entfernen) und den Sync ausschalten. Lokale Daten und PINs bleiben.
+    /// Mit `includingKeychain` (Standard) verschwinden auch Sync-Schlüssel und alle PINs aus dem iCloud-Schlüsselbund –
+    /// auf allen Geräten. Beim erneuten Einschalten entstehen Zone und Schlüssel neu und alles wird wieder hochgeladen.
+    @MainActor
+    func deleteCloudData(includingKeychain: Bool = true) async throws {
+        pushTask?.cancel()
+        // Sperren, damit kein laufender Abgleich die Zone gleich wieder anlegt.
+        deleting = true
+        defer { deleting = false }
+        do {
+            _ = try await database.modifyRecordZones(saving: [], deleting: [Self.zone])
+        } catch let error as CKError where Self.zoneIsGone(error) {
+            // Schon weg: auch gut.
+        }
+        UserDefaults.standard.removeObject(forKey: "iCloudZoneReady")
+        if includingKeychain { SyncedKeychain.deleteAll() }
+        lastSync = nil
+        UserDefaults.standard.removeObject(forKey: "iCloudLastSync")
         isEnabled = false
     }
 
@@ -180,10 +231,15 @@ final class CloudSync {
         for id in plan.tombstones {
             records.append(CKRecord(recordType: "Tombstone", recordID: CKRecord.ID(recordName: "del-\(id.uuidString)", zoneID: Self.zone)))
         }
-        let deleting = plan.tombstones.map { CKRecord.ID(recordName: $0.uuidString, zoneID: Self.zone) }
+        var deleting = plan.tombstones.map { CKRecord.ID(recordName: $0.uuidString, zoneID: Self.zone) }
         guard !records.isEmpty else { return }
         for chunk in stride(from: 0, to: records.count, by: 300).map({ Array(records[$0..<min($0 + 300, records.count)]) }) {
-            _ = try await database.modifyRecords(saving: chunk, deleting: deleting, savePolicy: .allKeys, atomically: false)
+            let (saved, deleted) = try await database.modifyRecords(saving: chunk, deleting: deleting,
+                                                                    savePolicy: .allKeys, atomically: false)
+            deleting = []   // Löschungen nur mit dem ersten Paket
+            // Fehler einzelner Datensätze nicht als Erfolg melden.
+            for case .failure(let error) in saved.values { throw error }
+            for case .failure(let error) in deleted.values where (error as? CKError)?.code != .unknownItem { throw error }
         }
     }
 
@@ -225,6 +281,12 @@ enum SyncedKeychain {
         add[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
         SecItemAdd(add as CFDictionary, nil)
     }
+
+    /// Alle Einträge von Restwert (Sync-Schlüssel und PINs) aus dem iCloud-Schlüsselbund entfernen.
+    static func deleteAll() {
+        SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
+                       kSecAttrSynchronizable as String: true] as CFDictionary)
+    }
 }
 
 /// Der Schlüssel, mit dem alle Gutscheine in iCloud verschlüsselt sind.
@@ -239,14 +301,26 @@ enum SyncKey {
     }
 }
 
-/// PINs einzeln im iCloud-Schlüsselbund, damit sie nie in einer Datenbank liegen.
+/// PINs einzeln im iCloud-Schlüsselbund, damit sie nie in der iCloud-Datenbank liegen.
+/// Jeder Eintrag trägt den Zeitpunkt der Änderung (``PinEntry``); eine leere PIN heißt „gelöscht“.
 enum PinVault {
-    static func pin(for id: UUID) -> String? {
-        SyncedKeychain.get("pin-\(id.uuidString)").flatMap { String(data: $0, encoding: .utf8) }
+    static func entry(for id: UUID) -> PinEntry? {
+        SyncedKeychain.get(account(id)).flatMap(PinEntry.init(data:))
     }
 
-    static func store(_ value: String, for id: UUID) {
-        guard pin(for: id) != value else { return }
-        SyncedKeychain.set(value.isEmpty ? nil : Data(value.utf8), for: "pin-\(id.uuidString)")
+    static func pin(for id: UUID) -> String? {
+        entry(for: id).flatMap { $0.pin.isEmpty ? nil : $0.pin }
     }
+
+    static func store(_ entry: PinEntry, for id: UUID) {
+        guard self.entry(for: id) != entry else { return }
+        SyncedKeychain.set(entry.data, for: account(id))
+    }
+
+    /// Eintrag ganz entfernen (Gutschein gelöscht).
+    static func remove(for id: UUID) {
+        SyncedKeychain.set(nil, for: account(id))
+    }
+
+    private static func account(_ id: UUID) -> String { "pin-\(id.uuidString)" }
 }

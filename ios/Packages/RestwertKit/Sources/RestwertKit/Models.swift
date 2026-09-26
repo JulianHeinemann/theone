@@ -351,6 +351,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
 
     /// Rabattcodes und Coupons als Ganzes einlösen.
     public mutating func markRedeemed(store: String = "", at date: Date = .now) {
+        guard redeemedAt == nil else { return }
         redeemedAt = date
         history.append(Redemption(date: date, amount: 0, store: store, note: "\(kind.label) eingelöst", balanceAfter: balance))
         modifiedAt = date

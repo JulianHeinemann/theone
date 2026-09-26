@@ -65,7 +65,7 @@ public enum CloudPlan {
         let cards = localCards.filter { c in
             guard !c.isExample, !localDeleted.contains(c.id) else { return false }
             guard let remote = remoteModified[c.id] else { return true }
-            return c.modifiedAt > remote
+            return SyncMerge.isNewer(c.modifiedAt, than: remote)
         }
         let tests = localTests.filter { !$0.isExample && !remoteTests.contains($0.id) }
         let tombstones = localDeleted.subtracting(remoteTombstones).sorted { $0.uuidString < $1.uuidString }

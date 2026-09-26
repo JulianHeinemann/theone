@@ -380,3 +380,107 @@ struct CloudPayloadTests {
         #expect(plan.tombstones == [gone])
     }
 }
+
+@Suite("Datenschicht")
+struct DataLayerTests {
+    @Test("Zeitstempel überstehen iCloud-Nutzlast mit Millisekunden; kein erneuter Upload")
+    func timestampPrecision() throws {
+        var c = card()
+        c.modifiedAt = Date(timeIntervalSince1970: 1_800_000_000.734_512)
+        let key = CloudPayload.newKey()
+        let back = try CloudPayload.openCard(CloudPayload.seal(c, key: key), key: key)
+        #expect(abs(back.modifiedAt.timeIntervalSince(c.modifiedAt)) < 0.001)
+        let plan = CloudPlan.upload(localCards: [c], localTests: [], localDeleted: [], remoteModified: [c.id: back.modifiedAt],
+                                    remoteTests: [], remoteTombstones: [])
+        #expect(plan.cards.isEmpty)
+        // Innerhalb derselben Sekunde gewinnt die tatsächlich neuere Änderung.
+        var newer = back
+        newer.balance = 1
+        newer.modifiedAt = c.modifiedAt.addingTimeInterval(0.2)
+        let r = SyncMerge.merge(localCards: [c], localTests: [], localDeleted: [], remote: SyncData(cards: [newer], tests: [], deleted: []))
+        #expect(r.cards.first?.balance == 1)
+    }
+
+    @Test("Tests gelöschter Gutscheine und gelöschte Tests kommen nicht zurück")
+    func deletedTests() {
+        let a = card()
+        let t1 = TestResult(cardID: a.id, merchantID: "thalia", merchantName: "Thalia", date: .now, success: true, format: .code128)
+        let t2 = TestResult(merchantID: "ikea", merchantName: "IKEA", date: .now, success: false, format: .code128)
+        let t3 = TestResult(merchantID: "dm", merchantName: "dm", date: .now, success: true, format: .code128)
+        let r = SyncMerge.merge(localCards: [], localTests: [], localDeleted: [a.id, t2.id],
+                                remote: SyncData(cards: [a], tests: [t1, t2, t3], deleted: []))
+        #expect(r.cards.isEmpty)
+        #expect(r.tests.map(\.id) == [t3.id])
+    }
+
+    @Test("Wiederherstellen: gelöschte Gutscheine bekommen neue IDs, Tests ziehen mit")
+    func revive() {
+        let gone = card("ikea")
+        let kept = card("thalia")
+        let t = TestResult(cardID: gone.id, merchantID: "ikea", merchantName: "IKEA", date: .now, success: true, format: .code128)
+        let out = SyncMerge.revive(cards: [gone, kept], tests: [t], deleted: [gone.id])
+        #expect(out.cards.count == 2)
+        #expect(out.cards[0].id != gone.id)
+        #expect(out.cards[1].id == kept.id)
+        #expect(out.tests.first?.cardID == out.cards[0].id)
+        #expect(out.tests.first?.id != t.id)
+        let r = SyncMerge.merge(localCards: [], localTests: [], localDeleted: [gone.id],
+                                remote: SyncData(cards: out.cards, tests: out.tests, deleted: []))
+        #expect(r.cards.count == 2)
+        #expect(r.tests.count == 1)
+    }
+
+    @Test("PIN: neuere gewinnt, Löschen bleibt gelöscht, alte Einträge füllen leere PIN")
+    func pinResolve() throws {
+        let old = Date(timeIntervalSince1970: 1_000)
+        let new = Date(timeIntervalSince1970: 2_000)
+        // Auf dem anderen Gerät geändert
+        #expect(PinEntry.resolve(localPin: "1111", localChangedAt: old, vault: PinEntry(pin: "2222", changedAt: new))
+                == .adopt(PinEntry(pin: "2222", changedAt: new)))
+        // Hier geändert: hochschreiben, nicht zurückholen
+        #expect(PinEntry.resolve(localPin: "2222", localChangedAt: new, vault: PinEntry(pin: "1111", changedAt: old))
+                == .publish(PinEntry(pin: "2222", changedAt: new)))
+        // Hier gelöscht: Löschung geht raus
+        #expect(PinEntry.resolve(localPin: "", localChangedAt: new, vault: PinEntry(pin: "4821", changedAt: old))
+                == .publish(PinEntry(pin: "", changedAt: new)))
+        // Anderswo gelöscht: bleibt gelöscht
+        #expect(PinEntry.resolve(localPin: "4821", localChangedAt: old, vault: PinEntry(pin: "", changedAt: new))
+                == .adopt(PinEntry(pin: "", changedAt: new)))
+        // Neues Gerät, alter Eintrag nur als Text
+        let legacy = try #require(PinEntry(data: Data("9999".utf8)))
+        #expect(legacy.changedAt == .distantPast)
+        #expect(PinEntry.resolve(localPin: "", localChangedAt: nil, vault: legacy) == .adopt(legacy))
+        #expect(PinEntry.resolve(localPin: "9999", localChangedAt: nil, vault: legacy) == .keep)
+        // Kein Eintrag, keine PIN: nichts tun
+        #expect(PinEntry.resolve(localPin: "", localChangedAt: nil, vault: nil) == .keep)
+        let e = PinEntry(pin: "12", changedAt: new)
+        #expect(PinEntry(data: e.data) == e)
+    }
+
+    @Test("Bon-Summe: nur echte Abzüge, Aufladungen getrennt, nie negativ")
+    func bonTotals() {
+        var c = card(value: 20)
+        c.redeem(5)
+        c.setBalance(100)
+        let lines = CardQueries.bonLines([c])
+        #expect(CardQueries.redeemedTotal(lines) == 5)
+        #expect(CardQueries.toppedUpTotal(lines) == 85)
+        #expect(CardQueries.redeemedTotal(lines.filter { $0.redemption.amount < 0 }) == 0)
+    }
+
+    @Test("CSV: Nummern als Text, deutsche Zahlen, Felder maskiert")
+    func csv() {
+        var c = card(value: 1234.5)
+        c.number = "0036730012345678901"
+        c.owner = "\"Oma\" Erna; Tante\nLisa"
+        c.customName = "=HYPERLINK(1)"
+        c.merchantID = "other"
+        let text = CardQueries.csv([c], warnDays: 30, now: date(2026, 6, 1))
+        let lines = text.components(separatedBy: "\r\n")
+        #expect(lines.count == 3 && lines[2].isEmpty)
+        #expect(lines[1].contains("\"=\"\"0036730012345678901\"\"\""))
+        #expect(lines[1].contains(";1234,50;"))
+        #expect(lines[1].contains("\"\"\"Oma\"\" Erna; Tante\nLisa\""))
+        #expect(lines[1].hasPrefix("\"'=HYPERLINK(1)\""))
+    }
+}
