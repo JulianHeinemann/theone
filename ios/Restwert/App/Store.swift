@@ -46,6 +46,10 @@ final class Store {
     }
 
     private func save(notify: Bool = true) {
+        // PINs zusätzlich in den iCloud-Schlüsselbund, damit sie auf neuen Geräten ankommen, ohne je in iCloud-Datenbank zu liegen.
+        if UserDefaults.standard.bool(forKey: "iCloudSync") {
+            for c in cards where !c.isExample && !c.pin.isEmpty { PinVault.store(c.pin, for: c.id) }
+        }
         do {
             let data = try JSONEncoder().encode(Snapshot(cards: cards, tests: tests, deleted: Array(deletedIDs)))
             try data.write(to: fileURL, options: [.atomic, .completeFileProtection])
@@ -58,13 +62,15 @@ final class Store {
 
     // MARK: Sync
 
-    /// Was auf den Server geht: ohne Fotos, PINs und Beispiele.
-    var syncPayload: SyncData { .outgoing(cards: cards, tests: tests, deleted: deletedIDs) }
-
-    /// Server-Stand einmischen (neuere Änderung gewinnt, Löschungen gelten überall).
+    /// iCloud-Stand einmischen (neuere Änderung gewinnt, Löschungen gelten überall).
     func merge(_ remote: SyncData) {
         let result = SyncMerge.merge(localCards: cards, localTests: tests, localDeleted: deletedIDs, remote: remote)
-        cards = result.cards
+        cards = result.cards.map { c in
+            guard c.pin.isEmpty, let pin = PinVault.pin(for: c.id) else { return c }
+            var x = c
+            x.pin = pin
+            return x
+        }
         tests = result.tests
         deletedIDs = result.deleted
         save(notify: false)

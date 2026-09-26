@@ -5,7 +5,7 @@ import RestwertKit
 @main
 struct RestwertApp: App {
     @State private var store = Store()
-    @State private var account = Account()
+    @State private var cloud = CloudSync()
     @State private var router = Router()
     @Environment(\.scenePhase) private var scenePhase
 
@@ -13,18 +13,18 @@ struct RestwertApp: App {
         WindowGroup {
             RootView()
                 .environment(store)
-                .environment(account)
+                .environment(cloud)
                 .environment(router)
                 .preferredColorScheme(.light)
                 .tint(Color.ink)
                 .onOpenURL { url in router.openImport(url) }
                 .task {
-                    account.attach(store)
-                    await account.syncNow()
+                    cloud.attach(store)
+                    await cloud.syncNow()
                 }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await account.syncNow() } }
+            if phase == .active { Task { await cloud.syncNow() } }
         }
     }
 }
@@ -94,18 +94,12 @@ struct RootView: View {
     @AppStorage("appLock") private var appLock = false
     @State private var locked = UserDefaults.standard.bool(forKey: "appLock")
     @AppStorage("onboarded") private var onboarded = false
-    @AppStorage("authDecided") private var authDecided = false
 
     var body: some View {
         ZStack {
             if !onboarded {
                 OnboardingView { withAnimation(.smooth(duration: 0.5)) { onboarded = true } }
                     .transition(.blurReplace)
-            } else if !authDecided {
-                NavigationStack {
-                    AuthView(isFirstRun: true) { withAnimation(.smooth(duration: 0.5)) { authDecided = true } }
-                }
-                .transition(.push(from: .trailing))
             } else {
                 MainTabView()
                     // Schriftgrößen werden beim Aufbau berechnet; bei geänderter Textgröße neu aufbauen.

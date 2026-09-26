@@ -251,3 +251,56 @@ struct SyncTests {
         #expect(back.cards.first?.balance == 45)
     }
 }
+
+@Suite("iCloud-Nutzlast")
+struct CloudPayloadTests {
+    @Test("Verschlüsselt, ohne Klartext, PIN und Foto; mit richtigem Schlüssel lesbar")
+    func sealAndOpen() throws {
+        var c = card()
+        c.pin = "4821"
+        c.photo = Data([9, 9, 9])
+        let key = CloudPayload.newKey()
+        let blob = try CloudPayload.seal(c, key: key)
+        #expect(blob.range(of: Data("6300981274561234".utf8)) == nil)
+        #expect(blob.range(of: Data("thalia".utf8)) == nil)
+        let back = try CloudPayload.openCard(blob, key: key)
+        #expect(back.id == c.id)
+        #expect(back.number == c.number)
+        #expect(back.balance == c.balance)
+        #expect(back.pin.isEmpty)
+        #expect(back.photo == nil)
+    }
+
+    @Test("Falscher Schlüssel oder beschädigte Daten werden abgelehnt")
+    func wrongKey() throws {
+        let blob = try CloudPayload.seal(card(), key: CloudPayload.newKey())
+        #expect(throws: CloudPayload.Failure.wrongKeyOrDamaged) { try CloudPayload.openCard(blob, key: CloudPayload.newKey()) }
+        var broken = blob
+        broken[broken.count - 1] ^= 0xFF
+        #expect(throws: CloudPayload.Failure.wrongKeyOrDamaged) { try CloudPayload.openCard(broken, key: CloudPayload.newKey()) }
+    }
+
+    @Test("Schlüssel lässt sich speichern und wiederherstellen")
+    func keyRoundTrip() throws {
+        let key = CloudPayload.newKey()
+        let data = CloudPayload.keyData(key)
+        #expect(data.count == 32)
+        let blob = try CloudPayload.seal(card(), key: key)
+        #expect(throws: Never.self) { try CloudPayload.openCard(blob, key: CloudPayload.key(from: data)) }
+    }
+
+    @Test("Upload-Plan: nur Neues, Neueres und fehlende Löschungen; keine Beispiele")
+    func plan() {
+        let old = Date(timeIntervalSince1970: 1_000)
+        let new = Date(timeIntervalSince1970: 2_000)
+        var a = card("ikea"); a.modifiedAt = new
+        var b = card("thalia"); b.modifiedAt = old
+        let c = card("douglas")
+        var ex = card("zara"); ex.isExample = true
+        let gone = UUID()
+        let plan = CloudPlan.upload(localCards: [a, b, c, ex], localTests: [], localDeleted: [gone],
+                                    remoteModified: [a.id: old, b.id: new], remoteTests: [], remoteTombstones: [])
+        #expect(Set(plan.cards.map(\.id)) == [a.id, c.id])
+        #expect(plan.tombstones == [gone])
+    }
+}

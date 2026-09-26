@@ -205,6 +205,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = Restwert.entitlements;
 				INFOPLIST_FILE = "Restwert-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -244,6 +245,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				CODE_SIGN_ENTITLEMENTS = Restwert.entitlements;
 				INFOPLIST_FILE = "Restwert-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;

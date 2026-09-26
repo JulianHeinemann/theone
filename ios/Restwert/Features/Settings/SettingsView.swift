@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @Environment(Store.self) private var store
-    @Environment(Account.self) private var account
+    @Environment(CloudSync.self) private var cloud
     @AppStorage("reminders") private var reminders = true
     @AppStorage("pinLock") private var pinLock = true
     @AppStorage("maskNumber") private var maskNumber = false
@@ -14,16 +14,17 @@ struct SettingsView: View {
     @AppStorage("warnDays") private var warnDays = 30
     @AppStorage(ReminderPrefs.daysKey) private var reminderDays = "30,7"
     @AppStorage(ReminderPrefs.hourKey) private var reminderHour = 10
-    @State private var showAuth = false
-    @State private var confirmDeleteAccount = false
     @State private var confirmReset = false
-    @State private var accountError: String?
+    @State private var cloudError: String?
+    @State private var confirmDeleteCloud = false
     @State private var showRestore = false
     @State private var restoreMessage: String?
 
     var body: some View {
         Form {
-            Section { accountSection }
+            Section { accountSection } footer: {
+                Text("Ohne eigenes Konto und ohne unseren Server: Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deinem eigenen iCloud. Den Schlüssel hat nur dein iCloud-Schlüsselbund – wir können nichts lesen, Apple auch nicht.")
+            }
 
             Section {
                 Toggle(isOn: $reminders) {
@@ -133,15 +134,14 @@ struct SettingsView: View {
         .onChange(of: warnDays) { _, _ in Task { await store.scheduleReminders() } }
         .onChange(of: reminderDays) { _, _ in Task { await store.scheduleReminders() } }
         .onChange(of: reminderHour) { _, _ in Task { await store.scheduleReminders() } }
-        .sheet(isPresented: $showAuth) {
-            NavigationStack { AuthView() }
-        }
-        .confirmationDialog("Konto und alle Daten auf dem Server endgültig löschen?", isPresented: $confirmDeleteAccount, titleVisibility: .visible) {
-            Button("Konto löschen", role: .destructive) {
+        .confirmationDialog("Alle Restwert-Daten aus deinem iCloud löschen?", isPresented: $confirmDeleteCloud, titleVisibility: .visible) {
+            Button("Aus iCloud löschen", role: .destructive) {
                 Task {
-                    do { try await account.deleteAccount() } catch { accountError = error.localizedDescription }
+                    do { try await cloud.deleteCloudData() } catch { cloudError = error.localizedDescription }
                 }
             }
+        } message: {
+            Text("Auf diesem iPhone bleibt alles erhalten. Der Sync wird ausgeschaltet.")
         }
         .confirmationDialog("Alle Gutscheine, Einlösungen und Tests löschen?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("Alles löschen", role: .destructive) { withAnimation { store.resetAll() } }
@@ -161,60 +161,53 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var accountSection: some View {
-        if let user = account.user {
-            HStack(spacing: 14) {
-                Text((user.name.isEmpty ? user.email : user.name).initials)
-                    .font(.scaled(16, weight: .heavy)).foregroundStyle(Color.ink)
-                    .frame(width: 48, height: 48).background(Color.brandYellow, in: .circle)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(user.name.isEmpty ? "Dein Konto" : user.name).font(.scaled(17, weight: .bold))
-                    Text(user.email).font(.scaled(13)).foregroundStyle(Color.muted)
+        HStack(spacing: 14) {
+            let inCloud: Bool = {
+                switch cloud.state {
+                case .idle, .syncing: cloud.isEnabled
+                default: false
                 }
+            }()
+            Image(systemName: inCloud ? "lock.icloud" : "iphone").font(.scaled(20, weight: .semibold))
+                .frame(width: 48, height: 48).background(Color.fill, in: .circle)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(inCloud ? "Sicher in deinem iCloud" : "Nur auf diesem iPhone").font(.scaled(16, weight: .semibold))
+                Text(inCloud ? "Ende-zu-Ende verschlüsselt, auf allen deinen Apple-Geräten."
+                             : "Nichts verlässt dein iPhone. Texterkennung läuft auf dem Gerät.")
+                    .font(.scaled(14)).foregroundStyle(Color.ink2)
             }
+        }
+        Toggle(isOn: Binding(get: { cloud.isEnabled }, set: { cloud.isEnabled = $0 })) {
+            settingLabel("iCloud-Sync", "Für iPhone, iPad und ein neues Gerät", "icloud")
+        }
+        .tint(Color.ink)
+        if cloud.isEnabled {
             HStack(spacing: 8) {
-                switch account.syncState {
+                switch cloud.state {
                 case .syncing:
                     ProgressView().controlSize(.small)
-                    Text("Synchronisiere …")
-                case .failed(let message):
+                    Text("Wird abgeglichen …")
+                case .waitingForKey:
+                    Image(systemName: "key").foregroundStyle(Color.warn)
+                    Text("Warte auf den Schlüssel aus dem iCloud-Schlüsselbund. Bitte dort „Passwörter und Schlüsselbund“ einschalten.")
+                case .unavailable(let message), .failed(let message):
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Color.warn)
-                    Text(message).lineLimit(2)
-                case .idle:
+                    Text(message)
+                case .idle, .off:
                     Image(systemName: "checkmark.icloud.fill").foregroundStyle(Color.good)
-                        .symbolEffect(.bounce, value: account.lastSync)
-                    Text(account.lastSync.map { "Zuletzt synchronisiert \($0.formatted(.relative(presentation: .named)))" }
-                         ?? "Noch nicht synchronisiert")
+                    Text(cloud.lastSync.map { "Abgeglichen \($0.formatted(.relative(presentation: .named)))" } ?? "Noch nicht abgeglichen")
                 }
             }
             .font(.scaled(13.5)).foregroundStyle(Color.ink2)
-            .animation(.smooth, value: account.syncState)
-            Button("Jetzt synchronisieren", systemImage: "arrow.triangle.2.circlepath") { Task { await account.syncNow() } }
+            .animation(.smooth, value: cloud.state)
+            Button("Jetzt abgleichen", systemImage: "arrow.triangle.2.circlepath") { Task { await cloud.syncNow() } }
                 .foregroundStyle(Color.ink)
-            Button("Abmelden", systemImage: "rectangle.portrait.and.arrow.right") { account.logout() }
-                .foregroundStyle(Color.ink)
-            Button("Konto löschen", systemImage: "person.crop.circle.badge.xmark", role: .destructive) { confirmDeleteAccount = true }
-            if let accountError {
-                Text(accountError).font(.scaled(13)).foregroundStyle(Color.bad)
-            }
-        } else {
-            HStack(spacing: 14) {
-                Image(systemName: "iphone").font(.scaled(20, weight: .semibold))
-                    .frame(width: 48, height: 48).background(Color.fill, in: .circle)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Deine Daten bleiben auf diesem iPhone").font(.scaled(16, weight: .semibold))
-                    Text("Ohne Konto verlässt nichts dein iPhone. Texterkennung läuft auf dem Gerät.").font(.scaled(14)).foregroundStyle(Color.ink2)
-                }
-            }
-            Button { showAuth = true } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Mehrere Geräte (optional)").foregroundStyle(Color.ink)
-                    Text("Mit Konto werden Gutscheine über unseren Server abgeglichen, verschlüsselt übertragen (HTTPS). Fotos und PINs bleiben auf dem iPhone.")
-                        .font(.scaled(13)).foregroundStyle(Color.muted)
-                }
-            }
+            Button("Daten aus iCloud löschen", systemImage: "icloud.slash", role: .destructive) { confirmDeleteCloud = true }
+            if let cloudError { Text(cloudError).font(.scaled(13)).foregroundStyle(Color.bad) }
         }
     }
 }
+
 
 /// Vorlaufzeiten und Uhrzeit der Ablauf-Erinnerungen.
 struct ReminderSettingsView: View {
