@@ -1,0 +1,9 @@
+node_modules/
+.DS_Store
+*.xcuserstate
+xcuserdata/
+DerivedData/
+.env
+ios/build/
+.build/
+.swiftpm/

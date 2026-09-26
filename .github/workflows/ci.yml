@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  server:
+    name: Server-Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: restwert
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npm test
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/restwert
+          JWT_SECRET: ci-secret-ci-secret-ci-secret-ci-secret
+
+  ios:
+    name: iOS-Build
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Neuestes Xcode wählen
+        run: |
+          ls -d /Applications/Xcode*.app
+          XC="$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)"
+          sudo xcode-select -s "$XC"
+          xcodebuild -version
+          xcrun simctl list runtimes | tail -5
+      - name: RestwertKit-Tests (Swift Testing)
+        working-directory: ios/Packages/RestwertKit
+        run: |
+          set -o pipefail
+          swift test 2>&1 | tail -60
+      - name: Build (Simulator, ohne Signatur)
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild -project Restwert.xcodeproj -scheme Restwert -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build 2>&1 | tee build.log | grep -E "error:|warning: .*(isolat|Sendable|deprecated)|BUILD (SUCCEEDED|FAILED)" || true
+          grep -q "BUILD SUCCEEDED" build.log
+      - name: Build-Log hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: ios/build.log
