@@ -1,4 +1,5 @@
 import SwiftUI
+import LocalAuthentication
 import RestwertKit
 
 @main
@@ -89,6 +90,9 @@ extension View {
 
 struct RootView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("appLock") private var appLock = false
+    @State private var locked = UserDefaults.standard.bool(forKey: "appLock")
     @AppStorage("onboarded") private var onboarded = false
     @AppStorage("authDecided") private var authDecided = false
 
@@ -108,6 +112,14 @@ struct RootView: View {
                     .id(typeSize)
                     .transition(.blurReplace)
             }
+        }
+        .overlay {
+            if appLock && locked {
+                LockScreen { locked = false }
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background && appLock { locked = true }
         }
     }
 }
@@ -226,5 +238,31 @@ struct ToastView: View {
             onClose()
         }
         .accessibilityElement(children: .contain)
+    }
+}
+
+/// Sperrbildschirm, wenn „App mit Face ID sperren“ an ist.
+struct LockScreen: View {
+    var onUnlock: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "lock.fill").font(.scaled(34)).foregroundStyle(Color.ink)
+            Text("Restwert ist gesperrt").font(.scaled(20, weight: .semibold))
+            Button("Entsperren", systemImage: "faceid") { Task { await unlock() } }
+                .buttonStyle(.primary).padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.page.ignoresSafeArea())
+        .task { await unlock() }
+    }
+
+    private func unlock() async {
+        let context = LAContext()
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { onUnlock(); return }
+        if (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Restwert entsperren")) == true {
+            onUnlock()
+        }
     }
 }

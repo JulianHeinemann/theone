@@ -24,6 +24,8 @@ struct CardFormView: View {
     @State private var expires = GiftCard.legalExpiry(from: .now)
     @State private var location: StorageLocation = .drawer
     @State private var locationNote = ""
+    @State private var owner = ""
+    @State private var forGifting = false
     @State private var photo: Data?
     @State private var errors: [String] = []
     @State private var formatLocked = false
@@ -166,7 +168,7 @@ struct CardFormView: View {
                 withAnimation(.snappy) { showMore.toggle() }
             } label: {
                 HStack {
-                    Text(showMore ? "Weniger" : "Mehr Details (Barcode-Typ, Kaufdatum, Aufbewahrung)")
+                    Text(showMore ? "Weniger" : "Mehr Details (für wen, Barcode-Typ, Kaufdatum, Ort)")
                     Spacer()
                     Image(systemName: "chevron.down").rotationEffect(.degrees(showMore ? 180 : 0))
                 }
@@ -175,6 +177,15 @@ struct CardFormView: View {
             }
             .buttonStyle(.plain)
             if showMore {
+                LabeledField(label: "Für wen?", placeholder: "leer = für mich, z. B. Mia oder Oma", text: $owner)
+                Toggle(isOn: $forGifting) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Zum Verschenken").font(.scaled(16, weight: .semibold))
+                        Text("Zählt nicht zu deinem Guthaben").font(.scaled(13)).foregroundStyle(Color.muted)
+                    }
+                }
+                .tint(Color.ink)
+                .padding(.horizontal, 4).padding(.vertical, 10)
                 LabeledBox(label: "Barcode-Typ") {
                     Picker("Barcode-Typ", selection: $format) {
                         ForEach(CodeFormat.allCases) { Text($0.label).tag($0) }
@@ -271,6 +282,8 @@ struct CardFormView: View {
         expires = c.expires
         location = c.location
         locationNote = c.locationNote
+        owner = c.owner
+        forGifting = c.forGifting
         photo = c.photo
         formatLocked = true
         valueText = c.value > 0 ? Self.money(c.value) : ""
@@ -330,6 +343,8 @@ struct CardFormView: View {
         card.expires = expires
         card.location = location
         card.locationNote = locationNote.trimmingCharacters(in: .whitespaces)
+        card.owner = owner.trimmingCharacters(in: .whitespaces)
+        card.forGifting = forGifting
         card.photo = photo ?? card.photo
         store.upsert(card)
         Task { await store.requestNotifications() }

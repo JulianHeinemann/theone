@@ -262,6 +262,10 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     public var archivedAt: Date?
     /// Eigene Erinnerung nur für diesen Gutschein, zusätzlich zu den allgemeinen.
     public var reminderAt: Date?
+    /// Wem der Gutschein gehört (leer = mir), z. B. „Mia“ oder „Oma“.
+    public var owner: String = ""
+    /// Zum Verschenken gedacht: zählt nicht zum eigenen Guthaben.
+    public var forGifting: Bool = false
 
     public init(id: UUID = UUID(), kind: VoucherKind = .giftCard, merchantID: String, customName: String = "", number: String,
                 format: CodeFormat, pin: String = "", value: Double, balance: Double, percent: Double? = nil,
@@ -339,7 +343,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case id, kind, merchantID, customName, number, format, pin, value, balance, percent, received, expires
-        case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt, archivedAt, reminderAt
+        case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt, archivedAt, reminderAt, owner, forGifting
     }
 
     /// Tolerantes Dekodieren, damit ältere Speicherstände nach Updates lesbar bleiben.
@@ -366,6 +370,8 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
         modifiedAt = try c.decodeIfPresent(Date.self, forKey: .modifiedAt) ?? received
         archivedAt = try c.decodeIfPresent(Date.self, forKey: .archivedAt)
         reminderAt = try c.decodeIfPresent(Date.self, forKey: .reminderAt)
+        owner = try c.decodeIfPresent(String.self, forKey: .owner) ?? ""
+        forGifting = try c.decodeIfPresent(Bool.self, forKey: .forGifting) ?? false
     }
 }
 

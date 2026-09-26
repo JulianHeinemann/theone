@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UserNotifications
 import RestwertKit
 
 /// An der Kasse: großer Barcode bei voller Helligkeit, danach Ergebnis festhalten.
@@ -15,6 +16,9 @@ struct CheckoutView: View {
     @State private var note = ""
     @State private var showPin = false
     @State private var oldBrightness: CGFloat?
+    @State private var showFull = false
+    @State private var numberShown = false
+    @AppStorage("maskNumber") private var maskNumber = false
 
     var body: some View {
         ScrollView {
@@ -51,7 +55,10 @@ struct CheckoutView: View {
                                 Label("Nicht angenommen", systemImage: "xmark")
                             }
                             .buttonStyle(.quiet)
-                            Button("Später eintragen") { dismiss() }
+                            Button("Später eintragen") {
+                                Task { await remindLater(card) }
+                                dismiss()
+                            }
                                 .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
                                 .frame(maxWidth: .infinity, minHeight: 44)
                         }
@@ -65,6 +72,9 @@ struct CheckoutView: View {
         .pageBackground()
         .toolbar(.hidden, for: .tabBar)
         .navigationTitle("An der Kasse")
+        .fullScreenCover(isPresented: $showFull) {
+            if let card = store.card(cardID) { FullBarcode(card: card) }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             UIApplication.shared.isIdleTimerDisabled = true
@@ -97,10 +107,17 @@ struct CheckoutView: View {
             .padding(18)
             Perforation()
             VStack(spacing: 10) {
-                BarcodeView(number: card.number, format: card.format, height: 150)
-                if card.format != .text {
-                    Text(card.number.grouped).font(.scaled(19, weight: .bold)).kerning(2.4)
+                Button { showFull = true } label: {
+                    BarcodeView(number: card.number, format: card.format, height: 150)
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Barcode groß anzeigen")
+                if card.format != .text {
+                    Text(maskNumber && !numberShown ? card.number.masked : card.number.grouped)
+                        .font(.scaled(19, weight: .bold)).kerning(2.4)
+                        .onTapGesture { numberShown = true }
+                }
+                Text("Tippen für Vollbild").font(.scaled(12)).foregroundStyle(Color.muted)
                 Label("Helligkeit automatisch erhöht", systemImage: "checkmark.circle")
                     .font(.scaled(13)).foregroundStyle(Color.ink2)
                 if card.merchantID != Merchant.other.id {
@@ -119,6 +136,18 @@ struct CheckoutView: View {
             .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 20)
         }
         .cardSurface(radius: 28)
+    }
+
+    /// Nach 10 Minuten nachfragen, ob bezahlt wurde.
+    private func remindLater(_ card: GiftCard) async {
+        let content = UNMutableNotificationContent()
+        content.title = "Hast du bei \(card.name) bezahlt?"
+        content.body = "Trag den Betrag ein, damit dein Guthaben stimmt."
+        content.sound = .default
+        let request = UNNotificationRequest(identifier: "\(card.id.uuidString)-later", content: content,
+                                            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 600, repeats: false))
+        try? await UNUserNotificationCenter.current().add(request)
+        router.toast = Toast(message: "Wir erinnern dich in 10 Minuten.", undo: nil)
     }
 
     private func save(_ card: GiftCard, _ ok: Bool) {
@@ -313,5 +342,33 @@ struct KeypadView: View {
                 .scaleEffect(configuration.isPressed ? 0.92 : 1)
                 .animation(.spring(duration: 0.2, bounce: 0.5), value: configuration.isPressed)
         }
+    }
+}
+
+/// Barcode bildschirmfüllend, quer, mit Ruhezone – für schwierige Scanner.
+private struct FullBarcode: View {
+    let card: GiftCard
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        GeometryReader { geo in
+            VStack(spacing: 18) {
+                BarcodeView(number: card.number, format: card.format, height: min(geo.size.width * 0.5, 220))
+                    .padding(.horizontal, 24)
+                Text(card.number.grouped).font(.system(size: 26, weight: .bold, design: .monospaced)).kerning(2)
+                    .foregroundStyle(.black)
+            }
+            .frame(width: geo.size.height, height: geo.size.width)
+            .rotationEffect(.degrees(90))
+            .frame(width: geo.size.width, height: geo.size.height)
+        }
+        .background(Color.white.ignoresSafeArea())
+        .overlay(alignment: .topTrailing) {
+            Button("Schließen", systemImage: "xmark") { dismiss() }
+                .labelStyle(.iconOnly).font(.system(size: 17, weight: .bold))
+                .buttonStyle(.glass).buttonBorderShape(.circle).controlSize(.large)
+                .padding(16)
+        }
+        .onTapGesture { dismiss() }
     }
 }

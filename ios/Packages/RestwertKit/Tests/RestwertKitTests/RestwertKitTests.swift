@@ -229,6 +229,18 @@ struct SyncTests {
         #expect(CardQueries.openTotal([back, card("ikea")]) == 50)
     }
 
+    @Test("Besitzer und Verschenken überstehen den Roundtrip, Verschenken zählt nicht zur Summe")
+    func ownerRoundTrip() throws {
+        var c = card()
+        c.owner = "Mia"
+        c.forGifting = true
+        let data = try APICoding.encoder.encode(SyncData(cards: [c], tests: [], deleted: []))
+        let back = try APICoding.decoder.decode(SyncData.self, from: data).cards[0]
+        #expect(back.owner == "Mia")
+        #expect(back.forGifting)
+        #expect(CardQueries.openTotal([back, card("ikea")]) == 50)
+    }
+
     @Test("Roundtrip über die API-Kodierung")
     func roundTrip() throws {
         var c = card()

@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 import LocalAuthentication
 import RestwertKit
 
@@ -208,7 +209,9 @@ struct CardDetailView: View {
                 Text("Code").font(.scaled(16, weight: .bold))
                 Spacer()
                 Button {
-                    UIPasteboard.general.string = card.number
+                    // Nur auf diesem Gerät und nach 2 Minuten wieder weg.
+                    UIPasteboard.general.setItems([[UTType.plainText.identifier: card.number]],
+                                                  options: [.localOnly: true, .expirationDate: Date.now.addingTimeInterval(120)])
                     copied = true
                     success += 1
                     Task {

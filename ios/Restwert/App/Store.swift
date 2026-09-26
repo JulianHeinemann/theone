@@ -170,6 +170,45 @@ final class Store {
         save()
     }
 
+    // MARK: Sicherung
+
+    private struct Backup: Codable { var cards: [GiftCard]; var tests: [TestResult] }
+
+    /// Vollständige Sicherung als Datei (mit PINs, ohne Fotos), zum Aufbewahren in Dateien oder iCloud Drive.
+    func backupFile() -> URL? {
+        let own = cards.filter { !$0.isExample }.map { c -> GiftCard in var x = c; x.photo = nil; return x }
+        let enc = APICoding.encoder
+        guard let data = try? enc.encode(Backup(cards: own, tests: tests.filter { !$0.isExample })) else { return nil }
+        let url = URL.temporaryDirectory.appending(path: "Restwert-Sicherung-\(Date.now.formatted(.iso8601.year().month().day())).restwert.json")
+        return (try? data.write(to: url, options: .completeFileProtection)).map { url }
+    }
+
+    /// Lesbare Liste für Tabellen (ohne PINs).
+    func csvFile() -> URL? {
+        let head = "Händler;Für;Art;Startwert;Guthaben;Gültig bis;Code;Status"
+        let rows = cards.filter { !$0.isExample }.map { c in
+            [c.name, c.owner, c.kind.label,
+             c.kind.isValueBased ? c.value.formatted(.number.precision(.fractionLength(2))) : c.headline,
+             c.kind.isValueBased ? c.balance.formatted(.number.precision(.fractionLength(2))) : "",
+             c.expires.dayMonthYear, c.number,
+             c.isArchived ? "archiviert" : c.status(warnDays: warnDays).label]
+                .map { $0.replacingOccurrences(of: ";", with: ",") }.joined(separator: ";")
+        }
+        let url = URL.temporaryDirectory.appending(path: "Restwert-Gutscheine.csv")
+        let text = ([head] + rows).joined(separator: "\n")
+        return (try? Data(("\u{FEFF}" + text).utf8).write(to: url)).map { url }
+    }
+
+    /// Sicherung einspielen; neuere Stände gewinnen, nichts wird doppelt angelegt. Gibt die Zahl der Gutscheine zurück.
+    func restore(from url: URL) throws -> Int {
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        let backup = try APICoding.decoder.decode(Backup.self, from: Data(contentsOf: url))
+        merge(SyncData(cards: backup.cards, tests: backup.tests, deleted: []))
+        save()
+        return backup.cards.count
+    }
+
     func exportJSON() -> String {
         struct Export: Codable { var cards: [GiftCard]; var tests: [TestResult] }
         let safe = cards.map { c -> GiftCard in

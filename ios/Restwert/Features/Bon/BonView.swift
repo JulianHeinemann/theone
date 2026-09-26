@@ -149,13 +149,15 @@ struct TestsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Quote").font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink2)
-                    Text("\(all.isEmpty ? 0 : ok * 100 / all.count) %").font(.scaled(48, weight: .heavy))
+                    Text("An der Kasse angenommen").font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink2)
+                    // Unter 5 Tests ist eine Prozentzahl irreführend, dann in Worten.
+                    Text(all.count < 5 ? "\(ok) von \(all.count) Mal" : "\(ok * 100 / all.count) %")
+                        .font(.scaled(40, weight: .bold))
                         .contentTransition(.numericText())
-                    Text("Kassen, die den Barcode vom Handy angenommen haben").font(.scaled(13)).foregroundStyle(Color.ink2)
+                    Text("Wie oft Kassen den Barcode vom Handy genommen haben").font(.scaled(13)).foregroundStyle(Color.ink2)
                 }
                 .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.brandYellow.gradient, in: .rect(cornerRadius: 28, style: .continuous))
+                .background(Color.surface, in: .rect(cornerRadius: 22, style: .continuous))
                 Picker("Filter", selection: $filter.animation(.smooth)) {
                     Text("Alle").tag(0)
                     Text("Geklappt").tag(1)

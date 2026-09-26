@@ -1,11 +1,14 @@
 import SwiftUI
 import RestwertKit
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @Environment(Store.self) private var store
     @Environment(Account.self) private var account
     @AppStorage("reminders") private var reminders = true
     @AppStorage("pinLock") private var pinLock = true
+    @AppStorage("maskNumber") private var maskNumber = false
+    @AppStorage("appLock") private var appLock = false
     @AppStorage("onboarded") private var onboarded = true
     @AppStorage("sortOrder") private var sortRaw = CardSortOrder.expiry.rawValue
     @AppStorage("warnDays") private var warnDays = 30
@@ -15,6 +18,8 @@ struct SettingsView: View {
     @State private var confirmDeleteAccount = false
     @State private var confirmReset = false
     @State private var accountError: String?
+    @State private var showRestore = false
+    @State private var restoreMessage: String?
 
     var body: some View {
         Form {
@@ -33,6 +38,12 @@ struct SettingsView: View {
                 }
                 Toggle(isOn: $pinLock) {
                     settingLabel("PIN mit Face ID schützen", "PIN erst nach Face ID oder Code anzeigen", "faceid")
+                }
+                Toggle(isOn: $appLock) {
+                    settingLabel("App mit Face ID sperren", "Beim Öffnen entsperren", "lock.app.dashed")
+                }
+                Toggle(isOn: $maskNumber) {
+                    settingLabel("Kartennummer an der Kasse verdecken", "Tippen zeigt sie ganz", "eye.slash")
                 }
             } header: {
                 Text("Sicherheit & Erinnerungen")
@@ -70,8 +81,25 @@ struct SettingsView: View {
             .foregroundStyle(Color.ink2)
 
             Section {
+                if let url = store.backupFile() {
+                    ShareLink(item: url) { Label("Sicherung speichern", systemImage: "externaldrive.badge.checkmark") }
+                }
+                Button("Sicherung wiederherstellen", systemImage: "arrow.counterclockwise") { showRestore = true }
+                if let url = store.csvFile() {
+                    ShareLink(item: url) { Label("Als Tabelle exportieren (CSV)", systemImage: "tablecells") }
+                }
+                if let restoreMessage {
+                    Text(restoreMessage).font(.scaled(14)).foregroundStyle(Color.ink2)
+                }
+            } header: {
+                Text("Sicherung")
+            } footer: {
+                Text("Deine Gutscheine sind im iCloud-Backup deines iPhones enthalten. Zusätzlich kannst du eine Sicherungsdatei speichern, z. B. in iCloud Drive. Sie enthält PINs, aber keine Fotos – bewahre sie sicher auf.")
+            }
+            .foregroundStyle(Color.ink)
+
+            Section {
                 Button("Einführung ansehen", systemImage: "sparkles") { onboarded = false }
-                ShareLink(item: store.exportJSON()) { Label("Daten exportieren", systemImage: "square.and.arrow.up") }
                 if store.hasExamples {
                     Button("Beispiele entfernen", systemImage: "wand.and.stars") { withAnimation { store.clearExamples() } }
                 }
@@ -88,6 +116,15 @@ struct SettingsView: View {
         .scrollContentBackground(.hidden)
         .pageBackground()
         .navigationTitle("Einstellungen")
+        .fileImporter(isPresented: $showRestore, allowedContentTypes: [.json]) { result in
+            guard case .success(let url) = result else { return }
+            do {
+                let n = try store.restore(from: url)
+                restoreMessage = "\(n) Gutscheine aus der Sicherung übernommen."
+            } catch {
+                restoreMessage = "Die Datei ist keine Restwert-Sicherung."
+            }
+        }
         .onChange(of: reminders) { _, on in
             Task {
                 if on { await store.requestNotifications() } else { await store.scheduleReminders() }

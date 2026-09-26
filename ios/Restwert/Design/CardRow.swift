@@ -42,13 +42,23 @@ struct CardRow: View {
     /// Ein Satz für VoiceOver, z. B. „Thalia, 12,40 € von 25,00 €, bis 31.12.2028“.
     private var spoken: String {
         let amount = card.kind.isValueBased ? "\(card.headline) von \(card.value.euro)" : "\(card.headline) Rabattcode"
-        return "\(card.name), \(amount), \(dueText.0)"
+        let who = card.owner.isEmpty ? "" : ", für \(card.owner)"
+        return "\(card.name)\(who), \(amount), \(dueText.0)\(card.forGifting ? ", zum Verschenken" : "")"
     }
 
     private var nameBlock: some View {
         let due = dueText
         return VStack(alignment: .leading, spacing: 3) {
-            Text(card.name).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
+            HStack(spacing: 6) {
+                Text(card.name).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
+                if card.forGifting {
+                    Image(systemName: "gift").font(.scaled(13)).foregroundStyle(Color.ink2)
+                        .accessibilityLabel("zum Verschenken")
+                }
+                if !card.owner.isEmpty {
+                    Text("für \(card.owner)").font(.scaled(13)).foregroundStyle(Color.ink2).lineLimit(1)
+                }
+            }
             // Zwei Stufen: bis 14 Tage gefüllt mit Ausrufezeichen, danach nur umrandet mit Uhr.
             let urgent = due.1 == .bad || (due.1 == .warn && card.daysLeft <= 14)
             Label {

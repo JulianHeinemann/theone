@@ -8,10 +8,30 @@ struct HomeView: View {
     @AppStorage("sortOrder") private var sortRaw = CardSortOrder.expiry.rawValue
     @AppStorage("warnDays") private var warnDays = 30
 
+    @State private var query = ""
+    @State private var filter: CardFilter = .all
+
     private var order: CardSortOrder { CardSortOrder(rawValue: sortRaw) ?? .expiry }
-    private var sorted: [GiftCard] { store.cards(sortedBy: order) }
+    private var sorted: [GiftCard] { store.cards(sortedBy: order).filter(matches) }
     private var dueSoon: [GiftCard] {
-        store.activeCards.filter { $0.status(warnDays: warnDays) == .expiringSoon }
+        store.activeCards.filter { $0.status(warnDays: warnDays) == .expiringSoon && !$0.forGifting }.filter(matches)
+    }
+    private var owners: [String] {
+        Array(Set(store.cards.map(\.owner).filter { !$0.isEmpty })).sorted()
+    }
+    private var showFilters: Bool {
+        !owners.isEmpty || store.cards.contains(where: \.forGifting) || store.cards.contains { !$0.kind.isValueBased }
+    }
+
+    private func matches(_ c: GiftCard) -> Bool {
+        if !query.isEmpty && !c.name.localizedCaseInsensitiveContains(query) && !c.owner.localizedCaseInsensitiveContains(query) { return false }
+        switch filter {
+        case .all: return true
+        case .balance: return c.kind.isValueBased && !c.forGifting
+        case .codes: return !c.kind.isValueBased
+        case .gifts: return c.forGifting
+        case .owner(let name): return c.owner == name
+        }
     }
     private var rest: [GiftCard] {
         let due = Set(dueSoon.map(\.id))
@@ -24,7 +44,8 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 32) {
-                TotalHeader(total: store.total, cards: store.activeCards, soon: dueSoon.count)
+                TotalHeader(total: store.total, cards: store.activeCards.filter { !$0.forGifting }, soon: dueSoon.count)
+                if showFilters { filterBar }
                 if store.cards.isEmpty {
                     EmptyState { router.tab = .scan }
                 } else {
@@ -54,6 +75,7 @@ struct HomeView: View {
         .scrollIndicators(.hidden)
         .pageBackground()
         .navigationTitle("Restwert")
+        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Gutschein suchen")
         .confirmationDialog("„\(deleting?.name ?? "")“ endgültig entfernen?", isPresented: Binding(
             get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
             Button("Entfernen", role: .destructive) {
@@ -88,6 +110,33 @@ struct HomeView: View {
             }
             .animation(.snappy, value: cards.map(\.id))
         }
+    }
+
+    private var filterBar: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                chip("Alle", .all)
+                chip("Guthaben", .balance)
+                if store.cards.contains(where: { !$0.kind.isValueBased }) { chip("Rabattcodes", .codes) }
+                if store.cards.contains(where: \.forGifting) { chip("Zum Verschenken", .gifts) }
+                ForEach(owners, id: \.self) { chip("Für \($0)", .owner($0)) }
+            }
+            .padding(.horizontal, 16)
+        }
+        .scrollIndicators(.hidden)
+        .padding(.horizontal, -16)
+        .sensoryFeedback(.selection, trigger: filter)
+    }
+
+    private func chip(_ title: String, _ value: CardFilter) -> some View {
+        let on = filter == value
+        return Button { withAnimation(.snappy) { filter = value } } label: {
+            Text(title).font(.scaled(14, weight: .semibold))
+                .foregroundStyle(on ? Color.white : Color.ink)
+                .padding(.horizontal, 14).frame(minHeight: 36)
+                .background(on ? Color.ink : Color.surface, in: .capsule)
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
@@ -224,4 +273,9 @@ private struct EmptyState: View {
         .padding(20)
         .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
     }
+}
+
+enum CardFilter: Hashable {
+    case all, balance, codes, gifts
+    case owner(String)
 }
