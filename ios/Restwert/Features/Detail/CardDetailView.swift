@@ -97,6 +97,7 @@ struct CardDetailView: View {
                 dismiss()
                 clearLaterNotification(card.id)
                 store.delete(card.id)
+                router.showUndo("„\(card.name)“ entfernt") { store.undoDelete(card) }
             }
         }
         .sheet(isPresented: $showLocation) {
@@ -201,6 +202,7 @@ struct CardDetailView: View {
             Spacer()
             Button("Archivieren") {
                 store.setArchived(card.id, true)
+                router.showUndo("„\(card.name)“ archiviert") { store.setArchived(card.id, false) }
                 dismiss()
             }
             .font(.scaled(15, weight: .semibold))
@@ -438,13 +440,8 @@ struct CardDetailView: View {
 
     /// Stempel zurücknehmen: Einlösedatum und den zugehörigen Verlaufseintrag entfernen.
     private func unmarkRedeemed(_ id: UUID) {
-        guard var c = store.card(id), c.redeemedAt != nil else { return }
-        c.redeemedAt = nil
-        if let i = c.history.lastIndex(where: { $0.amount == 0 && $0.note == "\(c.kind.label) eingelöst" }) {
-            c.history.remove(at: i)
-        }
         withAnimation(.smooth) {
-            store.upsert(c)
+            store.undoMarkRedeemed(id)
             stampVisible = false
         }
     }

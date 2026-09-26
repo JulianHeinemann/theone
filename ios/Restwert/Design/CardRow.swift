@@ -53,21 +53,13 @@ struct CardRow: View {
     private var nameBlock: some View {
         let due = dueText
         return VStack(alignment: .leading, spacing: 3) {
+            // Name einzeilig; Zusatz-Etiketten stehen in der zweiten Zeile, damit der Name nicht umbricht.
             HStack(spacing: 6) {
                 Text(card.name).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
-                if card.isExample {
-                    Text("Beispiel").font(.scaled(11, weight: .semibold)).foregroundStyle(Color.ink2)
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(Color.fill, in: .capsule)
-                }
+                    .lineLimit(1).truncationMode(.tail).layoutPriority(1)
                 if card.forGifting {
                     Image(systemName: "gift").font(.scaled(13)).foregroundStyle(Color.ink2)
                         .accessibilityLabel("zum Verschenken")
-                }
-                if card.pendingSince != nil && card.isActive {
-                    Text("Betrag offen").font(.scaled(12, weight: .semibold)).foregroundStyle(Color.warn)
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(Color.warnSoft, in: .capsule)
                 }
                 if !card.owner.isEmpty {
                     Text("für \(card.owner)").font(.scaled(13)).foregroundStyle(Color.ink2).lineLimit(1)
@@ -75,12 +67,35 @@ struct CardRow: View {
             }
             // Zwei Stufen: bis 14 Tage gefüllt mit Ausrufezeichen, danach nur umrandet mit Uhr.
             let urgent = due.1 == .bad || (due.1 == .warn && card.daysLeft <= 14)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) { dueLabel(due, urgent); tags }
+                VStack(alignment: .leading, spacing: 3) { dueLabel(due, urgent); HStack(spacing: 6) { tags } }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var tags: some View {
+        if card.isExample {
+            Text("Beispiel").font(.scaled(11, weight: .semibold)).foregroundStyle(Color.ink2)
+                .padding(.horizontal, 6).padding(.vertical, 2)
+                .background(Color.fill, in: .capsule).fixedSize()
+        }
+        if card.pendingSince != nil && card.isActive {
+            Text("Betrag offen").font(.scaled(12, weight: .semibold)).foregroundStyle(Color.warn)
+                .padding(.horizontal, 6).padding(.vertical, 2)
+                .background(Color.warnSoft, in: .capsule).fixedSize()
+        }
+    }
+
+    private func dueLabel(_ due: (String, Color), _ urgent: Bool) -> some View {
             Label {
                 Text(due.0)
             } icon: {
                 if due.1 != .muted { Image(systemName: urgent ? "exclamationmark.circle.fill" : "clock") }
             }
             .labelStyle(DueLabelStyle())
+            .lineLimit(1).fixedSize()
             .font(.scaled(due.1 == .muted ? 14 : 13, weight: due.1 == .muted ? .regular : (urgent ? .bold : .semibold)))
             .foregroundStyle(due.1)
             .padding(.horizontal, due.1 == .muted ? 0 : 8).padding(.vertical, due.1 == .muted ? 0 : 3)
@@ -90,7 +105,6 @@ struct CardRow: View {
                     else { Capsule().strokeBorder(due.1.opacity(0.5), lineWidth: 1) }
                 }
             }
-        }
     }
 
     private var amountBlock: some View {

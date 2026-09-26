@@ -141,7 +141,8 @@ struct SettingsView: View {
             guard case .success(let url) = result else { return }
             do {
                 let n = try store.restore(from: url)
-                restoreMessage = "\(n) Gutscheine aus der Sicherung übernommen."
+                restoreMessage = n == 0 ? "Keine neuen Gutscheine – alles ist schon aktuell."
+                    : n == 1 ? "1 Gutschein aus der Sicherung übernommen." : "\(n) Gutscheine aus der Sicherung übernommen."
             } catch {
                 restoreMessage = "Die Datei ist keine Restwert-Sicherung."
             }

@@ -267,6 +267,15 @@ final class Store {
         save()
     }
 
+    /// „Rückgängig“ nach dem Entfernen: Der Gutschein kommt mit neuer ID zurück,
+    /// damit der Löschvermerk (auch in iCloud) ihn nicht gleich wieder entfernt.
+    func undoDelete(_ card: GiftCard) {
+        var c = card
+        c.id = UUID()
+        c.modifiedAt = .now
+        upsert(c)
+    }
+
     /// Nach einer Änderung mit neuem Verlaufseintrag den vorherigen Zustand für „Rückgängig“ merken.
     private func remember(_ prior: GiftCard, historyCount: Int) -> UUID? {
         guard let c = card(prior.id), c.history.count > historyCount, let entry = c.history.last?.id else { return nil }

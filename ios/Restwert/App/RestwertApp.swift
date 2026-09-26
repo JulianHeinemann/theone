@@ -28,6 +28,8 @@ struct RestwertApp: App {
         }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
+            // Nach dem Entsperren ggf. die Datei nachladen, die vorher gesperrt war.
+            store.reloadIfNeeded()
             // Widget-Zeitleiste auffrischen (Tage und Summe hängen am Datum).
             WidgetBridge.update(cards: store.cards, total: store.total)
             Task { await cloud.syncNow() }

@@ -106,7 +106,10 @@ struct HomeView: View {
         .confirmationDialog("„\(deleting?.name ?? "")“ endgültig entfernen?", isPresented: Binding(
             get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
             Button("Entfernen", role: .destructive) {
-                if let c = deleting { withAnimation(.snappy) { store.delete(c.id) } }
+                if let c = deleting {
+                    withAnimation(.snappy) { store.delete(c.id) }
+                    router.showUndo("„\(c.name)“ entfernt") { withAnimation(.snappy) { store.undoDelete(c) } }
+                }
                 deleting = nil
             }
         }
@@ -202,7 +205,11 @@ struct HomeView: View {
         }
         Button("Bearbeiten", systemImage: "pencil") { router.editing = c }
         Button(c.isArchived ? "Wiederherstellen" : "Archivieren", systemImage: c.isArchived ? "tray.and.arrow.up" : "archivebox") {
-            withAnimation(.snappy) { store.setArchived(c.id, !c.isArchived) }
+            let archive = !c.isArchived
+            withAnimation(.snappy) { store.setArchived(c.id, archive) }
+            if archive {
+                router.showUndo("„\(c.name)“ archiviert") { withAnimation(.snappy) { store.setArchived(c.id, false) } }
+            }
         }
         Button("Entfernen", systemImage: "trash", role: .destructive) { deleting = c }
     }
