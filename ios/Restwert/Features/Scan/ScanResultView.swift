@@ -22,10 +22,10 @@ struct ScanResultView: View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 14) {
-                    MerchantMark(merchantID: draft.merchantID, name: merchant?.name ?? "?")
+                    MerchantMark(merchantID: draft.merchantID, name: merchant?.name ?? draft.customName ?? "?")
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Erkannter Gutschein").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
-                        Text(merchant?.name ?? "Shop nicht erkannt").font(.scaled(19, weight: .bold))
+                        Text(merchant?.name ?? draft.customName ?? "Shop nicht erkannt").font(.scaled(19, weight: .bold))
                     }
                     Spacer()
                     if outcome.usedAppleIntelligence {
@@ -115,6 +115,8 @@ struct ScanResultView: View {
         }
         if let merchant {
             out.append(Check(level: .ok, text: "Shop erkannt: \(merchant.name). \(merchant.category.long)."))
+        } else if let name = draft.customName {
+            out.append(Check(level: .info, text: "„\(name)“ steht nicht in der Händlerliste. Prüf den Namen im nächsten Schritt."))
         } else {
             out.append(Check(level: .info, text: "Shop nicht erkannt. Du wählst ihn im nächsten Schritt aus."))
         }

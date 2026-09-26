@@ -106,18 +106,18 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         Merchant("db", "Deutsche Bahn", .codeOnly, .text, "https://www.bahn.de/faq/pk/service/gutschein/geschenkkarte", check: .info, "Nur auf bahn.de oder im DB Navigator, nicht im Reisezentrum."),
         Merchant("lieferando", "Lieferando", .codeOnly, .text, "https://www.lieferando.de/geschenkkarten/saldocheck", check: .form, "Nummer und PIN online eingeben."),
         Merchant("wunschgutschein", "Wunschgutschein", .codeOnly, .text, "https://app.wunschgutschein.de/", check: .form, "Online in einen Partner-Gutschein umtauschen."),
-        Merchant("eventim", "Eventim", .codeOnly, .text, "https://www.eventim.de/helpcenter/?faq=2288", check: .form, "Online mit 16-stelliger Nummer."),
+        Merchant("eventim", "Eventim", .codeOnly, .text, "https://www.eventim.de/helpcenter/?faq=2288", check: .info, "Online mit 16-stelliger Nummer."),
         Merchant("ticketmaster", "Ticketmaster", .codeOnly, .text, "https://sites.prepaytec.com/chopinweb/balanceCheck.do?customerCode=2013119751813114&loc=de&showCvc=1&showExpiryDate=1&brandingCode=bal_enq_tmgermany", check: .form, "Nummer plus 3-stelliger Sicherheitscode."),
-        Merchant("ikea", "IKEA", .official, .code128, "https://www.ikea.com/de/de/gift-cards/", check: .form, "Digitale Karte wird vom Handy gescannt. Guthaben online nur mit Login."),
+        Merchant("ikea", "IKEA", .official, .code128, "https://www.ikea.com/de/de/gift-cards/", check: .account, "Digitale Karte wird vom Handy gescannt. Guthaben online nur mit Login."),
         Merchant("thalia", "Thalia", .official, .code128, "https://www.thalia.de/geschenkkarte/", check: .form, "Digitale Karte wird vom Handy gescannt. 17-stellige Nummer und PIN für online."),
         Merchant("zara", "Zara", .official, .code128, "https://www.zara.com/de/de/z-zara-card/balance", check: .form, "E-Karte gilt in Filialen."),
         Merchant("tkmaxx", "TK Maxx", .official, .code128, "https://wbiprod.storedvalue.com/wbir/clients/tkmaxx-de", check: .form, "Digitalen Gutschein an der Kasse vorzeigen."),
         Merchant("decathlon", "Decathlon", .official, .code128, "https://www.decathlon.de/services/giftcard/balance", check: .form, "Offiziell auch digital auf dem Smartphone."),
-        Merchant("douglas", "Douglas", .official, .code128, "https://www.douglas.de/de/cp/helpv2wherecanicheckthebalanceofmygiftcard/help-where-can-i-check-the-balance-of-my-gift-card", check: .form, "eGift digital oder ausgedruckt. Online mit 17-stelliger Nummer und PIN."),
-        Merchant("hm", "H&M", .official, .code128, "https://www2.hm.com/de_de/customer-service/geschenkkarten.html", check: .form, "E-Geschenkkarte am Handy zeigen."),
+        Merchant("douglas", "Douglas", .official, .code128, "https://www.douglas.de/de/cp/helpv2wherecanicheckthebalanceofmygiftcard/help-where-can-i-check-the-balance-of-my-gift-card", check: .info, "eGift digital oder ausgedruckt. Online mit 17-stelliger Nummer und PIN."),
+        Merchant("hm", "H&M", .official, .code128, "https://www2.hm.com/de_de/customer-service/geschenkkarten.html", check: .info, "E-Geschenkkarte am Handy zeigen."),
         Merchant("rossmann", "Rossmann", .official, .code128, "https://www.rossmann.de/de/service-und-hilfe/geschenkgutscheine", check: .info, "Digitaler Gutschein am Handy möglich. Guthaben nur an der Kasse."),
         Merchant("lidl", "Lidl", .official, .code128, "https://www.lidl.de/c/lidl-geschenkkarten/s10007775", check: .form, "PDF-Geschenkkarte am Handy zeigen. Guthaben mit Nummer und PIN."),
-        Merchant("kaufland", "Kaufland", .official, .code128, "https://giftcard.kaufland.com/de_de/faq", check: .account, "Digitale Karte, Barcode am Handy. Nicht im Onlineshop."),
+        Merchant("kaufland", "Kaufland", .official, .code128, "https://giftcard.kaufland.com/de_de/faq", check: .info, "Digitale Karte, Barcode am Handy. Nicht im Onlineshop."),
         Merchant("aldi", "Aldi", .official, .code128, "https://www.helaba.com/de/aldi/", check: .form, "Digitale Karte mit Barcode am Handy. Guthaben online oder an jeder Aldi-Kasse."),
         Merchant("mueller", "Müller", .official, .code128, "https://www.mueller.de/service/geschenkgutscheine/", check: .form, "Digitale Karte digital oder ausgedruckt."),
         Merchant("tchibo", "Tchibo", .official, .code128, "https://www.tchibo.de/c/geschenkkarte", check: .info, "Kartennummer vorzeigen reicht laut FAQ. Guthaben im Warenkorb oder in der Filiale."),
@@ -481,10 +481,11 @@ extension String {
     }
 }
 
-/// „12,50 €“, „12.50“, „1.234,56“ → Double
+/// „12,50 €“, „12.50“, „1.234,56“, „1.000“ → Double
 public func parseMoney(_ text: String) -> Double? {
     var s = text.replacingOccurrences(of: "€", with: "").replacingOccurrences(of: " ", with: "")
     if s.contains(",") { s = s.replacingOccurrences(of: ".", with: "").replacingOccurrences(of: ",", with: ".") }
+    else if s.range(of: #"^\d{1,3}(\.\d{3})+$"#, options: .regularExpression) != nil { s = s.replacingOccurrences(of: ".", with: "") } // „1.000“ → 1000
     guard let v = Double(s) else { return nil }
     return (v * 100).rounded() / 100
 }

@@ -10,9 +10,12 @@ public struct CardDraft: Sendable, Equatable {
     public var expires: Date?
     /// Rabatt in Prozent, wenn der Text nach Rabattcode aussieht.
     public var percent: Double?
+    /// Shopname, der in keiner Händlerliste steht (z. B. von Apple Intelligence gelesen).
+    public var customName: String?
 
-    public init(merchantID: String? = nil, number: String? = nil, pin: String? = nil, value: Double? = nil, expires: Date? = nil, percent: Double? = nil) {
+    public init(merchantID: String? = nil, number: String? = nil, pin: String? = nil, value: Double? = nil, expires: Date? = nil, percent: Double? = nil, customName: String? = nil) {
         self.merchantID = merchantID; self.number = number; self.pin = pin; self.value = value; self.expires = expires; self.percent = percent
+        self.customName = customName
     }
 
     /// Heuristik: Rabattcode statt Wertgutschein.
@@ -58,24 +61,29 @@ public enum TextParser {
     }
 
     public static func percent(in s: String) -> Double? {
-        let hits = matches(#"(\d{1,2}(?:[.,]\d)?)\s?%"#, in: s).compactMap { parseMoney($0[1]) }.filter { $0 > 0 && $0 <= 90 }
+        // Steuersätze („19 % MwSt“) sind kein Rabatt
+        let hits = matches(#"(?i)(\d{1,2}(?:[.,]\d)?)\s?%(?!\s*(?:MwSt|USt|Mehrwertsteuer|Umsatzsteuer))"#, in: s)
+            .compactMap { parseMoney($0[1]) }.filter { $0 > 0 && $0 <= 90 }
         guard let first = hits.first else { return nil }
-        let lower = s.lowercased()
-        let discountWords = ["rabatt", "code", "gutscheincode", "sparen", "spare", "off", "reduziert"]
-        return discountWords.contains(where: lower.contains) ? first : nil
+        // Nur mit Rabatt-Kontext; „Code“ steht in fast jedem Gutscheintext und zählt nicht
+        let signal = #"(?i)\b(?:rabatt\w*|nachlass|sparen|spare|off|reduziert)\b"#
+        return matches(signal, in: s).isEmpty ? nil : first
     }
 
     /// Zahl mit optionalen Tausenderpunkten und Nachkommastellen, z. B. 1.234,56 oder 12,5 oder 20.
     private static let number = #"(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{1,4}(?:[.,]\d{1,2})?)"#
 
-    public static func amount(in s: String) -> Double? {
+    public static func amount(in text: String) -> Double? {
+        // Mindestbestellwerte („ab 50 €“, „Mindestbestellwert 50 €“) sind nicht der Gutscheinwert
+        let s = text.replacingOccurrences(of: #"(?i)\b(?:ab|Mindestbestellwert|MBW)\s*:?\s*(?:von\s*)?(?:€|EUR)?\s?\d[\d.,]*\s?(?:€|EUR|Euro)?"#,
+                                          with: " ", options: .regularExpression)
         let p = #"(?i)(?:€|EUR)\s?"# + number + #"|"# + number + #"\s?(?:€|EUR\b|Euro\b)"#
         let values = matches(p, in: s).compactMap { g -> Double? in
             let raw = g[1].isEmpty ? g[2] : g[1]
             return parseMoney(raw)
         }.filter { $0 > 0 && $0 <= 5000 }
-        // Beträge nahe „Wert“, „Betrag“, „Guthaben“ bevorzugen
-        let labeled = #"(?i)(?:Wert|Betrag|Guthaben|Gutscheinwert|Value)\D{0,20}"# + number
+        // Beträge nahe „Wert“, „Betrag“, „Guthaben“ bevorzugen; nur ganze Wörter, keine Datumsteile
+        let labeled = #"(?i)\b(?:Wert|Betrag|Guthaben|Gutscheinwert|Value)\b[^\d\n]{0,20}"# + number + #"(?![.,]?\d)"#
         if let hit = matches(labeled, in: s).compactMap({ parseMoney($0[1]) }).first(where: { $0 > 0 && $0 <= 5000 }) {
             return hit
         }
@@ -90,20 +98,28 @@ public enum TextParser {
             return cal.date(from: DateComponents(year: y, month: m, day: d))
         }
         let labeled = matches(#"(?i)(?:gültig|gueltig|bis|ablauf|verfällt|valid|expires?)[^\d]{0,25}(\d{1,2})\.(\d{1,2})\.(\d{2,4})"#, in: s).compactMap(date)
-        if let first = labeled.first { return first }
+        // „gültig vom X bis Y“: das spätere Datum ist das Ende
+        if let latest = labeled.max() { return latest }
         let all = matches(#"\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b"#, in: s).compactMap(date).filter { $0 > now }
         return all.max()
     }
 
     public static func code(in s: String, excluding pin: String?) -> String? {
-        let labeled = #"(?i)(?:Gutscheincode|Gutschein-Code|Gutscheinnummer|Kartennummer|Karten-Nr\.?|Kartennr\.?|Code|Nummer|Card number|Seriennummer)\s*[:#]?\s*([A-Z0-9][A-Z0-9 \-]{5,40})"#
-        for g in matches(labeled, in: s) {
-            let cleaned = clean(g[1])
-            if cleaned.count >= 6, cleaned != pin, cleaned.contains(where: \.isNumber) { return cleaned }
+        let value = #"\s*[:#]?\s*([A-Z0-9][A-Z0-9 \-]{5,40})"#
+        // Spezifische Beschriftungen zuerst, dann „Code“/„Nummer“ als ganzes Wort (nicht Kunden-/Bestellnummer)
+        let specific = #"(?i)\b(?:Gutscheincode|Gutschein-Code|Gutscheinnummer|Kartennummer|Karten-Nr\.?|Kartennr\.?|Card number|Seriennummer)"# + value
+        let generic = #"(?i)(?<!Kunden-|Bestell-|Rechnungs-|Auftrags-)\b(?:Code|Nummer)"# + value
+        for pattern in [specific, generic] {
+            for g in matches(pattern, in: s) {
+                let cleaned = clean(g[1])
+                if cleaned.count >= 6, cleaned != pin, cleaned.contains(where: \.isNumber) { return cleaned }
+            }
         }
+        let foreign = Set(matches(#"(?i)\b(?:Kunden|Bestell|Rechnungs|Auftrags)-?(?:nummer|nr\.?)\s*[:#]?\s*([A-Z0-9\-]{6,40})"#, in: s)
+            .map { $0[1].uppercased() })
         let candidates = matches(#"\b[A-Z0-9][A-Z0-9\-]{7,30}\b"#, in: s.uppercased())
             .map { $0[0] }
-            .filter { $0.filter(\.isNumber).count >= 4 && $0 != pin }
+            .filter { $0.filter(\.isNumber).count >= 4 && $0 != pin && !foreign.contains($0) }
         return candidates.max { $0.count < $1.count }
     }
 

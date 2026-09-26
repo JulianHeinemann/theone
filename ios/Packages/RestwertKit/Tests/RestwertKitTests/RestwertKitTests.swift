@@ -60,6 +60,46 @@ struct TextParserTests {
     func amounts(text: String, expected: Double) {
         #expect(TextParser.amount(in: text) == expected)
     }
+
+    @Test("Mindestbestellwert und Datum sind nicht der Gutscheinwert", arguments: [
+        ("Ihr Amazon Gutschein über 10 € – einlösbar ab einem Mindestbestellwert. Gültig bis 31.12.2026", 10.0),
+        ("Zalando Gutschein 10 € ab 50 € Mindestbestellwert", 10.0),
+        ("Gutschein über 1.000 € Otto", 1000.0),
+    ])
+    func amountsWithNoise(text: String, expected: Double) {
+        #expect(TextParser.amount(in: text) == expected)
+    }
+
+    @Test("Tausenderpunkt ohne Nachkommastellen", arguments: [("1.000", 1000.0), ("12.345", 12345.0), ("12.50", 12.5), ("12.5", 12.5)])
+    func thousands(text: String, expected: Double) {
+        #expect(parseMoney(text) == expected)
+    }
+
+    @Test("MwSt-Satz und „Gutscheincode“ machen keinen Rabattcode")
+    func vatIsNoDiscount() {
+        let d = TextParser.parse("Gutscheincode: AQ12-BCDE-FG34\n25,00 € inkl. 19 % MwSt.", now: date(2026, 9, 25))
+        #expect(d.percent == nil)
+        #expect(!d.isDiscount)
+        #expect(d.value == 25)
+        #expect(TextParser.percent(in: "Noch 10 % offen, Code ABC") == nil)
+        #expect(TextParser.percent(in: "20 % Rabatt, inkl. 19 % MwSt") == 20)
+    }
+
+    @Test("Kunden- und Bestellnummer sind kein Gutscheincode", arguments: [
+        ("Kundennummer: 12345678\nIhr Gutscheincode: XK9P-44TT-ZZ81\nWert: 25,00 €", "XK9P-44TT-ZZ81"),
+        ("Bestellnummer: 302-1234567-7654321\nGutscheincode: AQ12-BCDE-FG34", "AQ12-BCDE-FG34"),
+        ("Bestellnummer: 302-1234567-7654321\nCode: ZX81-7788", "ZX81-7788"),
+    ])
+    func customerNumber(text: String, expected: String) {
+        #expect(TextParser.parse(text, now: date(2026, 9, 25)).number == expected)
+    }
+
+    @Test("„gültig vom X bis Y“ ergibt das Enddatum")
+    func validityRange() throws {
+        let d = try #require(TextParser.expiry(in: "Gutschein gültig vom 01.10.2026 bis 31.12.2026. Code: ABCD1234EF", now: date(2026, 9, 25)))
+        let c = Calendar.current.dateComponents([.year, .month, .day], from: d)
+        #expect(c.year == 2026 && c.month == 12 && c.day == 31)
+    }
 }
 
 @Suite("Barcodes")
@@ -87,6 +127,23 @@ struct BarcodeTests {
     func itf() {
         #expect(BarcodeEncoder.itf("123") == BarcodeEncoder.itf("0123"))
         #expect(BarcodeEncoder.itf("12AB") == nil)
+    }
+
+    @Test("Prüfziffer nur bei EAN/UPC; sonst keine Aussage")
+    func checksumOnlyForEANUPC() {
+        #expect(BarcodeEncoder.hasValidChecksum("AB12-CD34", format: .code128) == nil)
+        #expect(BarcodeEncoder.hasValidChecksum("https://example.com/g/123", format: .qr) == nil)
+        #expect(BarcodeEncoder.hasValidChecksum("6300981274561234", format: .code128) == nil)
+        #expect(BarcodeEncoder.hasValidChecksum("AB12", format: .ean13) == false)
+    }
+
+    @Test("UPC-E wird zu UPC-A erweitert", arguments: [
+        ("01234565", "012345000065"), ("123456", "012345000065"), ("04252614", "042100005264"), ("01234133", "012300000413"),
+    ])
+    func upce(raw: String, expected: String) {
+        #expect(BarcodeEncoder.expandUPCE(raw) == expected)
+        #expect(BarcodeEncoder.hasValidChecksum(expected, format: .upca) == true)
+        #expect(BarcodeEncoder.modules(for: expected, format: .upca)?.count == 95)
     }
 
     @Test("Code 39 lehnt unbekannte Zeichen ab")

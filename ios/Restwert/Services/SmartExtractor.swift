@@ -43,7 +43,11 @@ nonisolated enum SmartExtractor {
 
     private static func draft(from f: VoucherFields) -> CardDraft {
         var d = CardDraft()
-        if let shop = f.shop, !shop.isEmpty { d.merchantID = TextParser.merchant(in: shop) }
+        if let shop = f.shop?.trimmingCharacters(in: .whitespacesAndNewlines), !shop.isEmpty {
+            d.merchantID = TextParser.merchant(in: shop)
+            // Unbekannter Laden: Namen behalten statt verwerfen
+            if d.merchantID == nil { d.customName = shop }
+        }
         d.value = f.valueEuro.flatMap { $0 > 0 && $0 <= 5000 ? $0 : nil }
         d.percent = f.percent.flatMap { $0 > 0 && $0 <= 90 ? $0 : nil }
         d.number = f.code?.replacingOccurrences(of: " ", with: "").nilIfEmpty

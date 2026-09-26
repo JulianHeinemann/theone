@@ -15,10 +15,12 @@ struct LiveScannerView: View {
     @State private var access = AVCaptureDevice.authorizationStatus(for: .video)
     @State private var photoItem: PhotosPickerItem?
     @State private var reading = false
+    @State private var loadFailed = false
 
     /// Simulator und Geräte ohne Neural Engine haben keinen Live-Scanner.
     private var supported: Bool { DataScannerViewController.isSupported }
     private var canUse: Bool { supported && access == .authorized && DataScannerViewController.isAvailable }
+    private var denied: Bool { access == .denied }
     private var hasSomething: Bool { model.barcode != nil || !model.texts.isEmpty }
 
     var body: some View {
@@ -45,10 +47,14 @@ struct LiveScannerView: View {
         }
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
+            photoItem = nil // gleiches Foto bleibt erneut wählbar
             Task {
                 reading = true
                 defer { reading = false }
-                guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else { return }
+                guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
+                    loadFailed = true
+                    return
+                }
                 let result = await Importer.analyze(image: image)
                 onDone(result)
                 dismiss()
@@ -64,37 +70,59 @@ struct LiveScannerView: View {
                 .padding(16)
         }
         .sensoryFeedback(.success, trigger: model.barcode)
+        .alert("Foto konnte nicht geladen werden", isPresented: $loadFailed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Prüf die Verbindung (iCloud-Foto) oder wähl ein anderes Foto.")
+        }
     }
 
     /// Ohne Kamera (Simulator) oder ohne Erlaubnis: gleicher Scan, aber aus einem Foto.
+    /// Passt der Inhalt nicht (große Schrift), wird gescrollt.
     private var fallback: some View {
+        ViewThatFits(in: .vertical) {
+            fallbackContent(spacers: true)
+            ScrollView { fallbackContent(spacers: false).padding(.top, 60) }
+        }
+        .foregroundStyle(Color.ink)
+        .pageBackground()
+    }
+
+    private var fallbackTitle: String {
+        !supported ? "Keine Kamera verfügbar" : denied ? "Kamera nicht freigegeben" : "Scanner gerade nicht verfügbar"
+    }
+
+    private var fallbackText: String {
+        if !supported { return "Auf diesem Gerät läuft der Live-Scan nicht, zum Beispiel im Simulator. Wähl ein Foto der Karte, Barcode und Text werden genauso gelesen." }
+        if denied { return "Erlaube Restwert in den Einstellungen den Zugriff auf die Kamera. Oder wähl ein Foto der Karte, das wird genauso gelesen." }
+        return "Die Kamera ist im Moment gesperrt oder belegt. Wähl ein Foto der Karte, das wird genauso gelesen."
+    }
+
+    private func fallbackContent(spacers: Bool) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Spacer()
+            if spacers { Spacer() }
             Image(systemName: supported ? "camera.fill" : "photo.on.rectangle")
                 .font(.scaled(30)).foregroundStyle(Color.ink2)
-            Text(supported ? "Kamera nicht freigegeben" : "Keine Kamera verfügbar")
+            Text(fallbackTitle)
                 .font(.scaled(22, weight: .bold))
-            Text(supported
-                 ? "Erlaube Restwert in den Einstellungen den Zugriff auf die Kamera. Oder wähl ein Foto der Karte, das wird genauso gelesen."
-                 : "Auf diesem Gerät läuft der Live-Scan nicht, zum Beispiel im Simulator. Wähl ein Foto der Karte, Barcode und Text werden genauso gelesen.")
+            Text(fallbackText)
                 .font(.scaled(15)).foregroundStyle(Color.ink2)
-            Spacer()
+                .fixedSize(horizontal: false, vertical: true)
+            if spacers { Spacer() }
             PhotosPicker(selection: $photoItem, matching: .images) {
                 Label(reading ? "Wird gelesen …" : "Foto der Karte wählen", systemImage: "photo")
             }
             .buttonStyle(.accent)
             .disabled(reading)
-            if supported {
+            if supported && denied {
                 Button("Kamera in Einstellungen erlauben") {
                     if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
                 }
                 .buttonStyle(.quiet)
             }
         }
-        .foregroundStyle(Color.ink)
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .pageBackground()
     }
 
     private var controls: some View {
@@ -118,7 +146,7 @@ struct LiveScannerView: View {
                 Task {
                     let photo = await model.capturePhoto()
                     onDone(ScanOutcome(barcode: model.barcode, format: model.format,
-                                       text: model.texts.values.joined(separator: "\n"), photo: photo))
+                                       text: model.orderedText, photo: photo))
                     dismiss()
                 }
             } label: {
@@ -136,9 +164,16 @@ struct LiveScannerView: View {
 
 @Observable
 final class LiveScanModel {
+    /// Erkannte Zeile mit Position, für die Leserichtung.
+    struct TextLine {
+        let text: String
+        let top: CGFloat
+        let left: CGFloat
+    }
+
     var barcode: String?
     var format: CodeFormat?
-    var texts: [UUID: String] = [:]
+    var texts: [UUID: TextLine] = [:]
     @ObservationIgnored weak var controller: DataScannerViewController?
 
     func handle(_ items: [RecognizedItem]) {
@@ -147,17 +182,27 @@ final class LiveScanModel {
             case .barcode(let b):
                 guard let payload = b.payloadStringValue, !payload.isEmpty else { continue }
                 let f = CodeFormat(vision: b.observation.symbology)
+                // UPC-E als UPC-A mit 12 Ziffern, damit Prüfziffer und Barcode stimmen
+                let value = b.observation.symbology == .upce ? (BarcodeEncoder.expandUPCE(payload) ?? payload) : payload
                 // Strichcode behalten, sobald einer gefunden ist; 2D-Codes nur als Notlösung
                 if barcode == nil || (format?.isTwoDimensional == true && !f.isTwoDimensional) {
-                    barcode = payload
+                    barcode = value
                     format = f
                 }
             case .text(let t):
-                texts[item.id] = t.transcript
+                texts[item.id] = TextLine(text: t.transcript,
+                                          top: min(t.bounds.topLeft.y, t.bounds.topRight.y), left: t.bounds.topLeft.x)
             @unknown default:
                 break
             }
         }
+    }
+
+    /// Zeilen in Leserichtung: oben nach unten, in einer Zeile links nach rechts.
+    var orderedText: String {
+        texts.values
+            .sorted { abs($0.top - $1.top) > 8 ? $0.top < $1.top : $0.left < $1.left }
+            .map(\.text).joined(separator: "\n")
     }
 
     func capturePhoto() async -> Data? {

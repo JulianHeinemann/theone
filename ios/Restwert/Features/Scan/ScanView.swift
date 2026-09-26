@@ -14,6 +14,7 @@ struct ScanView: View {
     @State private var showEmail = false
     @State private var photoItem: PhotosPickerItem?
     @State private var formSeed: FormSeed?
+    @State private var importError: String?
 
     var body: some View {
         ScrollView {
@@ -69,7 +70,10 @@ struct ScanView: View {
             LiveScannerView { live in Task { await finishLive(live) } }
         }
         .fileImporter(isPresented: $showFiles, allowedContentTypes: [.pdf, .image, .plainText, .text]) { result in
-            if case .success(let url) = result { Task { await run { await Importer.analyze(url: url) } } }
+            switch result {
+            case .success(let url): Task { await run { await Importer.analyze(url: url) } }
+            case .failure: importError = "Datei konnte nicht geöffnet werden."
+            }
         }
         .sheet(isPresented: $showEmail) {
             EmailImportSheet { text in Task { await run { await Importer.analyze(text: text) } } }
@@ -87,9 +91,15 @@ struct ScanView: View {
             }
         }
         .task(id: router.pendingImport) {
+            // Erst nach der Analyse zurücksetzen: eine neue task-id würde diesen Task sonst abbrechen.
             guard let url = router.pendingImport else { return }
-            router.pendingImport = nil
             await run { await Importer.analyze(url: url) }
+            if router.pendingImport == url { router.pendingImport = nil }
+        }
+        .alert("Import fehlgeschlagen", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(importError ?? "")
         }
     }
 
@@ -136,9 +146,15 @@ struct ScanView: View {
     // MARK: Logik
 
     private func run(_ work: () async -> ScanOutcome) async {
+        // Offenes Formular schließen, damit das neue Ergebnis sichtbar wird
+        formSeed = nil
         busy = true
         let result = await work()
         busy = false
+        if result.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && result.barcode == nil && result.photo == nil {
+            importError = "Datei oder Foto konnte nicht gelesen werden. Versuch ein anderes Format oder gib den Gutschein von Hand ein."
+            return
+        }
         show(result)
     }
 
