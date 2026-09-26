@@ -56,6 +56,8 @@ struct BarcodeView: View {
     let number: String
     let format: CodeFormat
     var height: CGFloat = 90
+    /// Nur für den Text-Rückfall: Nummer als „•••• 1234“ zeigen.
+    var masked = false
 
     var body: some View {
         switch BarcodeRenderer.render(number, format: format) {
@@ -78,11 +80,16 @@ struct BarcodeView: View {
                 .frame(maxHeight: format == .qr || format == .aztec ? height * 2.4 : height)
                 .accessibilityLabel("Barcode \(format.label)")
         case nil:
-            Text(number)
-                .font(.scaled(26, weight: .heavy, design: .monospaced))
-                .multilineTextAlignment(.center)
-                .textSelection(.enabled)
-                .padding(.vertical, 12)
+            Group {
+                if masked {
+                    Text(number.masked)
+                } else {
+                    Text(number).textSelection(.enabled)
+                }
+            }
+            .font(.scaled(26, weight: .heavy, design: .monospaced))
+            .multilineTextAlignment(.center)
+            .padding(.vertical, 12)
         }
     }
 }

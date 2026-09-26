@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import LocalAuthentication
 import UserNotifications
 import RestwertKit
 
@@ -21,6 +22,7 @@ struct CheckoutView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var numberShown = false
     @AppStorage("maskNumber") private var maskNumber = false
+    @AppStorage("pinLock") private var pinLock = true
 
     var body: some View {
         ScrollView {
@@ -28,17 +30,25 @@ struct CheckoutView: View {
                 VStack(spacing: 16) {
                     ticket(card)
                     if let result {
+                        let needsAmount = result && card.kind.isValueBased
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(result ? "Wie viel hast du bezahlt?" : "Nicht angenommen – dein Guthaben bleibt gleich.")
+                            Text(!result ? "Nicht angenommen – dein Guthaben bleibt gleich."
+                                 : needsAmount ? "Wie viel hast du bezahlt?" : "\(card.kind.label) wird als eingelöst markiert.")
                                 .font(.scaled(17, weight: .semibold))
-                            if result {
+                            if needsAmount {
                                 LabeledField(label: "Betrag, wird vom Guthaben abgezogen", placeholder: "z. B. 18,50",
                                              text: $amount, keyboard: .decimalPad)
+                                if !amountValid {
+                                    Label(amount.isEmpty ? "Gib den bezahlten Betrag ein." : "Kein gültiger Betrag, z. B. 18,50.",
+                                          systemImage: "exclamationmark.circle")
+                                        .font(.scaled(13)).foregroundStyle(amount.isEmpty ? Color.ink2 : Color.warn)
+                                }
                             }
                             LabeledField(label: "Filiale", placeholder: "optional, z. B. Köln Hohe Straße", text: $storeName)
                             LabeledField(label: "Notiz", placeholder: result ? "optional" : "optional, z. B. Kasse wollte Plastikkarte", text: $note)
-                            Button(result ? "Eintragen" : "Notieren") { save(card, result) }
+                            Button(!result ? "Notieren" : needsAmount ? "Eintragen" : "Als eingelöst markieren") { save(card, result) }
                                 .buttonStyle(.primary)
+                                .disabled(needsAmount && !amountValid)
                                 .padding(.top, 6)
                             Button("Zurück") { withAnimation(.snappy) { self.result = nil } }
                                 .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
@@ -78,7 +88,7 @@ struct CheckoutView: View {
         .toolbar(.hidden, for: .tabBar)
         .navigationTitle("An der Kasse")
         .fullScreenCover(isPresented: $showFull) {
-            if let card = store.card(cardID) { FullBarcode(card: card) }
+            if let card = store.card(cardID) { FullBarcode(card: card, masked: maskNumber && !numberShown) }
         }
         .fullScreenCover(isPresented: $showPhotoFull) {
             if let data = store.card(cardID)?.photo, let image = UIImage(data: data) { PhotoViewer(image: image) }
@@ -87,11 +97,13 @@ struct CheckoutView: View {
         .onAppear {
             UIApplication.shared.isIdleTimerDisabled = true
             if let screen = currentScreen {
-                oldBrightness = screen.brightness
+                // Nur einmal merken: nach dem Vollbild läuft onAppear erneut, dann steht die Helligkeit schon auf 1.
+                if oldBrightness == nil { oldBrightness = screen.brightness }
                 screen.brightness = 1
             }
         }
-        .onDisappear { restoreScreen() }
+        // fullScreenCover löst onDisappear der darunterliegenden View aus – dort muss es hell bleiben.
+        .onDisappear { if !showFull && !showPhotoFull { restoreScreen() } }
         // Beim Wechsel in eine andere App Helligkeit und Displaysperre sofort zurückgeben.
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
@@ -136,13 +148,16 @@ struct CheckoutView: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel("Foto des Gutscheins groß anzeigen")
                 } else {
-                    Button { showFull = true } label: {
-                        BarcodeView(number: card.number, format: card.format, height: 150)
+                    let textOnly = card.format == .text || card.format == .dataMatrix
+                    let hidden = maskNumber && !numberShown
+                    // Textcode verdeckt: erster Tipp deckt auf, erst der zweite öffnet das Vollbild.
+                    Button { if textOnly && hidden { numberShown = true } else { showFull = true } } label: {
+                        BarcodeView(number: card.number, format: card.format, height: 150, masked: hidden)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Barcode groß anzeigen")
+                    .accessibilityLabel(textOnly && hidden ? "Code aufdecken" : "Barcode groß anzeigen")
                 }
-                if card.format != .text {
+                if card.format != .text && card.format != .dataMatrix {
                     Text(maskNumber && !numberShown ? card.number.masked : card.number.grouped)
                         .font(.scaled(19, weight: .bold)).kerning(2.4)
                         .onTapGesture { numberShown = true }
@@ -160,8 +175,8 @@ struct CheckoutView: View {
                         .multilineTextAlignment(.center)
                 }
                 if !card.pin.isEmpty {
-                    Button { withAnimation(.snappy) { showPin = true } } label: {
-                        Label(showPin ? "PIN \(card.pin)" : "PIN anzeigen", systemImage: showPin ? "lock.open" : "faceid")
+                    Button { Task { await togglePin(card) } } label: {
+                        Label(showPin ? "PIN \(card.pin)" : "PIN anzeigen", systemImage: showPin ? "lock.open" : pinLock ? "faceid" : "eye")
                             .font(.scaled(15, weight: .semibold))
                     }
                     .buttonStyle(.glass)
@@ -171,6 +186,28 @@ struct CheckoutView: View {
         }
         .cardSurface(radius: 28)
     }
+
+    /// Wie CardDetailView.togglePin: bei PIN-Schutz erst Face ID oder Gerätecode.
+    private func togglePin(_ card: GiftCard) async {
+        if showPin {
+            withAnimation(.snappy) { showPin = false }
+            return
+        }
+        guard pinLock else {
+            withAnimation(.snappy) { showPin = true }
+            return
+        }
+        let context = LAContext()
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+            withAnimation(.snappy) { showPin = true }
+            return
+        }
+        let ok = (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "PIN von \(card.name) anzeigen")) ?? false
+        if ok { withAnimation(.snappy) { showPin = true } }
+    }
+
+    private var amountValid: Bool { (parseMoney(amount) ?? 0) > 0 }
 
     /// „Später eintragen“: Gutschein als „Betrag offen“ markieren und nach 2 Stunden nachfragen, nie nachts.
     private func remindLater(_ card: GiftCard) async {
@@ -190,12 +227,34 @@ struct CheckoutView: View {
         let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: fire)
         let request = UNNotificationRequest(identifier: "\(card.id.uuidString)-later", content: content,
                                             trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
-        try? await UNUserNotificationCenter.current().add(request)
-        router.toast = Toast(message: "Als „Betrag offen“ markiert. Wir fragen später nach.", undo: nil)
+        // Erinnerung nur versprechen, wenn Mitteilungen erlaubt sind.
+        let center = UNUserNotificationCenter.current()
+        var status = await center.notificationSettings().authorizationStatus
+        if status == .notDetermined {
+            _ = try? await center.requestAuthorization(options: [.alert, .sound, .badge])
+            status = await center.notificationSettings().authorizationStatus
+        }
+        var scheduled = false
+        if status == .authorized || status == .provisional || status == .ephemeral {
+            scheduled = (try? await center.add(request)) != nil
+        }
+        router.toast = Toast(message: scheduled
+            ? "Als „Betrag offen“ markiert. Wir fragen später nach."
+            : "Als „Betrag offen“ markiert. Mitteilungen sind aus – schau selbst in der Liste nach.", undo: nil)
     }
 
     private func save(_ card: GiftCard, _ ok: Bool) {
+        // Rabattcodes und Coupons: kein Betrag, sondern als Ganzes einlösen.
+        if ok && !card.kind.isValueBased {
+            _ = store.addTest(card: card, success: true, store: storeName, note: note, amount: nil)
+            store.setPending(card.id, false)
+            store.markRedeemed(card.id, store: storeName)
+            router.toast = Toast(message: "\(card.kind.label) als eingelöst markiert.", undo: nil)
+            dismiss()
+            return
+        }
         let value = parseMoney(amount)
+        if ok, (value ?? 0) <= 0 { return }
         let entry = store.addTest(card: card, success: ok, store: storeName, note: note, amount: value)
         if let entry, let value {
             router.showUndo("\(min(value, card.balance).euro) bei \(card.name) abgezogen") {
@@ -263,61 +322,64 @@ struct KeypadView: View {
     }
 
     private func content(_ card: GiftCard) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 14) {
-                MerchantMark(card: card)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(card.name).font(.scaled(16, weight: .bold))
-                    Text("\(card.balance.euro) verfügbar").font(.scaled(13)).foregroundStyle(Color.muted)
+        // Oberer Teil scrollt, Tastenfeld samt Bestätigung bleibt unten – auch bei großer Schrift.
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 14) {
+                    MerchantMark(card: card)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(card.name).font(.scaled(16, weight: .bold))
+                        Text("\(card.balance.euro) verfügbar").font(.scaled(13)).foregroundStyle(Color.muted)
+                    }
+                    Spacer()
                 }
-                Spacer()
-            }
-            .padding(12).cardSurface(radius: 20).padding(.horizontal, 16).padding(.top, 8)
+                .padding(12).cardSurface(radius: 20).padding(.horizontal, 16).padding(.top, 8)
 
-            Picker("Modus", selection: $correct) {
-                Text("Einkauf abziehen").tag(false)
-                Text("Neuen Stand eintragen").tag(true)
-            }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, 16).padding(.top, 14)
-            VStack(alignment: .leading, spacing: 6) {
-                Text(correct ? "Guthaben laut Bon oder nach Aufladung" : "Betrag eingeben").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
-                HStack(spacing: 4) {
-                    Text(input.isEmpty ? "0" : input).font(.scaled(56, weight: .heavy)).monospacedDigit()
-                        .contentTransition(.numericText())
-                    Rectangle().fill(Color.ink).frame(width: 2, height: 50)
-                        .phaseAnimator([1.0, 0.2]) { content, opacity in content.opacity(opacity) }
-                    Text(" €").font(.scaled(56, weight: .heavy)).foregroundStyle(Color.muted)
+                Picker("Modus", selection: $correct) {
+                    Text("Einkauf abziehen").tag(false)
+                    Text("Neuen Stand eintragen").tag(true)
                 }
-                .lineLimit(1).minimumScaleFactor(0.5)
-                .modifier(Shake(animatableData: CGFloat(rejected)))
-                Divider()
-                Text(hint(card)).font(.scaled(15, weight: !correct && value > card.balance ? .semibold : .regular))
-                    .foregroundStyle(!correct && value > card.balance ? Color.warn : Color.ink2)
-            }
-            .padding(.horizontal, 18).padding(.top, 22)
-
-            if !correct { GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
-                    ForEach([5.0, 10, 20].filter { $0 < card.balance }, id: \.self) { q in chip("\(Int(q)) €") { input = "\(Int(q))" } }
-                    chip("Alles") { input = card.balance.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE"))).replacingOccurrences(of: ".", with: "") }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 16).padding(.top, 14)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(correct ? "Guthaben laut Bon oder nach Aufladung" : "Betrag eingeben").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
+                    HStack(spacing: 4) {
+                        Text(input.isEmpty ? "0" : input).font(.scaled(56, weight: .heavy)).monospacedDigit()
+                            .contentTransition(.numericText())
+                        Rectangle().fill(Color.ink).frame(width: 2, height: 50)
+                            .phaseAnimator([1.0, 0.2]) { content, opacity in content.opacity(opacity) }
+                        Text(" €").font(.scaled(56, weight: .heavy)).foregroundStyle(Color.muted)
+                    }
+                    .lineLimit(1).minimumScaleFactor(0.5)
+                    .modifier(Shake(animatableData: CGFloat(rejected)))
+                    Divider()
+                    Text(hint(card)).font(.scaled(15, weight: !correct && value > card.balance ? .semibold : .regular))
+                        .foregroundStyle(!correct && value > card.balance ? Color.warn : Color.ink2)
                 }
-                .padding(.horizontal, 16).padding(.vertical, 4)
-            }
-            .padding(.top, 14) }
+                .padding(.horizontal, 18).padding(.top, 22)
 
-            Group {
-                if showStore {
-                    LabeledField(label: "Filiale (für deinen Verlauf)", placeholder: "z. B. Thalia Köln", text: $storeName)
-                } else {
-                    Button("+ Filiale notieren") { withAnimation(.snappy) { showStore = true } }
-                        .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                if !correct { GlassEffectContainer(spacing: 8) {
+                    HStack(spacing: 8) {
+                        ForEach([5.0, 10, 20].filter { $0 < card.balance }, id: \.self) { q in chip("\(Int(q)) €") { input = "\(Int(q))" } }
+                        chip("Alles") { input = card.balance.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE"))).replacingOccurrences(of: ".", with: "") }
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 4)
                 }
+                .padding(.top, 14) }
+
+                Group {
+                    if showStore {
+                        LabeledField(label: "Filiale (für deinen Verlauf)", placeholder: "z. B. Thalia Köln", text: $storeName)
+                    } else {
+                        Button("+ Filiale notieren") { withAnimation(.snappy) { showStore = true } }
+                            .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                    }
+                }
+                .padding(.horizontal, 16).padding(.top, 12).padding(.bottom, 16)
             }
-            .padding(.horizontal, 16).padding(.top, 12)
-
-            Spacer(minLength: 16)
-
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 14) {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 6) {
                     ForEach(["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "⌫"], id: \.self) { key in
@@ -329,7 +391,6 @@ struct KeypadView: View {
                                     Text(key).font(.system(size: 28, weight: .semibold))
                                 }
                             }
-                            .foregroundStyle(Color.ink)
                             .frame(width: 64, height: 58)
                         }
                         .buttonStyle(KeyStyle())
@@ -338,7 +399,8 @@ struct KeypadView: View {
                 }
                 .sensoryFeedback(.impact(weight: .light), trigger: input)
                 Button {
-                    guard value > 0 else {
+                    // Neuer Stand darf 0 sein (Bon zeigt leer), Abzug nicht.
+                    guard correct ? parseMoney(input) != nil : value > 0 else {
                         withAnimation(.linear(duration: 0.4)) { rejected += 1 }
                         return
                     }
@@ -408,6 +470,7 @@ struct KeypadView: View {
     private struct KeyStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
+                .foregroundStyle(configuration.isPressed ? Color.onBrand : Color.ink)
                 .background(configuration.isPressed ? Color.brandYellow : Color.disabledFill, in: .circle)
                 .scaleEffect(configuration.isPressed ? 0.92 : 1)
                 .animation(.spring(duration: 0.2, bounce: 0.5), value: configuration.isPressed)
@@ -418,16 +481,24 @@ struct KeypadView: View {
 /// Barcode bildschirmfüllend, quer, mit Ruhezone – für schwierige Scanner.
 private struct FullBarcode: View {
     let card: GiftCard
+    let masked: Bool
+    @State private var revealed = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
+        let hidden = masked && !revealed
         GeometryReader { geo in
             VStack(spacing: 18) {
-                BarcodeView(number: card.number, format: card.format, height: min(geo.size.width * 0.5, 220))
+                BarcodeView(number: card.number, format: card.format, height: min(geo.size.width * 0.5, 220), masked: hidden)
                     .padding(.horizontal, 24)
-                Text(card.number.grouped).font(.system(size: 26, weight: .bold, design: .monospaced)).kerning(2)
+                    .onTapGesture { if hidden { revealed = true } else { dismiss() } }
+                Text(hidden ? card.number.masked : card.number.grouped)
+                    .font(.system(size: 26, weight: .bold, design: .monospaced)).kerning(2)
                     .foregroundStyle(.black)
+                    .onTapGesture { if hidden { revealed = true } else { dismiss() } }
             }
+            // Weißer Hintergrund: Textcodes auch im Dunkelmodus dunkel zeichnen.
+            .environment(\.colorScheme, .light)
             .frame(width: geo.size.height, height: geo.size.width)
             .rotationEffect(.degrees(90))
             .frame(width: geo.size.width, height: geo.size.height)
@@ -440,5 +511,10 @@ private struct FullBarcode: View {
                 .padding(16)
         }
         .onTapGesture { dismiss() }
+        .onAppear {
+            // Hell und wach bleiben, auch falls die Kasse darunter schon zurückgesetzt hat.
+            UIApplication.shared.isIdleTimerDisabled = true
+            UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?.screen.brightness = 1
+        }
     }
 }
