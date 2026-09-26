@@ -138,6 +138,9 @@ struct MainTabView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        #if DEBUG
+        .task { router.applyDemoScreen(store: store) }
+        #endif
         .sheet(item: $router.editing) { card in
             NavigationStack {
                 CardFormView(editing: card) { _ in router.editing = nil }
@@ -145,3 +148,28 @@ struct MainTabView: View {
         }
     }
 }
+
+#if DEBUG
+extension Router {
+    /// Nur für Simulator-Screenshots: Start mit `-demoScreen radar` öffnet direkt diesen Bildschirm.
+    func applyDemoScreen(store: Store) {
+        guard let screen = UserDefaults.standard.string(forKey: "demoScreen") else { return }
+        let sample = store.cards.first { !$0.history.isEmpty } ?? store.cards.first
+        switch screen {
+        case "radar": homePath = [.radar]
+        case "detail": if let sample { homePath = [.card(sample.id)] }
+        case "checkout": if let sample { homePath = [.checkout(sample.id)] }
+        case "keypad": if let sample { homePath = [.keypad(sample.id)] }
+        case "form": editing = sample
+        case "history": tab = .history
+        case "tests":
+            tab = .history
+            historyPath = [.tests]
+        case "merchants": tab = .merchants
+        case "settings": tab = .settings
+        case "scan": tab = .scan
+        default: break
+        }
+    }
+}
+#endif
