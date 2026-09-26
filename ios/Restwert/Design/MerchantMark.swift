@@ -103,6 +103,13 @@ extension MerchantMark {
 struct BalanceCard: View {
     let card: GiftCard
     let status: VoucherStatus
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// Wie in der Liste: „läuft heute/morgen ab“ statt „noch 0/1 Tage“.
+    private var badgeText: String {
+        guard status == .expiringSoon else { return status.label }
+        return card.daysLeft == 0 ? "läuft heute ab" : card.daysLeft == 1 ? "läuft morgen ab" : "noch \(card.daysLeft) Tage"
+    }
 
     var body: some View {
         let brand = MerchantBrand.forID(card.merchantID) ?? MerchantBrand(0x0E0E10, 0xFFFFFF)
@@ -110,21 +117,23 @@ struct BalanceCard: View {
         let crossed = status == .redeemed || status == .expired
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
-                Text(card.name).font(.system(size: 20, weight: .bold)).lineLimit(1)
+                Text(card.name).font(.scaled(20, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
                 Spacer(minLength: 8)
                 if status != .valid {
-                    Text(status == .expiringSoon ? "noch \(card.daysLeft) Tage" : status.label)
-                        .font(.system(size: 12, weight: .semibold))
+                    Text(badgeText)
+                        .font(.scaled(12, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
                         .foregroundStyle(status.tint)
                         .padding(.horizontal, 9).padding(.vertical, 4)
                         .background(.white, in: .capsule)
+                        // Festes helles Etikett: Schrift immer in der dunklen Hell-Variante, auch im Dunkelmodus.
+                        .environment(\.colorScheme, .light)
                 }
             }
             Spacer(minLength: 12)
             Text(card.kind.isValueBased ? "Guthaben" : card.kind.label)
-                .font(.system(size: 14, weight: .medium)).opacity(0.75)
+                .font(.scaled(14, weight: .medium)).opacity(0.75).lineLimit(1).minimumScaleFactor(0.7)
             Text(card.headline)
-                .font(.system(size: 58, weight: .bold)).kerning(-2).monospacedDigit()
+                .font(.scaled(58, weight: .bold)).kerning(-2).monospacedDigit()
                 .contentTransition(.numericText(value: card.balance))
                 .strikethrough(crossed, color: fg.opacity(0.7))
                 .minimumScaleFactor(0.5).lineLimit(1)
@@ -137,7 +146,7 @@ struct BalanceCard: View {
                             }
                     }
                     .frame(height: 5)
-                    Text("von \(card.value.euro)").font(.system(size: 13, weight: .medium)).monospacedDigit().opacity(0.75)
+                    Text("von \(card.value.euro)").font(.scaled(13, weight: .medium)).monospacedDigit().opacity(0.75)
                         .fixedSize()
                 }
                 .padding(.top, 10)
@@ -147,12 +156,21 @@ struct BalanceCard: View {
         .foregroundStyle(fg)
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .aspectRatio(1.586, contentMode: .fit)
+        // Bei Bedienungshilfen-Größen wächst die Karte mit dem Inhalt statt im Scheckkartenformat abzuschneiden.
+        .cardFormat(!typeSize.isAccessibilitySize)
         .background(brand.background, in: .rect(cornerRadius: 22, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.ink.opacity(0.08), lineWidth: 1)
         }
         .shadow(color: Color.ink.opacity(0.12), radius: 16, y: 8)
         .accessibilityElement(children: .combine)
+    }
+}
+
+private extension View {
+    /// Scheckkartenformat nur, solange der Inhalt hineinpasst.
+    @ViewBuilder
+    func cardFormat(_ fixed: Bool) -> some View {
+        if fixed { aspectRatio(1.586, contentMode: .fit) } else { self }
     }
 }

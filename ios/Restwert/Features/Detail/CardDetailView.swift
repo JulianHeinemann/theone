@@ -2,6 +2,7 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 import LocalAuthentication
+import UserNotifications
 import RestwertKit
 
 struct CardDetailView: View {
@@ -9,7 +10,9 @@ struct CardDetailView: View {
     @Environment(Store.self) private var store
     @Environment(Router.self) private var router
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("pinLock") private var pinLock = true
+    @AppStorage("reminders") private var remindersOn = true
     @AppStorage("warnDays") private var warnDays = 30
 
     @State private var pinVisible = false
@@ -19,6 +22,7 @@ struct CardDetailView: View {
     @State private var copied = false
     @State private var success = 0
     @State private var showPhoto = false
+    @State private var notifStatus: UNAuthorizationStatus?
 
     var body: some View {
         Group {
@@ -30,6 +34,11 @@ struct CardDetailView: View {
         }
         .pageBackground()
         .sensoryFeedback(.success, trigger: success)
+        .task { await refreshNotifStatus() }
+        .onChange(of: scenePhase) { _, phase in
+            // PIN schon vor dem Snapshot für den App-Umschalter wieder verbergen.
+            if phase != .active { pinVisible = false } else { Task { await refreshNotifStatus() } }
+        }
     }
 
     private func content(_ card: GiftCard) -> some View {
@@ -55,8 +64,13 @@ struct CardDetailView: View {
                 }
                 codeTicket(card)
                 locationRow(card)
-                if card.isActive { reminderRow(card) }
+                // Eigene Erinnerungen plant der Store nur für echte, eigene Gutscheine.
+                if card.isActive && !card.isExample && !card.forGifting { reminderRow(card) }
                 CardBon(card: card).padding(.top, 6)
+                if !card.kind.isValueBased && card.redeemedAt != nil {
+                    Button("Doch nicht eingelöst", systemImage: "arrow.uturn.backward") { unmarkRedeemed(card.id) }
+                        .buttonStyle(.quiet)
+                }
                 if card.isArchived {
                     Button("Wiederherstellen", systemImage: "tray.and.arrow.up") { store.setArchived(card.id, false) }
                         .buttonStyle(.quiet)
@@ -81,6 +95,7 @@ struct CardDetailView: View {
         .confirmationDialog("Gutschein endgültig entfernen?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Entfernen", role: .destructive) {
                 dismiss()
+                clearLaterNotification(card.id)
                 store.delete(card.id)
             }
         }
@@ -89,6 +104,10 @@ struct CardDetailView: View {
                 store.setLocation(card.id, location, note: note)
             }
             .presentationDetents([.medium, .large])
+        }
+        .onChange(of: card.pendingSince == nil) { _, done in
+            // Betrag eingetragen oder verworfen: „Hast du bezahlt?“-Nachfrage nicht mehr schicken.
+            if done { clearLaterNotification(card.id) }
         }
     }
 
@@ -99,7 +118,8 @@ struct CardDetailView: View {
             BalanceCard(card: card, status: status)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 cell("Gültig bis", card.expires.dayMonthYear)
-                cell("Einlösungen", card.history.isEmpty ? "noch keine" : "\(card.history.count)")
+                let count = redemptionCount(card)
+                cell("Einlösungen", count == 0 ? "noch keine" : "\(count)")
             }
             .padding(.horizontal, 4)
         }
@@ -131,13 +151,14 @@ struct CardDetailView: View {
                     Button { Task { await togglePin(card) } } label: {
                         Label(pinVisible ? card.pin : "PIN anzeigen", systemImage: pinVisible ? "lock.open" : "faceid")
                             .contentTransition(.numericText())
+                            .privacySensitive()
                             .modifier(SecondaryPill())
                     }
                     .buttonStyle(.plain)
                 }
                 if let (url, label) = link {
                     Link(destination: url) {
-                        Label(hasPin ? "Guthaben prüfen" : label, systemImage: "arrow.up.right")
+                        Label(hasPin ? shortLinkLabel(card.merchant.balanceCheck) ?? label : label, systemImage: "arrow.up.right")
                             .modifier(SecondaryPill())
                     }
                     .buttonStyle(.plain)
@@ -157,7 +178,10 @@ struct CardDetailView: View {
                     Text("Jetzt eintragen").modifier(SecondaryPill())
                 }
                 .buttonStyle(.plain)
-                Button { store.setPending(card.id, false) } label: {
+                Button {
+                    store.setPending(card.id, false)
+                    clearLaterNotification(card.id)
+                } label: {
                     Text("Nicht bezahlt").modifier(SecondaryPill())
                 }
                 .buttonStyle(.plain)
@@ -189,27 +213,84 @@ struct CardDetailView: View {
 
     /// Eigene Erinnerung nur für diesen Gutschein.
     private func reminderRow(_ card: GiftCard) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let range = reminderRange(card)
+        return VStack(alignment: .leading, spacing: 10) {
             Toggle(isOn: Binding(
                 get: { card.reminderAt != nil },
                 set: { on in
-                    let fallback = Calendar.current.date(byAdding: .day, value: -3, to: card.expires) ?? card.expires
-                    store.setReminder(card.id, on ? max(fallback, .now.addingTimeInterval(3600)) : nil)
+                    store.setReminder(card.id, on ? defaultReminder(card) : nil)
+                    if on && notifStatus == .notDetermined {
+                        Task {
+                            await store.requestNotifications()
+                            await refreshNotifStatus()
+                        }
+                    }
                 })) {
                 Label("Eigene Erinnerung", systemImage: "bell")
                     .font(.scaled(16, weight: .semibold))
             }
             .tint(Color.ink)
             if let date = card.reminderAt {
-                DatePicker("Am", selection: Binding(get: { date }, set: { store.setReminder(card.id, $0) }),
-                           in: Date.now...card.expires, displayedComponents: [.date, .hourAndMinute])
+                DatePicker("Am", selection: Binding(get: { min(max(date, range.lowerBound), range.upperBound) },
+                                                   set: { store.setReminder(card.id, $0) }),
+                           in: range, displayedComponents: [.date, .hourAndMinute])
                     .environment(\.locale, Locale(identifier: "de_DE"))
                     .font(.scaled(15))
+                if notifStatus == .denied {
+                    Button("Mitteilungen sind aus – in den Einstellungen erlauben", systemImage: "bell.slash") {
+                        if let url = URL(string: UIApplication.openNotificationSettingsURLString) { UIApplication.shared.open(url) }
+                    }
+                    .font(.scaled(13, weight: .medium)).foregroundStyle(Color.bad)
+                } else if !remindersOn {
+                    Label("Erinnerungen sind in den Restwert-Einstellungen ausgeschaltet.", systemImage: "bell.slash")
+                        .font(.scaled(13, weight: .medium)).foregroundStyle(Color.bad)
+                }
             }
         }
         .foregroundStyle(Color.ink)
         .padding(14)
         .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+    }
+
+    /// Von jetzt bis zum Ende des Ablauftags; nie ein leerer Bereich, auch nicht am Ablauftag selbst.
+    private func reminderRange(_ card: GiftCard) -> ClosedRange<Date> {
+        let now = Date.now
+        let end = Calendar.current.date(bySettingHour: 23, minute: 59, second: 0, of: card.expires) ?? card.expires
+        return now...max(end, now)
+    }
+
+    /// Vorschlag: 3 Tage vor Ablauf zur gewohnten Erinnerungszeit, frühestens in einer Stunde, spätestens am Ablauftag.
+    private func defaultReminder(_ card: GiftCard) -> Date {
+        let cal = Calendar.current
+        let range = reminderRange(card)
+        let day = cal.date(byAdding: .day, value: -3, to: card.expires) ?? card.expires
+        let proposal = cal.date(bySettingHour: ReminderPrefs.hour, minute: 0, second: 0, of: day) ?? day
+        return min(max(proposal, range.lowerBound.addingTimeInterval(3600)), range.upperBound)
+    }
+
+    private func refreshNotifStatus() async {
+        notifStatus = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
+    }
+
+    private func clearLaterNotification(_ id: UUID) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["\(id.uuidString)-later"])
+    }
+
+    /// Nur echte Abzüge und gestempelte Codes, keine Aufladungen oder Korrekturen.
+    private func redemptionCount(_ card: GiftCard) -> Int {
+        card.history.filter { r in
+            r.amount > 0 ? r.note != "Stand korrigiert" : r.amount == 0 && r.note == "\(card.kind.label) eingelöst"
+        }.count
+    }
+
+    /// Kurze Beschriftung neben dem PIN-Knopf, passend zum Prüfweg.
+    private func shortLinkLabel(_ check: BalanceCheck) -> String? {
+        switch check {
+        case .form: "Guthaben prüfen"
+        case .account: "Kundenkonto"
+        case .info: "Infos zum Guthaben"
+        case .none: nil
+        }
     }
 
     private func locationRow(_ card: GiftCard) -> some View {
@@ -333,19 +414,39 @@ struct CardDetailView: View {
             Text("Rabattcodes und Coupons gelten meist nur einmal. Markier ihn nach dem Einkauf, dann erscheint er im Verlauf.")
                 .font(.scaled(14)).foregroundStyle(Color.muted)
             Button {
+                // Doppeltipp: nur der erste Tipp stempelt.
+                guard !stampVisible else { return }
                 stampVisible = true
                 success += 1
+                let id = card.id
+                let label = card.kind.label
                 Task {
                     try? await Task.sleep(for: .milliseconds(650))
-                    withAnimation(.smooth) { store.markRedeemed(card.id) }
+                    guard store.card(id)?.redeemedAt == nil else { return }
+                    withAnimation(.smooth) { store.markRedeemed(id) }
+                    router.showUndo("\(label) als eingelöst markiert.") { unmarkRedeemed(id) }
                 }
             } label: {
                 Label("Als eingelöst markieren", systemImage: "seal")
             }
             .buttonStyle(.accent)
+            .disabled(stampVisible)
         }
         .padding(18)
         .cardSurface(radius: 28)
+    }
+
+    /// Stempel zurücknehmen: Einlösedatum und den zugehörigen Verlaufseintrag entfernen.
+    private func unmarkRedeemed(_ id: UUID) {
+        guard var c = store.card(id), c.redeemedAt != nil else { return }
+        c.redeemedAt = nil
+        if let i = c.history.lastIndex(where: { $0.amount == 0 && $0.note == "\(c.kind.label) eingelöst" }) {
+            c.history.remove(at: i)
+        }
+        withAnimation(.smooth) {
+            store.upsert(c)
+            stampVisible = false
+        }
     }
 
     private func togglePin(_ card: GiftCard) async {
