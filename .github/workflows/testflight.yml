@@ -1,0 +1,117 @@
+name: TestFlight
+
+# Baut die App auf einem Mac in der Cloud, signiert sie automatisch und lädt sie zu TestFlight hoch.
+# Start: GitHub → Actions → TestFlight → „Run workflow“, oder ein Tag wie v1.0.0 pushen.
+# Ohne eingetragene Secrets wird nur ein unsignierter Release-Build geprüft.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+  pull_request:
+    paths: [".github/workflows/testflight.yml"]
+
+concurrency:
+  group: testflight-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  testflight:
+    name: Archivieren & hochladen
+    runs-on: macos-26
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+      TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      BUNDLE_ID: ${{ vars.BUNDLE_ID || 'de.restwert.app' }}
+      BUILD_NUMBER: ${{ github.run_number }}
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Neuestes Xcode wählen
+        run: |
+          XC="$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)"
+          sudo xcode-select -s "$XC"
+          xcodebuild -version
+
+      - name: Secrets prüfen
+        id: secrets
+        run: |
+          if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -n "$ASC_KEY_P8" ] && [ -n "$TEAM_ID" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Secrets für App Store Connect fehlen. Es wird nur ein unsignierter Release-Build geprüft (siehe ios/TESTFLIGHT.md)."
+          fi
+
+      - name: Release-Build ohne Signatur prüfen
+        if: steps.secrets.outputs.ready != 'true'
+        run: |
+          set -o pipefail
+          xcodebuild -project Restwert.xcodeproj -scheme Restwert -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath build/Restwert.xcarchive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO archive 2>&1 | tee archive.log | grep -E "error:|ARCHIVE (SUCCEEDED|FAILED)" || true
+          grep -q "ARCHIVE SUCCEEDED" archive.log
+
+      - name: API-Schlüssel ablegen
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          KEY_PATH="$RUNNER_TEMP/keys/AuthKey_${ASC_KEY_ID}.p8"
+          printf '%s' "$ASC_KEY_P8" > "$KEY_PATH"
+          echo "KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Archivieren (automatische Signierung)
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          set -o pipefail
+          xcodebuild -project Restwert.xcodeproj -scheme Restwert -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath build/Restwert.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            DEVELOPMENT_TEAM="$TEAM_ID" PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+            CODE_SIGN_STYLE=Automatic CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
+            archive 2>&1 | tee archive.log | grep -E "error:|ARCHIVE (SUCCEEDED|FAILED)" || true
+          grep -q "ARCHIVE SUCCEEDED" archive.log
+
+      - name: Zu TestFlight hochladen
+        if: steps.secrets.outputs.ready == 'true'
+        run: |
+          set -o pipefail
+          cat > ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>testFlightInternalTestingOnly</key><false/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive -archivePath build/Restwert.xcarchive -exportPath build/export \
+            -exportOptionsPlist ExportOptions.plist -allowProvisioningUpdates \
+            -authenticationKeyPath "$KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            2>&1 | tee export.log | grep -E "error:|Upload|EXPORT (SUCCEEDED|FAILED)" || true
+          grep -q "EXPORT SUCCEEDED" export.log
+          echo "::notice::Build $BUILD_NUMBER ist hochgeladen. Nach der Verarbeitung (meist 5–15 Minuten) erscheint er in TestFlight."
+
+      - name: Logs hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testflight-logs
+          path: |
+            ios/archive.log
+            ios/export.log
+          if-no-files-found: ignore
+
+      - name: Schlüssel entfernen
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/keys"
