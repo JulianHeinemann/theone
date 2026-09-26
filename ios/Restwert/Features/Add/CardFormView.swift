@@ -29,7 +29,12 @@ struct CardFormView: View {
     @State private var forGifting = false
     @State private var photo: Data?
     @State private var errors: [String] = []
+    /// Format kommt aus Scan, Nutzerwahl oder gespeicherter Karte und wird nicht mehr automatisch gesetzt.
     @State private var formatLocked = false
+    /// „Gültig bis“ ist nur der gesetzliche Vorschlag und darf „Erhalten am“ folgen.
+    @State private var expiresIsSuggestion = true
+    /// Beim Bearbeiten war schon eine PIN gespeichert: nur die bleibt verdeckt.
+    @State private var hadStoredPin = false
     @State private var loaded = false
     @State private var shake = 0
     @State private var showMore = false
@@ -102,10 +107,17 @@ struct CardFormView: View {
         .fullScreenCover(isPresented: $showPhoto) {
             if let photo, let image = UIImage(data: photo) { PhotoViewer(image: image) }
         }
-        .onChange(of: received) { _, new in if editing == nil { expires = GiftCard.legalExpiry(from: new) } }
-        .onChange(of: merchantID) { _, id in
-            if !formatLocked, let m = Merchant.byID[id] { format = m.format }
+        .onChange(of: received) { _, new in if expiresIsSuggestion { expires = GiftCard.legalExpiry(from: new) } }
+        .onChange(of: merchantID) { _, _ in
+            if !formatLocked { format = autoFormat }
         }
+    }
+
+    /// Format ohne Scan oder Nutzerwahl: Codes und reine Online-Händler als Text, sonst das Händlerformat.
+    private var autoFormat: CodeFormat {
+        guard kind.isValueBased else { return .text }
+        guard let m = Merchant.byID[merchantID] else { return .code128 }
+        return m.category == .codeOnly ? .text : m.format
     }
 
     // MARK: Felder
@@ -138,7 +150,7 @@ struct CardFormView: View {
     private func setKind(_ k: VoucherKind) {
         withAnimation(.snappy) {
             kind = k
-            if !k.isValueBased && !formatLocked { format = .text }
+            if !formatLocked { format = autoFormat }
         }
     }
 
@@ -240,7 +252,7 @@ struct CardFormView: View {
                     LabeledField(label: "oder Wert in €", placeholder: "optional", text: $valueText, keyboard: .decimalPad)
                 }
             }
-            dateBox("Gültig bis", $expires)
+            dateBox("Gültig bis", Binding(get: { expires }, set: { expires = $0; expiresIsSuggestion = false }))
             LabeledField(label: kind == .discountCode ? "Rabattcode" : "Code oder Kartennummer (falls vorhanden)",
                          placeholder: "wird beim Scannen ausgefüllt", text: $number)
             Button {
@@ -271,7 +283,7 @@ struct CardFormView: View {
                 .tint(Color.ink)
                 .padding(.horizontal, 4).padding(.vertical, 10)
                 LabeledBox(label: "Barcode-Typ (wird meist automatisch erkannt)") {
-                    Picker("Barcode-Typ", selection: $format) {
+                    Picker("Barcode-Typ", selection: Binding(get: { format }, set: { format = $0; formatLocked = true })) {
                         ForEach(CodeFormat.allCases) { Text($0.label).tag($0) }
                     }
                     .labelsHidden().tint(Color.ink)
@@ -292,16 +304,17 @@ struct CardFormView: View {
         .animation(.snappy, value: merchantID)
     }
 
-    /// PIN verdeckt, wie im Detail: Aufdecken nur nach Face ID, wenn die Einstellung an ist.
+    /// Gespeicherte PIN verdeckt, wie im Detail: Aufdecken nur nach Face ID, wenn die Einstellung an ist.
+    /// Eine neue PIN lässt sich immer eintippen, auch ins verdeckte Feld (ersetzt die alte).
     private var pinField: some View {
         LabeledBox(label: "PIN") {
             HStack {
-                if pinRevealed || editing == nil || pin.isEmpty {
+                if pinRevealed || !hadStoredPin {
                     TextField("optional", text: $pin).keyboardType(.numberPad)
                 } else {
-                    SecureField("optional", text: $pin).keyboardType(.numberPad).disabled(true)
+                    SecureField("optional", text: $pin).keyboardType(.numberPad)
                 }
-                if editing != nil && !pin.isEmpty {
+                if hadStoredPin {
                     Button(pinRevealed ? "PIN verbergen" : "PIN zeigen", systemImage: pinRevealed ? "eye.slash" : "eye") {
                         Task { await revealPin() }
                     }
@@ -332,26 +345,23 @@ struct CardFormView: View {
 
     private func apply(_ o: ScanOutcome) {
         let d = o.draft
-        if let id = d.merchantID {
-            merchantID = id
-            format = Merchant.byID[id]?.format ?? format
-        }
-        if let code = o.barcode {
-            number = code
-            format = o.format ?? format
-            formatLocked = true
-        } else if let n = d.number {
-            number = n
-        }
-        if let p = d.pin { pin = p }
-        if let v = d.value { valueText = Self.money(v) }
-        if let e = d.expires { expires = e }
+        if let id = d.merchantID { merchantID = id }
         if let p = d.percent {
             kind = .discountCode
             percentText = p.formatted()
-            if o.barcode == nil { format = .text }
         }
-        if let m = Merchant.byID[merchantID], m.category == .codeOnly, o.barcode == nil { format = .text }
+        if let code = o.barcode {
+            number = code
+            format = o.format ?? Merchant.byID[merchantID]?.format ?? format
+            formatLocked = true
+        } else {
+            if let n = d.number { number = n }
+            // Ohne Barcode automatisch; onChange(merchantID) rechnet später mit derselben Regel (Rabattcode bleibt Text)
+            format = autoFormat
+        }
+        if let p = d.pin { pin = p }
+        if let v = d.value { valueText = Self.money(v) }
+        if let e = d.expires { expires = e; expiresIsSuggestion = false }
         photo = o.photo
     }
 
@@ -362,14 +372,17 @@ struct CardFormView: View {
         number = c.number
         format = c.format
         pin = c.pin
+        hadStoredPin = !c.pin.isEmpty
         received = c.received
         expires = c.expires
+        expiresIsSuggestion = false
         location = c.location
         locationNote = c.locationNote
         owner = c.owner
         forGifting = c.forGifting
         photo = c.photo
-        formatLocked = true
+        // Ohne Code war .text keine echte Wahl: beim Ergänzen eines Codes gilt wieder das automatische Format
+        formatLocked = !c.number.isEmpty
         valueText = c.value > 0 ? Self.money(c.value) : ""
         balanceText = c.kind.isValueBased ? Self.money(c.balance) : ""
         percentText = c.percent.map { $0.formatted() } ?? ""
@@ -377,6 +390,12 @@ struct CardFormView: View {
 
     private static func money(_ v: Double) -> String {
         v.formatted(.number.precision(.fractionLength(2)).grouping(.never).locale(Locale(identifier: "de_DE")))
+    }
+
+    /// Unbenutzte Karte, Guthaben-Feld unverändert: Guthaben folgt einem korrigierten Betrag.
+    private var balanceFollowsValue: Bool {
+        guard let c = editing, c.kind.isValueBased else { return false }
+        return c.history.isEmpty && c.balance == c.value && balanceText == Self.money(c.balance)
     }
 
     private func validate() -> [String] {
@@ -391,12 +410,16 @@ struct CardFormView: View {
         if kind.isValueBased {
             if (value ?? 0) <= 0 { e.append("Gib den Betrag in Euro ein, z. B. 25,00.") }
             if !balanceText.isEmpty && balance == nil { e.append("„Guthaben jetzt“ ist keine gültige Zahl.") }
-            if let v = value, let b = balance, b > v { e.append("„Guthaben jetzt“ ist größer als der Betrag.") }
+            if let b = balance, b < 0 { e.append("„Guthaben jetzt“ darf nicht negativ sein.") }
+            if !balanceFollowsValue, let v = value, let b = balance, b > v { e.append("„Guthaben jetzt“ ist größer als der Betrag.") }
         } else {
             if percent == nil && value == nil { e.append("Gib einen Rabatt in % oder einen Wert in € ein.") }
-            if let p = percent, p <= 0 || p > 100 { e.append("Der Rabatt muss zwischen 1 und 100 % liegen.") }
+            if let p = percent, p < 1 || p > 100 { e.append("Der Rabatt muss zwischen 1 und 100 % liegen.") }
+            if let v = value, v < 0 { e.append("Der Wert darf nicht negativ sein.") }
         }
-        if expires < received { e.append("„Gültig bis“ liegt vor dem Erhalt-Datum.") }
+        // Tagesgenau: gleicher Tag ist gültig, Uhrzeiten spielen keine Rolle
+        let cal = Calendar.current
+        if cal.startOfDay(for: expires) < cal.startOfDay(for: received) { e.append("„Gültig bis“ liegt vor dem Erhalt-Datum.") }
         return e
     }
 
@@ -408,7 +431,7 @@ struct CardFormView: View {
             return
         }
         let value = parseMoney(valueText) ?? 0
-        let balance = parseMoney(balanceText) ?? value
+        let balance = balanceFollowsValue ? value : (parseMoney(balanceText) ?? value)
         let code = number.trimmingCharacters(in: .whitespacesAndNewlines)
 
         var card = editing ?? GiftCard(merchantID: merchantID, number: code, format: format, value: 0, balance: 0,
@@ -417,10 +440,15 @@ struct CardFormView: View {
         card.merchantID = merchantID
         card.customName = merchantID == "other" ? customName.trimmingCharacters(in: .whitespaces) : ""
         card.number = code
-        card.format = code.isEmpty ? .text : format
+        card.format = code.isEmpty ? .text : (formatLocked ? format : autoFormat)
         card.pin = kind == .giftCard ? pin.trimmingCharacters(in: .whitespaces) : ""
         card.value = value
-        card.balance = kind.isValueBased ? balance : value
+        if kind.isValueBased, let old = editing, old.kind.isValueBased, !balanceFollowsValue {
+            // Geändertes Guthaben landet mit der Differenz im Verlauf
+            _ = card.setBalance(balance)
+        } else {
+            card.balance = kind.isValueBased ? balance : value
+        }
         card.percent = kind.isValueBased ? nil : parseMoney(percentText)
         card.received = received
         card.expires = expires
@@ -428,7 +456,7 @@ struct CardFormView: View {
         card.locationNote = locationNote.trimmingCharacters(in: .whitespaces)
         card.owner = owner.trimmingCharacters(in: .whitespaces)
         card.forGifting = forGifting
-        card.photo = photo ?? card.photo
+        card.photo = photo
         store.upsert(card)
         Task { await store.requestNotifications() }
         onSaved(card)
@@ -472,6 +500,7 @@ struct PhotoViewer: View {
 
     var body: some View {
         Image(uiImage: image).resizable().scaledToFit()
+            .accessibilityLabel("Foto des Gutscheins")
             .scaleEffect(scale)
             .gesture(MagnifyGesture().onChanged { scale = max(1, $0.magnification) }.onEnded { _ in withAnimation { scale = 1 } })
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -481,7 +510,7 @@ struct PhotoViewer: View {
                     .labelStyle(.iconOnly).font(.system(size: 17, weight: .bold))
                     .buttonStyle(.glass).buttonBorderShape(.circle).controlSize(.large)
                     .padding(16)
+                    .accessibilityLabel("Schließen")
             }
-            .accessibilityLabel("Foto des Gutscheins")
     }
 }
