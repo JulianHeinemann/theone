@@ -263,7 +263,9 @@ extension View {
 
     /// Einheitlicher Seitenhintergrund. Harte Scroll-Kante oben, damit Inhalt nicht lesbar unter dem Titel durchläuft.
     func pageBackground() -> some View {
-        scrollEdgeEffectStyle(.hard, for: [.top, .bottom])
+        scrollEdgeEffectStyle(.hard, for: .top)
+            // Platz für die schwebende Tab-Leiste, damit die letzte Zeile am Listenende ganz frei steht.
+            .contentMargins(.bottom, 96, for: .scrollContent)
             .background(Color.page.ignoresSafeArea())
     }
 }

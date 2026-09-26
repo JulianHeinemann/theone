@@ -121,7 +121,7 @@ struct BalanceCard: View {
                 }
             }
             Spacer(minLength: 12)
-            Text(card.kind.isValueBased ? "Restwert" : card.kind.label)
+            Text(card.kind.isValueBased ? "Guthaben" : card.kind.label)
                 .font(.system(size: 14, weight: .medium)).opacity(0.75)
             Text(card.headline)
                 .font(.system(size: 58, weight: .bold)).kerning(-2).monospacedDigit()

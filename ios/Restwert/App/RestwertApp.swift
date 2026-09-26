@@ -49,6 +49,12 @@ final class Router {
     var editing: GiftCard?
     /// Datei, die über „Teilen → Restwert“ oder „Öffnen in“ angekommen ist.
     var pendingImport: URL?
+    /// Kurze Bestätigung unten, optional mit „Rückgängig“.
+    var toast: Toast?
+
+    func showUndo(_ message: String, undo: @escaping () -> Void) {
+        toast = Toast(message: message, undo: undo)
+    }
 
     func openImport(_ url: URL) {
         pendingImport = url
@@ -139,6 +145,15 @@ struct MainTabView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        .overlay(alignment: .bottom) {
+            if let toast = router.toast {
+                ToastView(toast: toast) { router.toast = nil }
+                    .id(toast.id)
+                    .padding(.horizontal, 16).padding(.bottom, 96)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy, value: router.toast?.id)
         #if DEBUG
         .task { router.applyDemoScreen(store: store) }
         #endif
@@ -174,3 +189,42 @@ extension Router {
     }
 }
 #endif
+
+// MARK: - Toast
+
+struct Toast: Identifiable {
+    let id = UUID()
+    let message: String
+    let undo: (() -> Void)?
+}
+
+/// Bestätigung mit „Rückgängig“, verschwindet nach 8 Sekunden.
+struct ToastView: View {
+    let toast: Toast
+    let onClose: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.good)
+            Text(toast.message).font(.scaled(15, weight: .medium)).lineLimit(2)
+            Spacer(minLength: 8)
+            if let undo = toast.undo {
+                Button("Rückgängig") {
+                    undo()
+                    onClose()
+                }
+                .font(.scaled(15, weight: .bold))
+            }
+        }
+        .foregroundStyle(.white)
+        .tint(Color.brandYellow)
+        .padding(.horizontal, 16).padding(.vertical, 14)
+        .background(Color.ink, in: .rect(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color.ink.opacity(0.2), radius: 16, y: 6)
+        .task {
+            try? await Task.sleep(for: .seconds(8))
+            onClose()
+        }
+        .accessibilityElement(children: .contain)
+    }
+}

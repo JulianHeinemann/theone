@@ -106,9 +106,21 @@ final class Store {
         save()
     }
 
-    func redeem(_ id: UUID, amount: Double, store storeName: String = "", note: String = "") {
-        guard amount > 0 else { return }
+    /// Zieht ab und gibt die ID des Verlaufseintrags zurück, damit man es rückgängig machen kann.
+    @discardableResult
+    func redeem(_ id: UUID, amount: Double, store storeName: String = "", note: String = "") -> UUID? {
+        guard amount > 0 else { return nil }
         update(id) { _ = $0.redeem(amount, store: storeName, note: note) }
+        return card(id)?.history.last?.id
+    }
+
+    /// Letzten Abzug zurücknehmen: Eintrag entfernen, Betrag wieder gutschreiben.
+    func undoRedemption(_ cardID: UUID, entry: UUID) {
+        update(cardID) { c in
+            guard let i = c.history.firstIndex(where: { $0.id == entry }) else { return }
+            c.balance = ((c.balance + c.history[i].amount) * 100).rounded() / 100
+            c.history.remove(at: i)
+        }
     }
 
     /// Rabattcodes und Coupons: als Ganzes einlösen und stempeln.
@@ -133,13 +145,16 @@ final class Store {
         }
     }
 
-    func addTest(card: GiftCard, success: Bool, store storeName: String, note: String, amount: Double?) {
+    @discardableResult
+    func addTest(card: GiftCard, success: Bool, store storeName: String, note: String, amount: Double?) -> UUID? {
+        var entry: UUID?
         if success, let amount, amount > 0 {
-            redeem(card.id, amount: min(amount, card.balance), store: storeName, note: "Kassentest")
+            entry = redeem(card.id, amount: min(amount, card.balance), store: storeName, note: "An der Kasse")
         }
         tests.append(TestResult(cardID: card.id, merchantID: card.merchantID, merchantName: card.name, date: .now,
                                 success: success, store: storeName, note: note, format: card.format, amount: amount))
         save()
+        return entry
     }
 
     func clearExamples() {

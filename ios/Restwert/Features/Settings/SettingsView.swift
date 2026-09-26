@@ -46,9 +46,9 @@ struct SettingsView: View {
                     settingLabel("Liste sortieren nach", nil, "arrow.up.arrow.down")
                 }
                 Picker(selection: $warnDays) {
-                    ForEach([7, 14, 30, 60, 90], id: \.self) { Text("\($0) Tage vorher").tag($0) }
+                    ForEach([7, 14, 30, 60, 90], id: \.self) { Text("\($0) Tagen").tag($0) }
                 } label: {
-                    settingLabel("Als „bald“ markieren", nil, "hourglass")
+                    settingLabel("Warnung ab", nil, "hourglass")
                 }
             } header: {
                 Text("Anzeige")
@@ -57,12 +57,12 @@ struct SettingsView: View {
             }
 
             Section {
-                Label("Gespeichert auf diesem iPhone mit Dateischutz des Systems. Mit Konto zusätzlich verschlüsselt übertragen, ohne Fotos und PINs.", systemImage: "lock")
+                Label("Gespeichert auf diesem iPhone mit Dateischutz des Systems. Mit Konto werden Gutscheine verschlüsselt übertragen (HTTPS), ohne Fotos und PINs.", systemImage: "lock")
                 Label("Import: Live-Scan, Foto, PDF, E-Mail-Text oder in Mail „Teilen → Restwert“. Handschrift wird mitgelesen.", systemImage: "square.and.arrow.down")
                 if SmartExtractor.isAvailable {
                     Label("Apple Intelligence liest schwierige Gutscheine direkt auf dem Gerät.", systemImage: "apple.intelligence")
                 }
-                Label("An der Kasse wird die Helligkeit automatisch auf Maximum gestellt.", systemImage: "sun.max")
+                Label("An der Kasse wird die Helligkeit automatisch erhöht.", systemImage: "sun.max")
             } header: {
                 Text("So funktioniert Restwert")
             }
@@ -165,13 +165,14 @@ struct SettingsView: View {
                     .frame(width: 48, height: 48).background(Color.fill, in: .circle)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Deine Daten bleiben auf diesem iPhone").font(.scaled(16, weight: .semibold))
-                    Text("Kein Konto nötig. Nichts wird hochgeladen.").font(.scaled(14)).foregroundStyle(Color.ink2)
+                    Text("Ohne Konto verlässt nichts dein iPhone. Texterkennung läuft auf dem Gerät.").font(.scaled(14)).foregroundStyle(Color.ink2)
                 }
             }
             Button { showAuth = true } label: {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Optional: Konto für mehrere Geräte").foregroundStyle(Color.ink)
-                    Text("Synchronisiert verschlüsselt, ohne Fotos und PINs").font(.scaled(13)).foregroundStyle(Color.muted)
+                    Text("Mehrere Geräte (optional)").foregroundStyle(Color.ink)
+                    Text("Mit Konto werden Gutscheine über unseren Server abgeglichen, verschlüsselt übertragen (HTTPS). Fotos und PINs bleiben auf dem iPhone.")
+                        .font(.scaled(13)).foregroundStyle(Color.muted)
                 }
             }
         }

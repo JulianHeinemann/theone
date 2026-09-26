@@ -1,4 +1,5 @@
 import SwiftUI
+import LocalAuthentication
 import RestwertKit
 
 /// Formular zum Hinzufügen oder Bearbeiten eines Gutscheins, vorbefüllt aus einem Scan.
@@ -29,6 +30,8 @@ struct CardFormView: View {
     @State private var loaded = false
     @State private var shake = 0
     @State private var showMore = false
+    @State private var pinRevealed = false
+    @AppStorage("pinLock") private var pinLock = true
 
     init(outcome: ScanOutcome? = nil, editing: GiftCard? = nil, onSaved: @escaping (GiftCard) -> Void) {
         self.outcome = outcome
@@ -144,8 +147,8 @@ struct CardFormView: View {
 
             if kind.isValueBased {
                 HStack(spacing: 16) {
-                    LabeledField(label: "Wert in €", placeholder: "50,00", text: $valueText, keyboard: .decimalPad)
-                    LabeledField(label: "Restguthaben", placeholder: "wie Wert", text: $balanceText, keyboard: .decimalPad)
+                    LabeledField(label: "Startwert in €", placeholder: "50,00", text: $valueText, keyboard: .decimalPad)
+                    LabeledField(label: "Guthaben jetzt", placeholder: "wie Startwert", text: $balanceText, keyboard: .decimalPad)
                 }
             } else {
                 HStack(spacing: 16) {
@@ -156,7 +159,7 @@ struct CardFormView: View {
             LabeledField(label: kind == .discountCode ? "Rabattcode" : "Code bzw. Kartennummer",
                          placeholder: "wird beim Scannen ausgefüllt", text: $number)
             if kind == .giftCard {
-                LabeledField(label: "PIN", placeholder: "optional", text: $pin, keyboard: .numberPad)
+                pinField
             }
             dateBox("Gültig bis", $expires)
             Button {
@@ -192,6 +195,34 @@ struct CardFormView: View {
         .background(Color.surface, in: .rect(cornerRadius: 16, style: .continuous))
         .animation(.snappy, value: kind)
         .animation(.snappy, value: merchantID)
+    }
+
+    /// PIN verdeckt, wie im Detail: Aufdecken nur nach Face ID, wenn die Einstellung an ist.
+    private var pinField: some View {
+        LabeledBox(label: "PIN") {
+            HStack {
+                if pinRevealed || editing == nil || pin.isEmpty {
+                    TextField("optional", text: $pin).keyboardType(.numberPad)
+                } else {
+                    SecureField("optional", text: $pin).keyboardType(.numberPad).disabled(true)
+                }
+                if editing != nil && !pin.isEmpty {
+                    Button(pinRevealed ? "PIN verbergen" : "PIN zeigen", systemImage: pinRevealed ? "eye.slash" : "eye") {
+                        Task { await revealPin() }
+                    }
+                    .labelStyle(.iconOnly).foregroundStyle(Color.ink2)
+                }
+            }
+        }
+    }
+
+    private func revealPin() async {
+        if pinRevealed { pinRevealed = false; return }
+        guard pinLock else { pinRevealed = true; return }
+        let context = LAContext()
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { pinRevealed = true; return }
+        pinRevealed = (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "PIN anzeigen")) ?? false
     }
 
     private func dateBox(_ label: String, _ date: Binding<Date>) -> some View {

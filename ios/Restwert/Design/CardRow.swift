@@ -35,35 +35,58 @@ struct CardRow: View {
         .padding(.horizontal, 14).padding(.vertical, 12)
         .opacity(card.isActive ? 1 : 0.5)
         .contentShape(.rect)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(spoken)
+    }
+
+    /// Ein Satz für VoiceOver, z. B. „Thalia, 12,40 € von 25,00 €, bis 31.12.2028“.
+    private var spoken: String {
+        let amount = card.kind.isValueBased ? "\(card.headline) von \(card.value.euro)" : "\(card.headline) Rabattcode"
+        return "\(card.name), \(amount), \(dueText.0)"
     }
 
     private var nameBlock: some View {
         let due = dueText
         return VStack(alignment: .leading, spacing: 3) {
             Text(card.name).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
+            // Zwei Stufen: bis 14 Tage gefüllt mit Ausrufezeichen, danach nur umrandet mit Uhr.
+            let urgent = due.1 == .bad || (due.1 == .warn && card.daysLeft <= 14)
             Label {
                 Text(due.0)
             } icon: {
-                if due.1 != .muted { Image(systemName: due.1 == .warn ? "clock.fill" : "exclamationmark.circle.fill") }
+                if due.1 != .muted { Image(systemName: urgent ? "exclamationmark.circle.fill" : "clock") }
             }
             .labelStyle(DueLabelStyle())
-            .font(.scaled(due.1 == .muted ? 14 : 13, weight: due.1 == .muted ? .regular : .semibold))
+            .font(.scaled(due.1 == .muted ? 14 : 13, weight: due.1 == .muted ? .regular : (urgent ? .bold : .semibold)))
             .foregroundStyle(due.1)
-            // Dringendes als Badge, damit es sich vom Markengelb und den Händlerfarben absetzt.
             .padding(.horizontal, due.1 == .muted ? 0 : 8).padding(.vertical, due.1 == .muted ? 0 : 3)
-            .background(due.1 == .muted ? Color.clear : (due.1 == .warn ? Color.warnSoft : Color.badSoft), in: .capsule)
+            .background {
+                if due.1 != .muted {
+                    if urgent { Capsule().fill(due.1 == .warn ? Color.warnSoft : Color.badSoft) }
+                    else { Capsule().strokeBorder(due.1.opacity(0.5), lineWidth: 1) }
+                }
+            }
         }
     }
 
     private var amountBlock: some View {
         VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: 3) {
-            Text(card.headline).font(.scaled(typeSize.isAccessibilitySize ? 16 : 20, weight: .bold)).kerning(-0.3).monospacedDigit().foregroundStyle(Color.ink)
-                .contentTransition(.numericText(value: card.balance))
-                .lineLimit(1).fixedSize()
-            Text(card.kind.isValueBased ? "von \(card.value.euro)" : card.kind.label)
-                .font(.scaled(13)).monospacedDigit().foregroundStyle(Color.muted)
-                .lineLimit(1).fixedSize()
+            if card.kind.isValueBased {
+                Text(card.headline).font(.scaled(typeSize.isAccessibilitySize ? 16 : 20, weight: .bold)).kerning(-0.3).monospacedDigit().foregroundStyle(Color.ink)
+                    .contentTransition(.numericText(value: card.balance))
+                    .lineLimit(1).fixedSize()
+                Text("von \(card.value.euro)")
+                    .font(.scaled(13)).monospacedDigit().foregroundStyle(Color.muted)
+                    .lineLimit(1).fixedSize()
+            } else {
+                // Rabattcodes sind kein Geld: als Etikett statt in der Euro-Spalte.
+                Label(card.percent != nil ? "\(card.headline) Rabatt" : card.kind.label, systemImage: "tag")
+                    .font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink)
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(Color.fill, in: .capsule)
+                    .overlay(Capsule().strokeBorder(Color.line, lineWidth: 1))
+                    .lineLimit(1).fixedSize()
+            }
             if card.kind.isValueBased && card.balance < card.value {
                 RemainingBar(share: card.remainingShare).frame(width: 64)
             }

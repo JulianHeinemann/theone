@@ -14,9 +14,6 @@ struct CardDetailView: View {
     @State private var pinVisible = false
     @State private var confirmDelete = false
     @State private var showLocation = false
-    @State private var amount: Double = 0
-    @State private var tornAmount: Double = 0
-    @State private var tearTrigger = 0
     @State private var stampVisible = false
     @State private var copied = false
     @State private var success = 0
@@ -242,90 +239,23 @@ struct CardDetailView: View {
 
     // MARK: Teileinlösung mit Abriss
 
+    /// Ein einziger Weg zum Abziehen: dasselbe Tastenfeld wie nach „Bezahlt“ an der Kasse.
     private func partialRedeem(_ card: GiftCard) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Eingekauft? Betrag abziehen").font(.scaled(18, weight: .bold))
+        NavigationLink(value: Route.keypad(card.id)) {
+            HStack(spacing: 14) {
+                Image(systemName: "minus.circle.fill").font(.scaled(24))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Einkauf eintragen").font(.scaled(17, weight: .bold))
+                    Text("Betrag wird vom Guthaben abgezogen").font(.scaled(14)).foregroundStyle(Color.ink2)
+                }
                 Spacer()
+                Image(systemName: "chevron.right").font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink2)
             }
-            GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
-                    // Nur Beträge, die auch auf der Karte sind; „Alles“ nennt den Rest ausdrücklich.
-                    ForEach([5.0, 10, 20].filter { $0 < card.balance }, id: \.self) { value in
-                        quickPick("\(Int(value)) €", selected: amount == value) { amount = value }
-                    }
-                    quickPick("Alles (\(card.balance.euro))", selected: amount == card.balance && amount > 0) { amount = card.balance }
-                }
-            }
-            NavigationLink(value: Route.keypad(card.id)) {
-                Label("Genauen Betrag eintippen", systemImage: "keyboard")
-                    .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .background(Color.fill, in: .rect(cornerRadius: 14, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            if amount > 0 {
-                Text("Danach übrig: \(max(0, card.balance - amount).euro)")
-                    .font(.scaled(15)).foregroundStyle(Color.ink2)
-                    .contentTransition(.numericText())
-            }
-            Button {
-                guard amount > 0 else { return }
-                let value = min(amount, card.balance)
-                tornAmount = value
-                tearTrigger += 1
-                success += 1
-                withAnimation(.snappy) { store.redeem(card.id, amount: value) }
-                amount = 0
-            } label: {
-                Text(amount > 0 ? "\(amount.euro) abziehen" : "Betrag abziehen")
-                    .contentTransition(.numericText())
-            }
-            .buttonStyle(.accent)
-            .disabled(amount <= 0)
-        }
-        .padding(18)
-        .cardSurface(radius: 28)
-        .overlay(alignment: .bottom) {
-            TearStub(amount: tornAmount, merchant: card.name)
-                .keyframeAnimator(initialValue: TearFrame(), trigger: tearTrigger) { content, frame in
-                    content
-                        .offset(y: frame.y)
-                        .rotationEffect(.degrees(frame.angle), anchor: .topLeading)
-                        .opacity(frame.opacity)
-                } keyframes: { _ in
-                    KeyframeTrack(\.opacity) {
-                        LinearKeyframe(1, duration: 0.08)
-                        LinearKeyframe(1, duration: 0.55)
-                        LinearKeyframe(0, duration: 0.3)
-                    }
-                    KeyframeTrack(\.y) {
-                        LinearKeyframe(40, duration: 0.08)
-                        SpringKeyframe(52, duration: 0.25, spring: .bouncy)
-                        CubicKeyframe(460, duration: 0.6)
-                    }
-                    KeyframeTrack(\.angle) {
-                        LinearKeyframe(0, duration: 0.2)
-                        SpringKeyframe(-4, duration: 0.15)
-                        CubicKeyframe(16, duration: 0.6)
-                    }
-                }
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
-        }
-    }
-
-    private func quickPick(_ title: String, selected: Bool, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title).font(.scaled(16, weight: .bold)).foregroundStyle(Color.ink)
-                .lineLimit(1).minimumScaleFactor(0.7)
-                .padding(.horizontal, 6)
-                .frame(maxWidth: .infinity, minHeight: 48)
+            .foregroundStyle(Color.ink)
+            .padding(16)
+            .background(Color.brandYellow, in: .rect(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
-        .glassEffect(selected ? .regular.tint(Color.brandYellow).interactive() : .regular.interactive(),
-                     in: .rect(cornerRadius: 14, style: .continuous))
-        .sensoryFeedback(.selection, trigger: selected)
     }
 
     private func markRedeemedBlock(_ card: GiftCard) -> some View {
@@ -370,39 +300,6 @@ struct CardDetailView: View {
 }
 
 // MARK: - Bausteine
-
-private struct TearFrame {
-    var y: CGFloat = 40
-    var angle: Double = 0
-    var opacity: Double = 0
-}
-
-/// Abriss-Streifen, der beim Einlösen vom Gutschein abreißt und herunterfällt.
-private struct TearStub: View {
-    let amount: Double
-    let merchant: String
-
-    var body: some View {
-        VStack(spacing: 0) {
-            ZigZag(tooth: 12, top: true).fill(Color.paper).frame(height: 10)
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(merchant.uppercased()).font(.scaled(12, weight: .bold, design: .monospaced))
-                    Text(Date.now.formatted(date: .numeric, time: .shortened))
-                        .font(.scaled(11, design: .monospaced)).foregroundStyle(Color.muted)
-                }
-                Spacer()
-                Text("−" + amount.euro).font(.scaled(20, weight: .heavy, design: .monospaced))
-            }
-            .foregroundStyle(Color.ink)
-            .padding(.horizontal, 18).padding(.vertical, 12)
-            .background(Color.paper)
-            ZigZag(tooth: 12, top: false).fill(Color.paper).frame(height: 10)
-        }
-        .padding(.horizontal, 24)
-        .shadow(color: Color.ink.opacity(0.15), radius: 10, y: 6)
-    }
-}
 
 /// Roter Stempel „Eingelöst“, fällt mit Wucht aufs Papier.
 struct Stamp: View {

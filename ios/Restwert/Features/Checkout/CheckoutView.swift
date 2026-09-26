@@ -6,6 +6,7 @@ import RestwertKit
 struct CheckoutView: View {
     let cardID: UUID
     @Environment(Store.self) private var store
+    @Environment(Router.self) private var router
     @Environment(\.dismiss) private var dismiss
 
     @State private var result: Bool?
@@ -20,32 +21,41 @@ struct CheckoutView: View {
             if let card = store.card(cardID) {
                 VStack(spacing: 16) {
                     ticket(card)
-                    Text("Hat es geklappt?").font(.scaled(20, weight: .semibold)).padding(.top, 8)
-                    HStack(alignment: .top, spacing: 10) {
-                        choice(true, "Geklappt", "Betrag eintragen", "checkmark", .good, .goodSoft)
-                        choice(false, "Abgelehnt", "nur notieren", "xmark", .bad, .badSoft)
-                    }
-                    .fixedSize(horizontal: false, vertical: true)
-                    if result == false {
-                        Text("Abgelehnt ändert dein Guthaben nicht. Die Notiz hilft dir beim nächsten Mal.")
-                            .font(.scaled(14)).foregroundStyle(Color.ink2)
-                    }
                     if let result {
-                        VStack(spacing: 8) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(result ? "Wie viel hast du bezahlt?" : "Nicht angenommen – dein Guthaben bleibt gleich.")
+                                .font(.scaled(17, weight: .semibold))
                             if result {
-                                LabeledField(label: "Bezahlter Betrag, wird abgezogen", placeholder: "z. B. 18,50",
+                                LabeledField(label: "Betrag, wird vom Guthaben abgezogen", placeholder: "z. B. 18,50",
                                              text: $amount, keyboard: .decimalPad)
                             }
                             LabeledField(label: "Filiale", placeholder: "optional, z. B. Köln Hohe Straße", text: $storeName)
-                            LabeledField(label: "Notiz", placeholder: "optional, z. B. Kasse wollte PIN", text: $note)
-                            Button("Ergebnis speichern") {
-                                store.addTest(card: card, success: result, store: storeName, note: note, amount: parseMoney(amount))
-                                dismiss()
-                            }
-                            .buttonStyle(.primary)
-                            .padding(.top, 6)
+                            LabeledField(label: "Notiz", placeholder: result ? "optional" : "optional, z. B. Kasse wollte Plastikkarte", text: $note)
+                            Button(result ? "Eintragen" : "Notieren") { save(card, result) }
+                                .buttonStyle(.primary)
+                                .padding(.top, 6)
+                            Button("Zurück") { withAnimation(.snappy) { self.result = nil } }
+                                .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                                .frame(maxWidth: .infinity, minHeight: 44)
                         }
+                        .padding(16)
+                        .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
                         .transition(.move(edge: .bottom).combined(with: .opacity))
+                    } else {
+                        VStack(spacing: 14) {
+                            Button { withAnimation(.snappy) { result = true } } label: {
+                                Label("Bezahlt – Betrag eintragen", systemImage: "checkmark")
+                            }
+                            .buttonStyle(.accent)
+                            Button { withAnimation(.snappy) { result = false } } label: {
+                                Label("Nicht angenommen", systemImage: "xmark")
+                            }
+                            .buttonStyle(.quiet)
+                            Button("Später eintragen") { dismiss() }
+                                .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                                .frame(maxWidth: .infinity, minHeight: 44)
+                        }
+                        .padding(.top, 12)
                     }
                 }
                 .padding(.horizontal, 16).padding(.bottom, 30)
@@ -79,8 +89,8 @@ struct CheckoutView: View {
                 MerchantMark(card: card)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(card.name).font(.scaled(19, weight: .bold))
-                    Text(card.kind.isValueBased ? "Restguthaben \(card.balance.euro)" : card.headline)
-                        .font(.scaled(14)).foregroundStyle(Color.muted)
+                    Text(card.kind.isValueBased ? "Guthaben \(card.balance.euro)" : card.headline)
+                        .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
                 }
                 Spacer()
             }
@@ -91,9 +101,8 @@ struct CheckoutView: View {
                 if card.format != .text {
                     Text(card.number.grouped).font(.scaled(19, weight: .bold)).kerning(2.4)
                 }
-                Label("Helligkeit auf Maximum", systemImage: "sun.max.fill")
+                Label("Helligkeit automatisch erhöht", systemImage: "checkmark.circle")
                     .font(.scaled(13)).foregroundStyle(Color.ink2)
-                    .symbolEffect(.pulse)
                 if card.merchantID != Merchant.other.id {
                     Text(card.merchant.tip)
                         .font(.scaled(13)).foregroundStyle(Color.muted)
@@ -110,6 +119,19 @@ struct CheckoutView: View {
             .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 20)
         }
         .cardSurface(radius: 28)
+    }
+
+    private func save(_ card: GiftCard, _ ok: Bool) {
+        let value = parseMoney(amount)
+        let entry = store.addTest(card: card, success: ok, store: storeName, note: note, amount: value)
+        if let entry, let value {
+            router.showUndo("\(min(value, card.balance).euro) bei \(card.name) abgezogen") {
+                store.undoRedemption(card.id, entry: entry)
+            }
+        } else if !ok {
+            router.toast = Toast(message: "Notiert. Guthaben unverändert.", undo: nil)
+        }
+        dismiss()
     }
 
     private func choice(_ value: Bool, _ title: String, _ subtitle: String, _ icon: String, _ fg: Color, _ bg: Color) -> some View {
@@ -139,6 +161,8 @@ struct CheckoutView: View {
 struct KeypadView: View {
     let cardID: UUID
     @Environment(Store.self) private var store
+    @Environment(Router.self) private var router
+    @State private var showStore = false
     @Environment(\.dismiss) private var dismiss
     @State private var input = ""
     @State private var storeName = ""
@@ -194,8 +218,15 @@ struct KeypadView: View {
             }
             .padding(.top, 14)
 
-            LabeledField(label: "Filiale (optional, erscheint auf dem Bon)", placeholder: "z. B. Thalia Köln", text: $storeName)
-                .padding(.horizontal, 16).padding(.top, 12)
+            Group {
+                if showStore {
+                    LabeledField(label: "Filiale (für deinen Verlauf)", placeholder: "z. B. Thalia Köln", text: $storeName)
+                } else {
+                    Button("+ Filiale notieren") { withAnimation(.snappy) { showStore = true } }
+                        .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                }
+            }
+            .padding(.horizontal, 16).padding(.top, 12)
 
             Spacer(minLength: 16)
 
@@ -224,11 +255,16 @@ struct KeypadView: View {
                         return
                     }
                     // Mehr als auf der Karte: Karte leeren, den Rest zahlt man an der Kasse anders.
-                    store.redeem(card.id, amount: min(value, card.balance), store: storeName)
+                    let taken = min(value, card.balance)
+                    if let entry = store.redeem(card.id, amount: taken, store: storeName) {
+                        router.showUndo("\(taken.euro) bei \(card.name) abgezogen") {
+                            store.undoRedemption(card.id, entry: entry)
+                        }
+                    }
                     dismiss()
                 } label: {
                     Text(value > card.balance ? "Alles abziehen (\(card.balance.euro))"
-                         : value > 0 ? "\(value.euro) abziehen" : "Betrag abziehen")
+                         : value > 0 ? "\(value.euro) abziehen" : "Erst Betrag wählen")
                 }
                 .buttonStyle(.accent)
                 .disabled(value <= 0)
@@ -245,7 +281,7 @@ struct KeypadView: View {
             return "Nur \(card.balance.euro) auf der Karte. \((value - card.balance).euro) zahlst du an der Kasse anders."
         }
         if value > 0 { return "Danach übrig: \(max(0, card.balance - value).euro)" }
-        return "Wird vom Restguthaben abgezogen"
+        return "Wird vom Guthaben abgezogen"
     }
 
     private func chip(_ title: String, _ action: @escaping () -> Void) -> some View {
@@ -273,7 +309,7 @@ struct KeypadView: View {
     private struct KeyStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
-                .background(configuration.isPressed ? Color.brandYellow : Color.fill, in: .circle)
+                .background(configuration.isPressed ? Color.brandYellow : Color(hex: 0xE6E7EB), in: .circle)
                 .scaleEffect(configuration.isPressed ? 0.92 : 1)
                 .animation(.spring(duration: 0.2, bounce: 0.5), value: configuration.isPressed)
         }

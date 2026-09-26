@@ -156,6 +156,7 @@ struct HomeView: View {
 
 /// Offenes Guthaben als ruhige Zahl, ohne Deko.
 private struct TotalHeader: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let total: Double
     let cards: [GiftCard]
     let soon: Int
@@ -168,13 +169,7 @@ private struct TotalHeader: View {
         return parts.joined(separator: " · ")
     }
 
-    private var codesNote: String? {
-        let codes = cards.filter { !$0.kind.isValueBased }.count
-        guard codes > 0 else { return nil }
-        return codes == 1 ? "+ 1 Rabattcode extra" : "+ \(codes) Rabattcodes extra"
-    }
-
-    var body: some View {
+    private var full: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Guthaben auf allen Karten").font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink.opacity(0.7))
             Text(total.euro)
@@ -187,8 +182,29 @@ private struct TotalHeader: View {
                 Text(codesNote).font(.scaled(14)).foregroundStyle(Color.ink.opacity(0.75))
             }
         }
+    }
+
+    private var codesNote: String? {
+        let codes = cards.filter { !$0.kind.isValueBased }.count
+        guard codes > 0 else { return nil }
+        return codes == 1 ? "dazu 1 Rabattcode (nicht in der Summe)" : "dazu \(codes) Rabattcodes (nicht in der Summe)"
+    }
+
+    var body: some View {
+        Group {
+            if typeSize.isAccessibilitySize {
+                // Bei sehr großer Schrift eine kompakte Summe, damit die Liste sichtbar bleibt.
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(total.euro).font(.scaled(34, weight: .bold)).monospacedDigit()
+                        .minimumScaleFactor(0.6).lineLimit(1)
+                    Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink.opacity(0.75))
+                }
+            } else {
+                full
+            }
+        }
         .foregroundStyle(Color.ink)
-        .padding(20)
+        .padding(typeSize.isAccessibilitySize ? 14 : 20)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.brandYellow, in: .rect(cornerRadius: 22, style: .continuous))
         .accessibilityElement(children: .combine)
