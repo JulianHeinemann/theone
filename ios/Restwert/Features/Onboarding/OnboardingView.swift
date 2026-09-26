@@ -1,81 +1,60 @@
 import SwiftUI
 import RestwertKit
 
-/// Einstieg: schwebende Pastellkarten auf lebendigem Verlauf.
+/// Einstieg: zeigt direkt, wie die App aussieht, statt Deko-Grafik.
 struct OnboardingView: View {
     var onStart: () -> Void
 
-    private let cards: [(color: Color, number: String)] = [
-        (Pastel.all[0], "856 279"), (Pastel.all[1], "412 008"), (Pastel.all[2], "731 554"),
+    private let preview: [(id: String, name: String, due: String, dueSoon: Bool, amount: String, of: String)] = [
+        ("ikea", "IKEA", "noch 9 Tage", true, "50,00 €", "von 50,00 €"),
+        ("douglas", "Douglas", "bis 31.03.2027", false, "23,85 €", "von 40,00 €"),
+        ("thalia", "Thalia", "bis 31.12.2028", false, "12,40 €", "von 25,00 €"),
     ]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            Text("Kein Gutschein verfällt mehr.")
-                .font(.system(size: 44, weight: .heavy)).kerning(-1)
-                .padding(.top, 30)
-            Text("Restwert holt deine Gutscheine aus der Schublade aufs Handy. Mit Restguthaben, Ablauf-Radar und Barcode für die Kasse.")
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Restwert").font(.system(size: 17, weight: .bold))
+                .padding(.top, 24)
+            Text("Deine Gutscheine,\nan einem Ort.")
+                .font(.system(size: 36, weight: .bold)).kerning(-0.8)
+                .padding(.top, 28)
+            Text("Karte abfotografieren oder Gutschein-PDF aus der Mail laden, Guthaben nachtragen, an der Kasse den Barcode zeigen. Vor dem Ablauf kommt eine Erinnerung.")
                 .font(.system(size: 17)).foregroundStyle(Color.ink2)
-            ZStack {
-                LivingMesh()
-                TimelineView(.animation) { timeline in
-                    let t = timeline.date.timeIntervalSinceReferenceDate
-                    ZStack {
-                        ForEach(Array(cards.enumerated()), id: \.offset) { i, card in
-                            let wobble = CGFloat(sin(t * 1.1 + Double(i) * 1.7)) * 9
-                            FloatingCard(color: card.color, number: card.number)
-                                .offset(x: CGFloat(i) * 34 - 34, y: CGFloat(i) * 78 - 78 + wobble)
+                .padding(.top, 14)
+            Spacer(minLength: 24)
+            Text("So sieht es aus (Beispiel)").font(.system(size: 13, weight: .medium)).foregroundStyle(Color.muted)
+                .padding(.horizontal, 4).padding(.bottom, 8)
+            VStack(spacing: 0) {
+                ForEach(Array(preview.enumerated()), id: \.offset) { i, row in
+                    if i > 0 { Divider().padding(.leading, 72) }
+                    HStack(spacing: 14) {
+                        MerchantMark(merchantID: row.id, name: row.name)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(row.name).font(.system(size: 16, weight: .semibold))
+                            Text(row.due).font(.system(size: 13, weight: row.dueSoon ? .semibold : .regular))
+                                .foregroundStyle(row.dueSoon ? Color.warn : Color.muted)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 3) {
+                            Text(row.amount).font(.system(size: 17, weight: .semibold)).monospacedDigit()
+                            Text(row.of).font(.system(size: 12)).foregroundStyle(Color.muted)
                         }
                     }
+                    .padding(.horizontal, 14).padding(.vertical, 12)
                 }
             }
-            .frame(maxHeight: .infinity)
-            .clipShape(.rect(cornerRadius: 32, style: .continuous))
-            Button(action: onStart) {
-                HStack {
-                    Text("Los geht's").font(.system(size: 17, weight: .bold))
-                    Spacer()
-                    Image(systemName: "arrow.right").font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(Color.ink)
-                        .frame(width: 62, height: 48)
-                        .background(.white, in: .rect(cornerRadius: 12, style: .continuous))
-                        .symbolEffect(.wiggle.right, options: .repeat(.periodic(delay: 2)))
-                }
-                .foregroundStyle(.white)
-                .padding(.leading, 24).padding(8)
-                .background(Color.ink, in: .rect(cornerRadius: 18, style: .continuous))
-            }
-            .buttonStyle(.plain)
+            .foregroundStyle(Color.ink)
+            .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+            .accessibilityHidden(true)
+            Spacer(minLength: 24)
+            Label("Kein Konto nötig. Deine Daten bleiben auf diesem iPhone.", systemImage: "lock")
+                .font(.system(size: 14)).foregroundStyle(Color.ink2)
+                .padding(.bottom, 14)
+            Button("Los geht's", action: onStart)
+                .buttonStyle(.primary)
         }
+        .foregroundStyle(Color.ink)
         .padding(.horizontal, 20).padding(.bottom, 16)
         .pageBackground()
-    }
-
-    private struct FloatingCard: View {
-        let color: Color
-        let number: String
-
-        var body: some View {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(color.gradient)
-                .frame(width: 220, height: 138)
-                .overlay(alignment: .topLeading) {
-                    Text("RESTWERT").font(.system(size: 19, weight: .heavy)).kerning(1.4).padding(18)
-                }
-                .overlay(alignment: .bottomLeading) {
-                    Text("••• \(number)").font(.system(size: 13, weight: .semibold)).kerning(1).opacity(0.7).padding(18)
-                }
-                .overlay(alignment: .topTrailing) {
-                    HStack(spacing: -7) {
-                        Circle().fill(Color.ink.opacity(0.7)).frame(width: 18)
-                        Circle().fill(Color.ink.opacity(0.35)).frame(width: 18)
-                    }
-                    .frame(height: 18).padding(18)
-                }
-                .foregroundStyle(Color.ink)
-                .shadow(color: Color.ink.opacity(0.12), radius: 20, y: 20)
-                .rotation3DEffect(.degrees(48), axis: (x: 1, y: 0, z: 0))
-                .rotationEffect(.degrees(-28))
-        }
     }
 }

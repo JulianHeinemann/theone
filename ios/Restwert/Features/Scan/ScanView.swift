@@ -37,7 +37,7 @@ struct ScanView: View {
         }
         .scrollIndicators(.hidden)
         .pageBackground()
-        .navigationTitle(outcome == nil ? "Scannen" : "Ergebnis")
+        .navigationTitle(outcome == nil ? "Hinzufügen" : "Ergebnis")
         .toolbar {
             if outcome != nil {
                 ToolbarItem(placement: .topBarLeading) {
@@ -49,7 +49,7 @@ struct ScanView: View {
             if busy {
                 VStack(spacing: 12) {
                     ProgressView().controlSize(.large)
-                    Text(SmartExtractor.isAvailable ? "Wird gelesen, Apple Intelligence hilft …" : "Wird gelesen …")
+                    Text(SmartExtractor.isAvailable ? "Wird gelesen …" : "Wird gelesen …")
                         .font(.system(size: 15, weight: .semibold))
                 }
                 .padding(28)
@@ -96,35 +96,31 @@ struct ScanView: View {
     // MARK: Quellen
 
     private var sources: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 20) {
             Button { showScanner = true } label: { ViewfinderTeaser() }
                 .buttonStyle(.plain)
-            Text("Oder auf anderem Weg").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted).padding(.top, 4)
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+            VStack(spacing: 0) {
                 PhotosPicker(selection: $photoItem, matching: .images) {
-                    SourceTile(icon: "photo", title: "Foto", subtitle: "Auch Screenshots und Handschrift", color: Pastel.all[0])
+                    SourceRow(icon: "photo", title: "Aus Fotos", subtitle: "Foto oder Screenshot eines Gutscheins")
                 }
-                .buttonStyle(.plain)
+                Divider().padding(.leading, 56)
                 Button { showEmail = true } label: {
-                    SourceTile(icon: "envelope", title: "E-Mail", subtitle: "Text einfügen", color: Pastel.all[1])
+                    SourceRow(icon: "envelope", title: "Aus einer E-Mail", subtitle: "Text der Mail einfügen")
                 }
-                .buttonStyle(.plain)
+                Divider().padding(.leading, 56)
                 Button { showFiles = true } label: {
-                    SourceTile(icon: "doc.richtext", title: "PDF / Datei", subtitle: "Aus Mail-Anhang oder Dateien", color: Pastel.all[2])
+                    SourceRow(icon: "doc", title: "Aus einer Datei", subtitle: "PDF oder Bild, z. B. aus einem Mail-Anhang")
                 }
-                .buttonStyle(.plain)
+                Divider().padding(.leading, 56)
                 Button { formSeed = FormSeed(outcome: nil) } label: {
-                    SourceTile(icon: "keyboard", title: "Manuell", subtitle: "Alles selbst eintippen", color: Pastel.all[4])
+                    SourceRow(icon: "keyboard", title: "Von Hand eingeben", subtitle: nil)
                 }
-                .buttonStyle(.plain)
             }
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "square.and.arrow.up")
-                Text("Tipp: In Mail einen Gutschein-Anhang lange drücken, „Teilen“ und dann Restwert wählen.")
-            }
-            .font(.system(size: 13.5)).foregroundStyle(Color.ink2)
-            .padding(14)
+            .buttonStyle(.plain)
             .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+            Text("PDFs aus Mail kannst du auch direkt teilen: Anhang lange drücken, „Teilen“, dann Restwert.")
+                .font(.system(size: 13)).foregroundStyle(Color.muted)
+                .padding(.horizontal, 4)
         }
         .padding(.top, 8)
     }
@@ -164,22 +160,22 @@ struct FormSeed: Identifiable, Hashable {
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }
 
-private struct SourceTile: View {
+private struct SourceRow: View {
     let icon: String
     let title: String
-    let subtitle: String
-    let color: Color
+    let subtitle: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: icon).font(.system(size: 19, weight: .semibold)).foregroundStyle(Color.ink)
-                .frame(width: 44, height: 44)
-                .background(color, in: .rect(cornerRadius: 14, style: .continuous))
-            Text(title).font(.system(size: 16, weight: .bold)).foregroundStyle(Color.ink)
-            Text(subtitle).font(.system(size: 12.5)).foregroundStyle(Color.muted).lineLimit(2, reservesSpace: true)
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.system(size: 17)).foregroundStyle(Color.ink2).frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 16)).foregroundStyle(Color.ink)
+                if let subtitle { Text(subtitle).font(.system(size: 13)).foregroundStyle(Color.muted) }
+            }
+            Spacer()
+            Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted.opacity(0.7))
         }
-        .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-        .cardSurface(radius: 22)
+        .padding(.horizontal, 14).padding(.vertical, 13)
         .contentShape(.rect)
     }
 }
@@ -222,27 +218,39 @@ private struct EmailImportSheet: View {
     }
 }
 
-/// Kamera-Sucher-Vorschau mit laufender Scanlinie; öffnet den echten Scanner.
+/// Großer Einstieg in den Kamera-Scanner.
 struct ViewfinderTeaser: View {
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color(hex: 0xE9ECF2))
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.ink, style: StrokeStyle(lineWidth: 2.5, dash: [26, 200]))
-                .padding(28)
-            ScanLine(travel: 0.18...0.72)
-            VStack(spacing: 10) {
-                Image(systemName: "camera.viewfinder").font(.system(size: 26, weight: .semibold))
-                    .foregroundStyle(Color.ink)
-                    .frame(width: 58, height: 58)
-                    .glassEffect(.regular.tint(Color.brandYellow).interactive(), in: .circle)
-                    .symbolEffect(.breathe)
-                Text("Gutschein scannen").font(.system(size: 18, weight: .bold)).foregroundStyle(Color.ink)
-                Text("Barcode, gedruckter Text und Handschrift").font(.system(size: 13)).foregroundStyle(Color.muted)
-            }
+        VStack(alignment: .leading, spacing: 0) {
+            ViewfinderCorners()
+                .stroke(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .frame(width: 64, height: 44)
+            Spacer(minLength: 28)
+            Text("Karte scannen").font(.system(size: 22, weight: .bold))
+            Text("Barcode und Text auf der Rückseite werden automatisch gelesen.")
+                .font(.system(size: 14)).foregroundStyle(.white.opacity(0.7))
+                .padding(.top, 4)
         }
-        .aspectRatio(1.45, contentMode: .fit)
-        .clipShape(.rect(cornerRadius: 28, style: .continuous))
+        .foregroundStyle(.white)
+        .padding(20)
+        .frame(maxWidth: .infinity, minHeight: 190, alignment: .leading)
+        .background(Color.ink, in: .rect(cornerRadius: 22, style: .continuous))
+        .contentShape(.rect)
+    }
+}
+
+/// Vier Eckwinkel eines Suchers, sauber an den Ecken des Rahmens.
+struct ViewfinderCorners: Shape {
+    var length: CGFloat = 14
+
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        let l = min(length, r.width / 2, r.height / 2)
+        p.move(to: CGPoint(x: r.minX, y: r.minY + l)); p.addLine(to: CGPoint(x: r.minX, y: r.minY)); p.addLine(to: CGPoint(x: r.minX + l, y: r.minY))
+        p.move(to: CGPoint(x: r.maxX - l, y: r.minY)); p.addLine(to: CGPoint(x: r.maxX, y: r.minY)); p.addLine(to: CGPoint(x: r.maxX, y: r.minY + l))
+        p.move(to: CGPoint(x: r.maxX, y: r.maxY - l)); p.addLine(to: CGPoint(x: r.maxX, y: r.maxY)); p.addLine(to: CGPoint(x: r.maxX - l, y: r.maxY))
+        p.move(to: CGPoint(x: r.minX + l, y: r.maxY)); p.addLine(to: CGPoint(x: r.minX, y: r.maxY)); p.addLine(to: CGPoint(x: r.minX, y: r.maxY - l))
+        return p
     }
 }
 

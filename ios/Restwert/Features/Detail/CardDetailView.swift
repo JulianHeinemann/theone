@@ -38,23 +38,31 @@ struct CardDetailView: View {
         return ScrollView {
             VStack(spacing: 16) {
                 summary(card, status)
-                locationRow(card)
-                codeTicket(card)
+                if card.isActive {
+                    NavigationLink(value: Route.checkout(card.id)) {
+                        Label("An der Kasse zeigen", systemImage: "barcode")
+                    }
+                    .buttonStyle(.primary)
+                }
+                if let url = card.merchant.balanceURL, let label = card.merchant.balanceCheck.linkLabel {
+                    Link(destination: url) {
+                        Label(label, systemImage: "arrow.up.right")
+                    }
+                    .buttonStyle(.quiet)
+                }
                 if card.isActive {
                     if card.kind.isValueBased { partialRedeem(card) } else { markRedeemedBlock(card) }
                 }
-                NavigationLink(value: Route.checkout(card.id)) {
-                    Label("An der Kasse zeigen & testen", systemImage: "barcode.viewfinder")
-                }
-                .buttonStyle(.quiet)
+                codeTicket(card)
+                locationRow(card)
                 CardBon(card: card).padding(.top, 6)
-                Button("Gutschein entfernen", role: .destructive) { confirmDelete = true }
+                Button("Gutschein entfernen", systemImage: "trash", role: .destructive) { confirmDelete = true }
                     .font(.system(size: 15, weight: .bold)).padding(.top, 6)
             }
             .padding(.horizontal, 16).padding(.bottom, 30)
         }
         .scrollIndicators(.hidden)
-        .navigationTitle(card.kind.label)
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -73,40 +81,18 @@ struct CardDetailView: View {
             }
             .presentationDetents([.medium, .large])
         }
-        .onAppear { if amount == 0 { amount = min(10, card.balance) } }
     }
 
     // MARK: Übersicht
 
     private func summary(_ card: GiftCard, _ status: VoucherStatus) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 14) {
-                LetterTile(text: card.name, color: Pastel.color(for: card))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(card.name).font(.system(size: 19, weight: .bold))
-                    Text(card.merchant.category.label).font(.system(size: 13)).foregroundStyle(Color.muted)
-                }
-                Spacer()
-                Chip(text: status.label, fg: status.tint, bg: status.soft)
-                    .contentTransition(.interpolate)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(card.kind.isValueBased ? "Restwert" : "Rabatt")
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted)
-                Text(card.headline)
-                    .font(.system(size: 52, weight: .heavy)).kerning(-1.5).monospacedDigit()
-                    .contentTransition(.numericText(value: card.balance))
-                    .strikethrough(status == .redeemed || status == .expired, color: Color.muted)
-                    .minimumScaleFactor(0.5).lineLimit(1)
-            }
-            ProgressBar(value: card.remainingShare, tint: status.tint)
+            BalanceCard(card: card, status: status)
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 cell("Gültig bis", card.expires.dayMonthYear)
-                cell("Verbleibend", card.daysLeft < 0 ? "abgelaufen" : "\(card.daysLeft) Tage",
-                     tint: card.daysLeft <= warnDays ? status.tint : .ink)
-                cell("Ursprünglich", card.kind.isValueBased ? card.value.euro : (card.percent.map { "\(Int($0)) %" } ?? "–"))
-                cell("Einlösungen", "\(card.history.count)")
+                cell("Einlösungen", card.history.isEmpty ? "noch keine" : "\(card.history.count)")
             }
+            .padding(.horizontal, 4)
             if card.kind == .giftCard && !card.pin.isEmpty {
                 Button { Task { await togglePin(card) } } label: {
                     HStack {
@@ -117,13 +103,11 @@ struct CardDetailView: View {
                         Spacer()
                     }
                     .foregroundStyle(Color.ink).padding(14)
-                    .background(Color.fill, in: .rect(cornerRadius: 16, style: .continuous))
+                    .background(Color.surface, in: .rect(cornerRadius: 16, style: .continuous))
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(18)
-        .cardSurface(radius: 28)
         .overlay {
             if card.redeemedAt != nil || stampVisible {
                 Stamp(date: card.redeemedAt ?? .now).allowsHitTesting(false)
@@ -134,12 +118,11 @@ struct CardDetailView: View {
     private func cell(_ label: String, _ value: String, tint: Color = .ink) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.system(size: 12)).foregroundStyle(Color.muted)
-            Text(value).font(.system(size: 16, weight: .bold)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
+            Text(value).font(.system(size: 16, weight: .semibold)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
                 .contentTransition(.numericText())
         }
-        .padding(12)
+        .padding(.vertical, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.fill, in: .rect(cornerRadius: 16, style: .continuous))
     }
 
     private func locationRow(_ card: GiftCard) -> some View {
@@ -148,9 +131,9 @@ struct CardDetailView: View {
                 Image(systemName: card.location.symbol).font(.system(size: 18, weight: .semibold))
                     .contentTransition(.symbolEffect(.replace))
                     .frame(width: 44, height: 44)
-                    .background(Pastel.all[3], in: .rect(cornerRadius: 14, style: .continuous))
+                    .background(Color.fill, in: .rect(cornerRadius: 12, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Aufbewahrt: \(card.location.label)").font(.system(size: 16, weight: .bold))
+                    Text("Aufbewahrt: \(card.location.label)").font(.system(size: 16, weight: .semibold))
                     Text(card.locationNote.isEmpty ? "Notiz hinzufügen" : card.locationNote)
                         .font(.system(size: 13)).foregroundStyle(Color.muted).lineLimit(2)
                 }
@@ -191,12 +174,6 @@ struct CardDetailView: View {
                 if card.format != .text {
                     Text(card.number.grouped).font(.system(size: 17, weight: .bold)).kerning(2).textSelection(.enabled)
                 }
-                if let url = card.merchant.balanceURL {
-                    Link(destination: url) {
-                        Label("Guthaben beim Händler prüfen", systemImage: "arrow.up.right").font(.system(size: 14, weight: .bold))
-                    }
-                    .foregroundStyle(Color.ink).padding(.top, 4)
-                }
             }
             .padding(.horizontal, 18).padding(.bottom, 18)
         }
@@ -208,26 +185,31 @@ struct CardDetailView: View {
     private func partialRedeem(_ card: GiftCard) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Einlösen").font(.system(size: 20, weight: .bold))
+                Text("Eingekauft? Betrag abziehen").font(.system(size: 18, weight: .bold))
                 Spacer()
-                Text(amount.euro).font(.system(size: 28, weight: .heavy)).monospacedDigit()
-                    .contentTransition(.numericText(value: amount))
-                    .animation(.snappy, value: amount)
             }
-            Slider(value: $amount, in: 0...max(card.balance, 0.5), step: 0.5)
-                .tint(Color.ink)
-                .sensoryFeedback(.selection, trigger: amount)
             GlassEffectContainer(spacing: 8) {
                 HStack(spacing: 8) {
                     ForEach([5.0, 10, 20], id: \.self) { value in
-                        quickPick("\(Int(value)) €") { amount = min(value, card.balance) }
+                        quickPick("\(Int(value)) €", selected: amount == value) { amount = value }
+                            .disabled(value > card.balance)
+                            .opacity(value > card.balance ? 0.35 : 1)
                     }
-                    quickPick("Alles") { amount = card.balance }
+                    quickPick("Alles", selected: amount == card.balance && amount > 0) { amount = card.balance }
                 }
             }
-            Text(amount > 0 ? "Danach übrig: \(max(0, card.balance - amount).euro)" : "Betrag wählen")
-                .font(.system(size: 13)).foregroundStyle(Color.muted)
-                .contentTransition(.numericText())
+            NavigationLink(value: Route.keypad(card.id)) {
+                Label("Genauen Betrag eintippen", systemImage: "keyboard")
+                    .font(.system(size: 16, weight: .semibold)).foregroundStyle(Color.ink)
+                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .background(Color.fill, in: .rect(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            if amount > 0 {
+                Text("Danach übrig: \(max(0, card.balance - amount).euro)")
+                    .font(.system(size: 15)).foregroundStyle(Color.ink2)
+                    .contentTransition(.numericText())
+            }
             Button {
                 guard amount > 0 else { return }
                 let value = min(amount, card.balance)
@@ -235,16 +217,13 @@ struct CardDetailView: View {
                 tearTrigger += 1
                 success += 1
                 withAnimation(.snappy) { store.redeem(card.id, amount: value) }
-                amount = min(amount, max(0, card.balance - value))
+                amount = 0
             } label: {
-                Label("Einlösen", systemImage: "scissors")
+                Text(amount > 0 ? "\(amount.euro) abziehen" : "Betrag wählen")
+                    .contentTransition(.numericText())
             }
             .buttonStyle(.accent)
             .disabled(amount <= 0)
-            NavigationLink(value: Route.keypad(card.id)) {
-                Text("Betrag genau eintippen").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color.muted)
-                    .frame(maxWidth: .infinity)
-            }
         }
         .padding(18)
         .cardSurface(radius: 28)
@@ -277,13 +256,15 @@ struct CardDetailView: View {
         }
     }
 
-    private func quickPick(_ title: String, _ action: @escaping () -> Void) -> some View {
+    private func quickPick(_ title: String, selected: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.system(size: 15, weight: .bold)).foregroundStyle(Color.ink)
-                .frame(maxWidth: .infinity, minHeight: 44)
+            Text(title).font(.system(size: 16, weight: .bold)).foregroundStyle(Color.ink)
+                .frame(maxWidth: .infinity, minHeight: 48)
         }
         .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 14, style: .continuous))
+        .glassEffect(selected ? .regular.tint(Color.brandYellow).interactive() : .regular.interactive(),
+                     in: .rect(cornerRadius: 14, style: .continuous))
+        .sensoryFeedback(.selection, trigger: selected)
     }
 
     private func markRedeemedBlock(_ card: GiftCard) -> some View {
@@ -328,22 +309,6 @@ struct CardDetailView: View {
 }
 
 // MARK: - Bausteine
-
-private struct ProgressBar: View {
-    let value: Double
-    let tint: Color
-
-    var body: some View {
-        Capsule().fill(Color.fill)
-            .overlay(alignment: .leading) {
-                GeometryReader { geo in
-                    Capsule().fill(tint.gradient).frame(width: geo.size.width * value)
-                }
-            }
-            .frame(height: 6)
-            .animation(.spring(duration: 0.6, bounce: 0.3), value: value)
-    }
-}
 
 private struct TearFrame {
     var y: CGFloat = 40

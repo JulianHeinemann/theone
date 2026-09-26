@@ -9,6 +9,8 @@ struct SettingsView: View {
     @AppStorage("onboarded") private var onboarded = true
     @AppStorage("sortOrder") private var sortRaw = CardSortOrder.expiry.rawValue
     @AppStorage("warnDays") private var warnDays = 30
+    @AppStorage(ReminderPrefs.daysKey) private var reminderDays = "30,7"
+    @AppStorage(ReminderPrefs.hourKey) private var reminderHour = 10
     @State private var showAuth = false
     @State private var confirmDeleteAccount = false
     @State private var confirmReset = false
@@ -20,7 +22,14 @@ struct SettingsView: View {
 
             Section {
                 Toggle(isOn: $reminders) {
-                    settingLabel("Ablauf-Erinnerungen", "30 und 7 Tage vor dem Ablauf, um 10 Uhr", "bell.badge")
+                    settingLabel("Ablauf-Erinnerungen", nil, "bell.badge")
+                }
+                if reminders {
+                    NavigationLink {
+                        ReminderSettingsView()
+                    } label: {
+                        settingLabel("Wann erinnern?", ReminderPrefs.describe(days: ReminderPrefs.days, hour: reminderHour), "clock")
+                    }
                 }
                 Toggle(isOn: $pinLock) {
                     settingLabel("PIN mit Face ID schützen", "PIN erst nach Face ID oder Code anzeigen", "faceid")
@@ -37,7 +46,7 @@ struct SettingsView: View {
                     settingLabel("Liste sortieren nach", nil, "arrow.up.arrow.down")
                 }
                 Stepper(value: $warnDays, in: 7...180, step: 7) {
-                    settingLabel("„Läuft bald ab“ ab \(warnDays) Tagen", "Warnfrist für Status, Radar und Hinweise", "hourglass")
+                    settingLabel("„Läuft bald ab“ ab \(warnDays) Tagen", "Ab dann steht ein Gutschein oben unter „Läuft bald ab“", "hourglass")
                         .contentTransition(.numericText(value: Double(warnDays)))
                         .animation(.snappy, value: warnDays)
                 }
@@ -83,6 +92,8 @@ struct SettingsView: View {
             }
         }
         .onChange(of: warnDays) { _, _ in Task { await store.scheduleReminders() } }
+        .onChange(of: reminderDays) { _, _ in Task { await store.scheduleReminders() } }
+        .onChange(of: reminderHour) { _, _ in Task { await store.scheduleReminders() } }
         .sheet(isPresented: $showAuth) {
             NavigationStack { AuthView() }
         }
@@ -148,16 +159,56 @@ struct SettingsView: View {
             }
         } else {
             HStack(spacing: 14) {
-                Image(systemName: "icloud").font(.system(size: 20, weight: .semibold))
-                    .frame(width: 48, height: 48).background(Color.brandYellow, in: .circle)
+                Image(systemName: "iphone").font(.system(size: 20, weight: .semibold))
+                    .frame(width: 48, height: 48).background(Color.fill, in: .circle)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Kein Konto").font(.system(size: 17, weight: .bold))
-                    Text("Alles liegt nur auf diesem iPhone.").font(.system(size: 13)).foregroundStyle(Color.muted)
+                    Text("Deine Daten bleiben auf diesem iPhone").font(.system(size: 16, weight: .semibold))
+                    Text("Kein Konto nötig. Nichts wird hochgeladen.").font(.system(size: 14)).foregroundStyle(Color.ink2)
                 }
             }
-            Button("Anmelden oder Konto erstellen") { showAuth = true }
-                .buttonStyle(.primary)
-                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 12, trailing: 16))
+            Button { showAuth = true } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Optional: Konto für mehrere Geräte").foregroundStyle(Color.ink)
+                    Text("Synchronisiert verschlüsselt, ohne Fotos und PINs").font(.system(size: 13)).foregroundStyle(Color.muted)
+                }
+            }
         }
+    }
+}
+
+/// Vorlaufzeiten und Uhrzeit der Ablauf-Erinnerungen.
+struct ReminderSettingsView: View {
+    @AppStorage(ReminderPrefs.daysKey) private var reminderDays = "30,7"
+    @AppStorage(ReminderPrefs.hourKey) private var reminderHour = 10
+    @AppStorage("warnDays") private var warnDays = 30
+
+    private var selected: Set<Int> { Set(reminderDays.split(separator: ",").compactMap { Int($0) }) }
+
+    var body: some View {
+        Form {
+            Section {
+                ForEach(ReminderPrefs.choices, id: \.self) { d in
+                    Toggle(d == 1 ? "1 Tag vorher" : "\(d) Tage vorher", isOn: Binding(
+                        get: { selected.contains(d) },
+                        set: { on in
+                            var set = selected
+                            if on { set.insert(d) } else { set.remove(d) }
+                            reminderDays = set.sorted(by: >).map(String.init).joined(separator: ",")
+                        }))
+                }
+            } header: {
+                Text("Vorlaufzeit")
+            } footer: {
+                Text("Du kannst mehrere wählen. Unabhängig davon steht ein Gutschein ab \(warnDays) Tagen vor Ablauf unter „Läuft bald ab“.")
+            }
+            .tint(Color.good)
+            Section("Uhrzeit") {
+                Picker("Erinnern um", selection: $reminderHour) {
+                    ForEach(6...22, id: \.self) { h in Text("\(h):00 Uhr").tag(h) }
+                }
+            }
+        }
+        .navigationTitle("Erinnerungen")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

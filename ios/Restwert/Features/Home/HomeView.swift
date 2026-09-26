@@ -7,262 +7,207 @@ struct HomeView: View {
     @Environment(Router.self) private var router
     @AppStorage("sortOrder") private var sortRaw = CardSortOrder.expiry.rawValue
     @AppStorage("warnDays") private var warnDays = 30
-    @State private var selected: UUID?
 
     private var order: CardSortOrder { CardSortOrder(rawValue: sortRaw) ?? .expiry }
     private var sorted: [GiftCard] { store.cards(sortedBy: order) }
-    private var soon: Int { store.soonCount(warnDays: warnDays) }
-    private var currentCard: GiftCard? { selected.flatMap { store.card($0) } ?? sorted.first }
+    private var dueSoon: [GiftCard] {
+        store.activeCards.filter { $0.status(warnDays: warnDays) == .expiringSoon }
+    }
+    private var rest: [GiftCard] {
+        let due = Set(dueSoon.map(\.id))
+        return sorted.filter { $0.isActive && !due.contains($0.id) }
+    }
+    private var done: [GiftCard] { sorted.filter { !$0.isActive } }
+    @State private var showDone = false
+    @State private var deleting: GiftCard?
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                HeroTotal(total: store.total, original: store.totalValue, count: store.cards.count, soon: soon)
-                carousel.padding(.top, 22)
-                dots.padding(.top, 12)
-                quickActions.padding(.top, 22)
-                NavigationLink(value: Route.radar) {
-                    RadarTeaser(cards: store.activeCards)
+            VStack(alignment: .leading, spacing: 28) {
+                TotalHeader(total: store.total, cards: store.activeCards, soon: dueSoon.count)
+                if store.cards.isEmpty {
+                    EmptyState { router.tab = .scan }
+                } else {
+                    if !dueSoon.isEmpty {
+                        section("Läuft bald ab", cards: dueSoon)
+                    }
+                    section(dueSoon.isEmpty ? "Deine Gutscheine" : "Weitere", cards: rest, sortable: true)
+                    NavigationLink(value: Route.radar) {
+                        Label("Alle Ablauftermine", systemImage: "calendar")
+                            .font(.system(size: 16, weight: .semibold)).foregroundStyle(Color.ink)
+                            .frame(maxWidth: .infinity, minHeight: 50)
+                            .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    if !done.isEmpty { doneSection }
                 }
-                .buttonStyle(.plain)
-                .padding(.top, 24)
-                list.padding(.top, 26)
                 if store.hasExamples {
                     Button("Beispielkarten entfernen") { withAnimation(.smooth) { store.clearExamples() } }
-                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.muted)
-                        .frame(maxWidth: .infinity).padding(.top, 20)
+                        .font(.system(size: 15, weight: .medium)).foregroundStyle(Color.muted)
+                        .frame(maxWidth: .infinity)
                 }
             }
             .padding(.horizontal, 16)
+            .padding(.top, 4)
             .padding(.bottom, 24)
         }
         .scrollIndicators(.hidden)
         .pageBackground()
         .navigationTitle("Restwert")
+        .confirmationDialog("„\(deleting?.name ?? "")“ endgültig entfernen?", isPresented: Binding(
+            get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
+            Button("Entfernen", role: .destructive) {
+                if let c = deleting { withAnimation(.snappy) { store.delete(c.id) } }
+                deleting = nil
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink(value: Route.radar) {
-                    Image(systemName: soon > 0 ? "bell.badge" : "bell")
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(Color.warn, Color.ink)
-                        .symbolEffect(.wiggle, value: soon)
-                }
-                .accessibilityLabel("\(soon) Gutscheine laufen bald ab")
+                Button("Gutschein hinzufügen", systemImage: "plus") { router.tab = .scan }
             }
         }
     }
 
-    // MARK: Karussell
-
-    private var carousel: some View {
-        ScrollView(.horizontal) {
-            LazyHStack(spacing: 12) {
-                if store.cards.isEmpty {
-                    Button { router.tab = .scan } label: { EmptyCard() }
+    @ViewBuilder
+    private func section(_ title: String, cards: [GiftCard], sortable: Bool = false) -> some View {
+        if !cards.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(title).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.ink2)
+                    Spacer()
+                    if sortable { sortMenu }
+                }
+                .padding(.horizontal, 4)
+                VStack(spacing: 0) {
+                    ForEach(Array(cards.enumerated()), id: \.element.id) { i, c in
+                        if i > 0 { Divider().padding(.leading, 72) }
+                        NavigationLink(value: Route.card(c.id)) {
+                            CardRow(card: c, warnDays: warnDays)
+                                .matchedTransitionSource(id: c.id, in: zoom)
+                        }
                         .buttonStyle(.plain)
-                        .containerRelativeFrame(.horizontal)
-                }
-                ForEach(sorted) { card in
-                    NavigationLink(value: Route.card(card.id)) {
-                        FolderCardView(card: card, warnDays: warnDays)
-                            .matchedTransitionSource(id: card.id, in: zoom)
+                        .contextMenu { rowMenu(c) }
                     }
-                    .buttonStyle(.plain)
-                    .containerRelativeFrame(.horizontal) { width, _ in width * 0.86 }
-                    .scrollTransition(axis: .horizontal) { content, phase in
-                        content
-                            .scaleEffect(phase.isIdentity ? 1 : 0.9)
-                            .rotation3DEffect(.degrees(phase.value * -12), axis: (x: 0, y: 1, z: 0))
-                            .opacity(phase.isIdentity ? 1 : 0.7)
-                    }
-                    .id(card.id)
                 }
+                .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
             }
-            .scrollTargetLayout()
+            .animation(.snappy, value: cards.map(\.id))
         }
-        .scrollTargetBehavior(.viewAligned)
-        .scrollPosition(id: $selected)
-        .scrollIndicators(.hidden)
-        .contentMargins(.horizontal, 16, for: .scrollContent)
-        .padding(.horizontal, -16)
-        .sensoryFeedback(.selection, trigger: selected)
     }
 
-    private var dots: some View {
-        HStack(spacing: 6) {
-            ForEach(sorted) { c in
-                let active = c.id == currentCard?.id
-                Capsule().fill(active ? Color.ink : Color.line)
-                    .frame(width: active ? 22 : 6, height: 6)
-            }
+    @ViewBuilder
+    private func rowMenu(_ c: GiftCard) -> some View {
+        if c.isActive {
+            Button("An der Kasse zeigen", systemImage: "barcode") { router.homePath.append(.checkout(c.id)) }
         }
-        .frame(maxWidth: .infinity)
-        .animation(.snappy, value: selected)
+        Button("Bearbeiten", systemImage: "pencil") { router.editing = c }
+        Button("Entfernen", systemImage: "trash", role: .destructive) { deleting = c }
     }
 
-    // MARK: Schnellaktionen
-
-    private var quickActions: some View {
-        GlassEffectContainer(spacing: 16) {
-            HStack {
-                QuickAction(icon: "plus", label: "Scannen", highlight: true) { router.tab = .scan }
-                if let c = currentCard {
-                    NavigationLink(value: Route.checkout(c.id)) { QuickActionLabel(icon: "barcode", label: "An der Kasse") }
-                        .buttonStyle(.plain)
-                    NavigationLink(value: Route.card(c.id)) { QuickActionLabel(icon: "scissors", label: "Einlösen") }
-                        .buttonStyle(.plain)
-                } else {
-                    QuickAction(icon: "barcode", label: "An der Kasse") { router.tab = .scan }
-                    QuickAction(icon: "scissors", label: "Einlösen") { router.tab = .scan }
+    /// Aufgebrauchte und abgelaufene Gutscheine, eingeklappt, damit die Liste ruhig bleibt.
+    private var doneSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.snappy) { showDone.toggle() }
+            } label: {
+                HStack {
+                    Text("Aufgebraucht & abgelaufen (\(done.count))")
+                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.ink2)
+                    Spacer()
+                    Image(systemName: "chevron.down").rotationEffect(.degrees(showDone ? 180 : 0))
+                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted)
                 }
-                NavigationLink(value: Route.tests) { QuickActionLabel(icon: "checkmark.seal", label: "Kassentest") }
-                    .buttonStyle(.plain)
+                .padding(.horizontal, 4).contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            if showDone {
+                VStack(spacing: 0) {
+                    ForEach(Array(done.enumerated()), id: \.element.id) { i, c in
+                        if i > 0 { Divider().padding(.leading, 72) }
+                        HStack(spacing: 0) {
+                            NavigationLink(value: Route.card(c.id)) { CardRow(card: c, warnDays: warnDays) }
+                                .buttonStyle(.plain)
+                            Button("Entfernen", systemImage: "trash") { deleting = c }
+                                .labelStyle(.iconOnly).foregroundStyle(Color.bad)
+                                .frame(width: 44, height: 44).padding(.trailing, 8)
+                        }
+                        .contextMenu { rowMenu(c) }
+                    }
+                }
+                .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
             }
         }
     }
 
-    // MARK: Liste
-
-    private var list: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Deine Gutscheine") {
-                Menu {
-                    Picker("Sortierung", selection: $sortRaw) {
-                        ForEach(CardSortOrder.allCases) { Text($0.label).tag($0.rawValue) }
-                    }
-                } label: {
-                    Label("nach \(order.label)", systemImage: "arrow.up.arrow.down")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.muted)
-                }
+    private var sortMenu: some View {
+        Menu {
+            Picker("Sortierung", selection: $sortRaw) {
+                ForEach(CardSortOrder.allCases) { Text($0.label).tag($0.rawValue) }
             }
-            if store.cards.isEmpty {
-                Text("Fotografier die Rückseite einer Gutscheinkarte, importier eine E-Mail oder scanne einen handgeschriebenen Gutschein.")
-                    .font(.system(size: 15)).foregroundStyle(Color.muted)
+        } label: {
+            HStack(spacing: 4) {
+                Text(order.label)
+                Image(systemName: "chevron.up.chevron.down").font(.system(size: 11, weight: .semibold))
             }
-            ForEach(sorted) { c in
-                NavigationLink(value: Route.card(c.id)) { CardRow(card: c, warnDays: warnDays) }
-                    .buttonStyle(.plain)
-                    .scrollTransition(.animated(.smooth)) { content, phase in
-                        content
-                            .opacity(phase.isIdentity ? 1 : 0.3)
-                            .scaleEffect(phase.isIdentity ? 1 : 0.94)
-                            .blur(radius: phase.isIdentity ? 0 : 2)
-                    }
-                    .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity),
-                                            removal: .scale(scale: 0.9).combined(with: .opacity)))
-            }
+            .font(.system(size: 14)).foregroundStyle(Color.muted)
         }
-        .animation(.spring(duration: 0.45, bounce: 0.25), value: sorted.map(\.id))
     }
 }
 
 // MARK: - Bausteine
 
-/// Gesamtguthaben auf einem lebendigen Pastell-Verlauf.
-private struct HeroTotal: View {
+/// Offenes Guthaben als ruhige Zahl, ohne Deko.
+private struct TotalHeader: View {
     let total: Double
-    let original: Double
-    let count: Int
+    let cards: [GiftCard]
     let soon: Int
 
+    /// Die Summe enthält nur Euro-Guthaben. Rabattcodes stehen in einer eigenen Zeile, damit die Rechnung aufgeht.
+    private var caption: String {
+        let value = cards.filter(\.kind.isValueBased).count
+        var parts = [value == 1 ? "1 Karte" : "\(value) Karten"]
+        if soon > 0 { parts.append(soon == 1 ? "1 läuft bald ab" : "\(soon) laufen bald ab") }
+        return parts.joined(separator: " · ")
+    }
+
+    private var codesNote: String? {
+        let codes = cards.filter { !$0.kind.isValueBased }.count
+        guard codes > 0 else { return nil }
+        return codes == 1 ? "+ 1 Rabattcode, nicht in der Summe" : "+ \(codes) Rabattcodes, nicht in der Summe"
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE"))))
-                .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.ink.opacity(0.55))
-            Text("Guthaben in deiner Schublade").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color.ink2)
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Guthaben auf allen Karten").font(.system(size: 15, weight: .medium)).foregroundStyle(Color.ink.opacity(0.7))
             Text(total.euro)
-                .font(.system(size: 50, weight: .heavy)).kerning(-1.5).monospacedDigit()
+                .font(.system(size: 60, weight: .bold)).kerning(-2).monospacedDigit()
                 .contentTransition(.numericText(value: total))
                 .animation(.snappy, value: total)
                 .minimumScaleFactor(0.6).lineLimit(1)
-            HStack(spacing: 28) {
-                stat("\(count)", "Gutscheine", original > 0 ? "\(Int(total / original * 100)) % übrig" : nil)
-                stat("\(soon)", "laufen bald ab", nil)
+            Text(caption).font(.system(size: 15, weight: .medium)).foregroundStyle(Color.ink.opacity(0.75))
+            if let codesNote {
+                Text(codesNote).font(.system(size: 14)).foregroundStyle(Color.ink.opacity(0.75))
             }
-            .padding(.top, 6)
         }
         .foregroundStyle(Color.ink)
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background { LivingMesh().clipShape(.rect(cornerRadius: 30, style: .continuous)) }
-        .padding(.top, 4)
-    }
-
-    private func stat(_ big: String, _ label: String, _ extra: String?) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(big).font(.system(size: 22, weight: .heavy)).contentTransition(.numericText())
-            Text(extra.map { "\(label) · \($0)" } ?? label).font(.system(size: 13)).foregroundStyle(Color.ink2)
-        }
+        .background(Color.brandYellow, in: .rect(cornerRadius: 22, style: .continuous))
+        .accessibilityElement(children: .combine)
     }
 }
 
-/// Sanft wabernder Mesh-Verlauf in den Markenfarben (hell, nie schwarz).
-struct LivingMesh: View {
-    var colors: [Color] = [
-        Color(hex: 0xFFF1A8), Color(hex: 0xFFE14D), Color(hex: 0xF9D8E8),
-        Color(hex: 0xE4D7FB), Color(hex: 0xFFF6D6), Color(hex: 0xCDEFE3),
-        Color(hex: 0xD9E2FB), Color(hex: 0xFBE1CF), Color(hex: 0xFFF1A8),
-    ]
+private struct EmptyState: View {
+    let onScan: () -> Void
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30)) { timeline in
-            let t = timeline.date.timeIntervalSinceReferenceDate
-            let dx = Float(sin(t * 0.6)) * 0.12
-            let dy = Float(cos(t * 0.45)) * 0.1
-            MeshGradient(width: 3, height: 3, points: [
-                [0, 0], [0.5, 0], [1, 0],
-                [0, 0.5], [0.5 + dx, 0.5 + dy], [1, 0.5],
-                [0, 1], [0.5, 1], [1, 1],
-            ], colors: colors)
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Noch keine Gutscheine").font(.system(size: 17, weight: .semibold))
+            Text("Fotografier die Rückseite einer Karte, füg eine Gutschein-Mail ein oder tipp den Code ab.")
+                .font(.system(size: 15)).foregroundStyle(Color.ink2)
+            Button("Ersten Gutschein erfassen", action: onScan).buttonStyle(.accent)
         }
-    }
-}
-
-private struct QuickActionLabel: View {
-    let icon: String
-    let label: String
-    var highlight = false
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(Color.ink)
-                .frame(width: 62, height: 62)
-                .glassEffect(highlight ? .regular.tint(Color.brandYellow).interactive() : .regular.interactive(), in: .circle)
-            Text(label).font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.ink)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
-private struct QuickAction: View {
-    let icon: String
-    let label: String
-    var highlight = false
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) { QuickActionLabel(icon: icon, label: label, highlight: highlight) }
-            .buttonStyle(.plain)
-    }
-}
-
-private struct EmptyCard: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Noch leer").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted)
-            Text(0.0.euro).font(.system(size: 32, weight: .heavy))
-            Spacer()
-            Label("Ersten Gutschein scannen", systemImage: "plus").font(.system(size: 16, weight: .bold))
-        }
-        .foregroundStyle(Color.ink)
         .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .aspectRatio(1.72, contentMode: .fit)
-        .background(RoundedRectangle(cornerRadius: 24, style: .continuous)
-            .strokeBorder(Color.muted.opacity(0.5), style: StrokeStyle(lineWidth: 1.5, dash: [6, 6])))
-        .padding(.top, 16)
+        .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
     }
 }

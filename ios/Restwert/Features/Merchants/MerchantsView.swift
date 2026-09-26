@@ -1,7 +1,7 @@
 import SwiftUI
 import RestwertKit
 
-/// Wo geht es ohne Plastikkarte? Recherche-Tabelle mit eigenen Kassentests.
+/// Wo geht es ohne Plastikkarte? Händlerliste mit eigenen Kassentests.
 struct MerchantsView: View {
     @Environment(Store.self) private var store
     @State private var query = ""
@@ -18,17 +18,26 @@ struct MerchantsView: View {
             }
     }
 
+    /// Händler, von denen man selbst Karten hat, zuerst. Nur ohne Filter und Suche, sonst doppelt.
+    private var mine: [Merchant] {
+        guard category == nil, query.isEmpty else { return [] }
+        let ids = Set(store.cards.filter(\.isActive).map(\.merchantID))
+        return Merchant.all.filter { ids.contains($0.id) }.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
+    }
+
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 14) {
-                Text("Recherche vom 25.09.2026 zu rund 45 Karten in Deutschland. Offiziell bestätigt kein Händler, dass ein Foto der Plastikkarte reicht.")
-                    .font(.system(size: 14)).foregroundStyle(Color.muted)
+            LazyVStack(alignment: .leading, spacing: 10) {
+                Text("Wo du Gutscheine am Handy vorzeigen kannst und wo du die Karte brauchst.")
+                    .font(.system(size: 15)).foregroundStyle(Color.ink2)
                 filters
+                if !mine.isEmpty {
+                    Text("Deine Händler").font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 4)
+                    ForEach(mine) { row($0) }
+                    Text("Alle Händler").font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 8)
+                }
                 ForEach(items) { merchant in
                     row(merchant)
-                        .scrollTransition { content, phase in
-                            content.opacity(phase.isIdentity ? 1 : 0.4).scaleEffect(phase.isIdentity ? 1 : 0.96)
-                        }
                 }
                 if items.isEmpty {
                     ContentUnavailableView.search(text: query)
@@ -72,19 +81,22 @@ struct MerchantsView: View {
         let ok = mine.filter(\.success).count
         let good = ok * 2 >= mine.count
         return HStack(alignment: .top, spacing: 14) {
-            LetterTile(text: m.name, color: Pastel.color(for: m.id))
+            MerchantMark(merchantID: m.id, name: m.name)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
-                    Text(m.name).font(.system(size: 16, weight: .bold))
-                    Chip(text: m.category.label, fg: m.category.tint, bg: m.category.soft)
+                    Text(m.name).font(.system(size: 16, weight: .semibold))
+                    Spacer(minLength: 4)
                     if !mine.isEmpty {
-                        Chip(text: "Dein Test \(ok)/\(mine.count)", fg: good ? .good : .bad, bg: good ? .goodSoft : .badSoft)
+                        Text("Selbst getestet \(ok)/\(mine.count)").font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(good ? Color.good : Color.bad)
                     }
                 }
+                Label(m.category.label, systemImage: m.category.symbol)
+                    .font(.system(size: 13, weight: .medium)).foregroundStyle(m.category.tint)
                 Text(m.tip).font(.system(size: 13.5)).foregroundStyle(Color.ink2)
-                if let url = m.balanceURL {
+                if let url = m.balanceURL, let label = m.balanceCheck.linkLabel {
                     Link(destination: url) {
-                        Label("Guthaben-Seite", systemImage: "arrow.up.right").font(.system(size: 13, weight: .bold))
+                        Label(label, systemImage: "arrow.up.right").font(.system(size: 13, weight: .medium))
                     }
                     .foregroundStyle(Color.ink)
                 } else {
@@ -93,6 +105,6 @@ struct MerchantsView: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(12).cardSurface(radius: 20)
+        .padding(14).background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
     }
 }

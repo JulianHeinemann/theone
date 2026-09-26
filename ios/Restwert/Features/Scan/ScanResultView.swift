@@ -22,7 +22,7 @@ struct ScanResultView: View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 14) {
-                    LetterTile(text: merchant?.name ?? "?", color: Pastel.color(for: draft.merchantID ?? "x"))
+                    MerchantMark(merchantID: draft.merchantID, name: merchant?.name ?? "?")
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Erkannter Gutschein").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted)
                         Text(merchant?.name ?? "Shop nicht erkannt").font(.system(size: 19, weight: .bold))

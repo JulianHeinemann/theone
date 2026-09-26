@@ -106,7 +106,6 @@ struct RootView: View {
 struct MainTabView: View {
     @Environment(Router.self) private var router
     @Environment(Store.self) private var store
-    @AppStorage("warnDays") private var warnDays = 30
     @Namespace private var zoom
 
     var body: some View {
@@ -117,7 +116,6 @@ struct MainTabView: View {
                     HomeView(zoom: zoom).appDestinations(zoom: zoom)
                 }
             }
-            .badge(store.soonCount(warnDays: warnDays))
 
             Tab("Verlauf", systemImage: "scroll", value: AppTab.history) {
                 NavigationStack(path: $router.historyPath) {
@@ -133,7 +131,7 @@ struct MainTabView: View {
                 NavigationStack { SettingsView() }
             }
 
-            Tab("Scannen", systemImage: "barcode.viewfinder", value: AppTab.scan, role: .search) {
+            Tab("Hinzufügen", systemImage: "plus", value: AppTab.scan, role: .search) {
                 NavigationStack { ScanView() }
             }
         }

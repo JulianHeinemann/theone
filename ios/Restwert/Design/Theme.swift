@@ -17,7 +17,7 @@ extension Color {
     static let fill = Color(hex: 0xF5F6F8)
     static let ink = Color(hex: 0x0E0E10)
     static let ink2 = Color(hex: 0x3A3C42)
-    static let muted = Color(hex: 0x8A8D96)
+    static let muted = Color(hex: 0x696C74)
     static let line = Color(hex: 0xE7E8EB)
     static let brandYellow = Color(hex: 0xFFE14D)
     static let keyBlue = Color(hex: 0x2451FF)
@@ -25,24 +25,21 @@ extension Color {
     static let goodSoft = Color(hex: 0xCFF0DC)
     static let bad = Color(hex: 0xE0413A)
     static let badSoft = Color(hex: 0xFBDCDA)
-    static let warn = Color(hex: 0xE98A1E)
+    static let warn = Color(hex: 0xB35F00)
     static let warnSoft = Color(hex: 0xFDE8CC)
     static let paper = Color(hex: 0xFBF9F4)
 }
 
-nonisolated enum Pastel {
-    static let all: [Color] = [0xE4D7FB, 0xCDEFE3, 0xF1EFD9, 0xC9EEF0, 0xFBE1CF, 0xF9D8E8, 0xE6F5C9, 0xD9E2FB].map { Color(hex: $0) }
-
-    static func color(for key: String) -> Color {
-        var h: UInt32 = 11
-        for u in key.unicodeScalars { h = h &* 31 &+ u.value }
-        return all[Int(h % UInt32(all.count))]
+extension MerchantCategory {
+    var symbol: String {
+        switch self {
+        case .official: "iphone"
+        case .codeOnly: "globe"
+        case .merchantApp: "app.badge"
+        case .untested: "questionmark.circle"
+        }
     }
 
-    static func color(for card: GiftCard) -> Color { color(for: card.merchantID + card.customName) }
-}
-
-extension MerchantCategory {
     var tint: Color {
         switch self {
         case .official: .good
@@ -107,21 +104,6 @@ extension ButtonStyle where Self == FilledButtonStyle {
 }
 
 // MARK: - Bausteine
-
-struct LetterTile: View {
-    let text: String
-    let color: Color
-    var size: CGFloat = 46
-
-    var body: some View {
-        Text(text.initials)
-            .font(.system(size: size * 0.33, weight: .heavy))
-            .foregroundStyle(Color.ink)
-            .frame(width: size, height: size)
-            .background(color, in: .rect(cornerRadius: size * 0.3, style: .continuous))
-            .accessibilityHidden(true)
-    }
-}
 
 struct Chip: View {
     let text: String
@@ -279,8 +261,9 @@ extension View {
             .shadow(color: Color.ink.opacity(0.06), radius: 14, y: 6)
     }
 
-    /// Einheitlicher Seitenhintergrund.
+    /// Einheitlicher Seitenhintergrund. Harte Scroll-Kante oben, damit Inhalt nicht lesbar unter dem Titel durchläuft.
     func pageBackground() -> some View {
-        background(Color.page.ignoresSafeArea())
+        scrollEdgeEffectStyle(.hard, for: .top)
+            .background(Color.page.ignoresSafeArea())
     }
 }

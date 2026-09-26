@@ -49,16 +49,17 @@ struct BonView: View {
                 NavigationLink(value: Route.tests) {
                     HStack {
                         Image(systemName: "checkmark.seal").font(.system(size: 18, weight: .semibold))
-                            .frame(width: 42, height: 42).background(Color.goodSoft, in: .rect(cornerRadius: 12))
+                            .frame(width: 42, height: 42).background(Color.fill, in: .rect(cornerRadius: 12))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Kassentest").font(.system(size: 16, weight: .bold))
-                            Text("\(store.tests.filter(\.success).count) von \(store.tests.count) Kassen haben das Handy genommen")
+                            Text("Kassentests").font(.system(size: 16, weight: .semibold))
+                            Text("\(store.tests.filter(\.success).count) von \(store.tests.count) Kassen haben das Handy akzeptiert")
                                 .font(.system(size: 13)).foregroundStyle(Color.muted)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer()
                         Image(systemName: "chevron.right").foregroundStyle(Color.muted)
                     }
-                    .foregroundStyle(Color.ink).padding(14).cardSurface(radius: 20)
+                    .foregroundStyle(Color.ink).padding(14).background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(.plain)
             }
@@ -124,10 +125,6 @@ struct BonView: View {
                 }
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundStyle(Color.muted)
-                DashedRule()
-                Text("DANKE, DASS DU NICHTS VERFALLEN LÄSST").font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(Color.muted).frame(maxWidth: .infinity)
-                BarcodeView(number: "RESTWERT", format: .code128, height: 34).padding(.horizontal, 40).opacity(0.85)
             }
         }
         .animation(.smooth, value: period)

@@ -22,8 +22,12 @@ struct CheckoutView: View {
                     ticket(card)
                     Text("Hat es geklappt?").font(.system(size: 24, weight: .heavy)).padding(.top, 8)
                     HStack(spacing: 10) {
-                        choice(true, "Geklappt", "checkmark", .good, .goodSoft)
-                        choice(false, "Abgelehnt", "xmark", .bad, .badSoft)
+                        choice(true, "Geklappt", "Betrag eintragen", "checkmark", .good, .goodSoft)
+                        choice(false, "Abgelehnt", "nur notieren", "xmark", .bad, .badSoft)
+                    }
+                    if result == false {
+                        Text("Abgelehnt ändert dein Guthaben nicht. Die Notiz hilft dir beim nächsten Mal.")
+                            .font(.system(size: 14)).foregroundStyle(Color.ink2)
                     }
                     if let result {
                         VStack(spacing: 8) {
@@ -70,7 +74,7 @@ struct CheckoutView: View {
     private func ticket(_ card: GiftCard) -> some View {
         VStack(spacing: 0) {
             HStack(spacing: 14) {
-                LetterTile(text: card.name, color: Pastel.color(for: card))
+                MerchantMark(card: card)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(card.name).font(.system(size: 19, weight: .bold))
                     Text(card.kind.isValueBased ? "Restguthaben \(card.balance.euro)" : card.headline)
@@ -85,9 +89,16 @@ struct CheckoutView: View {
                 if card.format != .text {
                     Text(card.number.grouped).font(.system(size: 19, weight: .bold)).kerning(2.4)
                 }
-                Label("\(card.format.label) · Helligkeit auf Maximum", systemImage: "sun.max.fill")
-                    .font(.system(size: 12)).foregroundStyle(Color.muted)
+                Label("Helligkeit auf Maximum", systemImage: "sun.max.fill")
+                    .font(.system(size: 13)).foregroundStyle(Color.ink2)
                     .symbolEffect(.pulse)
+                if card.merchantID != Merchant.other.id {
+                    Label(card.merchant.tip, systemImage: card.merchant.category.symbol)
+                        .font(.system(size: 14)).foregroundStyle(Color.ink2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                        .background(Color.fill, in: .rect(cornerRadius: 14, style: .continuous))
+                }
                 if !card.pin.isEmpty {
                     Button(showPin ? "PIN \(card.pin)" : "PIN anzeigen") { withAnimation(.snappy) { showPin = true } }
                         .font(.system(size: 15, weight: .bold, design: .monospaced))
@@ -99,13 +110,16 @@ struct CheckoutView: View {
         .cardSurface(radius: 28)
     }
 
-    private func choice(_ value: Bool, _ title: String, _ icon: String, _ fg: Color, _ bg: Color) -> some View {
+    private func choice(_ value: Bool, _ title: String, _ subtitle: String, _ icon: String, _ fg: Color, _ bg: Color) -> some View {
         Button { withAnimation(.snappy) { result = value } } label: {
             HStack(spacing: 12) {
                 Image(systemName: icon).font(.system(size: 17, weight: .bold)).foregroundStyle(fg)
                     .frame(width: 40, height: 40).background(bg, in: .rect(cornerRadius: 12, style: .continuous))
                     .symbolEffect(.bounce, value: result == value)
-                Text(title).font(.system(size: 16, weight: .bold)).foregroundStyle(Color.ink)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title).font(.system(size: 16, weight: .bold)).foregroundStyle(Color.ink)
+                    Text(subtitle).font(.system(size: 13)).foregroundStyle(Color.ink2)
+                }
                 Spacer(minLength: 0)
             }
             .padding(12)
@@ -141,7 +155,7 @@ struct KeypadView: View {
     private func content(_ card: GiftCard) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 14) {
-                LetterTile(text: card.name, color: Pastel.color(for: card))
+                MerchantMark(card: card)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(card.name).font(.system(size: 16, weight: .bold))
                     Text("\(card.balance.euro) verfügbar").font(.system(size: 13)).foregroundStyle(Color.muted)
@@ -162,7 +176,8 @@ struct KeypadView: View {
                 .lineLimit(1).minimumScaleFactor(0.5)
                 .modifier(Shake(animatableData: CGFloat(rejected)))
                 Divider()
-                Text(hint(card)).font(.system(size: 13)).foregroundStyle(value > card.balance ? Color.bad : Color.muted)
+                Text(hint(card)).font(.system(size: 15, weight: value > card.balance ? .semibold : .regular))
+                    .foregroundStyle(value > card.balance ? Color.warn : Color.ink2)
             }
             .padding(.horizontal, 18).padding(.top, 22)
 
@@ -202,13 +217,17 @@ struct KeypadView: View {
                     }
                 }
                 .sensoryFeedback(.impact(weight: .light), trigger: input)
-                Button("Abziehen") {
-                    guard value > 0, value <= card.balance else {
+                Button {
+                    guard value > 0 else {
                         withAnimation(.linear(duration: 0.4)) { rejected += 1 }
                         return
                     }
-                    store.redeem(card.id, amount: value, store: storeName)
+                    // Mehr als auf der Karte: Karte leeren, den Rest zahlt man an der Kasse anders.
+                    store.redeem(card.id, amount: min(value, card.balance), store: storeName)
                     dismiss()
+                } label: {
+                    Text(value > card.balance ? "Alles abziehen (\(card.balance.euro))"
+                         : value > 0 ? "\(value.euro) abziehen" : "Betrag eingeben")
                 }
                 .buttonStyle(.accent)
                 .disabled(value <= 0)
@@ -221,7 +240,9 @@ struct KeypadView: View {
     }
 
     private func hint(_ card: GiftCard) -> String {
-        if value > card.balance { return "Mehr als das Restguthaben von \(card.balance.euro)" }
+        if value > card.balance {
+            return "Nur \(card.balance.euro) auf der Karte. \((value - card.balance).euro) zahlst du an der Kasse anders."
+        }
         if value > 0 { return "Danach übrig: \(max(0, card.balance - value).euro)" }
         return "Wird vom Restguthaben abgezogen"
     }

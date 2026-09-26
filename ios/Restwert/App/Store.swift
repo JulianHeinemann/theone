@@ -209,13 +209,15 @@ final class Store {
         let status = await center.notificationSettings().authorizationStatus
         guard status == .authorized || status == .provisional else { return }
         let cal = Calendar.current
+        let leadDays = ReminderPrefs.days
+        let hour = ReminderPrefs.hour
         for c in cards where c.isActive && !c.isExample {
-            for days in [30, 7] {
+            for days in leadDays {
                 guard let fire = cal.date(byAdding: .day, value: -days, to: c.expires), fire > .now else { continue }
                 var comps = cal.dateComponents([.year, .month, .day], from: fire)
-                comps.hour = 10
+                comps.hour = hour
                 let content = UNMutableNotificationContent()
-                content.title = "\(c.name): noch \(days) Tage"
+                content.title = days == 1 ? "\(c.name): läuft morgen ab" : "\(c.name): noch \(days) Tage"
                 content.body = "\(c.headline) verfällt am \(c.expires.dayMonthYear). Jetzt einlösen."
                 content.sound = .default
                 let request = UNNotificationRequest(identifier: "\(c.id.uuidString)-\(days)", content: content,
@@ -223,5 +225,25 @@ final class Store {
                 try? await center.add(request)
             }
         }
+    }
+}
+
+/// Wann vor dem Ablauf erinnert wird. Gespeichert in UserDefaults, damit Einstellungen und Store dieselben Werte sehen.
+enum ReminderPrefs {
+    static let choices = [60, 30, 14, 7, 1]
+    static let daysKey = "reminderDays"
+    static let hourKey = "reminderHour"
+
+    static var days: [Int] {
+        let raw = UserDefaults.standard.string(forKey: daysKey) ?? "30,7"
+        return raw.split(separator: ",").compactMap { Int($0) }.sorted(by: >)
+    }
+
+    static var hour: Int { UserDefaults.standard.object(forKey: hourKey) as? Int ?? 10 }
+
+    static func describe(days: [Int], hour: Int) -> String {
+        guard !days.isEmpty else { return "Keine Vorlaufzeit gewählt" }
+        let list = days.sorted(by: >).map { $0 == 1 ? "1 Tag" : "\($0) Tage" }
+        return list.formatted(.list(type: .and)) + " vorher, um \(hour) Uhr"
     }
 }

@@ -1,4 +1,6 @@
 import SwiftUI
+import AVFoundation
+import PhotosUI
 import VisionKit
 import Vision
 import RestwertKit
@@ -7,9 +9,16 @@ import RestwertKit
 struct LiveScannerView: View {
     var onDone: (ScanOutcome) -> Void
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
     @State private var model = LiveScanModel()
+    @State private var access = AVCaptureDevice.authorizationStatus(for: .video)
+    @State private var photoItem: PhotosPickerItem?
+    @State private var reading = false
 
-    private var canUse: Bool { DataScannerViewController.isSupported && DataScannerViewController.isAvailable }
+    /// Simulator und Geräte ohne Neural Engine haben keinen Live-Scanner.
+    private var supported: Bool { DataScannerViewController.isSupported }
+    private var canUse: Bool { supported && access == .authorized && DataScannerViewController.isAvailable }
     private var hasSomething: Bool { model.barcode != nil || !model.texts.isEmpty }
 
     var body: some View {
@@ -17,12 +26,33 @@ struct LiveScannerView: View {
             if canUse {
                 DataScannerRepresentable(model: model).ignoresSafeArea()
                 ScanLine()
+                controls
+            } else if supported && access == .notDetermined {
+                Color.black.ignoresSafeArea()
             } else {
-                ContentUnavailableView("Live-Scan nicht verfügbar", systemImage: "camera.metering.unknown",
-                                       description: Text("Nutz „Foto“ oder „PDF / Datei“."))
-                    .pageBackground()
+                fallback
             }
-            controls
+        }
+        .task {
+            // Beim ersten Öffnen direkt nach der Kamera fragen, statt eine Fehlermeldung zu zeigen.
+            guard supported, access == .notDetermined else { return }
+            _ = await AVCaptureDevice.requestAccess(for: .video)
+            access = AVCaptureDevice.authorizationStatus(for: .video)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Nach dem Umweg über die Einstellungen die neue Freigabe übernehmen.
+            if phase == .active { access = AVCaptureDevice.authorizationStatus(for: .video) }
+        }
+        .onChange(of: photoItem) { _, item in
+            guard let item else { return }
+            Task {
+                reading = true
+                defer { reading = false }
+                guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else { return }
+                let result = await Importer.analyze(image: image)
+                onDone(result)
+                dismiss()
+            }
         }
         .overlay(alignment: .topTrailing) {
             Button("Schließen", systemImage: "xmark") { dismiss() }
@@ -34,6 +64,37 @@ struct LiveScannerView: View {
                 .padding(16)
         }
         .sensoryFeedback(.success, trigger: model.barcode)
+    }
+
+    /// Ohne Kamera (Simulator) oder ohne Erlaubnis: gleicher Scan, aber aus einem Foto.
+    private var fallback: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Spacer()
+            Image(systemName: supported ? "camera.fill" : "photo.on.rectangle")
+                .font(.system(size: 30)).foregroundStyle(Color.ink2)
+            Text(supported ? "Kamera nicht freigegeben" : "Keine Kamera verfügbar")
+                .font(.system(size: 22, weight: .bold))
+            Text(supported
+                 ? "Erlaube Restwert in den Einstellungen den Zugriff auf die Kamera. Oder wähl ein Foto der Karte, das wird genauso gelesen."
+                 : "Auf diesem Gerät läuft der Live-Scan nicht, zum Beispiel im Simulator. Wähl ein Foto der Karte, Barcode und Text werden genauso gelesen.")
+                .font(.system(size: 15)).foregroundStyle(Color.ink2)
+            Spacer()
+            PhotosPicker(selection: $photoItem, matching: .images) {
+                Label(reading ? "Wird gelesen …" : "Foto der Karte wählen", systemImage: "photo")
+            }
+            .buttonStyle(.accent)
+            .disabled(reading)
+            if supported {
+                Button("Kamera in Einstellungen erlauben") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                }
+                .buttonStyle(.quiet)
+            }
+        }
+        .foregroundStyle(Color.ink)
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .pageBackground()
     }
 
     private var controls: some View {
