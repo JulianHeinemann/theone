@@ -90,7 +90,7 @@ extension View {
                     .navigationTransition(.zoom(sourceID: id, in: zoom))
             case .checkout(let id): CheckoutView(cardID: id)
             case .keypad(let id): KeypadView(cardID: id)
-            case .radar: RadarView()
+            case .radar: RadarView(zoom: zoom)
             case .tests: TestsView()
             }
         }
