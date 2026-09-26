@@ -20,11 +20,12 @@ struct CheckoutView: View {
             if let card = store.card(cardID) {
                 VStack(spacing: 16) {
                     ticket(card)
-                    Text("Hat es geklappt?").font(.scaled(24, weight: .heavy)).padding(.top, 8)
-                    HStack(spacing: 10) {
+                    Text("Hat es geklappt?").font(.scaled(20, weight: .semibold)).padding(.top, 8)
+                    HStack(alignment: .top, spacing: 10) {
                         choice(true, "Geklappt", "Betrag eintragen", "checkmark", .good, .goodSoft)
                         choice(false, "Abgelehnt", "nur notieren", "xmark", .bad, .badSoft)
                     }
+                    .fixedSize(horizontal: false, vertical: true)
                     if result == false {
                         Text("Abgelehnt ändert dein Guthaben nicht. Die Notiz hilft dir beim nächsten Mal.")
                             .font(.scaled(14)).foregroundStyle(Color.ink2)
@@ -52,6 +53,7 @@ struct CheckoutView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .pageBackground()
+        .toolbar(.hidden, for: .tabBar)
         .navigationTitle("An der Kasse")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -93,16 +95,16 @@ struct CheckoutView: View {
                     .font(.scaled(13)).foregroundStyle(Color.ink2)
                     .symbolEffect(.pulse)
                 if card.merchantID != Merchant.other.id {
-                    Label(card.merchant.tip, systemImage: card.merchant.category.symbol)
-                        .font(.scaled(14)).foregroundStyle(Color.ink2)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(12)
-                        .background(Color.fill, in: .rect(cornerRadius: 14, style: .continuous))
+                    Text(card.merchant.tip)
+                        .font(.scaled(13)).foregroundStyle(Color.muted)
+                        .multilineTextAlignment(.center)
                 }
                 if !card.pin.isEmpty {
-                    Button(showPin ? "PIN \(card.pin)" : "PIN anzeigen") { withAnimation(.snappy) { showPin = true } }
-                        .font(.scaled(15, weight: .bold, design: .monospaced))
-                        .buttonStyle(.glass)
+                    Button { withAnimation(.snappy) { showPin = true } } label: {
+                        Label(showPin ? "PIN \(card.pin)" : "PIN anzeigen", systemImage: showPin ? "lock.open" : "faceid")
+                            .font(.scaled(15, weight: .semibold))
+                    }
+                    .buttonStyle(.glass)
                 }
             }
             .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 20)
@@ -123,6 +125,7 @@ struct CheckoutView: View {
                 Spacer(minLength: 0)
             }
             .padding(12)
+            .frame(maxHeight: .infinity)
             .cardSurface(radius: 20)
             .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(result == value ? fg : .clear, lineWidth: 2))
         }
@@ -148,6 +151,7 @@ struct KeypadView: View {
             if let card = store.card(cardID) { content(card) }
         }
         .pageBackground()
+        .toolbar(.hidden, for: .tabBar)
         .navigationTitle("Einkauf abziehen")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -169,7 +173,7 @@ struct KeypadView: View {
                 HStack(spacing: 4) {
                     Text(input.isEmpty ? "0" : input).font(.scaled(56, weight: .heavy)).monospacedDigit()
                         .contentTransition(.numericText())
-                    Rectangle().fill(Color.brandYellow).frame(width: 3, height: 50)
+                    Rectangle().fill(Color.ink).frame(width: 2, height: 50)
                         .phaseAnimator([1.0, 0.2]) { content, opacity in content.opacity(opacity) }
                     Text(" €").font(.scaled(56, weight: .heavy)).foregroundStyle(Color.muted)
                 }
@@ -181,16 +185,13 @@ struct KeypadView: View {
             }
             .padding(.horizontal, 18).padding(.top, 22)
 
-            ScrollView(.horizontal) {
-                GlassEffectContainer(spacing: 8) {
-                    HStack(spacing: 8) {
-                        ForEach(["5", "10", "20", "50"], id: \.self) { q in chip("\(q) €") { input = q } }
-                        chip("Alles") { input = card.balance.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE"))).replacingOccurrences(of: ".", with: "") }
-                    }
-                    .padding(.horizontal, 16).padding(.vertical, 4)
+            GlassEffectContainer(spacing: 8) {
+                HStack(spacing: 8) {
+                    ForEach([5.0, 10, 20].filter { $0 < card.balance }, id: \.self) { q in chip("\(Int(q)) €") { input = "\(Int(q))" } }
+                    chip("Alles") { input = card.balance.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE"))).replacingOccurrences(of: ".", with: "") }
                 }
+                .padding(.horizontal, 16).padding(.vertical, 4)
             }
-            .scrollIndicators(.hidden)
             .padding(.top, 14)
 
             LabeledField(label: "Filiale (optional, erscheint auf dem Bon)", placeholder: "z. B. Thalia Köln", text: $storeName)
@@ -227,7 +228,7 @@ struct KeypadView: View {
                     dismiss()
                 } label: {
                     Text(value > card.balance ? "Alles abziehen (\(card.balance.euro))"
-                         : value > 0 ? "\(value.euro) abziehen" : "Betrag eingeben")
+                         : value > 0 ? "\(value.euro) abziehen" : "Betrag abziehen")
                 }
                 .buttonStyle(.accent)
                 .disabled(value <= 0)
@@ -250,7 +251,7 @@ struct KeypadView: View {
     private func chip(_ title: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title).font(.scaled(16, weight: .bold)).foregroundStyle(Color.ink)
-                .padding(.horizontal, 18).padding(.vertical, 12)
+                .frame(maxWidth: .infinity, minHeight: 46)
         }
         .buttonStyle(.plain)
         .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 14, style: .continuous))

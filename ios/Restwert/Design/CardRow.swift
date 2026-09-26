@@ -28,6 +28,8 @@ struct CardRow: View {
             }
             if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
             amountBlock
+                // Gestapelt: an der Textkante ausrichten (Logo 44 + Abstand 14), nicht an der Zellkante.
+                .padding(.leading, typeSize.isAccessibilitySize ? 58 : 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 14).padding(.vertical, 12)
@@ -46,14 +48,17 @@ struct CardRow: View {
                 if due.1 != .muted { Image(systemName: due.1 == .warn ? "clock.fill" : "exclamationmark.circle.fill") }
             }
             .labelStyle(DueLabelStyle())
-            .font(.scaled(14, weight: due.1 == .muted ? .regular : .semibold))
+            .font(.scaled(due.1 == .muted ? 14 : 13, weight: due.1 == .muted ? .regular : .semibold))
             .foregroundStyle(due.1)
+            // Dringendes als Badge, damit es sich vom Markengelb und den Händlerfarben absetzt.
+            .padding(.horizontal, due.1 == .muted ? 0 : 8).padding(.vertical, due.1 == .muted ? 0 : 3)
+            .background(due.1 == .muted ? Color.clear : (due.1 == .warn ? Color.warnSoft : Color.badSoft), in: .capsule)
         }
     }
 
     private var amountBlock: some View {
         VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: 3) {
-            Text(card.headline).font(.scaled(20, weight: .bold)).kerning(-0.3).monospacedDigit().foregroundStyle(Color.ink)
+            Text(card.headline).font(.scaled(typeSize.isAccessibilitySize ? 16 : 20, weight: .bold)).kerning(-0.3).monospacedDigit().foregroundStyle(Color.ink)
                 .contentTransition(.numericText(value: card.balance))
                 .lineLimit(1).fixedSize()
             Text(card.kind.isValueBased ? "von \(card.value.euro)" : card.kind.label)

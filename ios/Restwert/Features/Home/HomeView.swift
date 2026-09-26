@@ -23,7 +23,7 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: 32) {
                 TotalHeader(total: store.total, cards: store.activeCards, soon: dueSoon.count)
                 if store.cards.isEmpty {
                     EmptyState { router.tab = .scan }
@@ -59,11 +59,6 @@ struct HomeView: View {
             Button("Entfernen", role: .destructive) {
                 if let c = deleting { withAnimation(.snappy) { store.delete(c.id) } }
                 deleting = nil
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Gutschein hinzufügen", systemImage: "plus") { router.tab = .scan }
             }
         }
     }
@@ -176,7 +171,7 @@ private struct TotalHeader: View {
     private var codesNote: String? {
         let codes = cards.filter { !$0.kind.isValueBased }.count
         guard codes > 0 else { return nil }
-        return codes == 1 ? "+ 1 Rabattcode, nicht in der Summe" : "+ \(codes) Rabattcodes, nicht in der Summe"
+        return codes == 1 ? "+ 1 Rabattcode extra" : "+ \(codes) Rabattcodes extra"
     }
 
     var body: some View {

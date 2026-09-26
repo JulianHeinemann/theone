@@ -22,12 +22,12 @@ extension Color {
     static let line = Color(hex: 0xE7E8EB)
     static let brandYellow = Color(hex: 0xFFE14D)
     static let keyBlue = Color(hex: 0x2451FF)
-    static let good = Color(hex: 0x1E9E5A)
+    static let good = Color(hex: 0x1F7A4D)
     static let goodSoft = Color(hex: 0xCFF0DC)
     static let bad = Color(hex: 0xE0413A)
     static let badSoft = Color(hex: 0xFBDCDA)
-    static let warn = Color(hex: 0xB35F00)
-    static let warnSoft = Color(hex: 0xFDE8CC)
+    static let warn = Color(hex: 0xB42318)
+    static let warnSoft = Color(hex: 0xFDECE8)
     static let paper = Color(hex: 0xFBF9F4)
 }
 
@@ -89,10 +89,9 @@ struct FilledButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.scaled(16, weight: .bold))
-            .foregroundStyle(foreground)
             .frame(maxWidth: .infinity, minHeight: 56)
-            .background(background, in: .rect(cornerRadius: 18, style: .continuous))
-            .opacity(isEnabled ? 1 : 0.45)
+            .foregroundStyle(isEnabled ? foreground : Color(hex: 0x6E717A))
+            .background(isEnabled ? background : Color(hex: 0xE6E6EA), in: .rect(cornerRadius: 18, style: .continuous))
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.spring(duration: 0.25, bounce: 0.4), value: configuration.isPressed)
     }
@@ -150,9 +149,9 @@ struct LabeledBox<Content: View>: View {
             Text(label).font(.scaled(12, weight: .semibold)).foregroundStyle(Color.muted)
             content.font(.scaled(16, weight: .semibold))
         }
-        .padding(.horizontal, 14).padding(.vertical, 10)
+        .padding(.horizontal, 4).padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.fill, in: .rect(cornerRadius: 16, style: .continuous))
+        .overlay(alignment: .bottom) { Rectangle().fill(Color.line).frame(height: 0.5) }
     }
 }
 
@@ -264,7 +263,7 @@ extension View {
 
     /// Einheitlicher Seitenhintergrund. Harte Scroll-Kante oben, damit Inhalt nicht lesbar unter dem Titel durchläuft.
     func pageBackground() -> some View {
-        scrollEdgeEffectStyle(.hard, for: .top)
+        scrollEdgeEffectStyle(.hard, for: [.top, .bottom])
             .background(Color.page.ignoresSafeArea())
     }
 }

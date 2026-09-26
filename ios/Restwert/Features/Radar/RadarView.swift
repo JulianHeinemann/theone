@@ -46,6 +46,7 @@ struct RadarView: View {
         }
         .scrollIndicators(.hidden)
         .pageBackground()
+        .toolbar(.hidden, for: .tabBar)
         .navigationTitle("Ablauftermine")
         .navigationBarTitleDisplayMode(.inline)
     }

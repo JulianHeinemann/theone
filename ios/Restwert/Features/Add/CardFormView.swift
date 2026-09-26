@@ -83,27 +83,25 @@ struct CardFormView: View {
 
     // MARK: Felder
 
-    /// Die drei häufigen Arten als Segmente, seltene Arten über „Andere“.
+    /// Vier gleich breite Segmente; „Andere“ zeigt darunter die seltenen Arten.
     private var kindPicker: some View {
-        let primary: [VoucherKind] = [.giftCard, .valueVoucher, .discountCode]
-        return HStack(spacing: 8) {
+        let others: [VoucherKind] = [.coupon, .custom]
+        return VStack(alignment: .leading, spacing: 8) {
             Picker("Art", selection: Binding(
-                get: { primary.contains(kind) ? kind : .giftCard },
-                set: { setKind($0) })) {
+                get: { others.contains(kind) ? .coupon : kind },
+                set: { setKind($0 == .coupon && others.contains(kind) ? kind : $0) })) {
                 Text("Karte").tag(VoucherKind.giftCard)
                 Text("Gutschein").tag(VoucherKind.valueVoucher)
-                Text("Rabattcode").tag(VoucherKind.discountCode)
+                Text("Code").tag(VoucherKind.discountCode)
+                Text("Andere").tag(VoucherKind.coupon)
             }
             .pickerStyle(.segmented)
-            .opacity(primary.contains(kind) ? 1 : 0.5)
-            Menu {
-                Button(VoucherKind.coupon.label, systemImage: VoucherKind.coupon.symbol) { setKind(.coupon) }
-                Button(VoucherKind.custom.label, systemImage: VoucherKind.custom.symbol) { setKind(.custom) }
-            } label: {
-                Text(primary.contains(kind) ? "Andere" : kind.label)
-                    .font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink)
-                    .padding(.horizontal, 10).frame(minHeight: 32)
-                    .background(primary.contains(kind) ? Color.clear : Color.brandYellow, in: .capsule)
+            if others.contains(kind) {
+                Picker("Welche Art?", selection: Binding(get: { kind }, set: { setKind($0) })) {
+                    ForEach(others) { Text($0.label).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
         .padding(.top, 8)
@@ -118,7 +116,7 @@ struct CardFormView: View {
     }
 
     private var fields: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 2) {
             LabeledBox(label: "Shop") {
                 Picker("Shop", selection: $merchantID) {
                     Text("Shop wählen").tag("")
@@ -140,29 +138,27 @@ struct CardFormView: View {
                     Image(systemName: "info.circle")
                     Text(m.category.long + ". " + m.tip)
                 }
-                .font(.scaled(13)).foregroundStyle(Color.ink2).padding(.horizontal, 4)
+                .font(.scaled(13)).foregroundStyle(Color.muted).padding(.horizontal, 4).padding(.vertical, 6)
                 .transition(.opacity)
             }
 
             if kind.isValueBased {
-                HStack(spacing: 8) {
+                HStack(spacing: 16) {
                     LabeledField(label: "Wert in €", placeholder: "50,00", text: $valueText, keyboard: .decimalPad)
-                    LabeledField(label: "Schon benutzt? Rest", placeholder: "sonst wie Wert", text: $balanceText, keyboard: .decimalPad)
+                    LabeledField(label: "Restguthaben", placeholder: "wie Wert", text: $balanceText, keyboard: .decimalPad)
                 }
             } else {
-                HStack(spacing: 8) {
+                HStack(spacing: 16) {
                     LabeledField(label: "Rabatt in %", placeholder: "z. B. 15", text: $percentText, keyboard: .decimalPad)
                     LabeledField(label: "oder Wert in €", placeholder: "optional", text: $valueText, keyboard: .decimalPad)
                 }
             }
             LabeledField(label: kind == .discountCode ? "Rabattcode" : "Code bzw. Kartennummer",
                          placeholder: "wird beim Scannen ausgefüllt", text: $number)
-            HStack(spacing: 8) {
-                if kind == .giftCard {
-                    LabeledField(label: "PIN", placeholder: "optional", text: $pin, keyboard: .numberPad)
-                }
-                dateBox("Gültig bis", $expires)
+            if kind == .giftCard {
+                LabeledField(label: "PIN", placeholder: "optional", text: $pin, keyboard: .numberPad)
             }
+            dateBox("Gültig bis", $expires)
             Button {
                 withAnimation(.snappy) { showMore.toggle() }
             } label: {
@@ -192,8 +188,8 @@ struct CardFormView: View {
                 LabeledField(label: "Notiz zum Ort", placeholder: "optional, z. B. rotes Portemonnaie", text: $locationNote)
             }
         }
-        .padding(12)
-        .cardSurface(radius: 24)
+        .padding(.horizontal, 12).padding(.vertical, 4)
+        .background(Color.surface, in: .rect(cornerRadius: 16, style: .continuous))
         .animation(.snappy, value: kind)
         .animation(.snappy, value: merchantID)
     }

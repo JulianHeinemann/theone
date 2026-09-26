@@ -37,7 +37,7 @@ struct SettingsView: View {
             } header: {
                 Text("Sicherheit & Erinnerungen")
             }
-            .tint(Color.good)
+            .tint(Color.ink)
 
             Section {
                 Picker(selection: $sortRaw) {
@@ -45,13 +45,15 @@ struct SettingsView: View {
                 } label: {
                     settingLabel("Liste sortieren nach", nil, "arrow.up.arrow.down")
                 }
-                Stepper(value: $warnDays, in: 7...180, step: 7) {
-                    settingLabel("„Läuft bald ab“ ab \(warnDays) Tagen", "Ab dann steht ein Gutschein oben unter „Läuft bald ab“", "hourglass")
-                        .contentTransition(.numericText(value: Double(warnDays)))
-                        .animation(.snappy, value: warnDays)
+                Picker(selection: $warnDays) {
+                    ForEach([7, 14, 30, 60, 90], id: \.self) { Text("\($0) Tage vorher").tag($0) }
+                } label: {
+                    settingLabel("Als „bald“ markieren", nil, "hourglass")
                 }
             } header: {
                 Text("Anzeige")
+            } footer: {
+                Text("Ab dann steht ein Gutschein auf Start oben unter „Läuft bald ab“.")
             }
 
             Section {
@@ -201,7 +203,7 @@ struct ReminderSettingsView: View {
             } footer: {
                 Text("Du kannst mehrere wählen. Unabhängig davon steht ein Gutschein ab \(warnDays) Tagen vor Ablauf unter „Läuft bald ab“.")
             }
-            .tint(Color.good)
+            .tint(Color.ink)
             Section("Uhrzeit") {
                 Picker("Erinnern um", selection: $reminderHour) {
                     ForEach(6...22, id: \.self) { h in Text("\(h):00 Uhr").tag(h) }

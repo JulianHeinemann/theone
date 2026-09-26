@@ -35,10 +35,6 @@ struct BonView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Was du wann und wo eingelöst hast.").foregroundStyle(Color.muted)
-                HStack(spacing: 10) {
-                    statTile("Eingelöst", sum, "arrow.down.right", .good)
-                    statTile("Noch offen", store.total, "clock", .warn)
-                }
                 Picker("Zeitraum", selection: $period.animation(.smooth)) {
                     ForEach(Period.allCases) { Text($0.rawValue).tag($0) }
                 }
@@ -70,29 +66,18 @@ struct BonView: View {
         .navigationTitle("Verlauf")
     }
 
-    private func statTile(_ label: String, _ value: Double, _ icon: String, _ tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(value.euro).font(.scaled(24, weight: .heavy)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
-                .contentTransition(.numericText(value: value))
-            HStack(spacing: 6) {
-                Text(label)
-                Image(systemName: icon).foregroundStyle(tint)
-            }
-            .font(.scaled(13.5)).foregroundStyle(Color.muted)
-        }
-        .padding(16).frame(maxWidth: .infinity, alignment: .leading).cardSurface(radius: 24)
-    }
-
     private var receipt: some View {
         ReceiptPaper {
             VStack(alignment: .leading, spacing: 10) {
                 VStack(spacing: 4) {
                     Text("RESTWERT").font(.scaled(22, weight: .heavy, design: .monospaced)).kerning(3)
-                    Text("EINLÖSUNGEN · \(period.rawValue.uppercased())").font(.scaled(11, design: .monospaced))
+                    Text("EINLÖSUNGEN · \(period.rawValue.uppercased())").font(.scaled(12, design: .monospaced))
                         .foregroundStyle(Color.muted)
                         .contentTransition(.interpolate)
-                    Text(Date.now.formatted(date: .numeric, time: .shortened)).font(.scaled(11, design: .monospaced))
+                    Text(Date.now.formatted(date: .numeric, time: .shortened)).font(.scaled(12, design: .monospaced))
                         .foregroundStyle(Color.muted)
+                    Text("NOCH OFFEN \(store.total.euro)").font(.scaled(13, weight: .semibold, design: .monospaced))
+                        .padding(.top, 2)
                 }
                 .frame(maxWidth: .infinity)
                 DashedRule()
@@ -134,9 +119,12 @@ struct BonView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(line.cardName.uppercased()).font(.scaled(14, weight: .bold, design: .monospaced))
-                Text([line.redemption.store, line.redemption.note, "Rest \(line.redemption.balanceAfter.euro)"]
+                // Händlername steht schon darüber, also nur die Filiale („Thalia Köln“ → „Köln“).
+                let place = line.redemption.store.hasPrefix(line.cardName + " ")
+                    ? String(line.redemption.store.dropFirst(line.cardName.count + 1)) : line.redemption.store
+                Text([place, line.redemption.note, "Rest \(line.redemption.balanceAfter.euro)"]
                     .filter { !$0.isEmpty }.joined(separator: " · "))
-                    .font(.scaled(11.5, design: .monospaced)).foregroundStyle(Color.muted)
+                    .font(.scaled(13, design: .monospaced)).foregroundStyle(Color.ink2)
             }
             Spacer()
             Text(line.redemption.amount > 0 ? "−" + line.redemption.amount.euro : "✓")

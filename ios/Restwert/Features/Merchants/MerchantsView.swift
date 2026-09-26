@@ -69,11 +69,11 @@ struct MerchantsView: View {
     private func segment(_ title: String, _ on: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title).font(.scaled(14.5, weight: .semibold))
-                .foregroundStyle(Color.ink)
+                .foregroundStyle(on ? Color.white : Color.ink)
                 .padding(.horizontal, 16).padding(.vertical, 10)
         }
         .buttonStyle(.plain)
-        .glassEffect(on ? .regular.tint(Color.brandYellow).interactive() : .regular.interactive(), in: .capsule)
+        .glassEffect(on ? .regular.tint(Color.ink).interactive() : .regular.interactive(), in: .capsule)
     }
 
     private func row(_ m: Merchant) -> some View {
@@ -93,7 +93,7 @@ struct MerchantsView: View {
                 }
                 Label(m.category.label, systemImage: m.category.symbol)
                     .font(.scaled(13, weight: .medium)).foregroundStyle(m.category.tint)
-                Text(m.tip).font(.scaled(13.5)).foregroundStyle(Color.ink2)
+                Text(m.tip).font(.scaled(14)).foregroundStyle(Color.ink2).lineLimit(2)
                 if let url = m.balanceURL, let label = m.balanceCheck.linkLabel {
                     Link(destination: url) {
                         Label(label, systemImage: "arrow.up.right").font(.scaled(13, weight: .medium))

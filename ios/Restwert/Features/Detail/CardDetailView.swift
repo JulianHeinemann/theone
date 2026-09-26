@@ -47,12 +47,7 @@ struct CardDetailView: View {
                     }
                     .buttonStyle(.primary)
                 }
-                if let url = card.merchant.balanceURL, let label = card.merchant.balanceCheck.linkLabel {
-                    Link(destination: url) {
-                        Label(label, systemImage: "arrow.up.right")
-                    }
-                    .buttonStyle(.quiet)
-                }
+                secondaryActions(card)
                 if card.isActive {
                     if card.kind.isValueBased { partialRedeem(card) } else { markRedeemedBlock(card) }
                 }
@@ -70,6 +65,7 @@ struct CardDetailView: View {
             .padding(.horizontal, 16).padding(.bottom, 30)
         }
         .scrollIndicators(.hidden)
+        .toolbar(.hidden, for: .tabBar)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -101,20 +97,6 @@ struct CardDetailView: View {
                 cell("Einlösungen", card.history.isEmpty ? "noch keine" : "\(card.history.count)")
             }
             .padding(.horizontal, 4)
-            if card.kind == .giftCard && !card.pin.isEmpty {
-                Button { Task { await togglePin(card) } } label: {
-                    HStack {
-                        Image(systemName: pinVisible ? "lock.open" : "faceid")
-                            .contentTransition(.symbolEffect(.replace))
-                        Text(pinVisible ? "PIN \(card.pin)" : "PIN anzeigen")
-                            .font(.scaled(15, weight: .bold, design: pinVisible ? Font.Design.monospaced : Font.Design.default))
-                        Spacer()
-                    }
-                    .foregroundStyle(Color.ink).padding(14)
-                    .background(Color.surface, in: .rect(cornerRadius: 16, style: .continuous))
-                }
-                .buttonStyle(.plain)
-            }
         }
         .overlay {
             if card.redeemedAt != nil || stampVisible {
@@ -131,6 +113,32 @@ struct CardDetailView: View {
         }
         .padding(.vertical, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// PIN und Guthaben-Link als gleichrangige, kleinere Knöpfe unter dem Hauptknopf.
+    @ViewBuilder
+    private func secondaryActions(_ card: GiftCard) -> some View {
+        let hasPin = card.kind == .giftCard && !card.pin.isEmpty
+        let link = card.merchant.balanceURL.flatMap { url in card.merchant.balanceCheck.linkLabel.map { (url, $0) } }
+        if hasPin || link != nil {
+            HStack(spacing: 8) {
+                if hasPin {
+                    Button { Task { await togglePin(card) } } label: {
+                        Label(pinVisible ? card.pin : "PIN anzeigen", systemImage: pinVisible ? "lock.open" : "faceid")
+                            .contentTransition(.numericText())
+                            .modifier(SecondaryPill())
+                    }
+                    .buttonStyle(.plain)
+                }
+                if let (url, label) = link {
+                    Link(destination: url) {
+                        Label(hasPin ? "Guthaben prüfen" : label, systemImage: "arrow.up.right")
+                            .modifier(SecondaryPill())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
     }
 
     /// Aufgebraucht oder abgelaufen: direkt oben anbieten, den Gutschein aus der Liste zu nehmen.
@@ -164,7 +172,7 @@ struct CardDetailView: View {
                 Label("Eigene Erinnerung", systemImage: "bell")
                     .font(.scaled(16, weight: .semibold))
             }
-            .tint(Color.good)
+            .tint(Color.ink)
             if let date = card.reminderAt {
                 DatePicker("Am", selection: Binding(get: { date }, set: { store.setReminder(card.id, $0) }),
                            in: Date.now...card.expires, displayedComponents: [.date, .hourAndMinute])
@@ -242,12 +250,11 @@ struct CardDetailView: View {
             }
             GlassEffectContainer(spacing: 8) {
                 HStack(spacing: 8) {
-                    ForEach([5.0, 10, 20], id: \.self) { value in
+                    // Nur Beträge, die auch auf der Karte sind; „Alles“ nennt den Rest ausdrücklich.
+                    ForEach([5.0, 10, 20].filter { $0 < card.balance }, id: \.self) { value in
                         quickPick("\(Int(value)) €", selected: amount == value) { amount = value }
-                            .disabled(value > card.balance)
-                            .opacity(value > card.balance ? 0.35 : 1)
                     }
-                    quickPick("Alles", selected: amount == card.balance && amount > 0) { amount = card.balance }
+                    quickPick("Alles (\(card.balance.euro))", selected: amount == card.balance && amount > 0) { amount = card.balance }
                 }
             }
             NavigationLink(value: Route.keypad(card.id)) {
@@ -271,7 +278,7 @@ struct CardDetailView: View {
                 withAnimation(.snappy) { store.redeem(card.id, amount: value) }
                 amount = 0
             } label: {
-                Text(amount > 0 ? "\(amount.euro) abziehen" : "Betrag wählen")
+                Text(amount > 0 ? "\(amount.euro) abziehen" : "Betrag abziehen")
                     .contentTransition(.numericText())
             }
             .buttonStyle(.accent)
@@ -311,6 +318,8 @@ struct CardDetailView: View {
     private func quickPick(_ title: String, selected: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title).font(.scaled(16, weight: .bold)).foregroundStyle(Color.ink)
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .padding(.horizontal, 6)
                 .frame(maxWidth: .infinity, minHeight: 48)
         }
         .buttonStyle(.plain)
@@ -503,5 +512,16 @@ struct CardBon: View {
             Spacer()
             Text(amount).font(.scaled(14, weight: bold ? .heavy : .semibold, design: .monospaced))
         }
+    }
+}
+
+/// Kleiner weißer Knopf, halb so hoch wie der Hauptknopf.
+private struct SecondaryPill: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink)
+            .lineLimit(1).minimumScaleFactor(0.8)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .background(Color.surface, in: .rect(cornerRadius: 14, style: .continuous))
     }
 }
