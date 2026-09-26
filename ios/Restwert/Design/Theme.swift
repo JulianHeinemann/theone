@@ -289,10 +289,12 @@ extension View {
 
 extension Font {
     /// Systemschrift, die mit „Größerer Text“ in den iOS-Einstellungen mitwächst.
-    /// Große Zahlen wachsen weniger stark, damit Beträge nicht umbrechen.
+    /// Relativ zu einem Textstil skaliert: SwiftUI löst die Größe erst beim Zeichnen auf,
+    /// daher passt sich die Schrift ohne Neuaufbau der Ansichten an.
+    /// Große Zahlen hängen an „Large Title“, der am wenigsten wächst, damit Beträge nicht umbrechen;
+    /// kleinere Schrift an „Title 2“ (bis etwa Faktor 2,5 bei der größten Stufe).
     static func scaled(_ size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
-        let factor = UIFontMetrics.default.scaledValue(for: size) / size
-        let capped = size >= 28 ? min(factor, 1.35) : min(factor, 2.2)
-        return .system(size: size * capped, weight: weight, design: design)
+        let (style, base): (Font.TextStyle, CGFloat) = size >= 28 ? (.largeTitle, 34) : (.title2, 22)
+        return .system(style, design: design, weight: weight).scaled(by: size / base)
     }
 }

@@ -20,13 +20,17 @@ struct RestwertApp: App {
                 .tint(Color.ink)
                 .onOpenURL { url in router.openImport(url) }
                 .task {
+                    NotificationHandler.cardLookup = { [store] id in store.cards.first { $0.id == id } }
                     NotificationHandler.openCard = { [router] id in router.showCard(id) }
                     cloud.attach(store)
                     await cloud.syncNow()
                 }
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await cloud.syncNow() } }
+            guard phase == .active else { return }
+            // Widget-Zeitleiste auffrischen (Tage und Summe hängen am Datum).
+            WidgetBridge.update(cards: store.cards, total: store.total)
+            Task { await cloud.syncNow() }
         }
     }
 }
@@ -96,32 +100,30 @@ extension View {
 // MARK: - Wurzel
 
 struct RootView: View {
-    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(Router.self) private var router
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("appLock") private var appLock = false
-    @State private var locked = UserDefaults.standard.bool(forKey: "appLock")
     @AppStorage("onboarded") private var onboarded = false
 
     var body: some View {
         ZStack {
             if !onboarded {
-                OnboardingView { withAnimation(.smooth(duration: 0.5)) { onboarded = true } }
-                    .transition(.blurReplace)
+                OnboardingView {
+                    // Auch nach „Einführung ansehen“ auf Start landen, nicht wieder in den Einstellungen.
+                    router.tab = .home
+                    router.homePath = []
+                    withAnimation(.smooth(duration: 0.5)) { onboarded = true }
+                }
+                .transition(.blurReplace)
             } else {
                 MainTabView()
-                    // Schriftgrößen werden beim Aufbau berechnet; bei geänderter Textgröße neu aufbauen.
-                    .id(typeSize)
                     .transition(.blurReplace)
             }
         }
-        .overlay {
-            if appLock && locked {
-                LockScreen { locked = false }
-            }
-        }
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .background && appLock { locked = true }
-        }
+        // Sperre in eigenem Fenster, damit sie auch über Sheets und Vollbildansichten liegt.
+        .onAppear { AppLock.shared.update(enabled: appLock, phase: scenePhase) }
+        .onChange(of: scenePhase) { _, phase in AppLock.shared.update(enabled: appLock, phase: phase) }
+        .onChange(of: appLock) { _, on in AppLock.shared.update(enabled: on, phase: scenePhase) }
     }
 }
 
@@ -160,7 +162,8 @@ struct MainTabView: View {
         .tabBarMinimizeBehavior(.onScrollDown)
         .overlay(alignment: .bottom) {
             if let toast = router.toast {
-                ToastView(toast: toast) { router.toast = nil }
+                // Nur den eigenen Toast schließen, nie einen inzwischen neueren.
+                ToastView(toast: toast) { if router.toast?.id == toast.id { router.toast = nil } }
                     .id(toast.id)
                     .padding(.horizontal, 16).padding(.bottom, 96)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -272,34 +275,112 @@ struct ToastView: View {
             AccessibilityNotification.Announcement(toast.undo == nil ? toast.message : "\(toast.message). Rückgängig möglich.").post()
             guard !UIAccessibility.isVoiceOverRunning else { return }
             try? await Task.sleep(for: .seconds(8))
+            guard !Task.isCancelled else { return }
             onClose()
         }
         .accessibilityElement(children: .contain)
     }
 }
 
+// MARK: - App-Sperre
+
+/// Zustand der App-Sperre. Zeigt Sperre und Sichtschutz in einem eigenen Fenster über allem,
+/// auch über Sheets und Vollbildansichten.
+@MainActor @Observable
+final class AppLock {
+    static let shared = AppLock()
+
+    /// Gesperrt bis Face ID oder Code; beim Start mit aktiver Sperre von Anfang an.
+    var locked = UserDefaults.standard.bool(forKey: "appLock")
+    /// Sichtschutz, solange die Szene nicht aktiv ist (App-Übersicht, Kontrollzentrum).
+    private(set) var shielded = false
+    private(set) var active = false
+    /// Face ID einmal von selbst starten (nach dem Start oder Zurückkehren), nicht nach jedem Abbruch erneut.
+    var autoPrompt = true
+
+    @ObservationIgnored private var window: UIWindow?
+
+    func update(enabled: Bool, phase: ScenePhase) {
+        if !enabled { locked = false }
+        if enabled && phase == .background && !locked {
+            locked = true
+            autoPrompt = true
+        }
+        shielded = enabled && phase != .active
+        active = phase == .active
+        show(enabled && (locked || shielded))
+    }
+
+    func unlock() {
+        locked = false
+        show(shielded)
+    }
+
+    private func show(_ visible: Bool) {
+        guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
+        if visible {
+            if window == nil {
+                let w = UIWindow(windowScene: scene)
+                w.windowLevel = .alert + 1
+                let host = UIHostingController(rootView: LockOverlay().tint(Color.ink))
+                host.view.backgroundColor = .clear
+                w.rootViewController = host
+                window = w
+            }
+            guard let window, window.isHidden || !window.isKeyWindow else { return }
+            // Tastatur schließen, damit sie nicht über der Sperre stehen bleibt.
+            if locked { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
+            window.makeKeyAndVisible()
+        } else if let window, !window.isHidden {
+            window.isHidden = true
+            scene.windows.first { $0 !== window && !$0.isHidden }?.makeKey()
+        }
+    }
+}
+
+/// Inhalt des Sperrfensters: Sperrbildschirm oder reiner Sichtschutz.
+private struct LockOverlay: View {
+    var body: some View {
+        if AppLock.shared.locked {
+            LockScreen()
+        } else {
+            Color.page.ignoresSafeArea()
+                .overlay { Image(systemName: "lock.fill").font(.scaled(34)).foregroundStyle(Color.ink) }
+        }
+    }
+}
+
 /// Sperrbildschirm, wenn „App mit Face ID sperren“ an ist.
 struct LockScreen: View {
-    var onUnlock: () -> Void
+    @State private var authenticating = false
+    private var lock: AppLock { .shared }
 
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "lock.fill").font(.scaled(34)).foregroundStyle(Color.ink)
-            Text("Restwert ist gesperrt").font(.scaled(20, weight: .semibold))
+            Text("Restwert ist gesperrt").font(.scaled(20, weight: .semibold)).foregroundStyle(Color.ink)
             Button("Entsperren", systemImage: "faceid") { Task { await unlock() } }
                 .buttonStyle(.primary).padding(.horizontal, 40)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.page.ignoresSafeArea())
-        .task { await unlock() }
+        // Face ID erst starten, wenn die App wirklich im Vordergrund ist; im Hintergrund schlägt die Abfrage fehl.
+        .task(id: lock.active) {
+            guard lock.active, lock.autoPrompt else { return }
+            lock.autoPrompt = false
+            await unlock()
+        }
     }
 
     private func unlock() async {
+        guard !authenticating else { return }
+        authenticating = true
+        defer { authenticating = false }
         let context = LAContext()
         var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { onUnlock(); return }
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { lock.unlock(); return }
         if (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Restwert entsperren")) == true {
-            onUnlock()
+            lock.unlock()
         }
     }
 }
@@ -308,7 +389,18 @@ struct LockScreen: View {
 
 /// Tippen auf eine Erinnerung öffnet den Gutschein; „Morgen erinnern“ plant sie einen Tag später neu.
 final class NotificationHandler: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
-    @MainActor static var openCard: ((UUID) -> Void)?
+    /// Beim Kaltstart angetippter Gutschein, bis der Router bereitsteht.
+    @MainActor static var pendingCard: UUID?
+    @MainActor static var openCard: ((UUID) -> Void)? {
+        didSet {
+            if let id = pendingCard, let openCard {
+                pendingCard = nil
+                openCard(id)
+            }
+        }
+    }
+    /// Aktueller Stand eines Gutscheins aus dem Store (für „Morgen erinnern“).
+    @MainActor static var cardLookup: ((UUID) -> GiftCard?)?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = self
@@ -323,12 +415,55 @@ final class NotificationHandler: NSObject, UIApplicationDelegate, UNUserNotifica
         let content = response.notification.request.content
         guard let raw = content.userInfo["card"] as? String, let id = UUID(uuidString: raw) else { return }
         if response.actionIdentifier == "snooze" {
+            let fire = Date.now.addingTimeInterval(24 * 3600)
+            let expires = (content.userInfo["expires"] as? Double).map { Date(timeIntervalSince1970: $0) }
+            guard let text = await Self.snoozeText(id: id, fire: fire, title: content.title, body: content.body,
+                                                   name: content.userInfo["name"] as? String, expires: expires) else { return }
             let copy = content.mutableCopy() as? UNMutableNotificationContent ?? UNMutableNotificationContent()
+            copy.title = text.title
+            copy.body = text.body
             let request = UNNotificationRequest(identifier: "\(raw)-snooze", content: copy,
                                                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: 24 * 3600, repeats: false))
             try? await center.add(request)
         } else {
-            await MainActor.run { Self.openCard?(id) }
+            await MainActor.run {
+                // Beim Kaltstart ist der Router evtl. noch nicht bereit: ID vormerken, didSet öffnet sie.
+                if let open = Self.openCard { open(id) } else { Self.pendingCard = id }
+            }
         }
+    }
+
+    /// Titel und Text für „Morgen erinnern“ zum neuen Zeitpunkt; nil, wenn der Gutschein dann abgelaufen oder erledigt ist.
+    @MainActor
+    private static func snoozeText(id: UUID, fire: Date, title: String, body: String,
+                                   name: String?, expires: Date?) -> (title: String, body: String)? {
+        let card = cardLookup?(id) ?? storedCard(id)
+        if let card, !card.isActive { return nil }
+        let prefix = title.components(separatedBy: ": ").dropLast().joined(separator: ": ")
+        let name = name ?? card?.name ?? (prefix.isEmpty ? title : prefix)
+        let body = card.map { "\($0.headline) gültig bis \($0.expires.dayMonthYear). Jetzt einlösen." } ?? body
+        guard let expires = expires ?? card?.expires ?? expiry(in: body) else { return ("\(name): deine Erinnerung", body) }
+        let cal = Calendar.current
+        let days = cal.dateComponents([.day], from: cal.startOfDay(for: fire), to: cal.startOfDay(for: expires)).day ?? 0
+        guard days >= 0 else { return nil }
+        let text = days == 0 ? "läuft heute ab" : days == 1 ? "läuft morgen ab" : "noch \(days) Tage"
+        return ("\(name): \(text)", body)
+    }
+
+    /// Gutschein direkt aus der Datei, wenn die App nur im Hintergrund für die Aktion gestartet wurde.
+    private static func storedCard(_ id: UUID) -> GiftCard? {
+        struct Stored: Decodable { var cards: [GiftCard] }
+        guard let data = try? Data(contentsOf: URL.applicationSupportDirectory.appending(path: "restwert.json")),
+              let stored = try? JSONDecoder().decode(Stored.self, from: data) else { return nil }
+        return stored.cards.first { $0.id == id }
+    }
+
+    /// Letzte Rückfallebene: Datum aus „… gültig bis TT.MM.JJJJ“ im Mitteilungstext.
+    private static func expiry(in body: String) -> Date? {
+        guard let match = body.firstMatch(of: /bis (\d{2}\.\d{2}\.\d{4})/) else { return nil }
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "de_DE")
+        f.dateFormat = "dd.MM.yyyy"
+        return f.date(from: String(match.1))
     }
 }

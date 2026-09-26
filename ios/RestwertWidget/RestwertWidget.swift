@@ -8,12 +8,28 @@ struct WidgetSnapshot: Codable {
         var id: String
         var name: String
         var headline: String
-        var daysLeft: Int
+        var expires: Date
+        var amount: Double?
+
+        /// Tage bis zum Ablauf, gerechnet vom Anzeigezeitpunkt aus.
+        func daysLeft(at date: Date) -> Int {
+            let cal = Calendar.current
+            return cal.dateComponents([.day], from: cal.startOfDay(for: date), to: cal.startOfDay(for: expires)).day ?? 0
+        }
     }
-    var total: String
-    var count: Int
-    var next: [Item]
+    var items: [Item]
     var updated: Date
+
+    /// Nur, was zum Zeitpunkt noch gültig ist.
+    func valid(at date: Date) -> WidgetSnapshot {
+        WidgetSnapshot(items: items.filter { $0.daysLeft(at: date) >= 0 }, updated: updated)
+    }
+
+    var next: [Item] { items }
+    var count: Int { items.count }
+    var total: String {
+        items.reduce(0) { $0 + ($1.amount ?? 0) }.formatted(.currency(code: "EUR").locale(Locale(identifier: "de_DE")))
+    }
 
     static let groupID = "group.de.restwert.app"
 
@@ -24,11 +40,14 @@ struct WidgetSnapshot: Codable {
         return try? JSONDecoder().decode(WidgetSnapshot.self, from: data)
     }
 
-    static let sample = WidgetSnapshot(total: "136,25 €", count: 5, next: [
-        Item(id: "", name: "Zalando", headline: "15 %", daysLeft: 12),
-        Item(id: "", name: "IKEA", headline: "50,00 €", daysLeft: 24),
-        Item(id: "", name: "Stadtgutschein", headline: "20,00 €", daysLeft: 140),
-    ], updated: .now)
+    static var sample: WidgetSnapshot {
+        let day = { (d: Double) in Date.now.addingTimeInterval(d * 86_400) }
+        return WidgetSnapshot(items: [
+            Item(id: "", name: "Zalando", headline: "15 %", expires: day(12)),
+            Item(id: "", name: "IKEA", headline: "50,00 €", expires: day(24), amount: 50),
+            Item(id: "", name: "Stadtgutschein", headline: "20,00 €", expires: day(140), amount: 20),
+        ], updated: .now)
+    }
 }
 
 struct Entry: TimelineEntry {
@@ -40,13 +59,20 @@ struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> Entry { Entry(date: .now, snapshot: .sample) }
 
     func getSnapshot(in context: Context, completion: @escaping (Entry) -> Void) {
-        completion(Entry(date: .now, snapshot: context.isPreview ? .sample : WidgetSnapshot.load() ?? .sample))
+        completion(Entry(date: .now, snapshot: (context.isPreview ? .sample : WidgetSnapshot.load() ?? .sample).valid(at: .now)))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
-        // Einmal täglich neu, damit „noch X Tage“ stimmt; die App löst bei Änderungen sofort ein Update aus.
-        let tomorrow = Calendar.current.startOfDay(for: .now.addingTimeInterval(86_400))
-        completion(Timeline(entries: [Entry(date: .now, snapshot: WidgetSnapshot.load())], policy: .after(tomorrow)))
+        // Ein Eintrag je Tag (ab Mitternacht), damit „in X Tagen“ herunterzählt und Abgelaufenes verschwindet.
+        // Die App löst bei Änderungen sofort ein Update aus.
+        let snap = WidgetSnapshot.load()
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: .now)
+        let entries = (0..<8).map { offset -> Entry in
+            let date = offset == 0 ? Date.now : cal.date(byAdding: .day, value: offset, to: today) ?? today
+            return Entry(date: date, snapshot: snap?.valid(at: date))
+        }
+        completion(Timeline(entries: entries, policy: .atEnd))
     }
 }
 
@@ -66,16 +92,28 @@ struct RestwertWidgetView: View {
             switch family {
             case .accessoryRectangular: lockScreen(snap)
             case .accessoryInline:
-                Text(snap.next.first.map { "\($0.name) \(dueText($0.daysLeft))" } ?? snap.total)
+                Text(snap.next.first.map { "\($0.name) \(dueText($0.daysLeft(at: entry.date)))" } ?? snap.total)
             case .systemMedium: medium(snap)
             default: small(snap)
             }
         } else {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Restwert").font(.headline)
-                Text("Öffne die App einmal, dann erscheint hier dein Guthaben.").font(.caption)
+            switch family {
+            case .accessoryInline:
+                Text("Restwert: App öffnen")
+            case .accessoryRectangular:
+                // Sperrbildschirm: Systemfarbe statt festem Schwarz, sonst im Vibrant-Modus kaum sichtbar.
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Restwert").font(.headline).widgetAccentable()
+                    Text("App einmal öffnen").font(.caption)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            default:
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Restwert").font(.headline)
+                    Text("Öffne die App einmal, dann erscheint hier dein Guthaben.").font(.caption)
+                }
+                .foregroundStyle(onBrand)
             }
-            .foregroundStyle(onBrand)
         }
     }
 
@@ -86,7 +124,7 @@ struct RestwertWidgetView: View {
             Spacer(minLength: 4)
             if let n = s.next.first {
                 Text(n.name).font(.caption.weight(.semibold)).lineLimit(1)
-                Text("läuft \(dueText(n.daysLeft)) ab").font(.caption2).opacity(0.75)
+                Text("läuft \(dueText(n.daysLeft(at: entry.date))) ab").font(.caption2).opacity(0.75)
             } else {
                 Text("\(s.count) Gutscheine").font(.caption)
             }
@@ -111,7 +149,7 @@ struct RestwertWidgetView: View {
                         HStack {
                             Text(n.name).font(.caption.weight(.semibold)).lineLimit(1)
                             Spacer(minLength: 4)
-                            Text(dueText(n.daysLeft)).font(.caption2).opacity(0.75)
+                            Text(dueText(n.daysLeft(at: entry.date))).font(.caption2).opacity(0.75)
                         }
                     }
                 }
@@ -125,7 +163,7 @@ struct RestwertWidgetView: View {
         VStack(alignment: .leading, spacing: 1) {
             Text(s.total).font(.headline).widgetAccentable()
             if let n = s.next.first {
-                Text("\(n.name) läuft \(dueText(n.daysLeft)) ab").font(.caption).lineLimit(1)
+                Text("\(n.name) läuft \(dueText(n.daysLeft(at: entry.date))) ab").font(.caption).lineLimit(1)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
