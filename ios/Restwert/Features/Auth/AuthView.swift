@@ -55,7 +55,7 @@ struct AuthView: View {
 
                 if let error {
                     Label(error, systemImage: "exclamationmark.circle.fill")
-                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(Color.bad)
+                        .font(.scaled(14, weight: .semibold)).foregroundStyle(Color.bad)
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
@@ -70,14 +70,14 @@ struct AuthView: View {
 
                 if isFirstRun {
                     Button("Ohne Konto weiter") { onDone() }
-                        .font(.system(size: 16, weight: .bold)).foregroundStyle(Color.ink)
+                        .font(.scaled(16, weight: .bold)).foregroundStyle(Color.ink)
                         .frame(maxWidth: .infinity).padding(.top, 4)
                     Text("Du kannst später jederzeit in den Einstellungen ein Konto anlegen.")
-                        .font(.system(size: 13)).foregroundStyle(Color.muted)
+                        .font(.scaled(13)).foregroundStyle(Color.muted)
                         .frame(maxWidth: .infinity).multilineTextAlignment(.center)
                 }
                 Link("Datenschutz", destination: APIConfig.baseURL.appending(path: "datenschutz"))
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted).frame(maxWidth: .infinity)
+                    .font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted).frame(maxWidth: .infinity)
             }
             .padding(.horizontal, 20).padding(.bottom, 30)
         }
@@ -96,23 +96,23 @@ struct AuthView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
             Image(systemName: mode == .register ? "icloud.and.arrow.up" : "person.crop.circle.badge.checkmark")
-                .font(.system(size: 26, weight: .semibold))
+                .font(.scaled(26, weight: .semibold))
                 .contentTransition(.symbolEffect(.replace))
                 .frame(width: 58, height: 58)
                 .glassEffect(.regular.tint(Color.brandYellow), in: .rect(cornerRadius: 18, style: .continuous))
             Text(mode == .register ? "Gutscheine auf allen Geräten." : "Willkommen zurück.")
-                .font(.system(size: 38, weight: .heavy)).kerning(-1)
+                .font(.scaled(38, weight: .heavy)).kerning(-1)
                 .contentTransition(.opacity)
             Text("Mit Konto sind deine Gutscheine gesichert und auf iPhone und iPad gleich. Fotos und PINs bleiben nur auf deinem Gerät.")
-                .font(.system(size: 15)).foregroundStyle(Color.ink2)
+                .font(.scaled(15)).foregroundStyle(Color.ink2)
         }
         .padding(.top, isFirstRun ? 30 : 0)
     }
 
     private func box<Content: View>(_ label: String, @ViewBuilder _ content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.system(size: 12, weight: .semibold)).foregroundStyle(Color.muted)
-            content().font(.system(size: 16, weight: .semibold))
+            Text(label).font(.scaled(12, weight: .semibold)).foregroundStyle(Color.muted)
+            content().font(.scaled(16, weight: .semibold))
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)

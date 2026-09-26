@@ -50,7 +50,7 @@ struct ScanView: View {
                 VStack(spacing: 12) {
                     ProgressView().controlSize(.large)
                     Text(SmartExtractor.isAvailable ? "Wird gelesen …" : "Wird gelesen …")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.scaled(15, weight: .semibold))
                 }
                 .padding(28)
                 .glassEffect(.regular, in: .rect(cornerRadius: 24, style: .continuous))
@@ -119,7 +119,7 @@ struct ScanView: View {
             .buttonStyle(.plain)
             .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
             Text("PDFs aus Mail kannst du auch direkt teilen: Anhang lange drücken, „Teilen“, dann Restwert.")
-                .font(.system(size: 13)).foregroundStyle(Color.muted)
+                .font(.scaled(13)).foregroundStyle(Color.muted)
                 .padding(.horizontal, 4)
         }
         .padding(.top, 8)
@@ -167,13 +167,13 @@ private struct SourceRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: icon).font(.system(size: 17)).foregroundStyle(Color.ink2).frame(width: 28)
+            Image(systemName: icon).font(.scaled(17)).foregroundStyle(Color.ink2).frame(width: 28)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 16)).foregroundStyle(Color.ink)
-                if let subtitle { Text(subtitle).font(.system(size: 13)).foregroundStyle(Color.muted) }
+                Text(title).font(.scaled(16)).foregroundStyle(Color.ink)
+                if let subtitle { Text(subtitle).font(.scaled(13)).foregroundStyle(Color.muted) }
             }
             Spacer()
-            Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted.opacity(0.7))
+            Image(systemName: "chevron.right").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted.opacity(0.7))
         }
         .padding(.horizontal, 14).padding(.vertical, 13)
         .contentShape(.rect)
@@ -190,13 +190,13 @@ private struct EmailImportSheet: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Kopier in Mail den Text der Gutschein-E-Mail und füg ihn hier ein. Restwert sucht Shop, Wert, Code, PIN und Ablaufdatum heraus.")
-                    .font(.system(size: 14)).foregroundStyle(Color.ink2)
+                    .font(.scaled(14)).foregroundStyle(Color.ink2)
                 PasteButton(payloadType: String.self) { strings in
                     Task { @MainActor in text = strings.joined(separator: "\n") }
                 }
                 .labelStyle(.titleAndIcon)
                 TextEditor(text: $text)
-                    .font(.system(size: 14))
+                    .font(.scaled(14))
                     .scrollContentBackground(.hidden)
                     .padding(10)
                     .background(Color.fill, in: .rect(cornerRadius: 16, style: .continuous))
@@ -226,9 +226,9 @@ struct ViewfinderTeaser: View {
                 .stroke(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .frame(width: 64, height: 44)
             Spacer(minLength: 28)
-            Text("Karte scannen").font(.system(size: 22, weight: .bold))
+            Text("Karte scannen").font(.scaled(22, weight: .bold))
             Text("Barcode und Text auf der Rückseite werden automatisch gelesen.")
-                .font(.system(size: 14)).foregroundStyle(.white.opacity(0.7))
+                .font(.scaled(14)).foregroundStyle(.white.opacity(0.7))
                 .padding(.top, 4)
         }
         .foregroundStyle(.white)

@@ -34,7 +34,7 @@ struct HomeView: View {
                     section(dueSoon.isEmpty ? "Deine Gutscheine" : "Weitere", cards: rest, sortable: true)
                     NavigationLink(value: Route.radar) {
                         Label("Alle Ablauftermine", systemImage: "calendar")
-                            .font(.system(size: 16, weight: .semibold)).foregroundStyle(Color.ink)
+                            .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
                             .frame(maxWidth: .infinity, minHeight: 50)
                             .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
                     }
@@ -43,7 +43,7 @@ struct HomeView: View {
                 }
                 if store.hasExamples {
                     Button("Beispielkarten entfernen") { withAnimation(.smooth) { store.clearExamples() } }
-                        .font(.system(size: 15, weight: .medium)).foregroundStyle(Color.muted)
+                        .font(.scaled(15, weight: .medium)).foregroundStyle(Color.muted)
                         .frame(maxWidth: .infinity)
                 }
             }
@@ -73,7 +73,7 @@ struct HomeView: View {
         if !cards.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text(title).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.ink2)
+                    Text(title).font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
                     Spacer()
                     if sortable { sortMenu }
                 }
@@ -101,21 +101,24 @@ struct HomeView: View {
             Button("An der Kasse zeigen", systemImage: "barcode") { router.homePath.append(.checkout(c.id)) }
         }
         Button("Bearbeiten", systemImage: "pencil") { router.editing = c }
+        Button(c.isArchived ? "Wiederherstellen" : "Archivieren", systemImage: c.isArchived ? "tray.and.arrow.up" : "archivebox") {
+            withAnimation(.snappy) { store.setArchived(c.id, !c.isArchived) }
+        }
         Button("Entfernen", systemImage: "trash", role: .destructive) { deleting = c }
     }
 
-    /// Aufgebrauchte und abgelaufene Gutscheine, eingeklappt, damit die Liste ruhig bleibt.
+    /// Aufgebrauchte, abgelaufene und archivierte Gutscheine, eingeklappt, damit die Liste ruhig bleibt.
     private var doneSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Button {
                 withAnimation(.snappy) { showDone.toggle() }
             } label: {
                 HStack {
-                    Text("Aufgebraucht & abgelaufen (\(done.count))")
-                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.ink2)
+                    Text("Erledigt & archiviert (\(done.count))")
+                        .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
                     Spacer()
                     Image(systemName: "chevron.down").rotationEffect(.degrees(showDone ? 180 : 0))
-                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted)
+                        .font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
                 }
                 .padding(.horizontal, 4).contentShape(.rect)
             }
@@ -147,9 +150,9 @@ struct HomeView: View {
         } label: {
             HStack(spacing: 4) {
                 Text(order.label)
-                Image(systemName: "chevron.up.chevron.down").font(.system(size: 11, weight: .semibold))
+                Image(systemName: "chevron.up.chevron.down").font(.scaled(11, weight: .semibold))
             }
-            .font(.system(size: 14)).foregroundStyle(Color.muted)
+            .font(.scaled(14)).foregroundStyle(Color.muted)
         }
     }
 }
@@ -178,15 +181,15 @@ private struct TotalHeader: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Guthaben auf allen Karten").font(.system(size: 15, weight: .medium)).foregroundStyle(Color.ink.opacity(0.7))
+            Text("Guthaben auf allen Karten").font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink.opacity(0.7))
             Text(total.euro)
-                .font(.system(size: 60, weight: .bold)).kerning(-2).monospacedDigit()
+                .font(.scaled(60, weight: .bold)).kerning(-2).monospacedDigit()
                 .contentTransition(.numericText(value: total))
                 .animation(.snappy, value: total)
                 .minimumScaleFactor(0.6).lineLimit(1)
-            Text(caption).font(.system(size: 15, weight: .medium)).foregroundStyle(Color.ink.opacity(0.75))
+            Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink.opacity(0.75))
             if let codesNote {
-                Text(codesNote).font(.system(size: 14)).foregroundStyle(Color.ink.opacity(0.75))
+                Text(codesNote).font(.scaled(14)).foregroundStyle(Color.ink.opacity(0.75))
             }
         }
         .foregroundStyle(Color.ink)
@@ -202,9 +205,9 @@ private struct EmptyState: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Noch keine Gutscheine").font(.system(size: 17, weight: .semibold))
+            Text("Noch keine Gutscheine").font(.scaled(17, weight: .semibold))
             Text("Fotografier die Rückseite einer Karte, füg eine Gutschein-Mail ein oder tipp den Code ab.")
-                .font(.system(size: 15)).foregroundStyle(Color.ink2)
+                .font(.scaled(15)).foregroundStyle(Color.ink2)
             Button("Ersten Gutschein erfassen", action: onScan).buttonStyle(.accent)
         }
         .padding(20)

@@ -57,7 +57,7 @@ struct LiveScannerView: View {
         .overlay(alignment: .topTrailing) {
             Button("Schließen", systemImage: "xmark") { dismiss() }
                 .labelStyle(.iconOnly)
-                .font(.system(size: 17, weight: .bold))
+                .font(.scaled(17, weight: .bold))
                 .buttonStyle(.glass)
                 .buttonBorderShape(.circle)
                 .controlSize(.large)
@@ -71,13 +71,13 @@ struct LiveScannerView: View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer()
             Image(systemName: supported ? "camera.fill" : "photo.on.rectangle")
-                .font(.system(size: 30)).foregroundStyle(Color.ink2)
+                .font(.scaled(30)).foregroundStyle(Color.ink2)
             Text(supported ? "Kamera nicht freigegeben" : "Keine Kamera verfügbar")
-                .font(.system(size: 22, weight: .bold))
+                .font(.scaled(22, weight: .bold))
             Text(supported
                  ? "Erlaube Restwert in den Einstellungen den Zugriff auf die Kamera. Oder wähl ein Foto der Karte, das wird genauso gelesen."
                  : "Auf diesem Gerät läuft der Live-Scan nicht, zum Beispiel im Simulator. Wähl ein Foto der Karte, Barcode und Text werden genauso gelesen.")
-                .font(.system(size: 15)).foregroundStyle(Color.ink2)
+                .font(.scaled(15)).foregroundStyle(Color.ink2)
             Spacer()
             PhotosPicker(selection: $photoItem, matching: .images) {
                 Label(reading ? "Wird gelesen …" : "Foto der Karte wählen", systemImage: "photo")
@@ -101,14 +101,14 @@ struct LiveScannerView: View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
                 Image(systemName: model.barcode == nil ? "barcode.viewfinder" : "checkmark.circle.fill")
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.scaled(22, weight: .semibold))
                     .foregroundStyle(model.barcode == nil ? Color.muted : Color.good)
                     .contentTransition(.symbolEffect(.replace))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(model.barcode == nil ? "Halte die Rückseite ins Bild" : "\(model.format?.label ?? "Barcode") erkannt")
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.scaled(15, weight: .bold))
                     Text(model.barcode ?? "\(model.texts.count) Textzeilen erkannt, auch Handschrift")
-                        .font(.system(size: 13)).foregroundStyle(Color.ink2).lineLimit(1)
+                        .font(.scaled(13)).foregroundStyle(Color.ink2).lineLimit(1)
                         .contentTransition(.numericText())
                 }
                 Spacer()

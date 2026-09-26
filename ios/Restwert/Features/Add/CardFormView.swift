@@ -28,6 +28,7 @@ struct CardFormView: View {
     @State private var formatLocked = false
     @State private var loaded = false
     @State private var shake = 0
+    @State private var showMore = false
 
     init(outcome: ScanOutcome? = nil, editing: GiftCard? = nil, onSaved: @escaping (GiftCard) -> Void) {
         self.outcome = outcome
@@ -40,13 +41,13 @@ struct CardFormView: View {
             VStack(alignment: .leading, spacing: 14) {
                 kindPicker
                 fields
-                Text("Steht kein Datum auf dem Gutschein, gilt meist die gesetzliche Frist: drei Jahre ab Ende des Jahres, in dem er gekauft wurde (§ 195 BGB).")
-                    .font(.system(size: 12.5)).foregroundStyle(Color.muted).padding(.horizontal, 4)
+                Text("Kein Datum auf dem Gutschein? Dann gilt er meist drei Jahre, gerechnet ab Ende des Kaufjahres. Das Datum ist schon so vorausgefüllt.")
+                    .font(.scaled(13)).foregroundStyle(Color.ink2).padding(.horizontal, 4)
                 if !errors.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(errors, id: \.self) { Label($0, systemImage: "exclamationmark.circle.fill") }
                     }
-                    .font(.system(size: 14, weight: .semibold)).foregroundStyle(Color.bad)
+                    .font(.scaled(14, weight: .semibold)).foregroundStyle(Color.bad)
                     .padding(14).frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.badSoft, in: .rect(cornerRadius: 16, style: .continuous))
                     .modifier(Shake(animatableData: CGFloat(shake)))
@@ -72,7 +73,7 @@ struct CardFormView: View {
         .onAppear {
             guard !loaded else { return }
             loaded = true
-            if let editing { load(editing) } else if let outcome { apply(outcome) }
+            if let editing { load(editing); showMore = true } else if let outcome { apply(outcome) }
         }
         .onChange(of: received) { _, new in if editing == nil { expires = GiftCard.legalExpiry(from: new) } }
         .onChange(of: merchantID) { _, id in
@@ -82,31 +83,38 @@ struct CardFormView: View {
 
     // MARK: Felder
 
+    /// Die drei häufigen Arten als Segmente, seltene Arten über „Andere“.
     private var kindPicker: some View {
-        ScrollView(.horizontal) {
-            GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
-                    ForEach(VoucherKind.allCases) { k in
-                        Button {
-                            withAnimation(.snappy) {
-                                kind = k
-                                if !k.isValueBased && !formatLocked { format = .text }
-                            }
-                        } label: {
-                            Label(k.label, systemImage: k.symbol).font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(Color.ink)
-                                .padding(.horizontal, 14).padding(.vertical, 10)
-                        }
-                        .buttonStyle(.plain)
-                        .glassEffect(kind == k ? .regular.tint(Color.brandYellow).interactive() : .regular.interactive(), in: .capsule)
-                    }
-                }
-                .padding(.vertical, 4)
+        let primary: [VoucherKind] = [.giftCard, .valueVoucher, .discountCode]
+        return HStack(spacing: 8) {
+            Picker("Art", selection: Binding(
+                get: { primary.contains(kind) ? kind : .giftCard },
+                set: { setKind($0) })) {
+                Text("Karte").tag(VoucherKind.giftCard)
+                Text("Gutschein").tag(VoucherKind.valueVoucher)
+                Text("Rabattcode").tag(VoucherKind.discountCode)
+            }
+            .pickerStyle(.segmented)
+            .opacity(primary.contains(kind) ? 1 : 0.5)
+            Menu {
+                Button(VoucherKind.coupon.label, systemImage: VoucherKind.coupon.symbol) { setKind(.coupon) }
+                Button(VoucherKind.custom.label, systemImage: VoucherKind.custom.symbol) { setKind(.custom) }
+            } label: {
+                Text(primary.contains(kind) ? "Andere" : kind.label)
+                    .font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink)
+                    .padding(.horizontal, 10).frame(minHeight: 32)
+                    .background(primary.contains(kind) ? Color.clear : Color.brandYellow, in: .capsule)
             }
         }
-        .scrollIndicators(.hidden)
         .padding(.top, 8)
         .sensoryFeedback(.selection, trigger: kind)
+    }
+
+    private func setKind(_ k: VoucherKind) {
+        withAnimation(.snappy) {
+            kind = k
+            if !k.isValueBased && !formatLocked { format = .text }
+        }
     }
 
     private var fields: some View {
@@ -132,14 +140,14 @@ struct CardFormView: View {
                     Image(systemName: "info.circle")
                     Text(m.category.long + ". " + m.tip)
                 }
-                .font(.system(size: 13)).foregroundStyle(Color.ink2).padding(.horizontal, 4)
+                .font(.scaled(13)).foregroundStyle(Color.ink2).padding(.horizontal, 4)
                 .transition(.opacity)
             }
 
             if kind.isValueBased {
                 HStack(spacing: 8) {
                     LabeledField(label: "Wert in €", placeholder: "50,00", text: $valueText, keyboard: .decimalPad)
-                    LabeledField(label: "Restwert", placeholder: "wie Wert", text: $balanceText, keyboard: .decimalPad)
+                    LabeledField(label: "Schon benutzt? Rest", placeholder: "sonst wie Wert", text: $balanceText, keyboard: .decimalPad)
                 }
             } else {
                 HStack(spacing: 8) {
@@ -153,24 +161,36 @@ struct CardFormView: View {
                 if kind == .giftCard {
                     LabeledField(label: "PIN", placeholder: "optional", text: $pin, keyboard: .numberPad)
                 }
-                LabeledBox(label: "Barcode") {
-                    Picker("Barcode", selection: $format) {
+                dateBox("Gültig bis", $expires)
+            }
+            Button {
+                withAnimation(.snappy) { showMore.toggle() }
+            } label: {
+                HStack {
+                    Text(showMore ? "Weniger" : "Mehr Details (Barcode-Typ, Kaufdatum, Aufbewahrung)")
+                    Spacer()
+                    Image(systemName: "chevron.down").rotationEffect(.degrees(showMore ? 180 : 0))
+                }
+                .font(.scaled(14, weight: .medium)).foregroundStyle(Color.ink2)
+                .padding(.horizontal, 4).padding(.vertical, 6).contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            if showMore {
+                LabeledBox(label: "Barcode-Typ") {
+                    Picker("Barcode-Typ", selection: $format) {
                         ForEach(CodeFormat.allCases) { Text($0.label).tag($0) }
                     }
                     .labelsHidden().tint(Color.ink)
                 }
-            }
-            HStack(spacing: 8) {
                 dateBox("Erhalten am", $received)
-                dateBox("Gültig bis", $expires)
-            }
-            LabeledBox(label: "Aufbewahrungsort") {
-                Picker("Aufbewahrungsort", selection: $location) {
-                    ForEach(StorageLocation.allCases) { Label($0.label, systemImage: $0.symbol).tag($0) }
+                LabeledBox(label: "Aufbewahrungsort") {
+                    Picker("Aufbewahrungsort", selection: $location) {
+                        ForEach(StorageLocation.allCases) { Label($0.label, systemImage: $0.symbol).tag($0) }
+                    }
+                    .labelsHidden().tint(Color.ink)
                 }
-                .labelsHidden().tint(Color.ink)
+                LabeledField(label: "Notiz zum Ort", placeholder: "optional, z. B. rotes Portemonnaie", text: $locationNote)
             }
-            LabeledField(label: "Notiz zum Ort", placeholder: "optional, z. B. rotes Portemonnaie", text: $locationNote)
         }
         .padding(12)
         .cardSurface(radius: 24)

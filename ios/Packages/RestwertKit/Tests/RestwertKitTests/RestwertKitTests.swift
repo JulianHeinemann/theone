@@ -216,6 +216,19 @@ struct SyncTests {
         #expect(out.cards[0].photo == nil)
     }
 
+    @Test("Archiv und eigene Erinnerung überstehen den Roundtrip, Archiv zählt nicht zur Summe")
+    func archiveRoundTrip() throws {
+        var c = card()
+        c.archivedAt = Date(timeIntervalSince1970: 1_800_000_000)
+        c.reminderAt = Date(timeIntervalSince1970: 1_900_000_000)
+        let data = try APICoding.encoder.encode(SyncData(cards: [c], tests: [], deleted: []))
+        let back = try APICoding.decoder.decode(SyncData.self, from: data).cards[0]
+        #expect(back.isArchived)
+        #expect(back.reminderAt == c.reminderAt)
+        #expect(!back.isActive)
+        #expect(CardQueries.openTotal([back, card("ikea")]) == 50)
+    }
+
     @Test("Roundtrip über die API-Kodierung")
     func roundTrip() throws {
         var c = card()

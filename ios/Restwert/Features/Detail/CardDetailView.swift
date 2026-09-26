@@ -37,6 +37,9 @@ struct CardDetailView: View {
         let status = card.status(warnDays: warnDays)
         return ScrollView {
             VStack(spacing: 16) {
+                if !card.isActive && !card.isArchived {
+                    archiveBanner(card, status)
+                }
                 summary(card, status)
                 if card.isActive {
                     NavigationLink(value: Route.checkout(card.id)) {
@@ -55,9 +58,14 @@ struct CardDetailView: View {
                 }
                 codeTicket(card)
                 locationRow(card)
+                if card.isActive { reminderRow(card) }
                 CardBon(card: card).padding(.top, 6)
+                if card.isArchived {
+                    Button("Wiederherstellen", systemImage: "tray.and.arrow.up") { store.setArchived(card.id, false) }
+                        .buttonStyle(.quiet)
+                }
                 Button("Gutschein entfernen", systemImage: "trash", role: .destructive) { confirmDelete = true }
-                    .font(.system(size: 15, weight: .bold)).padding(.top, 6)
+                    .font(.scaled(15, weight: .bold)).padding(.top, 6)
             }
             .padding(.horizontal, 16).padding(.bottom, 30)
         }
@@ -99,7 +107,7 @@ struct CardDetailView: View {
                         Image(systemName: pinVisible ? "lock.open" : "faceid")
                             .contentTransition(.symbolEffect(.replace))
                         Text(pinVisible ? "PIN \(card.pin)" : "PIN anzeigen")
-                            .font(.system(size: 15, weight: .bold, design: pinVisible ? Font.Design.monospaced : Font.Design.default))
+                            .font(.scaled(15, weight: .bold, design: pinVisible ? Font.Design.monospaced : Font.Design.default))
                         Spacer()
                     }
                     .foregroundStyle(Color.ink).padding(14)
@@ -117,28 +125,72 @@ struct CardDetailView: View {
 
     private func cell(_ label: String, _ value: String, tint: Color = .ink) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.system(size: 12)).foregroundStyle(Color.muted)
-            Text(value).font(.system(size: 16, weight: .semibold)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
+            Text(label).font(.scaled(12)).foregroundStyle(Color.muted)
+            Text(value).font(.scaled(16, weight: .semibold)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
                 .contentTransition(.numericText())
         }
         .padding(.vertical, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// Aufgebraucht oder abgelaufen: direkt oben anbieten, den Gutschein aus der Liste zu nehmen.
+    private func archiveBanner(_ card: GiftCard, _ status: VoucherStatus) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: status == .expired ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
+                .font(.scaled(20)).foregroundStyle(status == .expired ? Color.bad : Color.good)
+            Text(status == .expired ? "Abgelaufen" : "Aufgebraucht").font(.scaled(16, weight: .semibold))
+            Spacer()
+            Button("Archivieren") {
+                store.setArchived(card.id, true)
+                dismiss()
+            }
+            .font(.scaled(15, weight: .semibold))
+            .buttonStyle(.glass)
+        }
+        .foregroundStyle(Color.ink)
+        .padding(14)
+        .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+    }
+
+    /// Eigene Erinnerung nur für diesen Gutschein.
+    private func reminderRow(_ card: GiftCard) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle(isOn: Binding(
+                get: { card.reminderAt != nil },
+                set: { on in
+                    let fallback = Calendar.current.date(byAdding: .day, value: -3, to: card.expires) ?? card.expires
+                    store.setReminder(card.id, on ? max(fallback, .now.addingTimeInterval(3600)) : nil)
+                })) {
+                Label("Eigene Erinnerung", systemImage: "bell")
+                    .font(.scaled(16, weight: .semibold))
+            }
+            .tint(Color.good)
+            if let date = card.reminderAt {
+                DatePicker("Am", selection: Binding(get: { date }, set: { store.setReminder(card.id, $0) }),
+                           in: Date.now...card.expires, displayedComponents: [.date, .hourAndMinute])
+                    .environment(\.locale, Locale(identifier: "de_DE"))
+                    .font(.scaled(15))
+            }
+        }
+        .foregroundStyle(Color.ink)
+        .padding(14)
+        .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+    }
+
     private func locationRow(_ card: GiftCard) -> some View {
         Button { showLocation = true } label: {
             HStack(spacing: 14) {
-                Image(systemName: card.location.symbol).font(.system(size: 18, weight: .semibold))
+                Image(systemName: card.location.symbol).font(.scaled(18, weight: .semibold))
                     .contentTransition(.symbolEffect(.replace))
                     .frame(width: 44, height: 44)
                     .background(Color.fill, in: .rect(cornerRadius: 12, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Aufbewahrt: \(card.location.label)").font(.system(size: 16, weight: .semibold))
+                    Text("Aufbewahrt: \(card.location.label)").font(.scaled(16, weight: .semibold))
                     Text(card.locationNote.isEmpty ? "Notiz hinzufügen" : card.locationNote)
-                        .font(.system(size: 13)).foregroundStyle(Color.muted).lineLimit(2)
+                        .font(.scaled(13)).foregroundStyle(Color.muted).lineLimit(2)
                 }
                 Spacer()
-                Text("Ändern").font(.system(size: 14, weight: .bold))
+                Text("Ändern").font(.scaled(14, weight: .bold))
             }
             .foregroundStyle(Color.ink).padding(12).cardSurface(radius: 20)
         }
@@ -148,7 +200,7 @@ struct CardDetailView: View {
     private func codeTicket(_ card: GiftCard) -> some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Code").font(.system(size: 16, weight: .bold))
+                Text("Code").font(.scaled(16, weight: .bold))
                 Spacer()
                 Button {
                     UIPasteboard.general.string = card.number
@@ -160,7 +212,7 @@ struct CardDetailView: View {
                     }
                 } label: {
                     Label(copied ? "Kopiert" : "Code kopieren", systemImage: copied ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.scaled(14, weight: .bold))
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .buttonStyle(.glassProminent)
@@ -172,7 +224,7 @@ struct CardDetailView: View {
             VStack(spacing: 8) {
                 BarcodeView(number: card.number, format: card.format, height: 84)
                 if card.format != .text {
-                    Text(card.number.grouped).font(.system(size: 17, weight: .bold)).kerning(2).textSelection(.enabled)
+                    Text(card.number.grouped).font(.scaled(17, weight: .bold)).kerning(2).textSelection(.enabled)
                 }
             }
             .padding(.horizontal, 18).padding(.bottom, 18)
@@ -185,7 +237,7 @@ struct CardDetailView: View {
     private func partialRedeem(_ card: GiftCard) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Eingekauft? Betrag abziehen").font(.system(size: 18, weight: .bold))
+                Text("Eingekauft? Betrag abziehen").font(.scaled(18, weight: .bold))
                 Spacer()
             }
             GlassEffectContainer(spacing: 8) {
@@ -200,14 +252,14 @@ struct CardDetailView: View {
             }
             NavigationLink(value: Route.keypad(card.id)) {
                 Label("Genauen Betrag eintippen", systemImage: "keyboard")
-                    .font(.system(size: 16, weight: .semibold)).foregroundStyle(Color.ink)
+                    .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
                     .frame(maxWidth: .infinity, minHeight: 48)
                     .background(Color.fill, in: .rect(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
             if amount > 0 {
                 Text("Danach übrig: \(max(0, card.balance - amount).euro)")
-                    .font(.system(size: 15)).foregroundStyle(Color.ink2)
+                    .font(.scaled(15)).foregroundStyle(Color.ink2)
                     .contentTransition(.numericText())
             }
             Button {
@@ -258,7 +310,7 @@ struct CardDetailView: View {
 
     private func quickPick(_ title: String, selected: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.system(size: 16, weight: .bold)).foregroundStyle(Color.ink)
+            Text(title).font(.scaled(16, weight: .bold)).foregroundStyle(Color.ink)
                 .frame(maxWidth: .infinity, minHeight: 48)
         }
         .buttonStyle(.plain)
@@ -269,9 +321,9 @@ struct CardDetailView: View {
 
     private func markRedeemedBlock(_ card: GiftCard) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("\(card.kind.label) benutzt?").font(.system(size: 20, weight: .bold))
+            Text("\(card.kind.label) benutzt?").font(.scaled(20, weight: .bold))
             Text("Rabattcodes und Coupons gelten meist nur einmal. Markier ihn nach dem Einkauf, dann erscheint er im Verlauf.")
-                .font(.system(size: 14)).foregroundStyle(Color.muted)
+                .font(.scaled(14)).foregroundStyle(Color.muted)
             Button {
                 stampVisible = true
                 success += 1
@@ -326,12 +378,12 @@ private struct TearStub: View {
             ZigZag(tooth: 12, top: true).fill(Color.paper).frame(height: 10)
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(merchant.uppercased()).font(.system(size: 12, weight: .bold, design: .monospaced))
+                    Text(merchant.uppercased()).font(.scaled(12, weight: .bold, design: .monospaced))
                     Text(Date.now.formatted(date: .numeric, time: .shortened))
-                        .font(.system(size: 11, design: .monospaced)).foregroundStyle(Color.muted)
+                        .font(.scaled(11, design: .monospaced)).foregroundStyle(Color.muted)
                 }
                 Spacer()
-                Text("−" + amount.euro).font(.system(size: 20, weight: .heavy, design: .monospaced))
+                Text("−" + amount.euro).font(.scaled(20, weight: .heavy, design: .monospaced))
             }
             .foregroundStyle(Color.ink)
             .padding(.horizontal, 18).padding(.vertical, 12)
@@ -350,8 +402,8 @@ struct Stamp: View {
 
     var body: some View {
         VStack(spacing: 2) {
-            Text("EINGELÖST").font(.system(size: 28, weight: .black, design: .rounded)).kerning(3)
-            Text(date.dayMonthYear).font(.system(size: 13, weight: .bold, design: .monospaced))
+            Text("EINGELÖST").font(.scaled(28, weight: .black, design: .rounded)).kerning(3)
+            Text(date.dayMonthYear).font(.scaled(13, weight: .bold, design: .monospaced))
         }
         .foregroundStyle(Color.bad.opacity(0.85))
         .padding(.horizontal, 18).padding(.vertical, 10)
@@ -373,14 +425,14 @@ struct LocationSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Wo liegt der Gutschein?").font(.system(size: 24, weight: .heavy)).padding(.top, 24)
+            Text("Wo liegt der Gutschein?").font(.scaled(24, weight: .heavy)).padding(.top, 24)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                 ForEach(StorageLocation.allCases) { loc in
                     Button { withAnimation(.snappy) { location = loc } } label: {
                         VStack(spacing: 8) {
-                            Image(systemName: loc.symbol).font(.system(size: 22, weight: .semibold))
+                            Image(systemName: loc.symbol).font(.scaled(22, weight: .semibold))
                                 .symbolEffect(.bounce, value: location == loc)
-                            Text(loc.label).font(.system(size: 13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                            Text(loc.label).font(.scaled(13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
                         }
                         .foregroundStyle(Color.ink)
                         .frame(maxWidth: .infinity, minHeight: 84)
@@ -410,9 +462,9 @@ struct CardBon: View {
         ReceiptPaper {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("Einlöse-Verlauf").font(.system(size: 20, weight: .heavy))
+                    Text("Einlöse-Verlauf").font(.scaled(20, weight: .heavy))
                     Spacer()
-                    Text(card.name.uppercased()).font(.system(size: 12, weight: .bold, design: .monospaced)).foregroundStyle(Color.muted)
+                    Text(card.name.uppercased()).font(.scaled(12, weight: .bold, design: .monospaced)).foregroundStyle(Color.muted)
                 }
                 DashedRule()
                 row(card.kind.isValueBased ? "Erhalten" : "Hinzugefügt", card.received.dayMonthYear,
@@ -423,7 +475,7 @@ struct CardBon: View {
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 if card.history.isEmpty {
-                    Text("Noch nichts eingelöst.").font(.system(size: 13, design: .monospaced)).foregroundStyle(Color.muted)
+                    Text("Noch nichts eingelöst.").font(.scaled(13, design: .monospaced)).foregroundStyle(Color.muted)
                 }
                 DashedRule()
                 row(card.kind.isValueBased ? "RESTWERT" : "STATUS", "",
@@ -443,13 +495,13 @@ struct CardBon: View {
     private func row(_ title: String, _ sub: String, _ amount: String, bold: Bool = false) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 14, weight: bold ? .heavy : .semibold, design: .monospaced))
+                Text(title).font(.scaled(14, weight: bold ? .heavy : .semibold, design: .monospaced))
                 if !sub.isEmpty {
-                    Text(sub).font(.system(size: 11.5, design: .monospaced)).foregroundStyle(Color.muted)
+                    Text(sub).font(.scaled(11.5, design: .monospaced)).foregroundStyle(Color.muted)
                 }
             }
             Spacer()
-            Text(amount).font(.system(size: 14, weight: bold ? .heavy : .semibold, design: .monospaced))
+            Text(amount).font(.scaled(14, weight: bold ? .heavy : .semibold, design: .monospaced))
         }
     }
 }

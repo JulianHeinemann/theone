@@ -79,7 +79,7 @@ struct BarcodeView: View {
                 .accessibilityLabel("Barcode \(format.label)")
         case nil:
             Text(number)
-                .font(.system(size: 26, weight: .heavy, design: .monospaced))
+                .font(.scaled(26, weight: .heavy, design: .monospaced))
                 .multilineTextAlignment(.center)
                 .textSelection(.enabled)
                 .padding(.vertical, 12)

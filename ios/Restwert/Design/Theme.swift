@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import RestwertKit
 
 // MARK: - Farben
@@ -87,7 +88,7 @@ struct FilledButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 16, weight: .bold))
+            .font(.scaled(16, weight: .bold))
             .foregroundStyle(foreground)
             .frame(maxWidth: .infinity, minHeight: 56)
             .background(background, in: .rect(cornerRadius: 18, style: .continuous))
@@ -112,7 +113,7 @@ struct Chip: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 12, weight: .bold))
+            .font(.scaled(12, weight: .bold))
             .foregroundStyle(fg)
             .padding(.horizontal, 10).padding(.vertical, 4)
             .background(bg, in: .capsule)
@@ -125,7 +126,7 @@ struct SectionHeader<Trailing: View>: View {
 
     var body: some View {
         HStack {
-            Text(title).font(.system(size: 20, weight: .bold))
+            Text(title).font(.scaled(20, weight: .bold))
             Spacer()
             trailing
         }
@@ -146,8 +147,8 @@ struct LabeledBox<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.system(size: 12, weight: .semibold)).foregroundStyle(Color.muted)
-            content.font(.system(size: 16, weight: .semibold))
+            Text(label).font(.scaled(12, weight: .semibold)).foregroundStyle(Color.muted)
+            content.font(.scaled(16, weight: .semibold))
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -265,5 +266,17 @@ extension View {
     func pageBackground() -> some View {
         scrollEdgeEffectStyle(.hard, for: .top)
             .background(Color.page.ignoresSafeArea())
+    }
+}
+
+// MARK: - Schrift
+
+extension Font {
+    /// Systemschrift, die mit „Größerer Text“ in den iOS-Einstellungen mitwächst.
+    /// Große Zahlen wachsen weniger stark, damit Beträge nicht umbrechen.
+    static func scaled(_ size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
+        let factor = UIFontMetrics.default.scaledValue(for: size) / size
+        let capped = size >= 28 ? min(factor, 1.35) : min(factor, 2.2)
+        return .system(size: size * capped, weight: weight, design: design)
     }
 }

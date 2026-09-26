@@ -13,16 +13,16 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Restwert").font(.system(size: 17, weight: .bold))
+            Text("Restwert").font(.scaled(17, weight: .bold))
                 .padding(.top, 24)
             Text("Deine Gutscheine,\nan einem Ort.")
-                .font(.system(size: 36, weight: .bold)).kerning(-0.8)
+                .font(.scaled(36, weight: .bold)).kerning(-0.8)
                 .padding(.top, 28)
             Text("Karte abfotografieren oder Gutschein-PDF aus der Mail laden, Guthaben nachtragen, an der Kasse den Barcode zeigen. Vor dem Ablauf kommt eine Erinnerung.")
-                .font(.system(size: 17)).foregroundStyle(Color.ink2)
+                .font(.scaled(17)).foregroundStyle(Color.ink2)
                 .padding(.top, 14)
             Spacer(minLength: 24)
-            Text("So sieht es aus (Beispiel)").font(.system(size: 13, weight: .medium)).foregroundStyle(Color.muted)
+            Text("So sieht es aus (Beispiel)").font(.scaled(13, weight: .medium)).foregroundStyle(Color.muted)
                 .padding(.horizontal, 4).padding(.bottom, 8)
             VStack(spacing: 0) {
                 ForEach(Array(preview.enumerated()), id: \.offset) { i, row in
@@ -30,14 +30,14 @@ struct OnboardingView: View {
                     HStack(spacing: 14) {
                         MerchantMark(merchantID: row.id, name: row.name)
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(row.name).font(.system(size: 16, weight: .semibold))
-                            Text(row.due).font(.system(size: 13, weight: row.dueSoon ? .semibold : .regular))
+                            Text(row.name).font(.scaled(16, weight: .semibold))
+                            Text(row.due).font(.scaled(13, weight: row.dueSoon ? .semibold : .regular))
                                 .foregroundStyle(row.dueSoon ? Color.warn : Color.muted)
                         }
                         Spacer()
                         VStack(alignment: .trailing, spacing: 3) {
-                            Text(row.amount).font(.system(size: 17, weight: .semibold)).monospacedDigit()
-                            Text(row.of).font(.system(size: 12)).foregroundStyle(Color.muted)
+                            Text(row.amount).font(.scaled(17, weight: .semibold)).monospacedDigit()
+                            Text(row.of).font(.scaled(12)).foregroundStyle(Color.muted)
                         }
                     }
                     .padding(.horizontal, 14).padding(.vertical, 12)
@@ -48,7 +48,7 @@ struct OnboardingView: View {
             .accessibilityHidden(true)
             Spacer(minLength: 24)
             Label("Kein Konto nötig. Deine Daten bleiben auf diesem iPhone.", systemImage: "lock")
-                .font(.system(size: 14)).foregroundStyle(Color.ink2)
+                .font(.scaled(14)).foregroundStyle(Color.ink2)
                 .padding(.bottom, 14)
             Button("Los geht's", action: onStart)
                 .buttonStyle(.primary)

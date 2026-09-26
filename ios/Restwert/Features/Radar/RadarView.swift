@@ -25,10 +25,10 @@ struct RadarView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(alignment: .firstTextBaseline) {
                             Text(group.key.formatted(.dateTime.month(.wide).year().locale(Locale(identifier: "de_DE"))))
-                                .font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.ink2)
+                                .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
                             Spacer()
                             Text(CardQueries.openTotal(group.cards).euro)
-                                .font(.system(size: 14)).monospacedDigit().foregroundStyle(Color.muted)
+                                .font(.scaled(14)).monospacedDigit().foregroundStyle(Color.muted)
                         }
                         .padding(.horizontal, 4)
                         VStack(spacing: 0) {

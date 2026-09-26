@@ -14,17 +14,17 @@ public enum CardQueries {
         }
     }
 
-    /// Offener Restwert aller wertbasierten, nicht abgelaufenen Gutscheine.
+    /// Offener Restwert aller wertbasierten, nicht abgelaufenen und nicht archivierten Gutscheine.
     public static func openTotal(_ cards: [GiftCard]) -> Double {
-        cards.filter { $0.kind.isValueBased && $0.daysLeft >= 0 }.reduce(0) { $0 + $1.balance }
+        cards.filter { $0.kind.isValueBased && $0.daysLeft >= 0 && !$0.isArchived }.reduce(0) { $0 + $1.balance }
     }
 
     public static func originalTotal(_ cards: [GiftCard]) -> Double {
-        cards.filter { $0.kind.isValueBased && $0.daysLeft >= 0 }.reduce(0) { $0 + $1.value }
+        cards.filter { $0.kind.isValueBased && $0.daysLeft >= 0 && !$0.isArchived }.reduce(0) { $0 + $1.value }
     }
 
     public static func expiringSoon(_ cards: [GiftCard], warnDays: Int) -> [GiftCard] {
-        cards.filter { $0.status(warnDays: warnDays) == .expiringSoon }.sorted { $0.expires < $1.expires }
+        cards.filter { !$0.isArchived && $0.status(warnDays: warnDays) == .expiringSoon }.sorted { $0.expires < $1.expires }
     }
 
     public static func bonLines(_ cards: [GiftCard]) -> [BonLine] {

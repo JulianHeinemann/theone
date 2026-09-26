@@ -116,6 +116,16 @@ final class Store {
         update(id) { $0.markRedeemed(store: storeName) }
     }
 
+    func setArchived(_ id: UUID, _ archived: Bool) {
+        update(id) { $0.archivedAt = archived ? .now : nil }
+        Task { await scheduleReminders() }
+    }
+
+    func setReminder(_ id: UUID, _ date: Date?) {
+        update(id) { $0.reminderAt = date }
+        Task { await scheduleReminders() }
+    }
+
     func setLocation(_ id: UUID, _ location: StorageLocation, note: String) {
         update(id) {
             $0.location = location
@@ -221,6 +231,16 @@ final class Store {
                 content.body = "\(c.headline) verfällt am \(c.expires.dayMonthYear). Jetzt einlösen."
                 content.sound = .default
                 let request = UNNotificationRequest(identifier: "\(c.id.uuidString)-\(days)", content: content,
+                                                    trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
+                try? await center.add(request)
+            }
+            if let custom = c.reminderAt, custom > .now {
+                let content = UNMutableNotificationContent()
+                content.title = "\(c.name): deine Erinnerung"
+                content.body = "\(c.headline) übrig, gültig bis \(c.expires.dayMonthYear)."
+                content.sound = .default
+                let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: custom)
+                let request = UNNotificationRequest(identifier: "\(c.id.uuidString)-custom", content: content,
                                                     trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
                 try? await center.add(request)
             }

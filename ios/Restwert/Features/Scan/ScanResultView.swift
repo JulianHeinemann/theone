@@ -24,13 +24,13 @@ struct ScanResultView: View {
                 HStack(spacing: 14) {
                     MerchantMark(merchantID: draft.merchantID, name: merchant?.name ?? "?")
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Erkannter Gutschein").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted)
-                        Text(merchant?.name ?? "Shop nicht erkannt").font(.system(size: 19, weight: .bold))
+                        Text("Erkannter Gutschein").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
+                        Text(merchant?.name ?? "Shop nicht erkannt").font(.scaled(19, weight: .bold))
                     }
                     Spacer()
                     if outcome.usedAppleIntelligence {
                         Image(systemName: "apple.intelligence")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.scaled(18, weight: .semibold))
                             .symbolRenderingMode(.multicolor)
                             .symbolEffect(.bounce, value: revealed)
                             .accessibilityLabel("Mit Apple Intelligence gelesen")
@@ -54,11 +54,11 @@ struct ScanResultView: View {
             .padding(18).cardSurface(radius: 28)
 
             VStack(alignment: .leading, spacing: 10) {
-                Label("Echtheits-Hinweis", systemImage: "checkmark.shield").font(.system(size: 17, weight: .bold))
+                Label("Echtheits-Hinweis", systemImage: "checkmark.shield").font(.scaled(17, weight: .bold))
                 ForEach(checks(draft: draft, merchant: merchant)) { check in
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: icon(check.level)).foregroundStyle(tint(check.level))
-                        Text(check.text).font(.system(size: 14)).foregroundStyle(Color.ink2)
+                        Text(check.text).font(.scaled(14)).foregroundStyle(Color.ink2)
                     }
                 }
             }
@@ -74,8 +74,8 @@ struct ScanResultView: View {
 
     private func cell(_ label: String, _ value: String, index: Int) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.system(size: 12)).foregroundStyle(Color.muted)
-            Text(value).font(.system(size: 15, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
+            Text(label).font(.scaled(12)).foregroundStyle(Color.muted)
+            Text(value).font(.scaled(15, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
         }
         .padding(12).frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.fill, in: .rect(cornerRadius: 16, style: .continuous))

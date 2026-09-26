@@ -64,7 +64,7 @@ struct SettingsView: View {
             } header: {
                 Text("So funktioniert Restwert")
             }
-            .font(.system(size: 14))
+            .font(.scaled(14))
             .foregroundStyle(Color.ink2)
 
             Section {
@@ -112,8 +112,8 @@ struct SettingsView: View {
     private func settingLabel(_ title: String, _ subtitle: String?, _ icon: String) -> some View {
         Label {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 16, weight: .semibold))
-                if let subtitle { Text(subtitle).font(.system(size: 13)).foregroundStyle(Color.muted) }
+                Text(title).font(.scaled(16, weight: .semibold))
+                if let subtitle { Text(subtitle).font(.scaled(13)).foregroundStyle(Color.muted) }
             }
         } icon: {
             Image(systemName: icon).foregroundStyle(Color.ink)
@@ -125,11 +125,11 @@ struct SettingsView: View {
         if let user = account.user {
             HStack(spacing: 14) {
                 Text((user.name.isEmpty ? user.email : user.name).initials)
-                    .font(.system(size: 16, weight: .heavy)).foregroundStyle(Color.ink)
+                    .font(.scaled(16, weight: .heavy)).foregroundStyle(Color.ink)
                     .frame(width: 48, height: 48).background(Color.brandYellow, in: .circle)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(user.name.isEmpty ? "Dein Konto" : user.name).font(.system(size: 17, weight: .bold))
-                    Text(user.email).font(.system(size: 13)).foregroundStyle(Color.muted)
+                    Text(user.name.isEmpty ? "Dein Konto" : user.name).font(.scaled(17, weight: .bold))
+                    Text(user.email).font(.scaled(13)).foregroundStyle(Color.muted)
                 }
             }
             HStack(spacing: 8) {
@@ -147,7 +147,7 @@ struct SettingsView: View {
                          ?? "Noch nicht synchronisiert")
                 }
             }
-            .font(.system(size: 13.5)).foregroundStyle(Color.ink2)
+            .font(.scaled(13.5)).foregroundStyle(Color.ink2)
             .animation(.smooth, value: account.syncState)
             Button("Jetzt synchronisieren", systemImage: "arrow.triangle.2.circlepath") { Task { await account.syncNow() } }
                 .foregroundStyle(Color.ink)
@@ -155,21 +155,21 @@ struct SettingsView: View {
                 .foregroundStyle(Color.ink)
             Button("Konto löschen", systemImage: "person.crop.circle.badge.xmark", role: .destructive) { confirmDeleteAccount = true }
             if let accountError {
-                Text(accountError).font(.system(size: 13)).foregroundStyle(Color.bad)
+                Text(accountError).font(.scaled(13)).foregroundStyle(Color.bad)
             }
         } else {
             HStack(spacing: 14) {
-                Image(systemName: "iphone").font(.system(size: 20, weight: .semibold))
+                Image(systemName: "iphone").font(.scaled(20, weight: .semibold))
                     .frame(width: 48, height: 48).background(Color.fill, in: .circle)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Deine Daten bleiben auf diesem iPhone").font(.system(size: 16, weight: .semibold))
-                    Text("Kein Konto nötig. Nichts wird hochgeladen.").font(.system(size: 14)).foregroundStyle(Color.ink2)
+                    Text("Deine Daten bleiben auf diesem iPhone").font(.scaled(16, weight: .semibold))
+                    Text("Kein Konto nötig. Nichts wird hochgeladen.").font(.scaled(14)).foregroundStyle(Color.ink2)
                 }
             }
             Button { showAuth = true } label: {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Optional: Konto für mehrere Geräte").foregroundStyle(Color.ink)
-                    Text("Synchronisiert verschlüsselt, ohne Fotos und PINs").font(.system(size: 13)).foregroundStyle(Color.muted)
+                    Text("Synchronisiert verschlüsselt, ohne Fotos und PINs").font(.scaled(13)).foregroundStyle(Color.muted)
                 }
             }
         }

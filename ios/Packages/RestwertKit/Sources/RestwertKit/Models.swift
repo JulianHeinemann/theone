@@ -258,6 +258,10 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     public var history: [Redemption]
     /// Letzte Änderung, entscheidet beim Sync, welche Version gewinnt.
     public var modifiedAt: Date
+    /// Aus der Liste ausgeblendet, bleibt aber mit Verlauf erhalten.
+    public var archivedAt: Date?
+    /// Eigene Erinnerung nur für diesen Gutschein, zusätzlich zu den allgemeinen.
+    public var reminderAt: Date?
 
     public init(id: UUID = UUID(), kind: VoucherKind = .giftCard, merchantID: String, customName: String = "", number: String,
                 format: CodeFormat, pin: String = "", value: Double, balance: Double, percent: Double? = nil,
@@ -287,7 +291,8 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     }
 
     public var isOpen: Bool { redeemedAt == nil && (!kind.isValueBased || balance > 0) }
-    public var isActive: Bool { isOpen && daysLeft >= 0 }
+    public var isActive: Bool { isOpen && daysLeft >= 0 && archivedAt == nil }
+    public var isArchived: Bool { archivedAt != nil }
 
     public var merchant: Merchant { Merchant.byID[merchantID] ?? .other }
 
@@ -334,7 +339,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case id, kind, merchantID, customName, number, format, pin, value, balance, percent, received, expires
-        case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt
+        case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt, archivedAt, reminderAt
     }
 
     /// Tolerantes Dekodieren, damit ältere Speicherstände nach Updates lesbar bleiben.
@@ -359,6 +364,8 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
         isExample = try c.decodeIfPresent(Bool.self, forKey: .isExample) ?? false
         history = try c.decodeIfPresent([Redemption].self, forKey: .history) ?? []
         modifiedAt = try c.decodeIfPresent(Date.self, forKey: .modifiedAt) ?? received
+        archivedAt = try c.decodeIfPresent(Date.self, forKey: .archivedAt)
+        reminderAt = try c.decodeIfPresent(Date.self, forKey: .reminderAt)
     }
 }
 

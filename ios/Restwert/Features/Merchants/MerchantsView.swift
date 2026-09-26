@@ -29,12 +29,12 @@ struct MerchantsView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 10) {
                 Text("Wo du Gutscheine am Handy vorzeigen kannst und wo du die Karte brauchst.")
-                    .font(.system(size: 15)).foregroundStyle(Color.ink2)
+                    .font(.scaled(15)).foregroundStyle(Color.ink2)
                 filters
                 if !mine.isEmpty {
-                    Text("Deine Händler").font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 4)
+                    Text("Deine Händler").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 4)
                     ForEach(mine) { row($0) }
-                    Text("Alle Händler").font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 8)
+                    Text("Alle Händler").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 8)
                 }
                 ForEach(items) { merchant in
                     row(merchant)
@@ -68,7 +68,7 @@ struct MerchantsView: View {
 
     private func segment(_ title: String, _ on: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.system(size: 14.5, weight: .semibold))
+            Text(title).font(.scaled(14.5, weight: .semibold))
                 .foregroundStyle(Color.ink)
                 .padding(.horizontal, 16).padding(.vertical, 10)
         }
@@ -84,23 +84,23 @@ struct MerchantsView: View {
             MerchantMark(merchantID: m.id, name: m.name)
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
-                    Text(m.name).font(.system(size: 16, weight: .semibold))
+                    Text(m.name).font(.scaled(16, weight: .semibold))
                     Spacer(minLength: 4)
                     if !mine.isEmpty {
-                        Text("Selbst getestet \(ok)/\(mine.count)").font(.system(size: 12, weight: .medium))
+                        Text("Selbst getestet \(ok)/\(mine.count)").font(.scaled(12, weight: .medium))
                             .foregroundStyle(good ? Color.good : Color.bad)
                     }
                 }
                 Label(m.category.label, systemImage: m.category.symbol)
-                    .font(.system(size: 13, weight: .medium)).foregroundStyle(m.category.tint)
-                Text(m.tip).font(.system(size: 13.5)).foregroundStyle(Color.ink2)
+                    .font(.scaled(13, weight: .medium)).foregroundStyle(m.category.tint)
+                Text(m.tip).font(.scaled(13.5)).foregroundStyle(Color.ink2)
                 if let url = m.balanceURL, let label = m.balanceCheck.linkLabel {
                     Link(destination: url) {
-                        Label(label, systemImage: "arrow.up.right").font(.system(size: 13, weight: .medium))
+                        Label(label, systemImage: "arrow.up.right").font(.scaled(13, weight: .medium))
                     }
                     .foregroundStyle(Color.ink)
                 } else {
-                    Text("Guthaben nur an der Kasse").font(.system(size: 13)).foregroundStyle(Color.muted)
+                    Text("Guthaben nur an der Kasse").font(.scaled(13)).foregroundStyle(Color.muted)
                 }
             }
             Spacer(minLength: 0)

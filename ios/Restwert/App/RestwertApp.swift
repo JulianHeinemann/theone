@@ -82,6 +82,7 @@ extension View {
 // MARK: - Wurzel
 
 struct RootView: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     @AppStorage("onboarded") private var onboarded = false
     @AppStorage("authDecided") private var authDecided = false
 
@@ -97,6 +98,8 @@ struct RootView: View {
                 .transition(.push(from: .trailing))
             } else {
                 MainTabView()
+                    // Schriftgrößen werden beim Aufbau berechnet; bei geänderter Textgröße neu aufbauen.
+                    .id(typeSize)
                     .transition(.blurReplace)
             }
         }

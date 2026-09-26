@@ -48,12 +48,12 @@ struct BonView: View {
 
                 NavigationLink(value: Route.tests) {
                     HStack {
-                        Image(systemName: "checkmark.seal").font(.system(size: 18, weight: .semibold))
+                        Image(systemName: "checkmark.seal").font(.scaled(18, weight: .semibold))
                             .frame(width: 42, height: 42).background(Color.fill, in: .rect(cornerRadius: 12))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Kassentests").font(.system(size: 16, weight: .semibold))
+                            Text("Kassentests").font(.scaled(16, weight: .semibold))
                             Text("\(store.tests.filter(\.success).count) von \(store.tests.count) Kassen haben das Handy akzeptiert")
-                                .font(.system(size: 13)).foregroundStyle(Color.muted)
+                                .font(.scaled(13)).foregroundStyle(Color.muted)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer()
@@ -72,13 +72,13 @@ struct BonView: View {
 
     private func statTile(_ label: String, _ value: Double, _ icon: String, _ tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(value.euro).font(.system(size: 24, weight: .heavy)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
+            Text(value.euro).font(.scaled(24, weight: .heavy)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
                 .contentTransition(.numericText(value: value))
             HStack(spacing: 6) {
                 Text(label)
                 Image(systemName: icon).foregroundStyle(tint)
             }
-            .font(.system(size: 13.5)).foregroundStyle(Color.muted)
+            .font(.scaled(13.5)).foregroundStyle(Color.muted)
         }
         .padding(16).frame(maxWidth: .infinity, alignment: .leading).cardSurface(radius: 24)
     }
@@ -87,24 +87,24 @@ struct BonView: View {
         ReceiptPaper {
             VStack(alignment: .leading, spacing: 10) {
                 VStack(spacing: 4) {
-                    Text("RESTWERT").font(.system(size: 22, weight: .heavy, design: .monospaced)).kerning(3)
-                    Text("EINLÖSUNGEN · \(period.rawValue.uppercased())").font(.system(size: 11, design: .monospaced))
+                    Text("RESTWERT").font(.scaled(22, weight: .heavy, design: .monospaced)).kerning(3)
+                    Text("EINLÖSUNGEN · \(period.rawValue.uppercased())").font(.scaled(11, design: .monospaced))
                         .foregroundStyle(Color.muted)
                         .contentTransition(.interpolate)
-                    Text(Date.now.formatted(date: .numeric, time: .shortened)).font(.system(size: 11, design: .monospaced))
+                    Text(Date.now.formatted(date: .numeric, time: .shortened)).font(.scaled(11, design: .monospaced))
                         .foregroundStyle(Color.muted)
                 }
                 .frame(maxWidth: .infinity)
                 DashedRule()
                 if days.isEmpty {
                     Text("NOCH KEINE POSTEN\nZieh einen Einkauf ab oder mach einen Kassentest.")
-                        .font(.system(size: 12.5, design: .monospaced)).foregroundStyle(Color.muted)
+                        .font(.scaled(12.5, design: .monospaced)).foregroundStyle(Color.muted)
                         .multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.vertical, 12)
                 }
                 ForEach(days, id: \.day) { day in
                     Text(day.day.formatted(.dateTime.weekday(.abbreviated).day().month(.twoDigits).year()
                         .locale(Locale(identifier: "de_DE"))).uppercased())
-                        .font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(Color.muted)
+                        .font(.scaled(11, weight: .bold, design: .monospaced)).foregroundStyle(Color.muted)
                     ForEach(day.lines) { line in
                         NavigationLink(value: Route.card(line.cardID)) { lineRow(line) }
                             .buttonStyle(.plain)
@@ -113,9 +113,9 @@ struct BonView: View {
                 }
                 DashedRule()
                 HStack {
-                    Text("SUMME").font(.system(size: 16, weight: .heavy, design: .monospaced))
+                    Text("SUMME").font(.scaled(16, weight: .heavy, design: .monospaced))
                     Spacer()
-                    Text(sum.euro).font(.system(size: 16, weight: .heavy, design: .monospaced))
+                    Text(sum.euro).font(.scaled(16, weight: .heavy, design: .monospaced))
                         .contentTransition(.numericText(value: sum))
                 }
                 HStack {
@@ -123,7 +123,7 @@ struct BonView: View {
                     Spacer()
                     Text("\(lines.count)").contentTransition(.numericText())
                 }
-                .font(.system(size: 12, design: .monospaced))
+                .font(.scaled(12, design: .monospaced))
                 .foregroundStyle(Color.muted)
             }
         }
@@ -133,14 +133,14 @@ struct BonView: View {
     private func lineRow(_ line: BonLine) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(line.cardName.uppercased()).font(.system(size: 14, weight: .bold, design: .monospaced))
+                Text(line.cardName.uppercased()).font(.scaled(14, weight: .bold, design: .monospaced))
                 Text([line.redemption.store, line.redemption.note, "Rest \(line.redemption.balanceAfter.euro)"]
                     .filter { !$0.isEmpty }.joined(separator: " · "))
-                    .font(.system(size: 11.5, design: .monospaced)).foregroundStyle(Color.muted)
+                    .font(.scaled(11.5, design: .monospaced)).foregroundStyle(Color.muted)
             }
             Spacer()
             Text(line.redemption.amount > 0 ? "−" + line.redemption.amount.euro : "✓")
-                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                .font(.scaled(14, weight: .bold, design: .monospaced))
         }
         .foregroundStyle(Color.ink)
         .contentShape(.rect)
@@ -161,10 +161,10 @@ struct TestsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Quote").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color.ink2)
-                    Text("\(all.isEmpty ? 0 : ok * 100 / all.count) %").font(.system(size: 48, weight: .heavy))
+                    Text("Quote").font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink2)
+                    Text("\(all.isEmpty ? 0 : ok * 100 / all.count) %").font(.scaled(48, weight: .heavy))
                         .contentTransition(.numericText())
-                    Text("Kassen, die den Barcode vom Handy angenommen haben").font(.system(size: 13)).foregroundStyle(Color.ink2)
+                    Text("Kassen, die den Barcode vom Handy angenommen haben").font(.scaled(13)).foregroundStyle(Color.ink2)
                 }
                 .padding(18).frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.brandYellow.gradient, in: .rect(cornerRadius: 28, style: .continuous))
@@ -179,17 +179,17 @@ struct TestsView: View {
                 }
                 ForEach(shown) { test in
                     HStack(spacing: 14) {
-                        Image(systemName: test.success ? "checkmark" : "xmark").font(.system(size: 17, weight: .bold))
+                        Image(systemName: test.success ? "checkmark" : "xmark").font(.scaled(17, weight: .bold))
                             .foregroundStyle(test.success ? Color.good : Color.bad)
                             .frame(width: 46, height: 46)
                             .background(test.success ? Color.goodSoft : Color.badSoft, in: .rect(cornerRadius: 14, style: .continuous))
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 6) {
-                                Text(test.merchantName).font(.system(size: 16, weight: .bold))
+                                Text(test.merchantName).font(.scaled(16, weight: .bold))
                                 if test.isExample { Chip(text: "Beispiel") }
                             }
                             Text([test.date.dayMonthYear, test.format.label, test.store, test.note].filter { !$0.isEmpty }.joined(separator: " · "))
-                                .font(.system(size: 13)).foregroundStyle(Color.muted)
+                                .font(.scaled(13)).foregroundStyle(Color.muted)
                         }
                         Spacer()
                     }

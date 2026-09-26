@@ -20,14 +20,14 @@ struct CheckoutView: View {
             if let card = store.card(cardID) {
                 VStack(spacing: 16) {
                     ticket(card)
-                    Text("Hat es geklappt?").font(.system(size: 24, weight: .heavy)).padding(.top, 8)
+                    Text("Hat es geklappt?").font(.scaled(24, weight: .heavy)).padding(.top, 8)
                     HStack(spacing: 10) {
                         choice(true, "Geklappt", "Betrag eintragen", "checkmark", .good, .goodSoft)
                         choice(false, "Abgelehnt", "nur notieren", "xmark", .bad, .badSoft)
                     }
                     if result == false {
                         Text("Abgelehnt ändert dein Guthaben nicht. Die Notiz hilft dir beim nächsten Mal.")
-                            .font(.system(size: 14)).foregroundStyle(Color.ink2)
+                            .font(.scaled(14)).foregroundStyle(Color.ink2)
                     }
                     if let result {
                         VStack(spacing: 8) {
@@ -76,9 +76,9 @@ struct CheckoutView: View {
             HStack(spacing: 14) {
                 MerchantMark(card: card)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(card.name).font(.system(size: 19, weight: .bold))
+                    Text(card.name).font(.scaled(19, weight: .bold))
                     Text(card.kind.isValueBased ? "Restguthaben \(card.balance.euro)" : card.headline)
-                        .font(.system(size: 14)).foregroundStyle(Color.muted)
+                        .font(.scaled(14)).foregroundStyle(Color.muted)
                 }
                 Spacer()
             }
@@ -87,21 +87,21 @@ struct CheckoutView: View {
             VStack(spacing: 10) {
                 BarcodeView(number: card.number, format: card.format, height: 150)
                 if card.format != .text {
-                    Text(card.number.grouped).font(.system(size: 19, weight: .bold)).kerning(2.4)
+                    Text(card.number.grouped).font(.scaled(19, weight: .bold)).kerning(2.4)
                 }
                 Label("Helligkeit auf Maximum", systemImage: "sun.max.fill")
-                    .font(.system(size: 13)).foregroundStyle(Color.ink2)
+                    .font(.scaled(13)).foregroundStyle(Color.ink2)
                     .symbolEffect(.pulse)
                 if card.merchantID != Merchant.other.id {
                     Label(card.merchant.tip, systemImage: card.merchant.category.symbol)
-                        .font(.system(size: 14)).foregroundStyle(Color.ink2)
+                        .font(.scaled(14)).foregroundStyle(Color.ink2)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(12)
                         .background(Color.fill, in: .rect(cornerRadius: 14, style: .continuous))
                 }
                 if !card.pin.isEmpty {
                     Button(showPin ? "PIN \(card.pin)" : "PIN anzeigen") { withAnimation(.snappy) { showPin = true } }
-                        .font(.system(size: 15, weight: .bold, design: .monospaced))
+                        .font(.scaled(15, weight: .bold, design: .monospaced))
                         .buttonStyle(.glass)
                 }
             }
@@ -113,12 +113,12 @@ struct CheckoutView: View {
     private func choice(_ value: Bool, _ title: String, _ subtitle: String, _ icon: String, _ fg: Color, _ bg: Color) -> some View {
         Button { withAnimation(.snappy) { result = value } } label: {
             HStack(spacing: 12) {
-                Image(systemName: icon).font(.system(size: 17, weight: .bold)).foregroundStyle(fg)
+                Image(systemName: icon).font(.scaled(17, weight: .bold)).foregroundStyle(fg)
                     .frame(width: 40, height: 40).background(bg, in: .rect(cornerRadius: 12, style: .continuous))
                     .symbolEffect(.bounce, value: result == value)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(title).font(.system(size: 16, weight: .bold)).foregroundStyle(Color.ink)
-                    Text(subtitle).font(.system(size: 13)).foregroundStyle(Color.ink2)
+                    Text(title).font(.scaled(16, weight: .bold)).foregroundStyle(Color.ink)
+                    Text(subtitle).font(.scaled(13)).foregroundStyle(Color.ink2)
                 }
                 Spacer(minLength: 0)
             }
@@ -157,26 +157,26 @@ struct KeypadView: View {
             HStack(spacing: 14) {
                 MerchantMark(card: card)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(card.name).font(.system(size: 16, weight: .bold))
-                    Text("\(card.balance.euro) verfügbar").font(.system(size: 13)).foregroundStyle(Color.muted)
+                    Text(card.name).font(.scaled(16, weight: .bold))
+                    Text("\(card.balance.euro) verfügbar").font(.scaled(13)).foregroundStyle(Color.muted)
                 }
                 Spacer()
             }
             .padding(12).cardSurface(radius: 20).padding(.horizontal, 16).padding(.top, 8)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Betrag eingeben").font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.muted)
+                Text("Betrag eingeben").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
                 HStack(spacing: 4) {
-                    Text(input.isEmpty ? "0" : input).font(.system(size: 56, weight: .heavy)).monospacedDigit()
+                    Text(input.isEmpty ? "0" : input).font(.scaled(56, weight: .heavy)).monospacedDigit()
                         .contentTransition(.numericText())
                     Rectangle().fill(Color.brandYellow).frame(width: 3, height: 50)
                         .phaseAnimator([1.0, 0.2]) { content, opacity in content.opacity(opacity) }
-                    Text(" €").font(.system(size: 56, weight: .heavy)).foregroundStyle(Color.muted)
+                    Text(" €").font(.scaled(56, weight: .heavy)).foregroundStyle(Color.muted)
                 }
                 .lineLimit(1).minimumScaleFactor(0.5)
                 .modifier(Shake(animatableData: CGFloat(rejected)))
                 Divider()
-                Text(hint(card)).font(.system(size: 15, weight: value > card.balance ? .semibold : .regular))
+                Text(hint(card)).font(.scaled(15, weight: value > card.balance ? .semibold : .regular))
                     .foregroundStyle(value > card.balance ? Color.warn : Color.ink2)
             }
             .padding(.horizontal, 18).padding(.top, 22)
@@ -249,7 +249,7 @@ struct KeypadView: View {
 
     private func chip(_ title: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.system(size: 16, weight: .bold)).foregroundStyle(Color.ink)
+            Text(title).font(.scaled(16, weight: .bold)).foregroundStyle(Color.ink)
                 .padding(.horizontal, 18).padding(.vertical, 12)
         }
         .buttonStyle(.plain)
