@@ -60,6 +60,11 @@ final class Router {
     }
 
     func openImport(_ url: URL) {
+        // restwert://card/<id> aus dem Widget öffnet den Gutschein.
+        if url.scheme == "restwert" {
+            if url.host() == "card", let id = UUID(uuidString: url.lastPathComponent) { showCard(id) } else { tab = .home }
+            return
+        }
         pendingImport = url
         tab = .scan
     }
@@ -192,8 +197,38 @@ extension Router {
         case "merchants": tab = .merchants
         case "settings": tab = .settings
         case "scan": tab = .scan
+        case "pending":
+            if let sample {
+                store.setPending(sample.id, true)
+                homePath = [.card(sample.id)]
+            }
+        case "paper", "paperCheckout", "newForm":
+            if screen == "newForm" { tab = .scan; return }
+            let card = Self.paperExample()
+            store.upsert(card)
+            homePath = [screen == "paper" ? .card(card.id) : .checkout(card.id)]
         default: break
         }
+    }
+
+    /// Papiergutschein ohne Code mit gezeichnetem Foto, nur für Screenshots.
+    static func paperExample() -> GiftCard {
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 900, height: 560)).image { ctx in
+            UIColor(red: 0.98, green: 0.95, blue: 0.88, alpha: 1).setFill()
+            ctx.fill(CGRect(x: 0, y: 0, width: 900, height: 560))
+            let title: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 64, weight: .heavy), .foregroundColor: UIColor.brown]
+            let body: [NSAttributedString.Key: Any] = [.font: UIFont.italicSystemFont(ofSize: 40), .foregroundColor: UIColor.darkGray]
+            ("GUTSCHEIN" as NSString).draw(at: CGPoint(x: 60, y: 60), withAttributes: title)
+            ("Café am Markt" as NSString).draw(at: CGPoint(x: 60, y: 170), withAttributes: body)
+            ("über 20,– Euro" as NSString).draw(at: CGPoint(x: 60, y: 240), withAttributes: body)
+            ("gültig bis 31.12.2027   – Stempel –" as NSString).draw(at: CGPoint(x: 60, y: 420), withAttributes: body)
+        }
+        var card = GiftCard(kind: .valueVoucher, merchantID: "other", customName: "Café am Markt", number: "", format: .text,
+                            value: 20, balance: 20, received: .now,
+                            expires: Calendar.current.date(from: DateComponents(year: 2027, month: 12, day: 31)) ?? .now)
+        card.photo = image.jpegData(compressionQuality: 0.8)
+        card.isExample = true
+        return card
     }
 }
 #endif

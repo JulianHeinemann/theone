@@ -38,11 +38,13 @@ final class Store {
         guard let data = try? Data(contentsOf: fileURL),
               let snap = try? JSONDecoder().decode(Snapshot.self, from: data) else {
             seedExamples()
+            WidgetBridge.update(cards: cards, total: total)
             return
         }
         cards = snap.cards
         tests = snap.tests
         deletedIDs = Set(snap.deleted ?? [])
+        WidgetBridge.update(cards: cards, total: total)
     }
 
     private func save(notify: Bool = true) {
@@ -57,6 +59,7 @@ final class Store {
             print("Restwert: Speichern fehlgeschlagen:", error)
         }
         Task { await scheduleReminders() }
+        WidgetBridge.update(cards: cards, total: total)
         if notify { onChange?() }
     }
 
