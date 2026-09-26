@@ -1,0 +1,38 @@
+name: Simulator
+
+# Startet Restwert im iOS-Simulator und speichert Screenshots, Videos und die Simulator-App als Artefakt.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: ["ios/**", ".github/workflows/simulator.yml"]
+
+concurrency:
+  group: simulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shots:
+    name: Screenshots im Simulator
+    runs-on: macos-26
+    defaults:
+      run:
+        working-directory: ios
+    steps:
+      - uses: actions/checkout@v4
+      - name: Neuestes Xcode wählen
+        run: |
+          XC="$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)"
+          sudo xcode-select -s "$XC"
+          xcodebuild -version
+      - name: Bauen, starten, fotografieren
+        run: bash scripts/simulator-shots.sh
+      - name: Ergebnisse hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-shots
+          path: |
+            ios/build/shots
+            ios/build/sim-build.log
+          if-no-files-found: warn
