@@ -345,7 +345,12 @@ struct CardFormView: View {
 
     private func apply(_ o: ScanOutcome) {
         let d = o.draft
-        if let id = d.merchantID { merchantID = id }
+        if let id = d.merchantID {
+            merchantID = id
+        } else if let name = d.customName {
+            // Laden, den die Texterkennung gelesen hat, der aber nicht in der Händlerliste steht.
+            merchantID = "other"; customName = name; shopText = name
+        }
         if let p = d.percent {
             kind = .discountCode
             percentText = p.formatted()
