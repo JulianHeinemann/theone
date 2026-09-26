@@ -7,10 +7,27 @@ struct MerchantsView: View {
     @State private var query = ""
     @State private var category: MerchantCategory?
 
+    private var trimmedQuery: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    /// Nur Buchstaben und Ziffern, ohne Akzente: „Müller“ → „muller“, „H&M“ → „hm“.
+    private static func folded(_ s: String) -> String {
+        s.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "de_DE"))
+            .filter { $0.isLetter || $0.isNumber }
+    }
+
+    /// Tolerant: ohne Akzente und Sonderzeichen, zusätzlich über die ID („mueller“ findet Müller).
+    private func matches(_ m: Merchant) -> Bool {
+        let q = trimmedQuery
+        guard !q.isEmpty else { return true }
+        if m.name.range(of: q, options: [.caseInsensitive, .diacriticInsensitive]) != nil { return true }
+        let f = Self.folded(q)
+        return !f.isEmpty && (Self.folded(m.name).contains(f) || Self.folded(m.id).contains(f))
+    }
+
     private var items: [Merchant] {
         Merchant.all
             .filter { category == nil || $0.category == category }
-            .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
+            .filter(matches)
             .sorted {
                 let a = MerchantCategory.allCases.firstIndex(of: $0.category) ?? 0
                 let b = MerchantCategory.allCases.firstIndex(of: $1.category) ?? 0
@@ -20,7 +37,7 @@ struct MerchantsView: View {
 
     /// Händler, von denen man selbst Karten hat, zuerst. Nur ohne Filter und Suche, sonst doppelt.
     private var mine: [Merchant] {
-        guard category == nil, query.isEmpty else { return [] }
+        guard category == nil, trimmedQuery.isEmpty else { return [] }
         let ids = Set(store.cards.filter(\.isActive).map(\.merchantID))
         return Merchant.all.filter { ids.contains($0.id) }.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
     }
@@ -40,7 +57,7 @@ struct MerchantsView: View {
                     row(merchant)
                 }
                 if items.isEmpty {
-                    ContentUnavailableView.search(text: query)
+                    ContentUnavailableView.search(text: trimmedQuery)
                 }
             }
             .padding(.horizontal, 16).padding(.bottom, 30)
@@ -74,12 +91,14 @@ struct MerchantsView: View {
         }
         .buttonStyle(.plain)
         .glassEffect(on ? .regular.tint(Color.ink).interactive() : .regular.interactive(), in: .capsule)
+        .accessibilityAddTraits(on ? .isSelected : [])
     }
 
     private func row(_ m: Merchant) -> some View {
         let mine = store.tests.filter { $0.merchantID == m.id && !$0.isExample }
         let ok = mine.filter(\.success).count
-        let good = ok * 2 >= mine.count
+        // Klare Mehrheit grün, klare Minderheit rot, Gleichstand neutral.
+        let tint: Color = ok * 2 > mine.count ? .good : ok * 2 < mine.count ? .bad : .ink2
         return HStack(alignment: .top, spacing: 14) {
             MerchantMark(merchantID: m.id, name: m.name)
             VStack(alignment: .leading, spacing: 4) {
@@ -88,7 +107,7 @@ struct MerchantsView: View {
                     Spacer(minLength: 4)
                     if !mine.isEmpty {
                         Text("Selbst getestet \(ok)/\(mine.count)").font(.scaled(12, weight: .medium))
-                            .foregroundStyle(good ? Color.good : Color.bad)
+                            .foregroundStyle(tint)
                     }
                 }
                 Label(m.category.label, systemImage: m.category.symbol)

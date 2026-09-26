@@ -29,7 +29,9 @@ struct BonView: View {
         return groups.keys.sorted(by: >).map { day in (day, groups[day] ?? []) }
     }
 
-    private var sum: Double { lines.reduce(0) { $0 + $1.redemption.amount } }
+    /// Nur echte Abzüge. Aufladungen und Korrekturen nach oben sind als negative Beträge gespeichert und stehen extra.
+    private var sum: Double { lines.reduce(0) { $0 + max(0, $1.redemption.amount) } }
+    private var topUps: Double { lines.reduce(0) { $0 + max(0, -$1.redemption.amount) } }
 
     var body: some View {
         ScrollView {
@@ -48,7 +50,8 @@ struct BonView: View {
                             .frame(width: 42, height: 42).background(Color.fill, in: .rect(cornerRadius: 12))
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Kassentests").font(.scaled(16, weight: .semibold))
-                            Text("\(store.tests.filter(\.success).count) von \(store.tests.count) Kassen haben das Handy akzeptiert")
+                            Text(store.tests.isEmpty ? "Noch kein Kassentest – teste, ob die Kasse das Handy nimmt"
+                                 : "\(store.tests.filter(\.success).count) von \(store.tests.count) Kassen haben das Handy akzeptiert")
                                 .font(.scaled(13)).foregroundStyle(Color.muted)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -98,10 +101,23 @@ struct BonView: View {
                 }
                 DashedRule()
                 HStack {
-                    Text("SUMME").font(.scaled(16, weight: .heavy, design: .monospaced))
+                    Text("SUMME EINGELÖST").font(.scaled(16, weight: .heavy, design: .monospaced))
                     Spacer()
-                    Text(sum.euro).font(.scaled(16, weight: .heavy, design: .monospaced))
+                    Text(sum > 0 ? "−" + sum.euro : sum.euro).font(.scaled(16, weight: .heavy, design: .monospaced))
                         .contentTransition(.numericText(value: sum))
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Summe eingelöst \(sum.euro)")
+                if topUps > 0 {
+                    HStack {
+                        Text("AUFGELADEN/KORRIGIERT")
+                        Spacer()
+                        Text("+" + topUps.euro).contentTransition(.numericText(value: topUps))
+                    }
+                    .font(.scaled(12, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(Color.ink2)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Aufgeladen oder korrigiert \(topUps.euro)")
                 }
                 HStack {
                     Text("POSTEN")
@@ -119,10 +135,11 @@ struct BonView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(line.cardName.uppercased()).font(.scaled(14, weight: .bold, design: .monospaced))
-                // Händlername steht schon darüber, also nur die Filiale („Thalia Köln“ → „Köln“).
-                let place = line.redemption.store.hasPrefix(line.cardName + " ")
-                    ? String(line.redemption.store.dropFirst(line.cardName.count + 1)) : line.redemption.store
-                Text([place, line.redemption.note, "Rest \(line.redemption.balanceAfter.euro)"]
+                // Händlername steht schon darüber, also nur die Filiale („thalia Köln“ → „Köln“, „Thalia“ → nichts).
+                let place = Self.place(line.redemption.store, merchant: line.cardName)
+                // Rabattcodes haben keinen Rest; gelöschte Karten zeigen ihn weiter.
+                let showRest = store.card(line.cardID)?.kind.isValueBased ?? true
+                Text([place, line.redemption.note, showRest ? "Rest \(line.redemption.balanceAfter.euro)" : ""]
                     .filter { !$0.isEmpty }.joined(separator: " · "))
                     .font(.scaled(13, design: .monospaced)).foregroundStyle(Color.ink2)
             }
@@ -133,6 +150,18 @@ struct BonView: View {
         .foregroundStyle(Color.ink)
         .contentShape(.rect)
         .transition(.opacity.combined(with: .move(edge: .leading)))
+    }
+
+    /// Filiale ohne vorangestellten Händlernamen, unabhängig von Groß-/Kleinschreibung und Akzenten.
+    static func place(_ store: String, merchant: String) -> String {
+        let raw = store.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = merchant.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty,
+              let r = raw.range(of: name, options: [.caseInsensitive, .diacriticInsensitive, .anchored]) else { return raw }
+        let rest = raw[r.upperBound...]
+        // Nur abschneiden, wenn der Name allein steht oder ein Trenner folgt („Thalia Köln“, nicht „Thaliahaus“).
+        guard rest.isEmpty || rest.first?.isWhitespace == true || rest.first?.isPunctuation == true else { return raw }
+        return rest.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
     }
 }
 
@@ -151,7 +180,7 @@ struct TestsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("An der Kasse angenommen").font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink2)
                     // Unter 5 Tests ist eine Prozentzahl irreführend, dann in Worten.
-                    Text(all.count < 5 ? "\(ok) von \(all.count) Mal" : "\(ok * 100 / all.count) %")
+                    Text(all.isEmpty ? "Noch nicht getestet" : all.count < 5 ? "\(ok) von \(all.count) Mal" : "\(ok * 100 / all.count) %")
                         .font(.scaled(40, weight: .bold))
                         .contentTransition(.numericText())
                     Text("Wie oft Kassen den Barcode vom Handy genommen haben").font(.scaled(13)).foregroundStyle(Color.ink2)
@@ -164,8 +193,10 @@ struct TestsView: View {
                     Text("Abgelehnt").tag(2)
                 }
                 .pickerStyle(.segmented)
-                if shown.isEmpty {
+                if all.isEmpty {
                     Text("Noch keine Tests. Öffne einen Gutschein und tipp auf „An der Kasse zeigen“.").foregroundStyle(Color.muted)
+                } else if shown.isEmpty {
+                    Text(filter == 1 ? "Keine geklappten Tests." : "Keine abgelehnten Tests.").foregroundStyle(Color.muted)
                 }
                 ForEach(shown) { test in
                     HStack(spacing: 14) {
@@ -194,7 +225,9 @@ struct TestsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                ShareLink(item: exportText(all)) { Image(systemName: "square.and.arrow.up") }
+                // Exportiert, was angezeigt wird, ohne Beispiele (wie Backup und CSV).
+                ShareLink(item: exportText(shown.filter { !$0.isExample })) { Image(systemName: "square.and.arrow.up") }
+                    .disabled(!shown.contains { !$0.isExample })
             }
         }
     }

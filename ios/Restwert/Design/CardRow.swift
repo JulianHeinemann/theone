@@ -8,7 +8,10 @@ struct CardRow: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     private var dueText: (String, Color) {
-        switch card.status(warnDays: warnDays) {
+        let status = card.status(warnDays: warnDays)
+        // Archiviert, aber noch gültig: so anzeigen und ansagen. Eingelöst und abgelaufen behalten ihren Status.
+        if card.isArchived, status == .valid || status == .expiringSoon { return ("archiviert", .muted) }
+        return switch status {
         case .expiringSoon: (card.daysLeft == 0 ? "läuft heute ab" : card.daysLeft == 1 ? "läuft morgen ab" : "noch \(card.daysLeft) Tage", .warn)
         case .expired: ("abgelaufen", .bad)
         case .redeemed: ("eingelöst", .muted)
@@ -41,9 +44,10 @@ struct CardRow: View {
 
     /// Ein Satz für VoiceOver, z. B. „Thalia, 12,40 € von 25,00 €, bis 31.12.2028“.
     private var spoken: String {
-        let amount = card.kind.isValueBased ? "\(card.headline) von \(card.value.euro)" : "\(card.headline) Rabattcode"
+        let amount = card.kind.isValueBased ? "\(card.headline) von \(card.value.euro)" : card.headline == card.kind.label ? card.kind.label : "\(card.headline) \(card.kind.label)"
         let who = card.owner.isEmpty ? "" : ", für \(card.owner)"
-        return "\(card.name)\(who), \(amount), \(dueText.0)\(card.forGifting ? ", zum Verschenken" : "")"
+        let open = card.pendingSince != nil && card.isActive ? ", Betrag offen" : ""
+        return "\(card.name)\(who)\(open), \(amount), \(dueText.0)\(card.forGifting ? ", zum Verschenken" : "")"
     }
 
     private var nameBlock: some View {
@@ -95,7 +99,7 @@ struct CardRow: View {
                     .lineLimit(1).fixedSize()
             } else {
                 // Rabattcodes sind kein Geld: als Etikett statt in der Euro-Spalte.
-                Label(card.percent != nil ? "\(card.headline) Rabatt" : card.kind.label, systemImage: "tag")
+                Label((card.percent ?? 0) > 0 || card.value > 0 ? "\(card.headline) Rabatt" : card.kind.label, systemImage: "tag")
                     .font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink)
                     .padding(.horizontal, 10).padding(.vertical, 5)
                     .background(Color.fill, in: .capsule)
