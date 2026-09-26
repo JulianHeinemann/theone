@@ -17,6 +17,7 @@ struct CheckoutView: View {
     @State private var showPin = false
     @State private var oldBrightness: CGFloat?
     @State private var showFull = false
+    @Environment(\.scenePhase) private var scenePhase
     @State private var numberShown = false
     @AppStorage("maskNumber") private var maskNumber = false
 
@@ -83,10 +84,21 @@ struct CheckoutView: View {
                 screen.brightness = 1
             }
         }
-        .onDisappear {
-            UIApplication.shared.isIdleTimerDisabled = false
-            if let screen = currentScreen, let old = oldBrightness { screen.brightness = old }
+        .onDisappear { restoreScreen() }
+        // Beim Wechsel in eine andere App Helligkeit und Displaysperre sofort zurückgeben.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                UIApplication.shared.isIdleTimerDisabled = true
+                currentScreen?.brightness = 1
+            } else {
+                restoreScreen()
+            }
         }
+    }
+
+    private func restoreScreen() {
+        UIApplication.shared.isIdleTimerDisabled = false
+        if let screen = currentScreen, let old = oldBrightness { screen.brightness = old }
     }
 
     private var currentScreen: UIScreen? {

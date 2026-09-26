@@ -69,7 +69,7 @@ struct SettingsView: View {
             }
 
             Section {
-                Label("Gespeichert auf diesem iPhone mit Dateischutz des Systems. Mit Konto werden Gutscheine verschlüsselt übertragen (HTTPS), ohne Fotos und PINs.", systemImage: "lock")
+                Label("Gespeichert auf diesem iPhone mit Dateischutz des Systems. Mit iCloud-Sync zusätzlich Ende-zu-Ende verschlüsselt in deinem eigenen iCloud, PINs nur im Schlüsselbund.", systemImage: "lock")
                 Label("Import: Live-Scan, Foto, PDF, E-Mail-Text oder in Mail „Teilen → Restwert“. Handschrift wird mitgelesen.", systemImage: "square.and.arrow.down")
                 if SmartExtractor.isAvailable {
                     Label("Apple Intelligence liest schwierige Gutscheine direkt auf dem Gerät.", systemImage: "apple.intelligence")
@@ -171,9 +171,11 @@ struct SettingsView: View {
             Image(systemName: inCloud ? "lock.icloud" : "iphone").font(.scaled(20, weight: .semibold))
                 .frame(width: 48, height: 48).background(Color.fill, in: .circle)
             VStack(alignment: .leading, spacing: 2) {
-                Text(inCloud ? "Sicher in deinem iCloud" : "Nur auf diesem iPhone").font(.scaled(16, weight: .semibold))
+                Text(inCloud ? "Sicher in deinem iCloud" : cloud.isEnabled ? "iCloud-Sync wartet" : "Nur auf diesem iPhone")
+                    .font(.scaled(16, weight: .semibold))
                 Text(inCloud ? "Ende-zu-Ende verschlüsselt, auf allen deinen Apple-Geräten."
-                             : "Nichts verlässt dein iPhone. Texterkennung läuft auf dem Gerät.")
+                     : cloud.isEnabled ? "Bis iCloud bereit ist, bleibt alles auf diesem iPhone."
+                     : "Nichts verlässt dein iPhone. Texterkennung läuft auf dem Gerät.")
                     .font(.scaled(14)).foregroundStyle(Color.ink2)
             }
         }
