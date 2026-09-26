@@ -47,7 +47,7 @@ struct CardRow: View {
         let amount = card.kind.isValueBased ? "\(card.headline) von \(card.value.euro)" : card.headline == card.kind.label ? card.kind.label : "\(card.headline) \(card.kind.label)"
         let who = card.owner.isEmpty ? "" : ", für \(card.owner)"
         let open = card.pendingSince != nil && card.isActive ? ", Betrag offen" : ""
-        return "\(card.name)\(who)\(open), \(amount), \(dueText.0)\(card.forGifting ? ", zum Verschenken" : "")"
+        return "\(card.isExample ? "Beispiel: " : "")\(card.name)\(who)\(open), \(amount), \(dueText.0)\(card.forGifting ? ", zum Verschenken" : "")"
     }
 
     private var nameBlock: some View {
@@ -55,6 +55,11 @@ struct CardRow: View {
         return VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 6) {
                 Text(card.name).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
+                if card.isExample {
+                    Text("Beispiel").font(.scaled(11, weight: .semibold)).foregroundStyle(Color.ink2)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Color.fill, in: .capsule)
+                }
                 if card.forGifting {
                     Image(systemName: "gift").font(.scaled(13)).foregroundStyle(Color.ink2)
                         .accessibilityLabel("zum Verschenken")

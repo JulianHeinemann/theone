@@ -61,6 +61,7 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 32) {
                 // Der Kopf beschreibt immer den ganzen Bestand, unabhängig von Filter und Suche.
                 TotalHeader(total: store.total, cards: store.activeCards.filter { !$0.forGifting }, soon: dueSoonAll.count)
+                if store.hasExamples && store.cards.allSatisfy(\.isExample) { exampleHint }
                 if showFilters { filterBar }
                 if store.cards.isEmpty {
                     EmptyState { router.tab = .scan }
@@ -111,6 +112,25 @@ struct HomeView: View {
         }
     }
 
+    /// Solange nur Beispielkarten da sind: deutlich sagen, dass die Summe nicht echt ist.
+    private var exampleHint: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Das sind Beispielkarten", systemImage: "sparkles").font(.scaled(16, weight: .semibold))
+            Text("Die Summe oben ist nur ein Beispiel. Leg deinen ersten Gutschein an, dann verschwinden sie.")
+                .font(.scaled(14)).foregroundStyle(Color.ink2)
+            HStack(spacing: 8) {
+                Button("Ersten Gutschein hinzufügen") { router.tab = .scan }.buttonStyle(.bordered).tint(Color.ink)
+                Button("Beispiele entfernen") { withAnimation(.smooth) { store.clearExamples() } }
+                    .buttonStyle(.borderless).foregroundStyle(Color.ink2)
+            }
+            .font(.scaled(14, weight: .semibold))
+        }
+        .foregroundStyle(Color.ink)
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+    }
+
     @ViewBuilder
     private func section(_ title: String, cards: [GiftCard], sortable: Bool = false) -> some View {
         if !cards.isEmpty {
@@ -124,11 +144,20 @@ struct HomeView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(cards.enumerated()), id: \.element.id) { i, c in
                         if i > 0 { Divider().padding(.leading, 72) }
-                        NavigationLink(value: Route.card(c.id)) {
-                            CardRow(card: c, warnDays: warnDays)
-                                .matchedTransitionSource(id: c.id, in: zoom)
+                        HStack(spacing: 0) {
+                            NavigationLink(value: Route.card(c.id)) {
+                                CardRow(card: c, warnDays: warnDays)
+                                    .matchedTransitionSource(id: c.id, in: zoom)
+                            }
+                            .buttonStyle(.plain)
+                            // Sichtbarer Weg zu Kasse, Bearbeiten, Archivieren, Entfernen (nicht nur langes Drücken).
+                            Menu { rowMenu(c) } label: {
+                                Image(systemName: "ellipsis").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                                    .frame(width: 36, height: 44).contentShape(.rect)
+                            }
+                            .accessibilityLabel("Aktionen für \(c.name)")
+                            .padding(.trailing, 6)
                         }
-                        .buttonStyle(.plain)
                         .contextMenu { rowMenu(c) }
                     }
                 }
