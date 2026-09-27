@@ -11,6 +11,15 @@ struct RestwertApp: App {
     @State private var router = Router()
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        #if DEBUG
+        // Nur für Tests: `-resetOnboarding YES` zeigt den Einstieg wieder, dauerhaft bis „Fertig“.
+        if UserDefaults.standard.bool(forKey: "resetOnboarding") {
+            UserDefaults.standard.set(false, forKey: "onboarded")
+        }
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -120,13 +129,15 @@ struct RootView: View {
                 OnboardingView { exit in
                     // Auch nach „Einführung ansehen“ nicht wieder in den Einstellungen landen.
                     router.homePath = []
-                    switch exit {
-                    case .browse: router.tab = .home
-                    case .add: router.tab = .scan
-                    case .scan: router.tab = .scan; router.scanIntent = .camera
-                    case .manual: router.tab = .scan; router.scanIntent = .manual
-                    }
+                    router.tab = .home
                     withAnimation(.smooth(duration: 0.5)) { onboarded = true }
+                    guard exit != .browse else { return }
+                    // Tab erst wechseln, wenn die Tab-Leiste steht – sonst übernimmt sie die Auswahl nicht.
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(550))
+                        router.scanIntent = exit == .scan ? .camera : exit == .manual ? .manual : nil
+                        router.tab = .scan
+                    }
                 }
                 .transition(.blurReplace)
             } else {

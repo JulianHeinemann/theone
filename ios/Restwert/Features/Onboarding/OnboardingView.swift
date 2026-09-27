@@ -50,6 +50,9 @@ struct OnboardingView: View {
             }
         }
         .frame(minHeight: Layout.tap)
+        .lineLimit(1)
+        // Kopfzeile wächst nur bis zu einer Größe, bei der Wortmarke und „Überspringen“ nebeneinander passen.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .padding(.horizontal, Layout.page).padding(.top, 8)
         .animation(.smooth, value: page)
     }
@@ -89,16 +92,16 @@ struct OnboardingView: View {
             default:
                 Button("Gutschein hinzufügen") { onFinish(.add) }.buttonStyle(.primary)
                 quiet("Erstmal umschauen") { onFinish(.browse) }
-                HStack(spacing: 4) {
-                    Text("Schon Gutscheine in iCloud?").foregroundStyle(Color.muted)
-                    Button("Wiederherstellen") {
-                        cloud.isEnabled = true
-                        onFinish(.browse)
-                    }
-                    .fontWeight(.semibold).foregroundStyle(Color.ink)
+                Button {
+                    cloud.isEnabled = true
+                    onFinish(.browse)
+                } label: {
+                    (Text("Schon Gutscheine in iCloud? ").foregroundStyle(Color.muted)
+                     + Text("Wiederherstellen").fontWeight(.semibold).foregroundStyle(Color.ink))
+                        .font(.scaled(13)).multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, minHeight: Layout.tap)
                 }
-                .font(.scaled(13))
-                .frame(minHeight: Layout.tap)
+                .buttonStyle(.plain)
             }
         }
         .animation(.smooth, value: page)
@@ -126,10 +129,30 @@ private struct PageFrame<Stage: View>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Spacer(minLength: Layout.section)
-            stage.frame(maxWidth: .infinity)
-            Spacer(minLength: Layout.section)
+        // Passt alles, steht der Text unten wie im Entwurf; bei großer Schrift wird die Seite scrollbar.
+        ViewThatFits(in: .vertical) {
+            VStack(alignment: .leading, spacing: 0) {
+                Spacer(minLength: Layout.section)
+                stage.frame(maxWidth: .infinity)
+                Spacer(minLength: Layout.section)
+                copy
+            }
+            .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
+            ScrollView {
+                VStack(alignment: .leading, spacing: Layout.section) {
+                    stage.frame(maxWidth: .infinity)
+                    copy
+                }
+                .padding(.horizontal, Layout.page).padding(.vertical, Layout.section)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .opacity(active || reduceMotion ? 1 : 0.4)
+        .animation(.easeOut(duration: 0.3), value: active)
+    }
+
+    private var copy: some View {
+        VStack(alignment: .leading, spacing: Layout.group) {
             Text(title)
                 .font(.scaled(34, weight: .heavy, design: .rounded)).kerning(-0.6)
                 .fixedSize(horizontal: false, vertical: true)
@@ -137,11 +160,7 @@ private struct PageFrame<Stage: View>: View {
             Text(text)
                 .font(.scaled(17)).foregroundStyle(Color.ink2)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, Layout.group)
         }
-        .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
-        .opacity(active || reduceMotion ? 1 : 0.4)
-        .animation(.easeOut(duration: 0.3), value: active)
     }
 }
 
