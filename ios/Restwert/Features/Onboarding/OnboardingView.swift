@@ -438,36 +438,15 @@ private struct RemindPage: View {
     }
 }
 
-/// Das App-Icon im Kleinen: gelbes Ticket mit €, zwei Kerben und Abrisslinie auf Tinte – wie auf dem Home-Bildschirm.
-/// Feste Maße, weil es ein Bild ist und kein Text.
+/// Das App-Icon im Kleinen – dasselbe Bild wie auf dem Home-Bildschirm (Asset „AppLogo“, hell und dunkel).
 private struct AppIconMark: View {
-    private let ticket = CGSize(width: 34, height: 23)
-    private let notchY: CGFloat = 0.55
-
     var body: some View {
-        RoundedRectangle(cornerRadius: 10, style: .continuous)
-            .fill(Color.onBrand)   // immer dunkel, wie das echte Icon
+        Image("AppLogo")
+            .resizable()
+            .interpolation(.high)
             .frame(width: 40, height: 40)
-            .overlay {
-                TicketShape(radius: 3.5, notchRadius: 2.2, notchY: notchY)
-                    .fill(Color.brandYellow)
-                    .overlay(alignment: .top) {
-                        Text("€").font(.system(size: 9, weight: .black, design: .rounded))
-                            .foregroundStyle(Color.onBrand)
-                            .frame(height: ticket.height * notchY)
-                    }
-                    .overlay(alignment: .top) {
-                        DashLine(dash: 3.4, gap: 2)
-                            .fill(Color.onBrand)
-                            .frame(height: 1)
-                            .scaleEffect(y: 1.4)
-                            .padding(.horizontal, 5)
-                            .offset(y: ticket.height * notchY - 0.5)
-                    }
-                    .frame(width: ticket.width, height: ticket.height)
-            }
+            .clipShape(.rect(cornerRadius: 10, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.line.opacity(0.6), lineWidth: 0.5))
-            .dynamicTypeSize(.large)
             .accessibilityHidden(true)
     }
 }
