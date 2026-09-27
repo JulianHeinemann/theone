@@ -23,11 +23,15 @@ struct RadarItem: Identifiable {
     }
 }
 
-/// Verfallsradar: die nächsten Monate als Zeitachse, jeder Gutschein als Ladenkachel an seinem Ablauftag.
-/// Kacheln, die sich überschneiden, stapeln sich nach oben. Später Ablaufendes steht als „+N später“ rechts.
+/// Verfallsradar: Zeitachse ab heute, jeder Gutschein als Ladenkachel an seinem Ablauftag.
+/// Die Achse skaliert mit: Sie reicht bis zum spätesten Gutschein (3 bis 48 Monate) und wechselt dabei
+/// von Monats- über Quartals- zu Jahresstrichen. Bei langen Spannen ist die Zeit gestaucht (Wurzelskala),
+/// damit die nächsten Wochen breit bleiben. Kacheln und Abstände wachsen mit der Schriftgröße.
+/// Kacheln, die sich überschneiden, stapeln sich. Nur was nach 48 Monaten abläuft, steht als „+N später“.
 struct ExpiryRadar: View {
     let items: [RadarItem]
-    var months = 6
+    /// Feste Spanne in Monaten; `nil` = automatisch bis zum spätesten Gutschein.
+    var months: Int? = nil
     var onSelect: ((RadarItem) -> Void)? = nil
     /// Bei `true` fallen die Kacheln nacheinander auf die Achse (Onboarding, erster Auftritt).
     var animateIn = true
@@ -35,23 +39,41 @@ struct ExpiryRadar: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var landed = false
 
-    private let tile: CGFloat = 32
-    private let laneStep: CGFloat = 22
+    // Wächst mit „Größerer Text“, aber gedeckelt, damit die Achse nicht nur aus Kacheln besteht.
+    @ScaledMetric(relativeTo: .body) private var tileBase: CGFloat = 32
+    @ScaledMetric(relativeTo: .caption) private var flagSpace: CGFloat = 30
+    @ScaledMetric(relativeTo: .caption) private var labelSpace: CGFloat = 30
+    private var tile: CGFloat { min(tileBase, 46) }
+    private var laneStep: CGFloat { tile * 0.7 }
     private let lanes = 3
+    private static let maxMonths = 48   // gesetzliche Frist: bis zu 4 Jahre
+
+    /// Spanne in Monaten: bis zum spätesten Gutschein (höchstens 36), mindestens 3.
+    private var span: Int {
+        if let months { return months }
+        let cal = Calendar.current
+        let latest = items.map(\.expires).max() ?? .now
+        let m = (cal.dateComponents([.month], from: cal.startOfDay(for: .now), to: latest).month ?? 0) + 1
+        return min(max(m, 3), Self.maxMonths)
+    }
 
     /// Achse beginnt knapp vor heute, damit „Heute“ links steht und der Platz der Zukunft gehört.
     private var range: (start: Date, end: Date) {
         let cal = Calendar.current
         let today = cal.startOfDay(for: .now)
-        let start = cal.date(byAdding: .day, value: -8, to: today) ?? today
-        return (start, cal.date(byAdding: .month, value: months, to: today) ?? today)
+        let lead = max(4, span * 30 / 25)   // Vorlauf wächst mit der Spanne, damit „Heute“ nie am Rand klebt
+        let start = cal.date(byAdding: .day, value: -lead, to: today) ?? today
+        return (start, cal.date(byAdding: .month, value: span, to: today) ?? today)
     }
+
+    /// Strichabstand je nach Spanne: Monate, Quartale oder Jahre.
+    private var tickStep: Int { span <= 8 ? 1 : span <= 18 ? 3 : 12 }
 
     private var visible: [RadarItem] { items.filter { $0.expires < range.end }.sorted { $0.expires < $1.expires } }
     private var later: Int { items.count - visible.count }
 
     var body: some View {
-        let chartHeight = tile + laneStep * CGFloat(lanes - 1) + 30
+        let chartHeight = tile + laneStep * CGFloat(lanes - 1) + flagSpace
         GeometryReader { geo in
             let w = geo.size.width
             let axisY = chartHeight
@@ -68,10 +90,11 @@ struct ExpiryRadar: View {
                 }
             }
         }
-        .frame(height: chartHeight + 30)
+        .frame(height: chartHeight + labelSpace)
         .onAppear { landed = true }
+        .animation(.smooth, value: span)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Verfallsradar, nächste \(months) Monate")
+        .accessibilityLabel("Verfallsradar, nächste \(span) Monate")
     }
 
     /// Kopfzeile mit Titel und „+N später“ – als eigener View, damit Home sie wie andere Abschnitte setzen kann.
@@ -81,7 +104,9 @@ struct ExpiryRadar: View {
 
     private func xPos(_ date: Date, width: CGFloat) -> CGFloat {
         let (start, end) = range
-        let t = date.timeIntervalSince(start) / end.timeIntervalSince(start)
+        let linear = date.timeIntervalSince(start) / end.timeIntervalSince(start)
+        // Ab 9 Monaten Spanne gestaucht: nahe Termine bekommen mehr Platz als ferne.
+        let t = span > 8 ? pow(min(max(linear, 0), 1), 0.55) : linear
         // Rand lassen, damit Kacheln am Anfang und Ende nicht abgeschnitten werden.
         let inset = tile / 2 + 2
         return inset + CGFloat(min(max(t, 0), 1)) * (width - inset * 2)
@@ -100,19 +125,20 @@ struct ExpiryRadar: View {
 
     private func axis(width: CGFloat, y: CGFloat) -> some View {
         let cal = Calendar.current
-        // Striche an jedem Monatsersten innerhalb der Achse.
+        // Striche an Monats-, Quartals- oder Jahresanfängen innerhalb der Achse.
         let first = cal.date(from: cal.dateComponents([.year, .month], from: range.start)) ?? range.start
-        let ticks = (1...months + 1).compactMap { cal.date(byAdding: .month, value: $0, to: first) }.filter { $0 < range.end }
+        let ticks = (1...span + 1).compactMap { cal.date(byAdding: .month, value: $0, to: first) }
+            .filter { $0 < range.end && (cal.component(.month, from: $0) - 1) % tickStep == 0 }
         return ZStack(alignment: .topLeading) {
             Capsule().fill(Color.ink).frame(width: width, height: 2).offset(y: y - 1)
             ForEach(ticks, id: \.self) { d in
                 let x = xPos(d, width: width)
                 Capsule().fill(Color.ink).frame(width: 2, height: 8).offset(x: x - 1, y: y - 8)
-                Text(monthLabel(d))
+                Text(tickLabel(d))
                     .font(.scaled(12, weight: .medium)).foregroundStyle(Color.muted)
                     .fixedSize()
-                    .frame(width: 40)
-                    .offset(x: x - 20, y: y + 8)
+                    .frame(width: 64)
+                    .offset(x: x - 32, y: y + 8)
             }
         }
         .accessibilityHidden(true)
@@ -123,9 +149,9 @@ struct ExpiryRadar: View {
         return ZStack(alignment: .topLeading) {
             // Heute: gelbes Fähnchen mit gestrichelter Linie bis zur Achse – Gelb ist die App.
             DashLine(dash: 3, gap: 3).fill(Color.ink.opacity(0.5))
-                .frame(width: axisY - 20, height: 1)
+                .frame(width: axisY - flagSpace * 0.65, height: 1)
                 .rotationEffect(.degrees(90), anchor: .topLeading)
-                .offset(x: x + 0.5, y: 20)
+                .offset(x: x + 0.5, y: flagSpace * 0.65)
             Text("Heute")
                 .font(.scaled(12, weight: .heavy, design: .rounded))
                 .foregroundStyle(Color.onBrand)
@@ -162,8 +188,15 @@ struct ExpiryRadar: View {
         }
     }
 
-    private func monthLabel(_ d: Date) -> String {
-        d.formatted(.dateTime.month(.abbreviated).locale(Locale(identifier: "de_DE"))).replacingOccurrences(of: ".", with: "")
+    /// „Okt“ bei Monaten, „Jan 27“ bei Quartalen im Januar, „2027“ bei Jahren.
+    private func tickLabel(_ d: Date) -> String {
+        let de = Locale(identifier: "de_DE")
+        if tickStep == 12 { return d.formatted(.dateTime.year().locale(de)) }
+        let month = d.formatted(.dateTime.month(.abbreviated).locale(de)).replacingOccurrences(of: ".", with: "")
+        if tickStep == 3 && Calendar.current.component(.month, from: d) == 1 {
+            return "\(month) \(d.formatted(.dateTime.year(.twoDigits).locale(de)))"
+        }
+        return month
     }
 }
 
