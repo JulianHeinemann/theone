@@ -1,7 +1,7 @@
 import SwiftUI
 import RestwertKit
 
-/// Wo geht es ohne Plastikkarte? Händlerliste mit eigenen Kassentests.
+/// Wo geht es ohne Plastikkarte? Liste der Läden mit eigenen Kassentests.
 struct MerchantsView: View {
     @Environment(Store.self) private var store
     @State private var query = ""
@@ -45,13 +45,11 @@ struct MerchantsView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 10) {
-                Text("Wo du Gutscheine am Handy vorzeigen kannst und wo du die Karte brauchst.")
-                    .font(.scaled(15)).foregroundStyle(Color.ink2)
                 filters
                 if !mine.isEmpty {
-                    Text("Deine Händler").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 4)
+                    Text("Deine Läden").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 4)
                     ForEach(mine) { row($0) }
-                    Text("Alle Händler").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 8)
+                    Text("Alle Läden").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 8)
                 }
                 ForEach(items) { merchant in
                     row(merchant)
@@ -66,7 +64,7 @@ struct MerchantsView: View {
         .scrollIndicators(.hidden)
         .pageBackground()
         .navigationTitle("Läden")
-        .searchable(text: $query, prompt: "Händler suchen")
+        .searchable(text: $query, prompt: "Laden suchen")
     }
 
     private var filters: some View {
@@ -112,7 +110,7 @@ struct MerchantsView: View {
                 }
                 Label(m.category.label, systemImage: m.category.symbol)
                     .font(.scaled(13, weight: .medium)).foregroundStyle(m.category.tint)
-                Text(m.tip).font(.scaled(14)).foregroundStyle(Color.ink2).lineLimit(2)
+                Text(m.tip).font(.scaled(14)).foregroundStyle(Color.ink2).lineLimit(1)
                 if let url = m.balanceURL, let label = m.balanceCheck.linkLabel {
                     Link(destination: url) {
                         Label(label, systemImage: "arrow.up.right").font(.scaled(13, weight: .medium))

@@ -19,6 +19,9 @@ struct CheckoutView: View {
     @State private var oldBrightness: CGFloat?
     @State private var showFull = false
     @State private var showPhotoFull = false
+    @State private var torn = false
+    @State private var tearHaptic = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var numberShown = false
     @AppStorage("maskNumber") private var maskNumber = false
@@ -64,16 +67,18 @@ struct CheckoutView: View {
                                 Label("Bezahlt – Betrag eintragen", systemImage: "checkmark")
                             }
                             .buttonStyle(.primary)
-                            Button { withAnimation(.snappy) { result = false } } label: {
-                                Label("Nicht angenommen", systemImage: "xmark")
+                            HStack {
+                                Button("Nicht angenommen") { withAnimation(.snappy) { result = false } }
+                                    .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
+                                Spacer()
+                                Button("Später eintragen") {
+                                    Task { await remindLater(card) }
+                                    dismiss()
+                                }
+                                .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
                             }
-                            .buttonStyle(.quiet)
-                            Button("Später eintragen") {
-                                Task { await remindLater(card) }
-                                dismiss()
-                            }
-                            .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
-                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .frame(minHeight: 44)
+                            .padding(.horizontal, 8)
                             Text("Nur „Bezahlt“ zieht vom Guthaben ab.")
                                 .font(.scaled(13)).foregroundStyle(Color.muted)
                         }
@@ -86,6 +91,7 @@ struct CheckoutView: View {
         .scrollDismissesKeyboard(.interactively)
         .pageBackground()
         .toolbar(.hidden, for: .tabBar)
+        .sensoryFeedback(.impact(weight: .medium), trigger: tearHaptic)
         .navigationTitle("An der Kasse")
         .fullScreenCover(isPresented: $showFull) {
             if let card = store.card(cardID) { FullBarcode(card: card, masked: maskNumber && !numberShown) }
@@ -183,8 +189,23 @@ struct CheckoutView: View {
                 }
             }
             .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 20)
+            // Abriss-Moment: Nach „Bezahlt“ reißt der Abschnitt an der Linie ab.
+            .offset(y: torn ? 70 : 0)
+            .rotationEffect(.degrees(torn ? -4 : 0), anchor: .topLeading)
+            .opacity(torn ? 0 : 1)
         }
         .cardSurface(radius: Layout.cardRadius)
+    }
+
+    /// Erst abreißen lassen, dann speichern und zurück. Bei „Bewegung reduzieren“ sofort.
+    private func tearOff(then commit: @escaping () -> Void) {
+        tearHaptic += 1
+        guard !reduceMotion else { commit(); return }
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.8)) { torn = true }
+        Task {
+            try? await Task.sleep(for: .milliseconds(520))
+            commit()
+        }
     }
 
     /// Wie CardDetailView.togglePin: bei PIN-Schutz erst Face ID oder Gerätecode.
@@ -246,24 +267,30 @@ struct CheckoutView: View {
     private func save(_ card: GiftCard, _ ok: Bool) {
         // Rabattcodes und Coupons: kein Betrag, sondern als Ganzes einlösen.
         if ok && !card.kind.isValueBased {
-            _ = store.addTest(card: card, success: true, store: storeName, note: note, amount: nil)
-            store.setPending(card.id, false)
-            store.markRedeemed(card.id, store: storeName)
-            router.toast = Toast(message: "\(card.kind.label) als eingelöst markiert.", undo: nil)
-            dismiss()
+            tearOff {
+                _ = store.addTest(card: card, success: true, store: storeName, note: note, amount: nil)
+                store.setPending(card.id, false)
+                store.markRedeemed(card.id, store: storeName)
+                router.toast = Toast(message: "\(card.kind.label) eingelöst. Gut genutzt.", undo: nil)
+                dismiss()
+            }
             return
         }
         let value = parseMoney(amount)
         if ok, (value ?? 0) <= 0 { return }
-        let entry = store.addTest(card: card, success: ok, store: storeName, note: note, amount: value)
-        if let entry, let value {
-            router.showUndo("\(min(value, card.balance).euro) bei \(card.name) abgezogen") {
-                store.undoRedemption(card.id, entry: entry)
+        let commit = {
+            let entry = store.addTest(card: card, success: ok, store: storeName, note: note, amount: value)
+            if let entry, let value {
+                let rest = max(0, card.balance - min(value, card.balance))
+                router.showUndo(rest <= 0 ? "Aufgebraucht. Gut genutzt." : "\(min(value, card.balance).euro) abgezogen · noch \(rest.euro) drauf") {
+                    store.undoRedemption(card.id, entry: entry)
+                }
+            } else if !ok {
+                router.toast = Toast(message: "Notiert. Guthaben bleibt gleich.", undo: nil)
             }
-        } else if !ok {
-            router.toast = Toast(message: "Notiert. Guthaben unverändert.", undo: nil)
+            dismiss()
         }
-        dismiss()
+        if ok { tearOff(then: commit) } else { commit() }
     }
 
     private func choice(_ value: Bool, _ title: String, _ subtitle: String, _ icon: String, _ fg: Color, _ bg: Color) -> some View {
@@ -309,7 +336,7 @@ struct KeypadView: View {
         }
         .pageBackground()
         .toolbar(.hidden, for: .tabBar)
-        .navigationTitle("Einkauf abziehen")
+        .navigationTitle(store.card(cardID)?.name ?? "Einkauf")
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -317,46 +344,41 @@ struct KeypadView: View {
         // Oberer Teil scrollt, Tastenfeld samt Bestätigung bleibt unten – auch bei großer Schrift.
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 14) {
-                    MerchantMark(card: card)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(card.name).font(.scaled(16, weight: .bold))
-                        Text("\(card.balance.euro) verfügbar").font(.scaled(13)).foregroundStyle(Color.muted)
-                    }
-                    Spacer()
-                }
-                .padding(12).cardSurface(radius: Layout.cardRadius).padding(.horizontal, 16).padding(.top, 8)
-
-                Picker("Modus", selection: $correct) {
-                    Text("Einkauf abziehen").tag(false)
-                    Text("Neuen Stand eintragen").tag(true)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 16).padding(.top, 14)
+                // Ein Eingabeweg: Betrag groß, darunter zwei leise Kurzwege. Kein Modus-Segment, keine Kopfkarte.
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(correct ? "Guthaben laut Bon oder nach Aufladung" : "Betrag eingeben").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
-                    HStack(spacing: 4) {
-                        Text(input.isEmpty ? "0" : input).font(.amount(56))
+                    Text(correct ? "Neuer Stand laut Bon" : "\(card.balance.euro) drauf")
+                        .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(input.isEmpty ? "0" : input).font(.amount(64))
                             .foregroundStyle(input.isEmpty ? Color.muted : Color.ink)
                             .contentTransition(.numericText())
-                        Text(" €").font(.amount(56)).foregroundStyle(Color.ink2)
+                        Text("€").font(.amount(30)).foregroundStyle(Color.ink2)
                     }
                     .lineLimit(1).minimumScaleFactor(0.5)
                     .modifier(Shake(animatableData: CGFloat(rejected)))
-                    Divider()
-                    Text(hint(card)).font(.scaled(15, weight: !correct && value > card.balance ? .semibold : .regular))
-                        .foregroundStyle(!correct && value > card.balance ? Color.warn : Color.ink2)
-                }
-                .padding(.horizontal, 18).padding(.top, 22)
-
-                // Nur ein leiser Kurzweg statt Schnellwahl-Chips, die mit dem Tastenfeld konkurrieren.
-                if !correct {
-                    Button("Ganzes Guthaben (\(card.balance.euro))") {
-                        input = card.balance.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE"))).replacingOccurrences(of: ".", with: "")
+                    if !input.isEmpty || correct {
+                        Text(hint(card)).font(.scaled(15, weight: !correct && value > card.balance ? .semibold : .regular))
+                            .foregroundStyle(!correct && value > card.balance ? Color.warn : Color.ink2)
                     }
-                    .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
-                    .padding(.horizontal, 18).padding(.top, 12)
                 }
+                .padding(.horizontal, 20).padding(.top, 12)
+
+                HStack(spacing: 16) {
+                    if !correct {
+                        Button("Alles (\(card.balance.euro))") {
+                            input = card.balance.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE"))).replacingOccurrences(of: ".", with: "")
+                        }
+                        .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                        .padding(.horizontal, 14).frame(minHeight: 40)
+                        .background(Color.surface, in: .capsule)
+                    }
+                    Button(correct ? "Doch Einkauf abziehen" : "Neuen Stand eintragen") {
+                        withAnimation(.snappy) { correct.toggle(); input = "" }
+                    }
+                    .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                    .frame(minHeight: 44)
+                }
+                .padding(.horizontal, 20).padding(.top, 14)
 
                 Group {
                     if showStore {
@@ -407,7 +429,8 @@ struct KeypadView: View {
                     // Mehr als auf der Karte: Karte leeren, den Rest zahlt man an der Kasse anders.
                     let taken = min(value, card.balance)
                     if let entry = store.redeem(card.id, amount: taken, store: storeName) {
-                        router.showUndo("\(taken.euro) bei \(card.name) abgezogen") {
+                        let rest = max(0, card.balance - taken)
+                        router.showUndo(rest <= 0 ? "Aufgebraucht. Gut genutzt." : "\(taken.euro) abgezogen · noch \(rest.euro) drauf") {
                             store.undoRedemption(card.id, entry: entry)
                         }
                     }
@@ -432,7 +455,7 @@ struct KeypadView: View {
         if value > card.balance {
             return "Nur \(card.balance.euro) auf der Karte. \((value - card.balance).euro) zahlst du an der Kasse anders."
         }
-        if value > 0 { return "Danach übrig: \(max(0, card.balance - value).euro)" }
+        if value > 0 { return "Danach noch \(max(0, card.balance - value).euro) drauf" }
         return "Wird vom Guthaben abgezogen"
     }
 

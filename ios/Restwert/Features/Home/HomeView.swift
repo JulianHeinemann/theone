@@ -62,7 +62,9 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Layout.section) {
                 // Der Kopf beschreibt immer den ganzen Bestand, unabhängig von Filter und Suche.
-                TotalHeader(total: store.total, cards: store.activeCards.filter { !$0.forGifting }, soon: dueSoonAll.count)
+                Wordmark().padding(.horizontal, 4)
+                TotalHeader(total: store.total, cards: store.activeCards.filter { !$0.forGifting }, soon: dueSoonAll.count,
+                            examples: !store.cards.isEmpty && store.cards.allSatisfy(\.isExample))
                 if showFilters { filterBar }
                 if store.cards.isEmpty {
                     EmptyState { router.tab = .scan }
@@ -95,6 +97,8 @@ struct HomeView: View {
         .scrollIndicators(.hidden)
         .pageBackground()
         .navigationTitle("Restwert")
+        .toolbarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) } }
         .modifier(SearchIfNeeded(enabled: manyCards, text: $query))
         .onChange(of: offeredFilters) { _, offered in
             if !offered.contains(filter) { withAnimation(.snappy) { filter = .all } }
@@ -249,58 +253,62 @@ private struct TotalHeader: View {
     let total: Double
     let cards: [GiftCard]
     let soon: Int
+    var examples = false
+    @State private var tearY: CGFloat = 110
 
-    /// Die Summe enthält nur Euro-Guthaben. Rabattcodes stehen in einer eigenen Zeile, damit die Rechnung aufgeht.
+    /// Die Summe enthält nur Euro-Guthaben. Rabattcodes stehen extra, damit die Rechnung aufgeht.
     private var caption: String {
         let value = cards.filter(\.kind.isValueBased).count
         var parts = [value == 1 ? "1 Karte" : "\(value) Karten"]
-        if soon > 0 { parts.append(soon == 1 ? "1 läuft bald ab" : "\(soon) laufen bald ab") }
+        if soon > 0 { parts.append(soon == 1 ? "1 bald weg" : "\(soon) bald weg") }
         return parts.joined(separator: " · ")
-    }
-
-    private var full: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Guthaben auf allen Karten").font(.scaled(15, weight: .medium)).foregroundStyle(Color.sumText.opacity(0.7))
-            Text(total.euro)
-                .font(.amount(60)).kerning(-1.5).foregroundStyle(Color.sumAmount)
-                .contentTransition(.numericText(value: total))
-                .animation(.snappy, value: total)
-                .minimumScaleFactor(0.6).lineLimit(1)
-            Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.sumText.opacity(0.75))
-            if let codesNote {
-                Text(codesNote).font(.scaled(14)).foregroundStyle(Color.sumText.opacity(0.75))
-            }
-        }
     }
 
     private var codesNote: String? {
         let codes = cards.filter { !$0.kind.isValueBased }.count
         guard codes > 0 else { return nil }
-        return codes == 1 ? "dazu 1 Rabattcode (nicht in der Summe)" : "dazu \(codes) Rabattcodes (nicht in der Summe)"
+        return codes == 1 ? "+ 1 Rabattcode, nicht in der Summe" : "+ \(codes) Rabattcodes, nicht in der Summe"
     }
 
     var body: some View {
-        Group {
-            if typeSize.isAccessibilitySize {
-                // Bei sehr großer Schrift eine kompakte Summe, damit die Liste sichtbar bleibt.
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Guthaben auf allen Karten").font(.scaled(13, weight: .medium)).foregroundStyle(Color.sumText.opacity(0.7))
-                    Text(total.euro).font(.amount(34)).foregroundStyle(Color.sumAmount)
-                        .minimumScaleFactor(0.6).lineLimit(1)
-                    Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.sumText.opacity(0.75))
-                    if let codesNote {
-                        Text(codesNote).font(.scaled(13)).foregroundStyle(Color.sumText.opacity(0.75))
-                    }
-                }
-            } else {
-                full
+        let big = !typeSize.isAccessibilitySize
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Noch drauf").font(.scaled(15, weight: .semibold)).opacity(0.75)
+                AmountText(value: total, size: big ? 60 : 36)
+                    .animation(.snappy, value: total)
             }
+            .padding(.horizontal, 20).padding(.top, big ? 18 : 14).padding(.bottom, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            // Gemessen, damit die Kerben bei jeder Schriftgröße genau auf der Abrisslinie sitzen.
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tearY = $0 }
+            // Abrisslinie auf Höhe der Kerben: oben der Betrag, unten der Abschnitt.
+            TearLine(color: .sumText).padding(.horizontal, 16)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(caption).font(.scaled(15, weight: .semibold))
+                if let codesNote { Text(codesNote).font(.scaled(13)).opacity(0.75) }
+                if examples { Text("Nur Beispiele – dein erster Gutschein ersetzt sie").font(.scaled(13)).opacity(0.75) }
+            }
+            .padding(.horizontal, 20).padding(.vertical, 12)
         }
         .foregroundStyle(Color.sumText)
-        .padding(typeSize.isAccessibilitySize ? 14 : 20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.sumFill, in: .rect(cornerRadius: Layout.cardRadius + 4, style: .continuous))
+        .background(Color.sumFill, in: TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchFromTop: tearY + 0.5))
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Wortmarke: „Restwert“ in der Betragsschrift mit gelbem Punkt.
+private struct Wordmark: View {
+    var body: some View {
+        HStack(alignment: .lastTextBaseline, spacing: 3) {
+            Text("Restwert").font(.scaled(30, weight: .heavy, design: .rounded)).foregroundStyle(Color.ink)
+            Circle().fill(Color.brandYellow).frame(width: 9, height: 9)
+                .overlay(Circle().strokeBorder(Color.ink.opacity(0.15), lineWidth: 0.5))
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Restwert")
+        .accessibilityAddTraits(.isHeader)
     }
 }
 

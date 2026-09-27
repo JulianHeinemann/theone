@@ -8,6 +8,7 @@ import RestwertKit
 struct CardDetailView: View {
     let cardID: UUID
     @Environment(Store.self) private var store
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(Router.self) private var router
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
@@ -48,10 +49,10 @@ struct CardDetailView: View {
                 if !card.isActive && !card.isArchived {
                     archiveBanner(card, status)
                 }
+                summary(card, status)
                 if card.pendingSince != nil && card.isActive {
                     pendingBanner(card)
                 }
-                summary(card, status)
                 if card.isActive {
                     NavigationLink(value: Route.checkout(card.id)) {
                         Label("An der Kasse zeigen", systemImage: "barcode")
@@ -113,13 +114,8 @@ struct CardDetailView: View {
 
     private func summary(_ card: GiftCard, _ status: VoucherStatus) -> some View {
         VStack(alignment: .leading, spacing: 16) {
+            // Gültigkeit steht im Ticket-Abschnitt, Einlösungen im Verlauf unten.
             BalanceCard(card: card, status: status)
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                cell("Gültig bis", card.expires.dayMonthYear)
-                let count = redemptionCount(card)
-                cell("Einlösungen", count == 0 ? "noch keine" : "\(count)")
-            }
-            .padding(.horizontal, 4)
         }
         .overlay {
             if card.redeemedAt != nil || stampVisible {
@@ -138,47 +134,35 @@ struct CardDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Alle Neben-Aktionen ruhig in einer Gruppe unter dem einzigen Hauptknopf „An der Kasse zeigen“.
+    /// Neben-Aktionen als Kacheln (Icon in Ladenfarbe) statt Einstellungs-Liste; Hauptaktion bleibt „An der Kasse zeigen“.
     @ViewBuilder
     private func actionGroup(_ card: GiftCard) -> some View {
         let hasPin = card.kind == .giftCard && !card.pin.isEmpty
         let link = card.merchant.balanceURL.flatMap { url in card.merchant.balanceCheck.linkLabel.map { (url, $0) } }
-        let rows = [card.isActive, hasPin, link != nil].filter { $0 }.count
-        if rows > 0 {
-            VStack(spacing: 0) {
-                if card.isActive {
-                    if card.kind.isValueBased {
-                        NavigationLink(value: Route.keypad(card.id)) {
-                            ActionRow(icon: "minus", title: "Einkauf eintragen", subtitle: "Betrag vom Guthaben abziehen")
-                        }
+        let tint = (MerchantBrand.forID(card.merchantID) ?? MerchantBrand.fallback(for: card.name)).accent
+        // Bei sehr großer Schrift eine Spalte, sonst brechen die Titel mitten im Wort.
+        let columns = Array(repeating: GridItem(.flexible(), spacing: Layout.group), count: typeSize.isAccessibilitySize ? 1 : 2)
+        LazyVGrid(columns: columns, spacing: Layout.group) {
+            if card.isActive {
+                if card.kind.isValueBased {
+                    NavigationLink(value: Route.keypad(card.id)) { ActionTile(icon: "minus.circle", title: "Einkauf eintragen", tint: tint) }
                         .buttonStyle(.plain)
-                    } else {
-                        Button { stamp(card) } label: {
-                            ActionRow(icon: "checkmark.seal", title: "Als eingelöst markieren",
-                                      subtitle: "Codes gelten meist nur einmal", chevron: false)
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(stampVisible)
-                    }
-                }
-                if hasPin {
-                    if card.isActive { Divider().padding(.leading, 66) }
-                    Button { Task { await togglePin(card) } } label: {
-                        ActionRow(icon: pinVisible ? "lock.open" : "faceid",
-                                  title: pinVisible ? "PIN \(card.pin)" : "PIN anzeigen", chevron: false)
-                            .privacySensitive()
-                    }
-                    .buttonStyle(.plain)
-                }
-                if let (url, label) = link {
-                    if card.isActive || hasPin { Divider().padding(.leading, 66) }
-                    Link(destination: url) {
-                        ActionRow(icon: "arrow.up.right", title: label, subtitle: card.merchant.name)
-                    }
-                    .buttonStyle(.plain)
+                } else {
+                    Button { stamp(card) } label: { ActionTile(icon: "checkmark.seal", title: "Als eingelöst markieren", tint: tint) }
+                        .buttonStyle(.plain).disabled(stampVisible)
                 }
             }
-            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+            if hasPin {
+                Button { Task { await togglePin(card) } } label: {
+                    ActionTile(icon: pinVisible ? "lock.open" : "faceid", title: pinVisible ? card.pin : "PIN anzeigen", tint: tint)
+                        .privacySensitive()
+                }
+                .buttonStyle(.plain)
+            }
+            if let (url, label) = link {
+                Link(destination: url) { ActionTile(icon: "arrow.up.right", title: label, tint: tint) }
+                    .buttonStyle(.plain)
+            }
         }
     }
 
@@ -199,27 +183,34 @@ struct CardDetailView: View {
 
     /// Nach „Später eintragen“ an der Kasse: Betrag nachtragen oder verwerfen.
     private func pendingBanner(_ card: GiftCard) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("Betrag offen", systemImage: "clock.badge.exclamationmark").font(.scaled(16, weight: .semibold))
-            Text("Du hast \(card.name) an der Kasse benutzt, aber noch keinen Betrag eingetragen.")
-                .font(.scaled(14)).foregroundStyle(Color.ink2)
-            HStack(spacing: 8) {
-                NavigationLink(value: Route.keypad(card.id)) {
-                    Text("Jetzt eintragen").modifier(SecondaryPill())
-                }
-                .buttonStyle(.plain)
-                Button {
+        // Neutraler Hinweis mit Streifen statt farbiger Fläche; eine Aktion, die zweite leise daneben.
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4)) : AnyLayout(HStackLayout(spacing: 12))
+        return layout {
+            if !typeSize.isAccessibilitySize {
+                Image(systemName: "clock").font(.scaled(17, weight: .semibold)).foregroundStyle(Color.notice)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Betrag offen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                Button("Nicht bezahlt") {
                     store.setPending(card.id, false)
                     clearLaterNotification(card.id)
-                } label: {
-                    Text("Nicht bezahlt").modifier(SecondaryPill())
                 }
-                .buttonStyle(.plain)
+                .font(.scaled(13)).foregroundStyle(Color.muted)
             }
+            if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
+            NavigationLink(value: Route.keypad(card.id)) {
+                Text("Jetzt eintragen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                    .frame(minHeight: 44)
+            }
+            .buttonStyle(.plain)
         }
-        .foregroundStyle(Color.ink)
-        .padding(14)
-        .background(Color.warnSoft, in: .rect(cornerRadius: 18, style: .continuous))
+        .padding(.leading, 18).padding(.trailing, 14).padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+        .overlay(alignment: .leading) {
+            UnevenRoundedRectangle(topLeadingRadius: Layout.buttonRadius, bottomLeadingRadius: Layout.buttonRadius)
+                .fill(Color.notice).frame(width: 4)
+        }
     }
 
     /// Aufgebraucht oder abgelaufen: direkt oben anbieten, den Gutschein aus der Liste zu nehmen.
@@ -564,5 +555,24 @@ private struct SecondaryPill: ViewModifier {
             .lineLimit(1).minimumScaleFactor(0.8)
             .frame(maxWidth: .infinity, minHeight: 44)
             .background(Color.surface, in: .rect(cornerRadius: 14, style: .continuous))
+    }
+}
+
+/// Kachel für Neben-Aktionen: 72 pt hoch, Icon in Ladenfarbe, kein Pfeil.
+private struct ActionTile: View {
+    let icon: String
+    let title: String
+    let tint: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Image(systemName: icon).font(.scaled(20, weight: .semibold)).foregroundStyle(tint)
+            Text(title).font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                .lineLimit(2).minimumScaleFactor(0.8).multilineTextAlignment(.leading)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 72, alignment: .topLeading)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+        .contentShape(.rect)
     }
 }

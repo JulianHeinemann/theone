@@ -47,7 +47,7 @@ public enum CardQueries {
     /// Tabelle für Excel und Numbers: Semikolon, CRLF, deutsche Zahlen unabhängig von der Gerätesprache,
     /// Felder in Anführungszeichen, Kartennummern als Text (="…"), damit Excel keine Stellen abschneidet.
     public static func csv(_ cards: [GiftCard], warnDays: Int, now: Date = .now) -> String {
-        let head = ["Händler", "Für", "Art", "Startwert", "Guthaben", "Gültig bis", "Code", "Status"].map(csvText)
+        let head = ["Laden", "Für", "Art", "Startwert", "Guthaben", "Gültig bis", "Code", "Status"].map(csvText)
         let rows = cards.filter { !$0.isExample }.map { c in
             [csvText(c.name), csvText(c.owner), csvText(c.kind.label),
              c.kind.isValueBased ? csvNumber(c.value) : csvText(c.headline),

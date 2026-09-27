@@ -162,6 +162,8 @@ struct MainTabView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        // Aktiver Tab in Tinte, keine dritte Akzentfarbe.
+        .tint(Color.ink)
         .overlay(alignment: .bottom) {
             if let toast = router.toast {
                 // Nur den eigenen Toast schließen, nie einen inzwischen neueren.

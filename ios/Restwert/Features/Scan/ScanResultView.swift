@@ -116,7 +116,7 @@ struct ScanResultView: View {
         if let merchant {
             out.append(Check(level: .ok, text: "Shop erkannt: \(merchant.name). \(merchant.category.long)."))
         } else if let name = draft.customName {
-            out.append(Check(level: .info, text: "„\(name)“ steht nicht in der Händlerliste. Prüf den Namen im nächsten Schritt."))
+            out.append(Check(level: .info, text: "„\(name)“ steht nicht in der Liste der Läden. Prüf den Namen im nächsten Schritt."))
         } else {
             out.append(Check(level: .info, text: "Shop nicht erkannt. Du wählst ihn im nächsten Schritt aus."))
         }
@@ -128,7 +128,7 @@ struct ScanResultView: View {
         if let value = draft.value, value > 500 {
             out.append(Check(level: .warning, text: "Ungewöhnlich hoher Wert (\(value.euro)). Bitte prüfen."))
         }
-        out.append(Check(level: .info, text: "Echte Händler verlangen nie Gutscheincodes per Telefon, Chat oder E-Mail. Wer danach fragt, will betrügen."))
+        out.append(Check(level: .info, text: "Echte Läden verlangen nie Gutscheincodes per Telefon, Chat oder E-Mail. Wer danach fragt, will betrügen."))
         return out
     }
 }

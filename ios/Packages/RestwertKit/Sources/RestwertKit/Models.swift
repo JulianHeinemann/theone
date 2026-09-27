@@ -37,7 +37,7 @@ public enum MerchantCategory: String, Codable, CaseIterable, Identifiable, Senda
         switch self {
         case .official: "Am Handy vorzeigbar"
         case .codeOnly: "Nur online"
-        case .merchantApp: "Über die Händler-App"
+        case .merchantApp: "Über die App des Ladens"
         case .untested: "Noch unklar"
         }
     }
@@ -46,7 +46,7 @@ public enum MerchantCategory: String, Codable, CaseIterable, Identifiable, Senda
         switch self {
         case .official: "Digitale Karte am Handy offiziell möglich"
         case .codeOnly: "Keine Plastikkarte nötig, Code online einlösen"
-        case .merchantApp: "Nur über die App des Händlers"
+        case .merchantApp: "Nur über die App des Ladens"
         case .untested: "Offiziell unklar, hier hilft der Kassentest"
         }
     }
@@ -67,7 +67,7 @@ public enum BalanceCheck: String, Codable, Sendable {
         switch self {
         case .form: "Guthaben online prüfen"
         case .account: "Guthaben im Kundenkonto ansehen"
-        case .info: "Infos zum Guthaben beim Händler"
+        case .info: "Infos zum Guthaben im Laden"
         case .none: nil
         }
     }
@@ -93,7 +93,7 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         self.tip = tip
     }
 
-    public static let other = Merchant("other", "Anderer Händler", .untested, .code128, nil, "Noch keine Infos. Genau dafür ist der Kassentest da.")
+    public static let other = Merchant("other", "Anderer Laden", .untested, .code128, nil, "Noch keine Infos. Genau dafür ist der Kassentest da.")
 
     public static let all: [Merchant] = [
         Merchant("amazon", "Amazon", .codeOnly, .text, "https://www.amazon.de/gc/balance", check: .account, "Code im Amazon-Konto einlösen. Keine Filialen."),
@@ -126,7 +126,7 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         Merchant("mediamarkt", "MediaMarkt", .official, .code128, "https://www.mediamarkt.de/de/service/giftCard", check: .form, "Barcode vom Handy wird gescannt. Die Kasse fragt eventuell nach der PIN."),
         Merchant("saturn", "Saturn", .official, .code128, "https://www.saturn.de/de/service/giftCard", check: .form, "Wie MediaMarkt. Karte gilt nur bei Saturn."),
         Merchant("rewe", "REWE", .official, .code128, "https://kartenwelt.rewe.de/rewe-geschenkkarte.html#form-guthaben", check: .form, "Nur den Strich-Barcode zeigen. Einen QR-Code hat REWE laut Nutzerbericht abgelehnt."),
-        Merchant("stadtgutschein", "Stadtgutschein", .official, .qr, nil, "Händler scannt den QR-Code mit der Kassen-App. Systeme je Stadt verschieden."),
+        Merchant("stadtgutschein", "Stadtgutschein", .official, .qr, nil, "Die Kasse scannt den QR-Code mit der Kassen-App. Systeme je Stadt verschieden."),
         Merchant("dm", "dm", .merchantApp, .code128, "https://www.dm.de/services/services-im-markt/geschenkkarten-3480686#abfrage-guthaben", check: .form, "Karte mit Nummer und PIN in die „Mein dm“-App laden und dort bezahlen."),
         Merchant("breuninger", "Breuninger", .merchantApp, .code128, "https://hilfe.breuninger.com/hc/de/articles/360016955480-Wo-kann-ich-das-Guthaben-meiner-Geschenkkarte-einsehen", check: .info, "Karte in der Breuninger-App speichern (scannen + PIN) und an der Kasse zeigen."),
         Merchant("ca", "C&A", .untested, .code128, "https://www.c-and-a.com/de/de/shop/geschenkkarten-gutscheine", check: .info, "Nur in Filialen. Guthaben nur an der Kasse oder per Hotline."),
@@ -303,7 +303,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     public var merchant: Merchant { Merchant.byID[merchantID] ?? .other }
 
     public var name: String {
-        if merchantID == "other" { return customName.isEmpty ? "Anderer Händler" : customName }
+        if merchantID == "other" { return customName.isEmpty ? "Anderer Laden" : customName }
         return merchant.name
     }
 

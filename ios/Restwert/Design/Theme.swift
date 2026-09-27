@@ -22,33 +22,39 @@ extension Color {
         self.init(uiColor: UIColor { $0.userInterfaceStyle == .dark ? ui(dark) : ui(light) })
     }
 
-    static let page = Color(light: 0xF1F2F4, dark: 0x0B0B0D)
-    static let surface = Color(light: 0xFFFFFF, dark: 0x1C1C1F)
-    static let fill = Color(light: 0xF5F6F8, dark: 0x2A2A2F)
-    static let ink = Color(light: 0x0E0E10, dark: 0xF2F2F4)
-    static let ink2 = Color(light: 0x3A3C42, dark: 0xC9CAD0)
-    static let muted = Color(light: 0x5E6169, dark: 0xA2A4AC)
-    static let line = Color(light: 0xE7E8EB, dark: 0x34353B)
-    /// Text auf `ink`-Flächen (Hauptknopf, aktive Chips): weiß im Hellen, schwarz im Dunkeln.
-    static let onInk = Color(light: 0xFFFFFF, dark: 0x0E0E10)
-    /// Text auf Markengelb: immer dunkel.
-    static let onBrand = Color(hex: 0x0E0E10)
-    /// Markengelb: nur für Markenmomente (Summe, Widget), nicht für Aktionen. Im Dunkeln gedämpft, damit es nicht blendet.
-    static let brandYellow = Color(light: 0xFFE14D, dark: 0xE3C53C)
+    // Papier statt Systemgrau: warmer Grund, Tinte statt reinem Schwarz.
+    static let page = Color(light: 0xF6F4EF, dark: 0x141311)
+    static let surface = Color(light: 0xFFFFFF, dark: 0x1E1D1B)
+    static let fill = Color(light: 0xEFECE5, dark: 0x2A2926)
+    static let ink = Color(light: 0x111111, dark: 0xF2F0EA)
+    static let ink2 = Color(light: 0x3A3A40, dark: 0xCFCDC6)
+    static let muted = Color(light: 0x5C5C63, dark: 0xA8A8AE)
+    static let line = Color(light: 0xE6E2D9, dark: 0x34322E)
+    /// Text auf `ink`-Flächen (Hauptknopf, aktive Chips): weiß im Hellen, Tinte im Dunkeln.
+    static let onInk = Color(light: 0xFFFFFF, dark: 0x111111)
+    /// Text auf Markengelb: immer Tinte.
+    static let onBrand = Color(hex: 0x111111)
+    /// Markengelb: die App selbst (Summe, Stempel, Widget). Nie Ladenfarbe, nie Aktionsknopf. In beiden Modi hell genug, kein Senf.
+    static let brandYellow = Color(light: 0xFFD84D, dark: 0xF5CE3E)
     static let keyBlue = Color(hex: 0x2451FF)
-    /// Summenkarte: im Hellen gelbe Fläche, im Dunkeln dunkle Fläche mit gelbem Betrag (kein Senf-Ton).
-    static let sumFill = Color(light: 0xFFE14D, dark: 0x1C1C1F)
-    static let sumText = Color(light: 0x0E0E10, dark: 0xC9CAD0)
-    static let sumAmount = Color(light: 0x0E0E10, dark: 0xFFE14D)
+    /// Summenkarte: in beiden Modi gelbe Fläche mit Tinte darauf.
+    static let sumFill = brandYellow
+    static let sumText = Color(hex: 0x111111)
+    static let sumAmount = Color(hex: 0x111111)
     static let good = Color(light: 0x1F7A4D, dark: 0x4CC38A)
-    static let goodSoft = Color(light: 0xCFF0DC, dark: 0x163A28)
-    static let bad = Color(light: 0xE0413A, dark: 0xFF8078)
-    static let badSoft = Color(light: 0xFBDCDA, dark: 0x3D1614)
-    static let warn = Color(light: 0xB42318, dark: 0xFF9C8A)
-    static let warnSoft = Color(light: 0xFDECE8, dark: 0x3A1712)
+    static let goodSoft = Color(light: 0xD9F0E2, dark: 0x173628)
+    static let bad = Color(light: 0xC4221A, dark: 0xFF7A70)
+    static let badSoft = Color(light: 0xF9DEDC, dark: 0x3D1714)
+    /// Frist bis 14 Tage (dringend) – als Pill mit 12 % Tönung.
+    static let warn = Color(light: 0xC4221A, dark: 0xFF7A70)
+    static let warnSoft = Color(light: 0xC4221A, dark: 0xFF7A70).opacity(0.12)
+    /// Frist 15–30 Tage – nur als Text.
+    static let soon = Color(light: 0xB35A00, dark: 0xFFB340)
+    /// Hinweis-Streifen (z. B. „Betrag offen“).
+    static let notice = Color(hex: 0xFF9F0A)
     static let paper = Color(light: 0xFBF9F4, dark: 0x24221E)
-    static let disabledFill = Color(light: 0xE6E6EA, dark: 0x2C2C31)
-    static let disabledText = Color(light: 0x6E717A, dark: 0x9C9EA6)
+    static let disabledFill = Color(light: 0xE4E0D7, dark: 0x2E2D2A)
+    static let disabledText = Color(light: 0x5C5C63, dark: 0xA8A8AE)
 }
 
 extension MerchantCategory {
@@ -106,15 +112,17 @@ extension VoucherStatus {
 enum Layout {
     static let page: CGFloat = 16
     static let section: CGFloat = 24
-    static let cardRadius: CGFloat = 20
-    static let controlRadius: CGFloat = 14
+    static let group: CGFloat = 12
+    /// Radien: groß 24 (Karten), mittel 16 (Knöpfe, Kacheln), klein 10 (Felder); sonst Capsule.
+    static let cardRadius: CGFloat = 24
     static let buttonRadius: CGFloat = 16
+    static let controlRadius: CGFloat = 10
 }
 
 extension Font {
     /// Beträge und Zahlen: SF Rounded, fett, gleich breite Ziffern.
     static func amount(_ size: CGFloat) -> Font {
-        .scaled(size, weight: .bold, design: .rounded).monospacedDigit()
+        .scaled(size, weight: .heavy, design: .rounded).monospacedDigit()
     }
 }
 
@@ -346,5 +354,91 @@ extension Font {
     static func scaled(_ size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
         let (style, base): (Font.TextStyle, CGFloat) = size >= 28 ? (.largeTitle, 34) : (.title2, 22)
         return .system(style, design: design, weight: weight).scaled(by: size / base)
+    }
+}
+
+// MARK: - Ticket (Signaturform)
+
+/// Die Signaturform der App: ein Abschnitt mit zwei ausgestanzten Kerben links und rechts.
+/// Nur für Summenkarte, Detailkarte, Kassen-Ticket, Stempel und Leerzustände – nirgends sonst.
+struct TicketShape: Shape {
+    var radius: CGFloat = 24
+    var notchRadius: CGFloat = 9
+    /// Höhe der Kerben als Anteil der Höhe (0…1) oder fester Abstand von oben.
+    var notchY: CGFloat = 0.62
+    var notchFromTop: CGFloat? = nil
+    var notchFromBottom: CGFloat? = nil
+    var sides: Edges = [.leading, .trailing]
+
+    struct Edges: OptionSet { let rawValue: Int; static let leading = Edges(rawValue: 1); static let trailing = Edges(rawValue: 2) }
+
+    func notchCenter(in rect: CGRect) -> CGFloat {
+        if let b = notchFromBottom { return rect.maxY - b }
+        return notchFromTop.map { rect.minY + $0 } ?? rect.minY + rect.height * notchY
+    }
+
+    func path(in rect: CGRect) -> Path {
+        var p = Path(roundedRect: rect, cornerRadius: radius, style: .continuous)
+        let y = notchCenter(in: rect)
+        var cut = Path()
+        if sides.contains(.leading) { cut.addEllipse(in: CGRect(x: rect.minX - notchRadius, y: y - notchRadius, width: notchRadius * 2, height: notchRadius * 2)) }
+        if sides.contains(.trailing) { cut.addEllipse(in: CGRect(x: rect.maxX - notchRadius, y: y - notchRadius, width: notchRadius * 2, height: notchRadius * 2)) }
+        p = p.subtracting(cut)
+        return p
+    }
+}
+
+/// Gestrichelte Abrisslinie zwischen den Kerben.
+struct TearLine: View {
+    var color: Color = .ink
+    var body: some View {
+        HLine().stroke(style: StrokeStyle(lineWidth: 1, dash: [4, 4])).foregroundStyle(color.opacity(0.22))
+            .frame(height: 1)
+            .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Betrag
+
+/// Beträge wie auf einem Preisschild: große Euro, kleine hochgestellte Cent und €-Zeichen.
+struct AmountText: View {
+    let value: Double
+    var size: CGFloat = 56
+
+    private var parts: (String, String) {
+        let s = value.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE")))
+        let comps = s.split(separator: ",", maxSplits: 1).map(String.init)
+        return (comps.first ?? s, comps.count > 1 ? comps[1] : "00")
+    }
+
+    var body: some View {
+        let (euros, cents) = parts
+        (Text(euros).font(.amount(size)).kerning(-size * 0.025)
+         + Text(",\(cents) €").font(.amount(size * 0.46)).baselineOffset(size * 0.36))
+            .monospacedDigit()
+            .contentTransition(.numericText(value: value))
+            .lineLimit(1).minimumScaleFactor(0.5)
+            .accessibilityLabel(value.euro)
+    }
+}
+
+/// Stempel „Aufgebraucht“ in der Betragsschrift, leicht schräg.
+struct UsedUpStamp: View {
+    var text = "AUFGEBRAUCHT"
+    @State private var landed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Text(text)
+            .font(.scaled(22, weight: .heavy, design: .rounded)).kerning(3)
+            .foregroundStyle(Color.ink.opacity(0.75))
+            .padding(.horizontal, 14).padding(.vertical, 6)
+            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.ink.opacity(0.75), lineWidth: 3))
+            .background(Color.brandYellow, in: .rect(cornerRadius: 8))
+            .rotationEffect(.degrees(-8))
+            .scaleEffect(landed || reduceMotion ? 1 : 1.3)
+            .opacity(landed || reduceMotion ? 1 : 0)
+            .onAppear { withAnimation(.spring(duration: 0.25, bounce: 0.3)) { landed = true } }
+            .accessibilityLabel("Aufgebraucht")
     }
 }

@@ -12,7 +12,11 @@ struct CardRow: View {
         // Archiviert, aber noch gültig: so anzeigen und ansagen. Eingelöst und abgelaufen behalten ihren Status.
         if card.isArchived, status == .valid || status == .expiringSoon { return ("archiviert", .muted) }
         return switch status {
-        case .expiringSoon: (card.daysLeft == 0 ? "läuft heute ab" : card.daysLeft == 1 ? "läuft morgen ab" : "noch \(card.daysLeft) Tage", .warn)
+        case .expiringSoon:
+            // Bis 14 Tage dringend (rote Pill), danach nur orangener Text.
+            card.daysLeft <= 14
+                ? (card.daysLeft == 0 ? "Heute weg" : card.daysLeft == 1 ? "Morgen weg" : "noch \(card.daysLeft) Tage", .warn)
+                : ("noch \(card.daysLeft) Tage", .soon)
         case .expired: ("abgelaufen", .bad)
         case .redeemed: ("eingelöst", .muted)
         case .valid: ("bis \(card.expires.dayMonthYear)", .muted)
@@ -47,7 +51,7 @@ struct CardRow: View {
         let amount = card.kind.isValueBased ? "\(card.headline) von \(card.value.euro)" : card.headline == card.kind.label ? card.kind.label : "\(card.headline) \(card.kind.label)"
         let who = card.owner.isEmpty ? "" : ", für \(card.owner)"
         let open = card.pendingSince != nil && card.isActive ? ", Betrag offen" : ""
-        return "\(card.isExample ? "Beispiel: " : "")\(card.name)\(who)\(open), \(amount), \(dueText.0)\(card.forGifting ? ", zum Verschenken" : "")"
+        return "\(card.name)\(who)\(open), \(amount), \(dueText.0)\(card.forGifting ? ", zum Verschenken" : "")"
     }
 
     private var nameBlock: some View {
@@ -66,7 +70,7 @@ struct CardRow: View {
                 }
             }
             // Zwei Stufen: bis 14 Tage gefüllt mit Ausrufezeichen, danach nur umrandet mit Uhr.
-            let urgent = due.1 == .bad || (due.1 == .warn && card.daysLeft <= 14)
+            let urgent = due.1 == .warn
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 6) { dueLabel(due, urgent); tags }
                 VStack(alignment: .leading, spacing: 3) { dueLabel(due, urgent); HStack(spacing: 6) { tags } }
@@ -80,27 +84,26 @@ struct CardRow: View {
         if card.pendingSince != nil && card.isActive {
             Text("· Betrag offen").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.warn).fixedSize()
         }
-        if card.isExample {
-            Text("· Beispiel").font(.scaled(13)).foregroundStyle(Color.muted).fixedSize()
-        }
     }
 
     private func dueLabel(_ due: (String, Color), _ urgent: Bool) -> some View {
             Label {
                 Text(due.0)
             } icon: {
-                if due.1 != .muted { Image(systemName: urgent ? "exclamationmark.circle.fill" : "clock") }
+                if due.1 == .warn || due.1 == .soon { Image(systemName: "clock") }
             }
             .labelStyle(DueLabelStyle())
             .lineLimit(1).minimumScaleFactor(0.75)
-            .font(.scaled(13, weight: due.1 == .muted ? .regular : (urgent ? .bold : .semibold)))
+            .font(.scaled(13, weight: due.1 == .muted ? .regular : .semibold))
             .foregroundStyle(due.1)
+            .padding(.horizontal, urgent ? 8 : 0).padding(.vertical, urgent ? 3 : 0)
+            .background(urgent ? Color.warnSoft : Color.clear, in: .capsule)
     }
 
     private var amountBlock: some View {
         VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: 3) {
             if card.kind.isValueBased {
-                Text(card.headline).font(.amount(typeSize.isAccessibilitySize ? 16 : 19)).foregroundStyle(Color.ink)
+                Text(card.headline).font(.amount(typeSize.isAccessibilitySize ? 16 : 20)).foregroundStyle(Color.ink)
                     .contentTransition(.numericText(value: card.balance))
                     .lineLimit(1).fixedSize()
                 Text("von \(card.value.euro)")
