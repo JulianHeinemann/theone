@@ -6,6 +6,8 @@ import RestwertKit
 /// Scannen → Ergebnis prüfen → Formular. Alternativ Foto, E-Mail, Datei oder manuell.
 struct ScanView: View {
     @Environment(Router.self) private var router
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var outcome: ScanOutcome?
     @State private var busy = false
@@ -15,6 +17,8 @@ struct ScanView: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var formSeed: FormSeed?
     @State private var importError: String?
+    /// Nur ob Text in der Zwischenablage liegt; gelesen wird erst nach einem Tipp.
+    @State private var clipboardHasText = UIPasteboard.general.hasStrings
 
     /// Wunsch aus dem Einstieg einlösen: Kamera oder Formular öffnen.
     private func consumeIntent() {
@@ -33,7 +37,7 @@ struct ScanView: View {
                     ScanResultView(outcome: outcome,
                                    onAdd: { formSeed = FormSeed(outcome: outcome) },
                                    onRescan: {
-                                       withAnimation(.smooth) { self.outcome = nil }
+                                       withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
                                        showScanner = true
                                    })
                     .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -44,7 +48,8 @@ struct ScanView: View {
                                                 removal: .move(edge: .leading).combined(with: .opacity)))
                 }
             }
-            .padding(.horizontal, Layout.page).padding(.bottom, 30)
+            // Reichlich Luft unten: im Hinzufügen-Tab (Suchrolle) lag das Ende sonst unter der schwebenden Tab-Leiste.
+            .padding(.horizontal, Layout.page).padding(.bottom, Layout.tap * 2)
         }
         .scrollIndicators(.hidden)
         .pageBackground()
@@ -54,7 +59,7 @@ struct ScanView: View {
         .toolbar {
             if outcome != nil {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Zurück", systemImage: "chevron.left") { withAnimation(.smooth) { outcome = nil } }
+                    Button("Zurück", systemImage: "chevron.left") { withAnimation(reduceMotion ? nil : .smooth) { outcome = nil } }
                 }
             }
         }
@@ -62,15 +67,25 @@ struct ScanView: View {
             if busy {
                 VStack(spacing: 12) {
                     ProgressView().controlSize(.large)
-                    Text(SmartExtractor.isAvailable ? "Wird gelesen …" : "Wird gelesen …")
+                    Text("Wird gelesen …")
                         .font(.scaled(15, weight: .semibold))
                 }
+                .accessibilityElement(children: .combine)
                 .padding(28)
                 .glassEffect(.regular, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                 .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
         }
-        .animation(.smooth, value: busy)
+        .animation(reduceMotion ? nil : .smooth, value: busy)
+        .onChange(of: busy) { _, reading in
+            if reading { AccessibilityNotification.Announcement("Wird gelesen").post() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIPasteboard.changedNotification)) { _ in
+            clipboardHasText = UIPasteboard.general.hasStrings
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { clipboardHasText = UIPasteboard.general.hasStrings }
+        }
         .navigationDestination(item: $formSeed) { seed in
             CardFormView(outcome: seed.outcome) { saved in
                 formSeed = nil
@@ -88,7 +103,7 @@ struct ScanView: View {
             }
         }
         .sheet(isPresented: $showEmail) {
-            EmailImportSheet { text in Task { await run { await Importer.analyze(text: text) } } }
+            EmailImportSheet(hasClipboard: clipboardHasText) { text in Task { await run { await Importer.analyze(text: text) } } }
         }
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
@@ -117,40 +132,57 @@ struct ScanView: View {
 
     // MARK: Quellen
 
+    /// Scannen ist der Hauptweg; die anderen drei stehen leiser darunter.
     private var sources: some View {
         VStack(alignment: .leading, spacing: Layout.section) {
-            Button { showScanner = true } label: { ViewfinderTeaser() }
+            VStack(alignment: .leading, spacing: Layout.group) {
+                Button { showScanner = true } label: { ViewfinderTeaser() }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Gutschein scannen")
+                    .accessibilityHint("Öffnet die Kamera. Barcode und Text werden automatisch gelesen.")
+                // Hinweis direkt beim Scannen, nicht als letzte Zeile unter der Tab-Leiste.
+                Label("Texterkennung läuft nur auf deinem iPhone.", systemImage: "lock")
+                    .font(.scaled(13)).foregroundStyle(Color.ink2).padding(.horizontal, 4)
+            }
+            VStack(alignment: .leading, spacing: Layout.group) {
+                Text("Oder anders hinzufügen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                    .accessibilityAddTraits(.isHeader)
+                VStack(spacing: 0) {
+                    PhotosPicker(selection: $photoItem, matching: .images) {
+                        SourceRow(icon: "photo", title: "Aus Fotos", subtitle: "Foto oder Screenshot eines Gutscheins")
+                    }
+                    Divider().padding(.leading, 56)
+                    Button { showEmail = true } label: {
+                        SourceRow(icon: "envelope", title: "Aus dem Text einer E-Mail", subtitle: "Text kopieren und hier einfügen")
+                    }
+                    if clipboardHasText {
+                        Button(action: pasteFromClipboard) {
+                            Label("Aus Zwischenablage einfügen", systemImage: "doc.on.clipboard")
+                                .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                                .padding(.horizontal, Layout.inset)
+                                .frame(minHeight: Layout.tap)
+                                .background(Color.fill, in: .capsule)
+                                .contentShape(.capsule)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading, 56).padding(.trailing, 14).padding(.bottom, Layout.group)
+                        .accessibilityHint("Liest den kopierten Text und sucht darin nach dem Gutschein")
+                        .transition(.opacity)
+                    }
+                    Divider().padding(.leading, 56)
+                    Button { showFiles = true } label: {
+                        SourceRow(icon: "doc", title: "Aus einer Datei",
+                                  subtitle: "PDF oder Bild. Anhang aus Mail: lange drücken, „Teilen“, Rest\u{2060}wert wählen")
+                    }
+                    Divider().padding(.leading, 56)
+                    Button { formSeed = FormSeed(outcome: nil) } label: {
+                        SourceRow(icon: "keyboard", title: "Von Hand eingeben", subtitle: "Laden, Betrag und Code selbst eintippen")
+                    }
+                }
                 .buttonStyle(.plain)
-            VStack(spacing: 0) {
-                PhotosPicker(selection: $photoItem, matching: .images) {
-                    SourceRow(icon: "photo", title: "Aus Fotos", subtitle: "Foto oder Screenshot eines Gutscheins")
-                }
-                Divider().padding(.leading, 56)
-                Button { showEmail = true } label: {
-                    SourceRow(icon: "envelope", title: "Aus einer E-Mail", subtitle: "Text der Mail einfügen")
-                }
-                Divider().padding(.leading, 56)
-                Button { showFiles = true } label: {
-                    SourceRow(icon: "doc", title: "Aus einer Datei", subtitle: "PDF oder Bild, z. B. aus einem Mail-Anhang")
-                }
-                Divider().padding(.leading, 56)
-                Button { formSeed = FormSeed(outcome: nil) } label: {
-                    SourceRow(icon: "keyboard", title: "Von Hand eingeben", subtitle: nil)
-                }
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                .animation(reduceMotion ? nil : .smooth, value: clipboardHasText)
             }
-            .buttonStyle(.plain)
-            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
-            VStack(alignment: .leading, spacing: 6) {
-                Label("PDF aus einer Mail übernehmen", systemImage: "envelope.open").font(.scaled(15, weight: .semibold))
-                Text("1. Anhang in Mail lange drücken  2. „Teilen“  3. Rest\u{2060}wert wählen")
-                    .font(.scaled(15)).foregroundStyle(Color.ink2)
-            }
-            .foregroundStyle(Color.ink)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(Layout.inset)
-            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
-            Label("Texterkennung läuft nur auf deinem iPhone.", systemImage: "lock")
-                .font(.scaled(13)).foregroundStyle(Color.muted).padding(.horizontal, 4)
         }
         .padding(.top, 8)
     }
@@ -183,7 +215,16 @@ struct ScanView: View {
     }
 
     private func show(_ result: ScanOutcome) {
-        withAnimation(.smooth) { outcome = result }
+        withAnimation(reduceMotion ? nil : .smooth) { outcome = result }
+    }
+
+    /// Erst hier wird die Zwischenablage gelesen (iOS fragt dann ggf. nach Erlaubnis).
+    private func pasteFromClipboard() {
+        guard let text = UIPasteboard.general.string, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            importError = "In der Zwischenablage ist kein Text. Kopier zuerst den Text der Gutschein-E-Mail."
+            return
+        }
+        Task { await run { await Importer.analyze(text: text) } }
     }
 }
 
@@ -204,20 +245,29 @@ private struct SourceRow: View {
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: icon).font(.scaled(17)).foregroundStyle(Color.ink2).frame(width: 28)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.scaled(16)).foregroundStyle(Color.ink)
-                if let subtitle { Text(subtitle).font(.scaled(13)).foregroundStyle(Color.muted) }
+                Text(title).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
+                if let subtitle {
+                    Text(subtitle).font(.scaled(13)).foregroundStyle(Color.ink2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            Spacer()
-            Image(systemName: "chevron.right").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted.opacity(0.7))
+            .multilineTextAlignment(.leading)
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.right").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
+                .accessibilityHidden(true)
         }
-        .padding(.horizontal, 14).padding(.vertical, 13)
+        .padding(.horizontal, 14).padding(.vertical, Layout.group)
+        .frame(minHeight: Layout.tap)
         .contentShape(.rect)
+        .accessibilityElement(children: .combine)
     }
 }
 
 /// E-Mail-Text einfügen und auswerten.
 private struct EmailImportSheet: View {
+    var hasClipboard: Bool
     var onAnalyze: (String) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var text = ""
@@ -225,14 +275,20 @@ private struct EmailImportSheet: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Kopier in Mail den Text der Gutschein-E-Mail und füg ihn hier ein. Rest\u{2060}wert sucht Shop, Wert, Code, PIN und Ablaufdatum heraus.")
+                Text("Kopier in Mail den Text der Gutschein-E-Mail und füg ihn hier ein. Rest\u{2060}wert sucht Laden, Wert, Code, PIN und Ablaufdatum heraus.")
                     .font(.scaled(15)).foregroundStyle(Color.ink2)
-                PasteButton(payloadType: String.self) { strings in
-                    Task { @MainActor in text = strings.joined(separator: "\n") }
+                    .fixedSize(horizontal: false, vertical: true)
+                if hasClipboard {
+                    // Systemknopf: liest die Zwischenablage erst beim Tipp, ohne Rückfrage.
+                    PasteButton(payloadType: String.self) { strings in
+                        Task { @MainActor in text = strings.joined(separator: "\n") }
+                    }
+                    .labelStyle(.titleAndIcon)
+                    .tint(Color.ink)
                 }
-                .labelStyle(.titleAndIcon)
                 TextEditor(text: $text)
                     .font(.scaled(15))
+                    .accessibilityLabel("Text der E-Mail")
                     .scrollContentBackground(.hidden)
                     .padding(Layout.group)
                     .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
@@ -255,23 +311,34 @@ private struct EmailImportSheet: View {
 }
 
 /// Großer Einstieg in den Kamera-Scanner.
+/// Im Hellen Tinte mit weißer Schrift; im Dunkeln eine dunkle Fläche mit Kante, damit das Ticket nicht blendet.
 struct ViewfinderTeaser: View {
+    @Environment(\.colorScheme) private var scheme
+
+    private var dark: Bool { scheme == .dark }
+    private var fill: Color { dark ? .fill : .ink }
+    private var text: Color { dark ? .ink : .onInk }
+
     var body: some View {
+        let shape = TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchY: 0.5)
         VStack(alignment: .leading, spacing: 0) {
             ViewfinderCorners()
-                .stroke(Color.onInk.opacity(0.9), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .stroke(text.opacity(0.9), style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .frame(width: 64, height: 44)
+                .accessibilityHidden(true)
             Spacer(minLength: 28)
-            Text("Karte scannen").font(.scaled(22, weight: .bold))
+            Text("Gutschein scannen").font(.scaled(22, weight: .bold))
             Text("Barcode und Text auf der Rückseite werden automatisch gelesen.")
-                .font(.scaled(15)).foregroundStyle(Color.onInk.opacity(0.8))
+                .font(.scaled(15)).foregroundStyle(text.opacity(0.85))
+                .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 4)
         }
-        .foregroundStyle(Color.onInk)
+        .foregroundStyle(text)
         .padding(Layout.ticketInset)
         .frame(maxWidth: .infinity, minHeight: 190, alignment: .leading)
-        // Hauptaktion in Tinte, als Ticket: hier entsteht ein neuer Gutschein.
-        .background(Color.ink, in: TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchY: 0.5))
+        // Hauptaktion als Ticket: hier entsteht ein neuer Gutschein.
+        .background(fill, in: shape)
+        .overlay { if dark { shape.stroke(Color.line, lineWidth: 1) } }
         .contentShape(.rect)
     }
 }
@@ -294,12 +361,14 @@ struct ViewfinderCorners: Shape {
 /// Gelbe Scanlinie, die zeitgesteuert über den Sucher läuft.
 struct ScanLine: View {
     var travel: ClosedRange<Double> = 0.18...0.62
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { geo in
-            TimelineView(.animation) { timeline in
+            // Bewegung reduzieren: Linie steht still in der Mitte.
+            TimelineView(.animation(paused: reduceMotion)) { timeline in
                 let t = timeline.date.timeIntervalSinceReferenceDate
-                let wave = (sin(t * 2 * .pi / 3.2) + 1) / 2
+                let wave = reduceMotion ? 0.5 : (sin(t * 2 * .pi / 3.2) + 1) / 2
                 let y = travel.lowerBound + (travel.upperBound - travel.lowerBound) * wave
                 Rectangle()
                     .fill(LinearGradient(colors: [Color.brandYellow.opacity(0), Color.brandYellow.opacity(0.4)],
@@ -311,5 +380,6 @@ struct ScanLine: View {
             }
         }
         .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }

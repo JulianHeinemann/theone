@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import RestwertKit
 
 /// Ein Punkt auf dem Verfallsradar. Eigener Typ, damit auch das Onboarding Beispieldaten zeigen kann.
@@ -8,225 +9,526 @@ struct RadarItem: Identifiable {
     let name: String
     let expires: Date
     var urgent = false
+    /// Kurzer Betrag für die Kachel („50 €“, „12,40 €“, „15 %“); `nil` = keiner.
+    var amount: String? = nil
+    /// Euro-Guthaben für Summen; nur bei wertbasierten Gutscheinen.
+    var value: Double? = nil
+    /// Ablaufdatum geschätzt (gesetzliche Frist), nicht vom Gutschein gelesen.
+    var estimated = false
 
-    init(id: UUID = UUID(), merchantID: String?, name: String, expires: Date, urgent: Bool = false) {
+    init(id: UUID = UUID(), merchantID: String?, name: String, expires: Date, urgent: Bool = false,
+         amount: String? = nil, value: Double? = nil, estimated: Bool = false) {
         self.id = id
         self.merchantID = merchantID
         self.name = name
         self.expires = expires
         self.urgent = urgent
+        self.amount = amount
+        self.value = value
+        self.estimated = estimated
     }
 
     init(card: GiftCard, warnDays: Int = 14) {
+        let amount: String? = if card.kind.isValueBased { Self.short(card.balance) }
+            else if let p = card.percent, p > 0 { card.headline }
+            else if card.value > 0 { Self.short(card.value) }
+            else { nil }
         self.init(id: card.id, merchantID: card.merchantID, name: card.name, expires: card.expires,
-                  urgent: card.daysLeft <= warnDays)
+                  urgent: card.daysLeft <= warnDays, amount: amount,
+                  value: card.kind.isValueBased ? card.balance : nil, estimated: card.expiresEstimated)
+    }
+
+    /// „50 €“ statt „50,00 €“, Cent nur wenn es welche gibt – die Kachel ist schmal.
+    static func short(_ v: Double) -> String {
+        let whole = v == v.rounded()
+        return v.formatted(.number.precision(.fractionLength(whole ? 0 : 2)).locale(Locale(identifier: "de_DE"))) + " €"
     }
 }
 
-/// Verfallsradar: Zeitachse ab heute, jeder Gutschein als Ladenkachel an seinem Ablauftag.
-/// Die Achse skaliert mit: Sie reicht bis zum spätesten Gutschein (3 bis 48 Monate) und wechselt dabei
-/// von Monats- über Quartals- zu Jahresstrichen. Bei langen Spannen ist die Zeit gestaucht (Wurzelskala),
-/// damit die nächsten Wochen breit bleiben. Kacheln und Abstände wachsen mit der Schriftgröße.
-/// Kacheln, die sich überschneiden, stapeln sich. Nur was nach 48 Monaten abläuft, steht als „+N später“.
+// MARK: - Radar
+
+/// Verfallsradar: ehrliche Zeitachse in zwei gekennzeichneten Zonen.
+/// Zone A: „Heute“ am linken Rand, die nächsten 90 Tage linear mit Monatsstrichen und Warnband (0–14 / 15–30 Tage).
+/// Danach ein sichtbarer Achsbruch, Zone B: spätere Kalenderjahre als gleich breite Spalten.
+/// Höchstens zwei Spuren ohne Überdeckung; was nicht mehr passt, wird zum „+N“-Bündel.
+/// Beschriftungen werden gemessen und bei Kollision weggelassen. Die Platzierung wird einmal je Aufbau berechnet.
 struct ExpiryRadar: View {
     let items: [RadarItem]
-    /// Feste Spanne in Monaten; `nil` = automatisch bis zum spätesten Gutschein.
-    var months: Int? = nil
     var onSelect: ((RadarItem) -> Void)? = nil
+    /// Tipp auf ein „+N“-Bündel (z. B. Ablauftermine öffnen).
+    var onBundle: (([RadarItem]) -> Void)? = nil
     /// Bei `true` fallen die Kacheln nacheinander auf die Achse (Onboarding, erster Auftritt).
     var animateIn = true
+    /// Meldet die Höhe der Achse, damit die Hülle ihre Kerben dorthin setzen kann.
+    var onAxis: ((CGFloat) -> Void)? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var landed = false
+    @State private var width: CGFloat = 0
 
-    // Wächst mit „Größerer Text“, aber gedeckelt, damit die Achse nicht nur aus Kacheln besteht.
+    // Wächst mit „Größerer Text“, gedeckelt, damit die Achse nicht nur aus Kacheln besteht.
     @ScaledMetric(relativeTo: .body) private var tileBase: CGFloat = 32
-    @ScaledMetric(relativeTo: .caption) private var flagSpace: CGFloat = 30
-    @ScaledMetric(relativeTo: .caption) private var labelSpace: CGFloat = 30
     private var tile: CGFloat { min(tileBase, 46) }
-    private var laneStep: CGFloat { tile * 0.7 }
-    private let lanes = 3
-    private static let maxMonths = 48   // gesetzliche Frist: bis zu 4 Jahre
-
-    /// Spanne in Monaten: bis zum spätesten Gutschein (höchstens 36), mindestens 3.
-    private var span: Int {
-        if let months { return months }
-        let cal = Calendar.current
-        let latest = items.map(\.expires).max() ?? .now
-        let m = (cal.dateComponents([.month], from: cal.startOfDay(for: .now), to: latest).month ?? 0) + 1
-        return min(max(m, 3), Self.maxMonths)
-    }
-
-    /// Achse beginnt knapp vor heute, damit „Heute“ links steht und der Platz der Zukunft gehört.
-    private var range: (start: Date, end: Date) {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: .now)
-        let lead = max(4, span * 30 / 25)   // Vorlauf wächst mit der Spanne, damit „Heute“ nie am Rand klebt
-        let start = cal.date(byAdding: .day, value: -lead, to: today) ?? today
-        return (start, cal.date(byAdding: .month, value: span, to: today) ?? today)
-    }
-
-    /// Strichabstand je nach Spanne: Monate, Quartale oder Jahre.
-    private var tickStep: Int { span <= 8 ? 1 : span <= 18 ? 3 : 12 }
-
-    private var visible: [RadarItem] { items.filter { $0.expires < range.end }.sorted { $0.expires < $1.expires } }
-    private var later: Int { items.count - visible.count }
+    /// Beschriftungen wachsen bis Accessibility 1 (≈ 17 pt), danach nicht weiter.
+    private static let maxType = DynamicTypeSize.accessibility1
 
     var body: some View {
-        let chartHeight = tile + laneStep * CGFloat(lanes - 1) + flagSpace
-        GeometryReader { geo in
-            let w = geo.size.width
-            let axisY = chartHeight
-            ZStack(alignment: .topLeading) {
-                axis(width: w, y: axisY)
-                todayMarker(width: w, axisY: axisY)
-                ForEach(Array(placed(width: w).enumerated()), id: \.element.item.id) { i, p in
-                    marker(p.item)
-                        .position(x: p.x, y: axisY - tile / 2 - 6 - CGFloat(p.lane) * laneStep)
-                        .offset(y: landed || reduceMotion || !animateIn ? 0 : -40)
-                        .opacity(landed || reduceMotion || !animateIn ? 1 : 0)
-                        .animation(.spring(duration: 0.5, bounce: 0.35).delay(0.08 * Double(i)), value: landed)
-                        .zIndex(Double(lanes - p.lane))
+        let plan = RadarPlan(items: items, width: width, tile: tile,
+                             fonts: RadarFonts(min(typeSize, Self.maxType)), now: .now)
+        ZStack(alignment: .topLeading) {
+            chart(plan)
+            labels(plan)
+            ForEach(Array(plan.marks.enumerated()), id: \.element.id) { i, m in
+                mark(m, plan: plan)
+                    .position(x: m.x, y: plan.slotTop(m.lane) + plan.slot / 2)
+                    .offset(y: shown ? 0 : -30)
+                    .opacity(shown ? 1 : 0)
+                    .animation(.spring(duration: 0.5, bounce: 0.3).delay(0.06 * Double(min(i, 10))), value: landed)
+                    // Chronologisch vorlesen, nicht nach Spur.
+                    .accessibilitySortPriority(Double(plan.marks.count - i))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(height: plan.height)
+        .dynamicTypeSize(...Self.maxType)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+        .onChange(of: plan.axisY, initial: true) { _, y in onAxis?(y) }
+        .onAppear { landed = true }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Verfallsradar")
+    }
+
+    private var shown: Bool { landed || reduceMotion || !animateIn }
+
+    // MARK: Achse, Zonen, Band
+
+    private func chart(_ p: RadarPlan) -> some View {
+        Canvas { ctx, size in
+            let top: CGFloat = 0
+            let axis = p.axisY
+            // Warnband hinter der Achse: 0–14 Tage kräftiger, 15–30 Tage zart.
+            for band in p.bands {
+                let r = CGRect(x: band.x0, y: top, width: max(0, band.x1 - band.x0), height: axis - top)
+                ctx.fill(Path(r), with: .color(band.strong ? Color.warnSoft : Color.soon.opacity(0.1)))
+            }
+            // Spaltengrenzen der Jahreszone.
+            for c in p.columns.dropFirst() {
+                ctx.fill(Path(CGRect(x: c.x0 - 0.5, y: top + 4, width: 1, height: axis - top - 4)), with: .color(Color.line))
+            }
+            // Stiele von der Kachel zur Achse, damit auch Spur 2 eindeutig auf ihrem Tag steht.
+            for m in p.marks where !m.zoneB {
+                let y0 = p.slotTop(m.lane) + p.tile + (m.showCaption ? 1 + p.captionH : 0)
+                ctx.fill(Path(CGRect(x: m.x - 0.5, y: y0, width: 1, height: max(0, axis - y0))),
+                         with: .color(Color.ink.opacity(0.3)))
+            }
+            // Achse Zone A: beginnt bei Heute.
+            let a = Path(roundedRect: CGRect(x: p.todayX, y: axis - 1, width: max(0, p.zoneAEnd - p.todayX), height: 2), cornerRadius: 1)
+            ctx.fill(a, with: .color(Color.ink))
+            // Monatsstriche.
+            for t in p.ticks {
+                ctx.fill(Path(roundedRect: CGRect(x: t.x - 1, y: axis - 7, width: 2, height: 7), cornerRadius: 1), with: .color(Color.ink))
+            }
+            // Heute: gelber Punkt mit Tintenrand am Achsanfang – Gelb ist die App.
+            let dot = CGRect(x: p.todayX - 5, y: axis - 5, width: 10, height: 10)
+            ctx.fill(Path(ellipseIn: dot), with: .color(Color.brandYellow))
+            ctx.stroke(Path(ellipseIn: dot), with: .color(Color.ink), lineWidth: 1.5)
+            if !p.columns.isEmpty {
+                // Achsbruch: zwei schräge Striche in der Lücke.
+                let mid = p.zoneAEnd + p.breakW / 2
+                for dx in [-3.0, 3.0] {
+                    var s = Path()
+                    s.move(to: CGPoint(x: mid + dx - 3, y: axis + 5))
+                    s.addLine(to: CGPoint(x: mid + dx + 3, y: axis - 5))
+                    ctx.stroke(s, with: .color(Color.muted), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                }
+                // Achse Zone B mit Strichen an den Jahresgrenzen.
+                let b0 = p.zoneAEnd + p.breakW
+                ctx.fill(Path(roundedRect: CGRect(x: b0, y: axis - 1, width: max(0, size.width - b0), height: 2), cornerRadius: 1),
+                         with: .color(Color.ink))
+                for c in p.columns.dropFirst() {
+                    ctx.fill(Path(roundedRect: CGRect(x: c.x0 - 1, y: axis - 7, width: 2, height: 7), cornerRadius: 1), with: .color(Color.ink))
                 }
             }
         }
-        .frame(height: chartHeight + labelSpace)
-        .onAppear { landed = true }
-        .animation(.smooth, value: span)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Verfallsradar, nächste \(span) Monate")
+        .accessibilityElement()
+        .accessibilityLabel(p.summary)
+        .accessibilitySortPriority(Double(p.marks.count + 1))
     }
 
-    /// Kopfzeile mit Titel und „+N später“ – als eigener View, damit Home sie wie andere Abschnitte setzen kann.
-    var laterLabel: String? { later > 0 ? "+\(later) später" : nil }
-
-    // MARK: Teile
-
-    private func xPos(_ date: Date, width: CGFloat) -> CGFloat {
-        let (start, end) = range
-        let linear = date.timeIntervalSince(start) / end.timeIntervalSince(start)
-        // Ab 9 Monaten Spanne gestaucht: nahe Termine bekommen mehr Platz als ferne.
-        let t = span > 8 ? pow(min(max(linear, 0), 1), 0.55) : linear
-        // Rand lassen, damit Kacheln am Anfang und Ende nicht abgeschnitten werden.
-        let inset = tile / 2 + 2
-        return inset + CGFloat(min(max(t, 0), 1)) * (width - inset * 2)
-    }
-
-    /// Kacheln in Spuren verteilen: unterste freie Spur, sonst die mit dem größten Abstand.
-    private func placed(width: CGFloat) -> [(item: RadarItem, x: CGFloat, lane: Int)] {
-        var lastX = Array(repeating: -CGFloat.infinity, count: lanes)
-        return visible.map { item in
-            let x = xPos(item.expires, width: width)
-            let lane = lastX.firstIndex { x - $0 >= tile * 0.8 } ?? (lastX.enumerated().min { $0.element < $1.element }?.offset ?? 0)
-            lastX[lane] = x
-            return (item, x, lane)
-        }
-    }
-
-    private func axis(width: CGFloat, y: CGFloat) -> some View {
-        let cal = Calendar.current
-        // Striche an Monats-, Quartals- oder Jahresanfängen innerhalb der Achse.
-        let first = cal.date(from: cal.dateComponents([.year, .month], from: range.start)) ?? range.start
-        let ticks = (1...span + 1).compactMap { cal.date(byAdding: .month, value: $0, to: first) }
-            .filter { $0 < range.end && (cal.component(.month, from: $0) - 1) % tickStep == 0 }
+    private func labels(_ p: RadarPlan) -> some View {
+        let y = p.axisY + 1 + RadarPlan.labelGap
         return ZStack(alignment: .topLeading) {
-            Capsule().fill(Color.ink).frame(width: width, height: 2).offset(y: y - 1)
-            ForEach(ticks, id: \.self) { d in
-                let x = xPos(d, width: width)
-                Capsule().fill(Color.ink).frame(width: 2, height: 8).offset(x: x - 1, y: y - 8)
-                Text(tickLabel(d))
-                    .font(.scaled(12, weight: .medium)).foregroundStyle(Color.muted)
-                    .fixedSize()
-                    .frame(width: 64)
-                    .offset(x: x - 32, y: y + 8)
-            }
-        }
-        .accessibilityHidden(true)
-    }
-
-    private func todayMarker(width: CGFloat, axisY: CGFloat) -> some View {
-        let x = xPos(.now, width: width)
-        return ZStack(alignment: .topLeading) {
-            // Heute: gelbes Fähnchen mit gestrichelter Linie bis zur Achse – Gelb ist die App.
-            DashLine(dash: 3, gap: 3).fill(Color.ink.opacity(0.5))
-                .frame(width: axisY - flagSpace * 0.65, height: 1)
-                .rotationEffect(.degrees(90), anchor: .topLeading)
-                .offset(x: x + 0.5, y: flagSpace * 0.65)
             Text("Heute")
                 .font(.scaled(12, weight: .heavy, design: .rounded))
                 .foregroundStyle(Color.onBrand)
-                .padding(.horizontal, 8).padding(.vertical, 3)
+                .padding(.horizontal, 8).padding(.vertical, 2)
                 .background(Color.brandYellow, in: .capsule)
-                .overlay(Capsule().strokeBorder(Color.onBrand.opacity(0.15), lineWidth: 1))
                 .fixedSize()
-                .offset(x: max(0, x - 8))
+                .offset(x: 0, y: y)
+            ForEach(p.ticks.filter { $0.label != nil }, id: \.x) { t in
+                Text(t.label ?? "")
+                    .font(.scaled(12, weight: .medium)).foregroundStyle(Color.muted)
+                    .fixedSize()
+                    .offset(x: t.x + 3, y: y + 2)
+            }
+            ForEach(p.columns.filter { $0.label != nil }, id: \.x0) { c in
+                Text(c.label ?? "")
+                    .font(.scaled(12, weight: .medium)).foregroundStyle(Color.muted)
+                    .fixedSize()
+                    .frame(width: c.x1 - c.x0)
+                    .offset(x: c.x0, y: y + 2)
+            }
         }
         .accessibilityHidden(true)
     }
 
+    // MARK: Kacheln
+
     @ViewBuilder
-    private func marker(_ item: RadarItem) -> some View {
-        let mark = MerchantMark(merchantID: item.merchantID, name: item.name, size: tile)
-            .overlay(RoundedRectangle(cornerRadius: tile * 0.24, style: .continuous).strokeBorder(Color.surface, lineWidth: 2))
-            .overlay {
-                // Dringend (bis 14 Tage): roter Ring als zweite Kante.
-                if item.urgent {
-                    RoundedRectangle(cornerRadius: tile * 0.24 + 3, style: .continuous)
-                        .strokeBorder(Color.warn, lineWidth: 2).padding(-3)
+    private func mark(_ m: RadarPlan.Mark, plan: RadarPlan) -> some View {
+        let face = m.items[0]
+        let extra = m.items.count - 1
+        let t = plan.tile
+        let content = VStack(spacing: 1) {
+            MerchantMark(merchantID: face.merchantID, name: face.name, size: t)
+                .overlay(RoundedRectangle(cornerRadius: t * 0.24, style: .continuous).strokeBorder(Color.surface, lineWidth: 2))
+                .overlay {
+                    // Dringend (bis 14 Tage): roter Ring …
+                    if face.urgent {
+                        RoundedRectangle(cornerRadius: t * 0.24 + 3, style: .continuous)
+                            .strokeBorder(Color.warn, lineWidth: 2).padding(-3)
+                    }
                 }
+                .overlay(alignment: .topLeading) {
+                    // … und ein Ausrufezeichen, damit es nicht nur an der Farbe hängt.
+                    if face.urgent {
+                        Image(systemName: "exclamationmark")
+                            .font(.system(size: t * 0.24, weight: .black))
+                            .foregroundStyle(Color.onInk)
+                            .frame(width: t * 0.4, height: t * 0.4)
+                            .background(Color.warn, in: .circle)
+                            .overlay(Circle().strokeBorder(Color.surface, lineWidth: 1.5))
+                            .offset(x: -t * 0.16, y: -t * 0.16)
+                    }
+                }
+                .overlay(alignment: .topTrailing) {
+                    if extra > 0 {
+                        Text("+\(extra)")
+                            .font(.system(size: max(10, t * 0.3), weight: .heavy, design: .rounded)).monospacedDigit()
+                            .foregroundStyle(Color.onInk)
+                            .padding(.horizontal, 4).frame(minWidth: t * 0.5, minHeight: t * 0.44)
+                            .background(Color.ink, in: .capsule)
+                            .overlay(Capsule().strokeBorder(Color.surface, lineWidth: 1.5))
+                            .fixedSize()
+                            .offset(x: t * 0.22, y: -t * 0.18)
+                    }
+                }
+                .shadow(color: Color.shade, radius: 3, y: 1)
+            if m.showCaption, let c = m.caption {
+                Text(c)
+                    .font(.scaled(12, weight: .semibold, design: .rounded)).monospacedDigit()
+                    .foregroundStyle(Color.ink2)
+                    .lineLimit(1).fixedSize()
             }
-            .shadow(color: Color.shade, radius: 4, y: 2)
-        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: .now),
-                                                    to: Calendar.current.startOfDay(for: item.expires)).day ?? 0
-        let label = "\(item.name), läuft \(days == 0 ? "heute" : days == 1 ? "morgen" : "in \(days) Tagen") ab"
-        if let onSelect {
-            Button { onSelect(item) } label: { mark.frame(width: Layout.tap, height: Layout.tap).contentShape(.rect) }
+            Spacer(minLength: 0)
+        }
+        .frame(width: plan.hit, height: plan.slot, alignment: .top)
+        .contentShape(.rect)
+
+        let label = spoken(m.items)
+        if extra > 0, let onBundle {
+            Button { onBundle(m.items) } label: { content }
+                .buttonStyle(.plain)
+                .accessibilityLabel(label)
+                .accessibilityHint("Zeigt diese Termine in den Ablaufterminen")
+        } else if extra == 0, let onSelect {
+            Button { onSelect(face) } label: { content }
                 .buttonStyle(.plain)
                 .accessibilityLabel(label)
         } else {
-            mark.accessibilityLabel(label)
+            content.accessibilityElement(children: .ignore).accessibilityLabel(label)
         }
     }
 
-    /// „Okt“ bei Monaten, „Jan 27“ bei Quartalen im Januar, „2027“ bei Jahren.
-    private func tickLabel(_ d: Date) -> String {
+    /// „Zalando, 20 €, läuft am 9. Oktober 2026 ab (in 12 Tagen)“; Bündel zählen alle auf.
+    private func spoken(_ items: [RadarItem]) -> String {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: .now)
         let de = Locale(identifier: "de_DE")
-        if tickStep == 12 { return d.formatted(.dateTime.year().locale(de)) }
-        let month = d.formatted(.dateTime.month(.abbreviated).locale(de)).replacingOccurrences(of: ".", with: "")
-        if tickStep == 3 && Calendar.current.component(.month, from: d) == 1 {
-            return "\(month) \(d.formatted(.dateTime.year(.twoDigits).locale(de)))"
+        let parts = items.map { item -> String in
+            let days = max(0, cal.dateComponents([.day], from: today, to: cal.startOfDay(for: item.expires)).day ?? 0)
+            let rel = days == 0 ? "heute" : days == 1 ? "morgen" : "in \(days)\u{00A0}Tagen"
+            let date = item.expires.formatted(.dateTime.day().month(.wide).year().locale(de))
+            let amount = item.amount.map { ", \($0)" } ?? ""
+            let est = item.estimated ? " voraussichtlich" : ""
+            return "\(item.name)\(amount), läuft\(est) am \(date) ab (\(rel))\(item.urgent ? ", dringend" : "")"
         }
-        return month
+        return items.count > 1 ? "\(items.count) Gutscheine: " + parts.joined(separator: "; ") : parts.joined()
     }
 }
 
-/// Radar mit Abschnittskopf wie die anderen Abschnitte auf dem Start, in einer Karte.
+// MARK: - Platzierung
+
+/// Schriften der Beschriftung als UIFont, damit Breiten vor dem Zeichnen gemessen werden können.
+/// Entspricht `Font.scaled(12, …)`: Title 2 der aktuellen Größe, skaliert mit 12/22.
+private struct RadarFonts {
+    let label: UIFont
+    let caption: UIFont
+    let pill: UIFont
+
+    init(_ size: DynamicTypeSize) {
+        let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(size))
+        let s = UIFont.preferredFont(forTextStyle: .title2, compatibleWith: traits).pointSize * 12 / 22
+        label = .systemFont(ofSize: s, weight: .medium)
+        caption = Self.rounded(.monospacedDigitSystemFont(ofSize: s, weight: .semibold))
+        pill = Self.rounded(.systemFont(ofSize: s, weight: .heavy))
+    }
+
+    private static func rounded(_ f: UIFont) -> UIFont {
+        f.fontDescriptor.withDesign(.rounded).map { UIFont(descriptor: $0, size: f.pointSize) } ?? f
+    }
+
+    func width(_ s: String, _ f: UIFont) -> CGFloat {
+        ceil((s as NSString).size(withAttributes: [.font: f]).width) + 2
+    }
+}
+
+/// Alle Positionen des Radars, einmal je Aufbau berechnet (sortieren O(N log N), sonst linear).
+private struct RadarPlan {
+    struct Mark: Identifiable {
+        var items: [RadarItem]
+        var x: CGFloat
+        var lane: Int
+        var zoneB: Bool
+        var caption: String? = nil
+        var captionW: CGFloat = 0
+        var showCaption = false
+        var id: UUID { items[0].id }
+    }
+    struct Tick { var x: CGFloat; var label: String? }
+    struct Column { var x0: CGFloat; var x1: CGFloat; var label: String? }
+    struct Band { var x0: CGFloat; var x1: CGFloat; var strong: Bool }
+
+    static let horizon = 90
+    static let labelGap: CGFloat = 5
+    static let breakW: CGFloat = 12
+
+    let tile: CGFloat
+    let hit: CGFloat
+    let captionH: CGFloat
+    let slot: CGFloat
+    var marks: [Mark] = []
+    var ticks: [Tick] = []
+    var columns: [Column] = []
+    var bands: [Band] = []
+    var todayX: CGFloat
+    var zoneAEnd: CGFloat
+    var breakW: CGFloat = 0
+    var lanes = 1
+    var axisY: CGFloat = 0
+    var height: CGFloat = 0
+    var summary = ""
+
+    func slotTop(_ lane: Int) -> CGFloat { axisY - CGFloat(lane + 1) * slot }
+
+    init(items: [RadarItem], width: CGFloat, tile t: CGFloat, fonts: RadarFonts, now: Date) {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: now)
+        let de = Locale(identifier: "de_DE")
+        func days(_ d: Date) -> Int { max(0, cal.dateComponents([.day], from: today, to: cal.startOfDay(for: d)).day ?? 0) }
+
+        tile = t
+        hit = max(Layout.tap, t + 4)
+        captionH = ceil(fonts.caption.lineHeight)
+        slot = t + 1 + captionH + 3
+        todayX = t / 2 + 2
+
+        let dated: [(item: RadarItem, d: Int)] = items.map { (item: $0, d: days($0.expires)) }
+            .sorted { a, b in a.d != b.d ? a.d < b.d : a.item.name < b.item.name }
+        let near = dated.filter { $0.d <= Self.horizon }
+        let far = dated.filter { $0.d > Self.horizon }
+        let W = max(width, 1)
+
+        // Zone B: ein Kalenderjahr je Spalte, gleich breit. Passen nicht alle, fasst die letzte Spalte den Rest („2029+“).
+        var farCols: [(x0: CGFloat, x1: CGFloat, from: Int, to: Int)] = []
+        if let first = far.first, let last = far.last {
+            let y0 = cal.component(.year, from: first.item.expires)
+            let y1 = cal.component(.year, from: last.item.expires)
+            let colMin = max(hit, fonts.width("2027+", fonts.label) + 6)
+            let room = W * 0.45 - Self.breakW
+            let fit: Int = max(1, Int(room / colMin))
+            let k: Int = Swift.min(y1 - y0 + 1, fit)
+            let colW: CGFloat = Swift.max(colMin, Swift.min(72, room / CGFloat(k)))
+            let start = W - CGFloat(k) * colW
+            for i in 0..<k {
+                let x0 = start + CGFloat(i) * colW
+                farCols.append((x0: x0, x1: x0 + colW, from: y0 + i, to: i == k - 1 ? y1 : y0 + i))
+            }
+            breakW = Self.breakW
+            zoneAEnd = start - breakW
+        } else {
+            zoneAEnd = W
+        }
+        // Zone A linear: Heute links, Tag 90 so weit rechts, dass keine Trefferfläche in die Jahreszone ragt.
+        let xEnd = farCols.isEmpty ? W - todayX : zoneAEnd - hit / 2 + 6
+        let perDay = max(0, xEnd - todayX) / CGFloat(Self.horizon)
+        let x0 = todayX
+        func xA(_ d: Int) -> CGFloat { x0 + CGFloat(d) * perDay }
+
+        bands = [Band(x0: x0, x1: xA(14), strong: true), Band(x0: xA(14), x1: xA(30), strong: false)]
+
+        // Monatsstriche mit Beschriftung, die nicht mit „Heute“ oder der vorigen kollidiert.
+        let pillW = fonts.width("Heute", fonts.pill) + 16
+        var lastRight = pillW
+        var m = cal.date(from: cal.dateComponents([.year, .month], from: today)) ?? today
+        while let next = cal.date(byAdding: .month, value: 1, to: m), days(next) <= Self.horizon {
+            m = next
+            let x = xA(days(m))
+            var month = m.formatted(.dateTime.month(.abbreviated).locale(de)).replacingOccurrences(of: ".", with: "")
+            if cal.component(.month, from: m) == 1 { month += " \(m.formatted(.dateTime.year(.twoDigits).locale(de)))" }
+            let w = fonts.width(month, fonts.label)
+            let fits = x + 3 >= lastRight + 6 && x + 3 + w <= zoneAEnd
+            ticks.append(Tick(x: x, label: fits ? month : nil))
+            if fits { lastRight = x + 3 + w }
+        }
+
+        // Zone A in höchstens zwei Spuren, Mindestabstand = Trefferfläche. Sonst ans nächste Ziel bündeln.
+        var lastInLane: [Int?] = [nil, nil]
+        for (item, d) in near {
+            let x = xA(d)
+            if let lane = (0..<2).first(where: { l in lastInLane[l].map { x - marks[$0].x >= hit } ?? true }) {
+                marks.append(Mark(items: [item], x: x, lane: lane, zoneB: false))
+                lastInLane[lane] = marks.count - 1
+            } else if let idx = lastInLane.compactMap({ $0 }).max(by: { marks[$0].x < marks[$1].x }) {
+                marks[idx].items.append(item)
+            }
+        }
+        // Zone B: je Spalte unten die früheste Kachel, darüber die zweite oder ein Bündel mit dem Rest.
+        var fi = 0
+        for c in farCols {
+            var inCol: [RadarItem] = []
+            while fi < far.count, cal.component(.year, from: far[fi].item.expires) <= c.to {
+                inCol.append(far[fi].item); fi += 1
+            }
+            let full = fonts.width(c.from == c.to ? "2027" : "2027+", fonts.label) + 4 <= c.x1 - c.x0
+            let yy = c.from % 100
+            let label = full ? "\(c.from)\(c.from == c.to ? "" : "+")" : "’\(yy)\(c.from == c.to ? "" : "+")"
+            columns.append(Column(x0: c.x0, x1: c.x1, label: label))
+            guard let first = inCol.first else { continue }
+            let cx = (c.x0 + c.x1) / 2
+            marks.append(Mark(items: [first], x: cx, lane: 0, zoneB: true))
+            if inCol.count > 1 { marks.append(Mark(items: Array(inCol.dropFirst()), x: cx, lane: 1, zoneB: true)) }
+        }
+
+        // Beträge unter den Kacheln: nur wenn sie weder Nachbarn noch Stiele berühren.
+        for i in marks.indices {
+            let its = marks[i].items
+            if its.count == 1 { marks[i].caption = its[0].amount }
+            else if its.allSatisfy({ $0.value != nil }) { marks[i].caption = RadarItem.short(its.reduce(0) { $0 + ($1.value ?? 0) }) }
+            if let c = marks[i].caption { marks[i].captionW = fonts.width(c, fonts.caption) }
+        }
+        let upperStems = marks.filter { $0.lane == 1 && !$0.zoneB }.map(\.x)   // schon aufsteigend
+        for lane in 0..<2 {
+            let idx = marks.indices.filter { marks[$0].lane == lane }.sorted { marks[$0].x < marks[$1].x }
+            var prevRight = -CGFloat.infinity
+            var stem = 0
+            for (n, i) in idx.enumerated() {
+                let mk = marks[i]
+                let half = mk.captionW / 2
+                var ok = mk.caption != nil && mk.x - half >= prevRight + 4 && mk.x - half >= -8 && mk.x + half <= W + 8
+                if ok, n + 1 < idx.count { ok = marks[idx[n + 1]].x - t / 2 >= mk.x + half + 4 }
+                if ok, mk.zoneB { ok = mk.captionW <= (farCols.first.map { $0.x1 - $0.x0 } ?? 0) - 2 }
+                if ok, lane == 0, !mk.zoneB {
+                    while stem < upperStems.count, upperStems[stem] < mk.x - half - 2 { stem += 1 }
+                    if stem < upperStems.count, upperStems[stem] <= mk.x + half + 2 { ok = false }
+                }
+                marks[i].showCaption = ok
+                prevRight = ok ? mk.x + half : mk.x + t / 2
+            }
+        }
+
+        lanes = (marks.map(\.lane).max() ?? 0) + 1
+        axisY = 4 + CGFloat(lanes) * slot
+        height = axisY + 1 + Self.labelGap + ceil(fonts.pill.lineHeight) + 4 + 2
+
+        // Zusammenfassung für VoiceOver.
+        let in14 = dated.filter { $0.d <= 14 }
+        let in30 = dated.filter { $0.d <= 30 }
+        let sum30 = in30.reduce(0.0) { $0 + ($1.item.value ?? 0) }
+        var s = [items.count == 1 ? "1 Gutschein" : "\(items.count) Gutscheine"]
+        s.append(in14.isEmpty ? "keiner läuft in den nächsten 14\u{00A0}Tagen ab" : "\(in14.count) in den nächsten 14\u{00A0}Tagen")
+        if in30.count > in14.count { s.append("\(in30.count) in 30\u{00A0}Tagen") }
+        if sum30 > 0 { s.append("\(sum30.euro) in 30\u{00A0}Tagen betroffen") }
+        if let last = dated.last, last.d > Self.horizon {
+            s.append("Zeitachse: nächste 90\u{00A0}Tage, danach Jahre bis \(cal.component(.year, from: last.item.expires))")
+        } else {
+            s.append("Zeitachse: nächste 90\u{00A0}Tage")
+        }
+        summary = s.joined(separator: ", ")
+    }
+}
+
+// MARK: - Abschnitt
+
+/// Radar mit Abschnittskopf wie die anderen Abschnitte auf dem Start, in einer Ticket-Hülle:
+/// Die Kerben sitzen auf Höhe der Achse, die Achse ist die Abrisslinie.
 struct ExpiryRadarSection: View {
     let items: [RadarItem]
     var onSelect: ((RadarItem) -> Void)? = nil
     var onShowAll: (() -> Void)? = nil
     var animateIn = true
+    /// Tipp auf ein „+N“-Bündel. Ohne Angabe öffnet es wie `onShowAll` die Ablauftermine.
+    var onBundle: (([RadarItem]) -> Void)? = nil
+
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var axisY: CGFloat = 100
+    private let top: CGFloat = 12
+
+    /// „2 in 30 Tagen · 70 €“ – was bald verfällt und wie viel Geld daran hängt.
+    private var soon: (text: String, spoken: String) {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: .now)
+        let in30 = items.filter { (cal.dateComponents([.day], from: today, to: cal.startOfDay(for: $0.expires)).day ?? 0) <= 30 }
+        guard !in30.isEmpty else { return ("Nichts in 30\u{00A0}Tagen", "Nichts läuft in 30\u{00A0}Tagen ab") }
+        let sum = in30.reduce(0.0) { $0 + ($1.value ?? 0) }
+        let money = sum > 0 ? " · \(RadarItem.short(sum))" : ""
+        let spokenMoney = sum > 0 ? ", zusammen \(sum.euro)" : ""
+        return ("\(in30.count) in 30\u{00A0}Tagen\(money)", "\(in30.count) laufen in 30\u{00A0}Tagen ab\(spokenMoney)")
+    }
 
     var body: some View {
-        let radar = ExpiryRadar(items: items, onSelect: onSelect, animateIn: animateIn)
         VStack(alignment: .leading, spacing: Layout.group) {
-            HStack(alignment: .firstTextBaseline) {
+            // Bei sehr großer Schrift untereinander, damit die Zusammenfassung nicht zerbricht.
+            let layout = typeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
+                : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 8))
+            layout {
                 Text("Verfallsradar").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
                     .accessibilityAddTraits(.isHeader)
-                Spacer()
-                if let later = radar.laterLabel {
-                    if let onShowAll {
-                        Button(later, action: onShowAll)
-                            .font(.scaled(15)).foregroundStyle(Color.muted)
-                            .frame(minHeight: Layout.tap)
-                    } else {
-                        Text(later).font(.scaled(15)).foregroundStyle(Color.muted)
+                if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
+                let s = soon
+                if let onShowAll {
+                    Button(action: onShowAll) {
+                        HStack(spacing: 4) {
+                            Text(s.text).multilineTextAlignment(typeSize.isAccessibilitySize ? .leading : .trailing)
+                            Image(systemName: "chevron.right").font(.scaled(12, weight: .semibold))
+                        }
+                        .font(.scaled(15)).foregroundStyle(Color.muted)
+                        .frame(minHeight: Layout.tap).contentShape(.rect)
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Alle Ablauftermine, \(s.spoken)")
+                } else {
+                    Text(s.text).font(.scaled(15)).foregroundStyle(Color.muted).multilineTextAlignment(.trailing)
+                        .accessibilityLabel(s.spoken)
                 }
             }
-            radar
-                .padding(.horizontal, Layout.inset).padding(.top, Layout.inset).padding(.bottom, 4)
-                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+            ExpiryRadar(items: items, onSelect: onSelect,
+                        onBundle: onBundle ?? onShowAll.map { all in { _ in all() } },
+                        animateIn: animateIn, onAxis: { axisY = $0 })
+                .padding(.horizontal, Layout.inset).padding(.top, top).padding(.bottom, 10)
+                .background(Color.surface, in: TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchFromTop: top + axisY))
         }
     }
 }

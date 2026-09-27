@@ -9,6 +9,8 @@ struct SettingsView: View {
     @Environment(CloudSync.self) private var cloud
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.openURL) private var openURL
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// Nur lesend, damit Schalter und Kopfzeile immer denselben Stand zeigen (CloudSync liest direkt aus UserDefaults).
     @AppStorage("iCloudSync") private var syncOn = false
     @State private var notifDenied = false
@@ -26,11 +28,15 @@ struct SettingsView: View {
     @State private var confirmDeleteCloud = false
     @State private var showRestore = false
     @State private var restoreMessage: String?
+    /// Export läuft gerade (Datei wird erzeugt); verhindert Doppeltippen.
+    @State private var exporting: ExportKind?
+
+    private enum ExportKind { case backup, csv }
 
     var body: some View {
         Form {
             Section { accountSection } footer: {
-                Text("Ohne eigenes Konto und ohne unseren Server: Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deinem eigenen iCloud. Den Schlüssel hat nur dein iCloud-Schlüsselbund – wir können nichts lesen, Apple auch nicht.")
+                Text("Ohne eigenes Konto und ohne unseren Server: Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deinem eigenen iCloud. Den Schlüssel hat nur dein iCloud-Schlüsselbund – diese Sync-Daten können weder wir noch Apple lesen. Das iCloud-Backup deines iPhones kann Apple dagegen öffnen, solange „Erweiterter Datenschutz“ aus ist.")
             }
 
             Section {
@@ -59,7 +65,7 @@ struct SettingsView: View {
                     settingLabel("App mit Face ID sperren", "Beim Öffnen entsperren", "lock.app.dashed")
                 }
                 Toggle(isOn: $maskNumber) {
-                    settingLabel("Kartennummer an der Kasse verdecken", "Tippen zeigt sie ganz", "eye.slash")
+                    settingLabel("Code an der Kasse verdecken", "Tippen zeigt ihn ganz", "eye.slash")
                 }
             } header: {
                 Text("Sicherheit & Erinnerungen")
@@ -72,11 +78,13 @@ struct SettingsView: View {
                 } label: {
                     settingLabel("Liste sortieren nach", nil, "arrow.up.arrow.down")
                 }
+                .modifier(AdaptivePickerStyle())
                 Picker(selection: $warnDays) {
-                    ForEach([7, 14, 30, 60, 90], id: \.self) { Text("\($0) Tagen").tag($0) }
+                    ForEach([7, 14, 30, 60, 90], id: \.self) { Text("\($0)\u{00A0}Tagen").tag($0) }
                 } label: {
                     settingLabel("Warnung ab", nil, "hourglass")
                 }
+                .modifier(AdaptivePickerStyle())
             } header: {
                 Text("Anzeige")
             } footer: {
@@ -97,40 +105,45 @@ struct SettingsView: View {
             .foregroundStyle(Color.ink2)
 
             Section {
-                if let url = store.backupFile() {
-                    ShareLink(item: url) { Label("Sicherung speichern", systemImage: "externaldrive.badge.checkmark") }
-                }
+                // Dateien entstehen erst beim Tippen, nicht bei jedem Neuzeichnen.
+                exportButton(.backup, "Sicherung speichern", "externaldrive.badge.checkmark")
                 Button("Sicherung wiederherstellen", systemImage: "arrow.counterclockwise") { showRestore = true }
-                if let url = store.csvFile() {
-                    ShareLink(item: url) { Label("Als Tabelle exportieren (CSV)", systemImage: "tablecells") }
-                }
+                exportButton(.csv, "Als Tabelle exportieren (CSV)", "tablecells")
                 if let restoreMessage {
                     Text(restoreMessage).font(.scaled(15)).foregroundStyle(Color.ink2)
                 }
             } header: {
                 Text("Sicherung")
             } footer: {
-                Text("Deine Gutscheine sind im iCloud-Backup deines iPhones enthalten. Zusätzlich kannst du eine Sicherungsdatei speichern, z. B. in iCloud Drive. Sie enthält PINs und Fotos – bewahre sie sicher auf.")
+                Text("Deine Gutscheine sind im iCloud-Backup deines iPhones enthalten. Zusätzlich kannst du eine Sicherungsdatei speichern, z.\u{00A0}B. in iCloud Drive. Sie enthält PINs und Fotos – bewahre sie sicher auf. Die Tabelle enthält keine PINs.")
             }
             .foregroundStyle(Color.ink)
 
             Section {
                 Button("Einführung ansehen", systemImage: "sparkles") { onboarded = false }
                 if store.hasExamples {
-                    Button("Beispiele entfernen", systemImage: "wand.and.stars") { withAnimation { store.clearExamples() } }
+                    Button("Beispiele entfernen", systemImage: "wand.and.stars") {
+                        withAnimation(reduceMotion ? nil : .default) { store.clearExamples() }
+                    }
                 }
                 NavigationLink {
                     PrivacyExplainer()
                 } label: {
                     Label("So schützt Restwert deine Daten", systemImage: "lock.shield")
                 }
-                Link(destination: APIConfig.baseURL.appending(path: "datenschutz")) {
+                NavigationLink {
+                    PrivacyPolicyView()
+                } label: {
                     Label("Datenschutzerklärung", systemImage: "hand.raised")
                 }
-                Link(destination: APIConfig.baseURL.appending(path: "impressum")) {
+                NavigationLink {
+                    ImprintView()
+                } label: {
                     Label("Impressum", systemImage: "info.circle")
                 }
                 Button("Alles löschen", systemImage: "trash", role: .destructive) { confirmReset = true }
+            } header: {
+                Text("Hilfe & Rechtliches")
             }
             .foregroundStyle(Color.ink)
         }
@@ -147,7 +160,10 @@ struct SettingsView: View {
                 restoreMessage = "Die Datei ist keine Restwert-Sicherung."
             }
         }
-        .task { await checkNotifications() }
+        .task {
+            removeLeftoverExports()
+            await checkNotifications()
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await checkNotifications() } }
         }
@@ -175,7 +191,7 @@ struct SettingsView: View {
             Text("Entfernt die Gutscheine aus iCloud sowie Schlüssel und PINs aus dem iCloud-Schlüsselbund. Auf diesem iPhone bleibt alles erhalten. Der Sync wird ausgeschaltet.")
         }
         .confirmationDialog("Alle Gutscheine, Einlösungen und Tests löschen?", isPresented: $confirmReset, titleVisibility: .visible) {
-            Button("Alles löschen", role: .destructive) { withAnimation { store.resetAll() } }
+            Button("Alles löschen", role: .destructive) { withAnimation(reduceMotion ? nil : .default) { store.resetAll() } }
         }
     }
 
@@ -192,6 +208,67 @@ struct SettingsView: View {
                 }
             }
         })
+    }
+
+    private func exportButton(_ kind: ExportKind, _ title: String, _ icon: String) -> some View {
+        Button {
+            export(kind)
+        } label: {
+            Label {
+                HStack {
+                    Text(title)
+                    if exporting == kind {
+                        Spacer()
+                        ProgressView().accessibilityLabel("Wird erstellt")
+                    }
+                }
+            } icon: {
+                Image(systemName: icon)
+            }
+        }
+        .disabled(exporting != nil)
+    }
+
+    /// Datei erst jetzt erzeugen, teilen und danach wieder löschen.
+    private func export(_ kind: ExportKind) {
+        guard exporting == nil else { return }
+        exporting = kind
+        Task {
+            await Task.yield()  // Fortschritt zuerst zeigen
+            let url: URL? = switch kind {
+            case .backup: store.backupFile()
+            case .csv: writeCSV()
+            }
+            exporting = nil
+            if let url {
+                ExportShare.present(url)
+            } else {
+                restoreMessage = kind == .backup ? "Die Sicherung konnte nicht erstellt werden." : "Die Tabelle konnte nicht erstellt werden."
+            }
+        }
+    }
+
+    /// Wie `Store.csvFile()`, aber ohne Beispielkarten und mit Dateischutz.
+    private func writeCSV() -> URL? {
+        let own = store.cards.filter { !$0.isExample }
+        let text = CardQueries.csv(own, warnDays: warnDays)
+        let url = URL.temporaryDirectory.appending(path: "Restwert-Gutscheine-\(Date.now.formatted(.iso8601.year().month().day())).csv")
+        do {
+            try Data(("\u{FEFF}" + text).utf8).write(to: url, options: [.atomic, .completeFileProtection])
+            return url
+        } catch {
+            return nil
+        }
+    }
+
+    /// Reste früherer Exporte (auch aus älteren Versionen, die bei jedem Zeichnen schrieben) entfernen.
+    private func removeLeftoverExports() {
+        let fm = FileManager.default
+        let dir = URL.temporaryDirectory
+        guard let files = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return }
+        for file in files where file.lastPathComponent.hasPrefix("Restwert-Sicherung-") || file.lastPathComponent.hasPrefix("Restwert-Gutscheine") {
+            try? fm.removeItem(at: file)
+        }
     }
 
     private func checkNotifications() async {
@@ -211,12 +288,15 @@ struct SettingsView: View {
 
     @ViewBuilder
     private var accountSection: some View {
-        HStack(spacing: 14) {
+        // Bei sehr großer Schrift Symbol über den Text, damit der Text die ganze Breite hat.
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(spacing: 14))
+        layout {
             // „Sicher in deinem iCloud“ erst nach einem erfolgreichen Abgleich; vorher und währenddessen neutral.
             let inCloud = syncOn && cloud.state == .idle && cloud.lastSync != nil
             let checking = syncOn && cloud.state == .syncing
             Image(systemName: inCloud ? "lock.icloud" : syncOn ? "icloud" : "iphone").font(.scaled(20, weight: .semibold))
                 .frame(width: 48, height: 48).background(Color.fill, in: .circle)
+                .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(inCloud ? "Sicher in deinem iCloud" : checking ? "iCloud wird geprüft" : syncOn ? "iCloud-Sync wartet" : "Nur auf diesem iPhone")
                     .font(.scaled(16, weight: .semibold))
@@ -224,8 +304,10 @@ struct SettingsView: View {
                      : syncOn ? "Bis iCloud bereit ist, bleibt alles auf diesem iPhone."
                      : "Nichts geht an uns. Texterkennung läuft auf dem Gerät. Das iCloud-Backup deines iPhones enthält die Gutscheine.")
                     .font(.scaled(15)).foregroundStyle(Color.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .accessibilityElement(children: .combine)
         Toggle(isOn: Binding(get: { syncOn }, set: { cloud.isEnabled = $0 })) {
             settingLabel("iCloud-Sync", "Für iPhone, iPad und ein neues Gerät", "icloud")
         }
@@ -248,7 +330,8 @@ struct SettingsView: View {
                 }
             }
             .font(.scaled(13)).foregroundStyle(Color.ink2)
-            .animation(.smooth, value: cloud.state)
+            .accessibilityElement(children: .combine)
+            .animation(reduceMotion ? nil : .smooth, value: cloud.state)
             Button("Jetzt abgleichen", systemImage: "arrow.triangle.2.circlepath") { Task { await cloud.syncNow() } }
                 .foregroundStyle(Color.ink)
             Button("Daten aus iCloud löschen", systemImage: "icloud.slash", role: .destructive) { confirmDeleteCloud = true }
@@ -270,7 +353,7 @@ struct ReminderSettingsView: View {
         Form {
             Section {
                 ForEach(ReminderPrefs.choices, id: \.self) { d in
-                    Toggle(d == 1 ? "1 Tag vorher" : "\(d) Tage vorher", isOn: Binding(
+                    Toggle(d == 1 ? "1\u{00A0}Tag vorher" : "\(d)\u{00A0}Tage vorher", isOn: Binding(
                         get: { selected.contains(d) },
                         set: { on in
                             var set = selected
@@ -281,7 +364,7 @@ struct ReminderSettingsView: View {
             } header: {
                 Text("Vorlaufzeit")
             } footer: {
-                Text("Du kannst mehrere wählen. Unabhängig davon steht ein Gutschein ab \(warnDays) Tagen vor Ablauf unter „Läuft bald ab“.")
+                Text("Du kannst mehrere wählen. Unabhängig davon steht ein Gutschein ab \(warnDays)\u{00A0}Tagen vor Ablauf unter „Läuft bald ab“.")
             }
             .tint(Color.toggleOn)
             Section("Uhrzeit") {
@@ -300,12 +383,12 @@ struct PrivacyExplainer: View {
     private let rows: [(icon: String, title: String, text: String)] = [
         ("iphone", "Auf deinem iPhone", "Gutscheine, Fotos, PINs und Verlauf liegen in einer Datei, die iOS verschlüsselt, solange das iPhone gesperrt ist."),
         ("person.crop.circle.badge.xmark", "Kein Konto, kein Server von uns", "Es gibt keine Anmeldung und keine Datenbank bei uns. Wir sehen nicht, welche Gutscheine du hast."),
-        ("lock.icloud", "iCloud-Sync (freiwillig)", "Jeder Gutschein wird auf dem iPhone mit AES-256 verschlüsselt, bevor er in dein eigenes iCloud geht. Der Schlüssel liegt nur in deinem iCloud-Schlüsselbund. Diese Sync-Daten können weder wir noch Apple lesen."),
+        ("lock.icloud", "iCloud-Sync (freiwillig)", "Jeder Gutschein wird auf dem iPhone mit AES-256 verschlüsselt, bevor er in dein eigenes iCloud geht. Der Schlüssel liegt nur in deinem iCloud-Schlüsselbund. Diese Sync-Daten können weder wir noch Apple lesen. Fotos werden nicht synchronisiert."),
         ("key", "PINs", "PINs liegen lokal in der geschützten Datei. Mit iCloud-Sync gehen sie zusätzlich nur in deinen iCloud-Schlüsselbund, nie in eine Datenbank. Angezeigt werden sie nur nach Face ID."),
-        ("externaldrive.badge.icloud", "iCloud-Backup des iPhones", "Wie alle App-Daten ist die Datei im iCloud-Backup deines iPhones enthalten. Dafür gelten Apples Regeln: Ende-zu-Ende verschlüsselt ist das Backup nur mit „Erweitertem Datenschutz“."),
+        ("externaldrive.badge.icloud", "iCloud-Backup des iPhones", "Wie alle App-Daten ist die Datei im iCloud-Backup deines iPhones enthalten. Ohne „Erweiterten Datenschutz“ kann Apple dieses Backup öffnen; mit ihm ist es Ende-zu-Ende verschlüsselt."),
         ("text.viewfinder", "Scannen", "Barcode- und Texterkennung laufen auf dem iPhone. Fotos werden nirgendwohin geschickt."),
         ("chart.bar.xaxis", "Keine Tracker, keine Werbung", "Die App enthält keine Analyse- oder Werbe-Software."),
-        ("externaldrive", "Sicherung", "Die Sicherungsdatei enthält PINs und Fotos. Speichere sie nur dort, wo du auch Passwörter aufbewahren würdest."),
+        ("externaldrive", "Sicherung", "Die Sicherungsdatei entsteht erst, wenn du sie speicherst, und enthält PINs und Fotos. Speichere sie nur dort, wo du auch Passwörter aufbewahren würdest."),
     ]
 
     var body: some View {
@@ -320,11 +403,45 @@ struct PrivacyExplainer: View {
                 } icon: {
                     Image(systemName: row.icon).foregroundStyle(Color.ink)
                 }
+                .accessibilityElement(children: .combine)
             }
         }
         .scrollContentBackground(.hidden)
         .pageBackground()
         .navigationTitle("Deine Daten")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+/// Bei sehr großer Schrift Auswahl auf eigener Seite statt Menü, damit Titel und Wert nicht abgeschnitten werden.
+private struct AdaptivePickerStyle: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func body(content: Content) -> some View {
+        if typeSize.isAccessibilitySize {
+            content.pickerStyle(.navigationLink)
+        } else {
+            content.pickerStyle(.menu)
+        }
+    }
+}
+
+/// Teilen-Blatt für eine eben erzeugte Datei. Die Datei wird gelöscht, sobald das Blatt fertig ist
+/// (gesichert, gesendet oder abgebrochen) – bis dahin liegt sie nur im temporären Ordner der App.
+private enum ExportShare {
+    static func present(_ url: URL) {
+        let remove: @Sendable () -> Void = { try? FileManager.default.removeItem(at: url) }
+        guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene })
+                .first(where: { $0.activationState == .foregroundActive }),
+              var top = scene.keyWindow?.rootViewController else { remove(); return }
+        while let next = top.presentedViewController { top = next }
+        let sheet = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        sheet.completionWithItemsHandler = { @Sendable _, _, _, _ in remove() }
+        if let popover = sheet.popoverPresentationController {
+            popover.sourceView = top.view
+            popover.sourceRect = CGRect(x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+        top.present(sheet, animated: true)
     }
 }

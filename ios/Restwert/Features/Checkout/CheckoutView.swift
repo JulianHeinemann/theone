@@ -2,9 +2,11 @@ import SwiftUI
 import UIKit
 import LocalAuthentication
 import UserNotifications
+import UniformTypeIdentifiers
 import RestwertKit
 
 /// An der Kasse: großer Barcode bei voller Helligkeit, danach Ergebnis festhalten.
+/// Online-Codes (Amazon, Spotify …) bekommen stattdessen „Code kopieren & einlösen“.
 struct CheckoutView: View {
     let cardID: UUID
     @Environment(Store.self) private var store
@@ -19,12 +21,24 @@ struct CheckoutView: View {
     @State private var showFull = false
     @State private var showPhotoFull = false
     @State private var torn = false
+    /// Sperre während des Abrisses: kein zweiter Tipp, kein zweiter Ziffernblock.
+    @State private var busy = false
     @State private var tearHaptic = 0
+    @State private var copied = 0
+    /// Foto einmal im Hintergrund dekodiert, nicht bei jedem Neuzeichnen.
+    @State private var photoImage: UIImage?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var numberShown = false
     @AppStorage("maskNumber") private var maskNumber = false
     @AppStorage("pinLock") private var pinLock = true
+
+    /// Nur-online-Gutschein mit Code: kein Kassenablauf, sondern kopieren und im Shop einlösen.
+    private func isOnline(_ card: GiftCard) -> Bool {
+        card.merchant.category == .codeOnly && !card.number.isEmpty
+    }
+
+    private var online: Bool { store.card(cardID).map(isOnline) ?? false }
 
     var body: some View {
         ScrollView {
@@ -36,8 +50,10 @@ struct CheckoutView: View {
                         VStack(alignment: .leading, spacing: Layout.group) {
                             Text(!result ? "Nicht angenommen – dein Guthaben bleibt gleich." : "\(card.kind.label) wird als eingelöst markiert.")
                                 .font(.scaled(17, weight: .semibold))
-                            LabeledField(label: "Filiale", placeholder: "optional, z. B. Köln Hohe Straße", text: $storeName)
-                            LabeledField(label: "Notiz", placeholder: result ? "optional" : "optional, z. B. Kasse wollte Plastikkarte", text: $note)
+                            if !isOnline(card) {
+                                LabeledField(label: "Filiale", placeholder: "optional, z.\u{00A0}B. Köln Hohe Straße", text: $storeName)
+                            }
+                            LabeledField(label: "Notiz", placeholder: result ? "optional" : "optional, z.\u{00A0}B. Kasse wollte Plastikkarte", text: $note)
                         }
                         .padding(Layout.inset)
                         .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
@@ -47,23 +63,30 @@ struct CheckoutView: View {
                 .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
             }
         }
+        // Bei großer Schrift ist die Leiste unten hoch: extra Luft, damit „PIN anzeigen“ ganz darüber passt.
+        .contentMargins(.bottom, Layout.section, for: .scrollContent)
         .scrollDismissesKeyboard(.interactively)
         // Entscheidung unten im Daumenbereich, auch wenn das Ticket hoch ist.
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+        .safeAreaInset(edge: .bottom, spacing: Layout.group) {
             if let card = store.card(cardID) { actions(card) }
         }
         .pageBackground()
         .toolbar(.hidden, for: .tabBar)
         .sensoryFeedback(.impact(weight: .medium), trigger: tearHaptic)
-        .navigationTitle("An der Kasse")
+        .sensoryFeedback(.success, trigger: copied)
+        .navigationTitle(online ? "Online einlösen" : "An der Kasse")
         .fullScreenCover(isPresented: $showFull) {
             if let card = store.card(cardID) { FullBarcode(card: card, masked: maskNumber && !numberShown) }
         }
         .fullScreenCover(isPresented: $showPhotoFull) {
-            if let data = store.card(cardID)?.photo, let image = UIImage(data: data) { PhotoViewer(image: image) }
+            if let photoImage { PhotoViewer(image: photoImage) }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .task(id: store.card(cardID)?.photo?.count) { await decodePhoto() }
         .onAppear {
+            busy = false
+            // Online-Codes werden nicht gescannt: Helligkeit bleibt, wie sie ist.
+            guard !online else { return }
             UIApplication.shared.isIdleTimerDisabled = true
             if let screen = currentScreen {
                 // Nur einmal merken: nach dem Vollbild läuft onAppear erneut, dann steht die Helligkeit schon auf 1.
@@ -72,9 +95,18 @@ struct CheckoutView: View {
             }
         }
         // fullScreenCover löst onDisappear der darunterliegenden View aus – dort muss es hell bleiben.
-        .onDisappear { if !showFull && !showPhotoFull { restoreScreen() } }
+        .onDisappear {
+            if !showFull && !showPhotoFull { restoreScreen() }
+            // Erst jetzt, wo die Kasse nicht mehr zu sehen ist, das abgerissene Ticket wieder zusammensetzen.
+            if torn {
+                var t = Transaction()
+                t.disablesAnimations = true
+                withTransaction(t) { torn = false }
+            }
+        }
         // Beim Wechsel in eine andere App Helligkeit und Displaysperre sofort zurückgeben.
         .onChange(of: scenePhase) { _, phase in
+            guard !online else { return }
             if phase == .active {
                 UIApplication.shared.isIdleTimerDisabled = true
                 currentScreen?.brightness = 1
@@ -90,30 +122,45 @@ struct CheckoutView: View {
             if let result {
                 Button(!result ? "Notieren" : "Als eingelöst markieren") { save(card, result) }
                     .buttonStyle(.primary)
+                    .disabled(busy)
                 Button("Zurück") { withAnimation(.snappy) { self.result = nil } }
                     .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
                     .frame(maxWidth: .infinity, minHeight: Layout.tap)
+                    .disabled(busy)
             } else {
                 Button {
-                    if card.kind.isValueBased { pay(card) } else { withAnimation(.snappy) { result = true } }
+                    if card.kind.isValueBased {
+                        pay(card)
+                    } else if isOnline(card) {
+                        save(card, true)
+                    } else {
+                        withAnimation(.snappy) { result = true }
+                    }
                 } label: {
-                    Label(card.kind.isValueBased ? "Bezahlt – Betrag eintragen" : "Eingelöst", systemImage: "checkmark")
+                    Label(primaryTitle(card), systemImage: "checkmark")
                 }
                 .buttonStyle(.primary)
+                .disabled(busy)
                 // Nebeneinander, bei großer Schrift untereinander – nie abgeschnitten.
                 ViewThatFits(in: .horizontal) {
-                    HStack { notAccepted; Spacer(); later(card) }
-                    VStack(spacing: 0) { notAccepted; later(card) }
+                    HStack { notAccepted(card); Spacer(); later(card) }
+                    VStack(spacing: 0) { notAccepted(card); later(card) }
                 }
                 .padding(.horizontal, 4)
+                .disabled(busy)
             }
         }
         .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, 4)
         .background(Color.page.ignoresSafeArea())
     }
 
-    private var notAccepted: some View {
-        Button("Nicht angenommen") { withAnimation(.snappy) { result = false } }
+    private func primaryTitle(_ card: GiftCard) -> String {
+        if isOnline(card) { return card.kind.isValueBased ? "Eingelöst? Einkauf abziehen" : "Als eingelöst markieren" }
+        return card.kind.isValueBased ? "Bezahlt – Einkauf abziehen" : "Eingelöst"
+    }
+
+    private func notAccepted(_ card: GiftCard) -> some View {
+        Button(isOnline(card) ? "Hat nicht geklappt" : "Nicht angenommen") { withAnimation(.snappy) { result = false } }
             .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
             .frame(minHeight: Layout.tap)
     }
@@ -127,14 +174,15 @@ struct CheckoutView: View {
         .frame(minHeight: Layout.tap)
     }
 
-    /// „Bezahlt“: Abschnitt abreißen, dann direkt zum Ziffernblock – dort wird der Betrag abgezogen.
+    /// „Bezahlt“: Abschnitt abreißen, dann den Ziffernblock auf die Kasse schieben.
+    /// „Betrag offen“ bleibt stehen, bis dort ein Betrag gespeichert ist; „Zurück“ führt wieder zum Barcode.
     private func pay(_ card: GiftCard) {
         tearOff {
-            store.setPending(card.id, false)
-            var path = router.homePath
-            if case .checkout = path.last { path.removeLast() }
-            path.append(.pay(card.id))
-            router.homePath = path
+            if router.historyPath.last == .checkout(cardID) && router.homePath.last != .checkout(cardID) {
+                router.historyPath.append(.pay(card.id))
+            } else {
+                router.homePath.append(.pay(card.id))
+            }
         }
     }
 
@@ -145,6 +193,15 @@ struct CheckoutView: View {
 
     private var currentScreen: UIScreen? {
         UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?.screen
+    }
+
+    private func decodePhoto() async {
+        guard let data = store.card(cardID)?.photo else { photoImage = nil; return }
+        // Dekodieren außerhalb des Hauptthreads; preparingForDisplay entpackt das Bild vollständig.
+        let image = await Task.detached(priority: .userInitiated) {
+            UIImage(data: data).map { $0.preparingForDisplay() ?? $0 }
+        }.value
+        photoImage = image
     }
 
     private func ticket(_ card: GiftCard) -> some View {
@@ -163,15 +220,10 @@ struct CheckoutView: View {
             .background(Color.surface, in: TicketHalf(top: true))
             .overlay(alignment: .bottom) { TearLine().padding(.horizontal, Layout.inset) }
             VStack(spacing: 10) {
-                if card.number.isEmpty, let data = card.photo, let image = UIImage(data: data) {
-                    // Papiergutschein: das Foto vorzeigen.
-                    Button { showPhotoFull = true } label: {
-                        Image(uiImage: image).resizable().scaledToFit()
-                            .frame(maxWidth: .infinity, maxHeight: 320)
-                            .clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Foto des Gutscheins groß anzeigen")
+                if isOnline(card) {
+                    onlineCode(card)
+                } else if card.number.isEmpty, card.photo != nil {
+                    paper(card)
                 } else {
                     let textOnly = card.format == .text || card.format == .dataMatrix
                     let hidden = maskNumber && !numberShown
@@ -181,21 +233,23 @@ struct CheckoutView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(textOnly && hidden ? "Code aufdecken" : "Barcode groß anzeigen")
+                    if !textOnly {
+                        Text(hidden ? card.number.masked : card.number.grouped)
+                            // Dieselbe Mono-Schrift wie im Detail; bleibt einzeilig statt „1234“ allein umzubrechen.
+                            .font(.scaled(20, weight: .bold, design: .monospaced))
+                            .lineLimit(1).minimumScaleFactor(0.5)
+                            .onTapGesture { numberShown = true }
+                    }
+                    Text("Tippen für Vollbild").font(.scaled(12)).foregroundStyle(Color.muted)
+                    if card.photo != nil {
+                        Button("Original-Foto zeigen", systemImage: "photo") { showPhotoFull = true }
+                            .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                            .frame(minHeight: Layout.tap)
+                            .disabled(photoImage == nil)
+                    }
+                    Label("Helligkeit automatisch erhöht", systemImage: "checkmark.circle")
+                        .font(.scaled(13)).foregroundStyle(Color.ink2)
                 }
-                if card.format != .text && card.format != .dataMatrix {
-                    Text(maskNumber && !numberShown ? card.number.masked : card.number.grouped)
-                        // Dieselbe Mono-Schrift wie im Detail; bleibt einzeilig statt „1234“ allein umzubrechen.
-                        .font(.scaled(20, weight: .bold, design: .monospaced))
-                        .lineLimit(1).minimumScaleFactor(0.5)
-                        .onTapGesture { numberShown = true }
-                }
-                Text(card.number.isEmpty ? "Tippen zum Vergrößern" : "Tippen für Vollbild").font(.scaled(12)).foregroundStyle(Color.muted)
-                if !card.number.isEmpty && card.photo != nil {
-                    Button("Original-Foto zeigen", systemImage: "photo") { showPhotoFull = true }
-                        .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
-                }
-                Label("Helligkeit automatisch erhöht", systemImage: "checkmark.circle")
-                    .font(.scaled(13)).foregroundStyle(Color.ink2)
                 if card.merchantID != Merchant.other.id {
                     Text(card.merchant.tip)
                         .font(.scaled(13)).foregroundStyle(Color.muted)
@@ -205,8 +259,10 @@ struct CheckoutView: View {
                     Button { Task { await togglePin(card) } } label: {
                         Label(showPin ? "PIN \(card.pin)" : "PIN anzeigen", systemImage: showPin ? "lock.open" : pinLock ? "faceid" : "eye")
                             .font(.scaled(15, weight: .semibold))
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.large).tint(Color.ink)
+                    .frame(minHeight: Layout.tap)
                 }
             }
             .padding(.horizontal, Layout.inset).padding(.top, Layout.inset).padding(.bottom, Layout.ticketInset)
@@ -221,15 +277,97 @@ struct CheckoutView: View {
         .shadow(color: Color.shade, radius: 14, y: 6)
     }
 
-    /// Erst abreißen lassen, dann speichern und zurück. Bei „Bewegung reduzieren“ sofort.
+    /// Papiergutschein: Restbetrag groß über dem Foto, damit man ihn an der Kasse nennen kann.
+    @ViewBuilder
+    private func paper(_ card: GiftCard) -> some View {
+        if card.kind.isValueBased {
+            VStack(spacing: 2) {
+                Text("Noch drauf").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
+                AmountText(value: card.balance, size: 44).foregroundStyle(Color.ink)
+            }
+            .accessibilityElement(children: .combine)
+        }
+        Button { showPhotoFull = true } label: {
+            Group {
+                if let photoImage {
+                    Image(uiImage: photoImage).resizable().scaledToFit()
+                } else {
+                    Color.fill.aspectRatio(1.6, contentMode: .fit).overlay(ProgressView())
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: 320)
+            .clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(photoImage == nil)
+        .accessibilityLabel("Foto des Gutscheins groß anzeigen")
+        Text("Tippen zum Vergrößern").font(.scaled(12)).foregroundStyle(Color.muted)
+        Label("Manche Läden wollen das Original sehen – nimm es sicherheitshalber mit.", systemImage: "doc.text")
+            .font(.scaled(13)).foregroundStyle(Color.ink2)
+            .multilineTextAlignment(.center)
+    }
+
+    /// Online-Code: groß zeigen, kopieren, im Shop einlösen.
+    @ViewBuilder
+    private func onlineCode(_ card: GiftCard) -> some View {
+        let hidden = maskNumber && !numberShown
+        Text("Code").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
+        Group {
+            if hidden {
+                Button { numberShown = true } label: { Text(card.number.masked) }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Code aufdecken")
+            } else {
+                Text(card.number).textSelection(.enabled)
+            }
+        }
+        .font(.scaled(28, weight: .heavy, design: .monospaced))
+        .foregroundStyle(Color.ink)
+        .multilineTextAlignment(.center)
+        .minimumScaleFactor(0.6)
+        .frame(maxWidth: .infinity, minHeight: Layout.tap)
+        .padding(.vertical, 8)
+        .background(Color.fill, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
+        Button {
+            copy(card.number)
+        } label: {
+            Label(copied > 0 ? "Kopiert" : "Code kopieren", systemImage: copied > 0 ? "checkmark" : "doc.on.doc")
+                .font(.scaled(16, weight: .semibold))
+                .frame(maxWidth: .infinity, minHeight: Layout.tap)
+        }
+        .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.large).tint(Color.ink)
+        .accessibilityHint("Legt den Code für 10 Minuten in die Zwischenablage.")
+        if let url = card.merchant.balanceURL {
+            Link(destination: url) {
+                Label("\(card.name) öffnen", systemImage: "arrow.up.right.square")
+                    .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                    .frame(minHeight: Layout.tap)
+            }
+        }
+        Text("Gib den Code auf der Website des Ladens oder in deinem Kundenkonto ein. Danach ziehst du hier den Einkauf ab.")
+            .font(.scaled(13)).foregroundStyle(Color.ink2)
+            .multilineTextAlignment(.center)
+    }
+
+    private func copy(_ code: String) {
+        // Nicht dauerhaft in der Zwischenablage liegen lassen.
+        UIPasteboard.general.setItems([[UTType.plainText.identifier: code]],
+                                      options: [.expirationDate: Date.now.addingTimeInterval(600)])
+        copied += 1
+        AccessibilityNotification.Announcement("Code kopiert").post()
+    }
+
+    /// Erst abreißen lassen, dann weiter. Bei „Bewegung reduzieren“ sofort.
+    /// Zurückgesetzt wird erst in onDisappear – so springt die Hälfte nie sichtbar zurück.
     private func tearOff(then commit: @escaping () -> Void) {
+        guard !busy else { return }
+        busy = true
         tearHaptic += 1
         guard !reduceMotion else { commit(); return }
         withAnimation(.easeIn(duration: 0.42)) { torn = true }
         Task {
             try? await Task.sleep(for: .milliseconds(460))
             commit()
-            torn = false
         }
     }
 
@@ -265,7 +403,7 @@ struct CheckoutView: View {
         }
         let content = UNMutableNotificationContent()
         content.title = "Hast du bei \(card.name) bezahlt?"
-        content.body = "Trag den Betrag ein, damit dein Guthaben stimmt."
+        content.body = "Zieh den Einkauf ab, damit dein Guthaben stimmt."
         content.sound = .default
         content.userInfo = ["card": card.id.uuidString]
         let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: fire)
@@ -319,8 +457,15 @@ struct KeypadView: View {
     @State private var input = ""
     @State private var storeName = ""
     @State private var rejected = 0
+    /// Karte auf 0 gebracht: kleines Belohnungs-Sheet, danach erst zurück.
+    @State private var usedUp: UsedUp?
+    /// `sheet(item:)` setzt das Item vor onDismiss auf nil – daher hier gemerkt.
+    @State private var lastUsedUp: UsedUp?
+    /// Ziffern wachsen mit der Schrift, aber gedeckelt, damit das Feld auf den Bildschirm passt.
+    @ScaledMetric(relativeTo: .title) private var keyFont: CGFloat = 28
 
     private var value: Double { parseMoney(input.isEmpty ? "0" : input) ?? 0 }
+    private var digitSize: CGFloat { min(keyFont, 40) }
 
     var body: some View {
         Group {
@@ -330,112 +475,62 @@ struct KeypadView: View {
         .toolbar(.hidden, for: .tabBar)
         .navigationTitle(store.card(cardID)?.name ?? "Einkauf")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $usedUp, onDismiss: finishUsedUp) { UsedUpSheet(info: $0) }
     }
 
     private func content(_ card: GiftCard) -> some View {
-        // Oberer Teil scrollt, Tastenfeld samt Bestätigung bleibt unten – auch bei großer Schrift.
+        // Oberer Teil scrollt, Kurzwege, Tastenfeld und Bestätigung bleiben unten im Daumenbereich.
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                // Ein Eingabeweg: Betrag groß, darunter zwei leise Kurzwege. Kein Modus-Segment, keine Kopfkarte.
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(correct ? "Neuer Stand laut Bon" : "\(card.balance.euro) drauf")
-                        .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(input.isEmpty ? "0" : input).font(.display(64))
-                            .foregroundStyle(input.isEmpty ? Color.muted : Color.ink)
-                            .contentTransition(.numericText())
-                        Text("€").font(.display(30)).foregroundStyle(Color.ink2)
-                    }
+            VStack(alignment: .leading, spacing: 6) {
+                Text(correct ? "Neuer Stand laut Bon" : "\(card.balance.euro) drauf")
+                    .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
+                amountDisplay
+                    .modifier(Shake(animatableData: CGFloat(rejected)))
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(correct ? "Neuer Stand" : "Betrag")
                     .accessibilityValue(value.euro)
-                    .lineLimit(1).minimumScaleFactor(0.5)
-                    .modifier(Shake(animatableData: CGFloat(rejected)))
-                    if !input.isEmpty || correct {
-                        Text(hint(card)).font(.scaled(15, weight: !correct && value > card.balance ? .semibold : .regular))
-                            .foregroundStyle(!correct && value > card.balance ? Color.warn : Color.ink2)
-                    }
+                    .accessibilityAddTraits(.updatesFrequently)
+                if !input.isEmpty || correct {
+                    Text(hint(card)).font(.scaled(15, weight: !correct && value > card.balance ? .semibold : .regular))
+                        .foregroundStyle(!correct && value > card.balance ? Color.warn : Color.ink2)
                 }
-                .padding(.horizontal, Layout.page).padding(.top, Layout.group)
-
-                HStack(spacing: Layout.inset) {
-                    if !correct {
-                        Button("Alles (\(card.balance.euro))") {
-                            input = card.balance.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE"))).replacingOccurrences(of: ".", with: "")
-                        }
-                        .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
-                        .padding(.horizontal, Layout.inset).frame(minHeight: Layout.tap)
-                        .background(Color.surface, in: .capsule)
-                    }
-                    Button(correct ? "Doch Einkauf abziehen" : "Neuen Stand eintragen") {
-                        withAnimation(.snappy) { correct.toggle(); input = "" }
-                    }
-                    .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
-                    .frame(minHeight: Layout.tap)
-                }
-                .padding(.horizontal, Layout.page).padding(.top, Layout.group)
-
                 Group {
                     if showStore {
-                        LabeledField(label: "Filiale (für deinen Verlauf)", placeholder: "z. B. Thalia Köln", text: $storeName)
+                        LabeledField(label: "Filiale (für deinen Verlauf)", placeholder: "z.\u{00A0}B. Thalia Köln", text: $storeName)
                     } else {
                         Button("+ Filiale notieren") { withAnimation(.snappy) { showStore = true } }
                             .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                            .frame(minHeight: Layout.tap)
                     }
                 }
-                .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, Layout.inset)
+                .padding(.top, Layout.group)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, Layout.inset)
         }
         .scrollDismissesKeyboard(.interactively)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 14) {
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 6) {
+            VStack(spacing: Layout.group) {
+                shortcuts(card)
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3), spacing: 6) {
                     ForEach(["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "⌫"], id: \.self) { key in
                         Button { press(key) } label: {
                             Group {
                                 if key == "⌫" {
-                                    Image(systemName: "delete.left").font(.system(size: 22, weight: .semibold))
+                                    Image(systemName: "delete.left").font(.system(size: digitSize * 0.8, weight: .semibold))
                                 } else {
-                                    Text(key).font(.system(size: 28, weight: .medium, design: .rounded))
+                                    Text(key).font(.system(size: digitSize, weight: .medium, design: .rounded))
                                 }
                             }
-                            .frame(maxWidth: .infinity, minHeight: 56)
+                            .frame(maxWidth: .infinity, minHeight: min(digitSize + 28, 68))
                         }
                         .buttonStyle(KeyStyle())
-                        .accessibilityLabel(key == "⌫" ? "Löschen" : key)
+                        .accessibilityLabel(key == "⌫" ? "Löschen" : key == "," ? "Komma" : key)
                     }
                 }
                 .sensoryFeedback(.impact(weight: .light), trigger: input)
-                Button {
-                    // Neuer Stand darf 0 sein (Bon zeigt leer), Abzug nicht.
-                    guard correct ? parseMoney(input) != nil : value > 0 else {
-                        withAnimation(.linear(duration: 0.4)) { rejected += 1 }
-                        AccessibilityNotification.Announcement(correct ? "Erst den neuen Stand eingeben." : "Erst einen Betrag eingeben.").post()
-                        return
-                    }
-                    if correct {
-                        if let entry = store.setBalance(card.id, to: value) {
-                            router.showUndo("Neuer Stand bei \(card.name): \(value.euro)") {
-                                store.undoRedemption(card.id, entry: entry)
-                            }
-                        }
-                        dismiss()
-                        return
-                    }
-                    // Mehr als auf der Karte: Karte leeren, den Rest zahlt man an der Kasse anders.
-                    let taken = min(value, card.balance)
-                    let entry = checkout
-                        ? store.addTest(card: card, success: true, store: storeName, note: "", amount: taken)
-                        : store.redeem(card.id, amount: taken, store: storeName)
-                    if let entry {
-                        let rest = max(0, card.balance - taken)
-                        router.showUndo(rest <= 0 ? "Aufgebraucht. Gut genutzt." : "\(taken.euro) abgezogen · noch \(rest.euro) drauf") {
-                            store.undoRedemption(card.id, entry: entry)
-                        }
-                    }
-                    dismiss()
-                } label: {
-                    Text(correct ? (input.isEmpty ? "Neuen Stand eingeben" : "Stand auf \(value.euro) setzen")
+                Button { confirm(card) } label: {
+                    Text(correct ? (input.isEmpty ? "Neuen Stand eintragen" : "\(value.euro) eintragen")
                          : value > card.balance ? "Alles abziehen (\(card.balance.euro))"
                          : value > 0 ? "\(value.euro) abziehen" : "Abziehen")
                 }
@@ -449,37 +544,260 @@ struct KeypadView: View {
         .sensoryFeedback(.error, trigger: rejected)
     }
 
+    /// Betrag wie ein Preisschild: große Euro, kleine hochgestellte Cent. Noch nicht getippte Cent stehen blass da.
+    private var amountDisplay: some View {
+        let size: CGFloat = 64
+        let parts = input.split(separator: ",", maxSplits: 1, omittingEmptySubsequences: false).map(String.init)
+        let euros = parts.first.flatMap { $0.isEmpty ? nil : $0 } ?? "0"
+        let cents = parts.count > 1 ? parts[1] : ""
+        let open = String(repeating: "0", count: max(0, 2 - cents.count))
+        let small = Font.display(size * 0.46)
+        return Text("""
+            \(Text("\(euros),").font(.display(size)).kerning(-size * 0.02).foregroundStyle(input.isEmpty ? Color.muted : Color.ink))\
+            \(Text(cents).font(small).baselineOffset(size * 0.40).foregroundStyle(Color.ink))\
+            \(Text(open).font(small).baselineOffset(size * 0.40).foregroundStyle(Color.muted))\
+            \(Text(" €").font(small).baselineOffset(size * 0.40).foregroundStyle(Color.ink2))
+            """)
+            .lineLimit(1).minimumScaleFactor(0.5)
+            .contentTransition(.numericText(value: value))
+            .animation(.snappy(duration: 0.2), value: input)
+    }
+
+    /// Zwei gleichwertige Kurzwege direkt über den Tasten.
+    @ViewBuilder
+    private func shortcuts(_ card: GiftCard) -> some View {
+        let all = Button("Alles (\(card.balance.euro))") {
+            input = card.balance.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE"))).replacingOccurrences(of: ".", with: "")
+            announce()
+        }
+        let mode = Button(correct ? "Einkauf abziehen" : "Neuen Stand eintragen") {
+            withAnimation(.snappy) { correct.toggle(); input = "" }
+        }
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                if !correct { all.buttonStyle(ShortcutStyle()) }
+                mode.buttonStyle(ShortcutStyle())
+            }
+            VStack(spacing: 8) {
+                if !correct { all.buttonStyle(ShortcutStyle()) }
+                mode.buttonStyle(ShortcutStyle())
+            }
+        }
+    }
+
+    private func confirm(_ card: GiftCard) {
+        // Neuer Stand darf 0 sein (Bon zeigt leer), Abzug nicht.
+        guard correct ? parseMoney(input) != nil : value > 0 else {
+            withAnimation(.linear(duration: 0.4)) { rejected += 1 }
+            AccessibilityNotification.Announcement(correct ? "Erst den neuen Stand eintragen." : "Erst einen Betrag eingeben.").post()
+            return
+        }
+        // „Betrag offen“ endet erst hier: redeem, setBalance und addTest setzen pendingSince zurück
+        // und merken den alten Zustand, damit „Rückgängig“ ihn wiederherstellt.
+        let entry: UUID?
+        let message: String
+        if correct {
+            entry = store.setBalance(card.id, to: value)
+            message = "Neuer Stand bei \(card.name): \(value.euro)"
+        } else {
+            // Mehr als auf der Karte: Karte leeren, den Rest zahlt man an der Kasse anders.
+            let taken = min(value, card.balance)
+            entry = checkout
+                ? store.addTest(card: card, success: true, store: storeName, note: "", amount: taken)
+                : store.redeem(card.id, amount: taken, store: storeName)
+            let rest = max(0, card.balance - taken)
+            message = rest <= 0 ? "Aufgebraucht. Gut genutzt." : "\(taken.euro) abgezogen · noch \(rest.euro) drauf"
+        }
+        if card.balance > 0, let after = store.card(card.id), after.kind.isValueBased, after.balance <= 0 {
+            // Belohnung zuerst, „Rückgängig“ danach – sonst läge der Hinweis unter dem Sheet.
+            let info = UsedUp(name: card.name, amount: max(after.value, card.balance), entry: entry, message: message)
+            lastUsedUp = info
+            usedUp = info
+            return
+        }
+        if let entry {
+            router.showUndo(message) { store.undoRedemption(card.id, entry: entry) }
+        }
+        leave()
+    }
+
+    private func finishUsedUp() {
+        guard let info = lastUsedUp else { leave(); return }
+        lastUsedUp = nil
+        if let entry = info.entry {
+            let id = cardID
+            router.showUndo(info.message) { store.undoRedemption(id, entry: entry) }
+        }
+        leave()
+    }
+
+    /// Nach dem Speichern: von der Kasse aus Ziffernblock und Kasse vom Stapel nehmen, sonst nur zurück.
+    private func leave() {
+        guard checkout else { dismiss(); return }
+        func trimmed(_ path: [Route]) -> [Route] {
+            var p = path
+            if p.last == .pay(cardID) { p.removeLast() } else { return path }
+            if p.last == .checkout(cardID) { p.removeLast() }
+            return p
+        }
+        if router.homePath.last == .pay(cardID) {
+            router.homePath = trimmed(router.homePath)
+        } else if router.historyPath.last == .pay(cardID) {
+            router.historyPath = trimmed(router.historyPath)
+        } else {
+            dismiss()
+        }
+    }
+
     private func hint(_ card: GiftCard) -> String {
         if correct { return "Bisher: \(card.balance.euro). Die Differenz steht im Verlauf." }
         if value > card.balance {
-            return "Nur \(card.balance.euro) auf der Karte. \((value - card.balance).euro) zahlst du an der Kasse anders."
+            return "Nur \(card.balance.euro) auf dem Gutschein. \((value - card.balance).euro) zahlst du an der Kasse anders."
         }
         if value > 0 { return "Danach noch \(max(0, card.balance - value).euro) drauf" }
         return "Wird vom Guthaben abgezogen"
     }
 
     private func press(_ key: String) {
+        let before = input
         switch key {
         case "⌫":
             if !input.isEmpty { input.removeLast() }
         case ",":
             if !input.contains(",") { input = (input.isEmpty ? "0" : input) + "," }
         default:
-            if let comma = input.firstIndex(of: ","), input.distance(from: comma, to: input.endIndex) > 2 { return }
+            if let comma = input.firstIndex(of: ","), input.distance(from: comma, to: input.endIndex) > 2 { break }
             if input == "0" { input = "" }
             if input.count < 7 { input += key }
         }
+        if input != before { announce() }
+    }
+
+    /// VoiceOver sagt nach jeder Taste den neuen Betrag.
+    private func announce() {
+        AccessibilityNotification.Announcement(input.isEmpty ? "Null Euro" : value.euro).post()
     }
 
     private struct KeyStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
-                // Flache Tasten wie ein Zahlenfeld, nicht wie die Telefon-App: nur beim Drücken eine Fläche.
+                // Ruhefläche sichtbar (auch im Dunkeln), beim Drücken eine Stufe kräftiger.
                 .foregroundStyle(Color.ink)
-                .background(configuration.isPressed ? Color.fill : Color.clear, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
+                .background(configuration.isPressed ? Color.line : Color.fill, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
+                .contentShape(.rect)
                 .scaleEffect(configuration.isPressed ? 0.96 : 1)
                 .animation(.spring(duration: 0.2, bounce: 0.5), value: configuration.isPressed)
         }
+    }
+
+    /// Kurzweg-Knopf: leise Fläche, gleich breit, mindestens 44 pt hoch.
+    private struct ShortcutStyle: ButtonStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, Layout.group).padding(.vertical, 8)
+                .frame(maxWidth: .infinity, minHeight: Layout.tap)
+                .background(configuration.isPressed ? Color.line : Color.fill, in: .capsule)
+                .contentShape(.capsule)
+        }
+    }
+}
+
+// MARK: - Belohnung
+
+struct UsedUp: Identifiable {
+    let id = UUID()
+    let name: String
+    let amount: Double
+    let entry: UUID?
+    let message: String
+}
+
+/// Karte aufgebraucht: großer Stempel, eingelöste Summe und ein teilbares Bild ohne Code und PIN.
+private struct UsedUpSheet: View {
+    let info: UsedUp
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shareImage: Image?
+    @State private var cheer = 0
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: Layout.section) {
+                UsedUpStamp()
+                    .scaleEffect(1.5)
+                    .padding(.vertical, Layout.section)
+                VStack(spacing: 6) {
+                    Text("Gut genutzt: \(info.amount.euro) eingelöst")
+                        .font(.scaled(22, weight: .bold))
+                        .multilineTextAlignment(.center)
+                    Text(info.name).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.muted)
+                }
+                .accessibilityElement(children: .combine)
+                VStack(spacing: Layout.group) {
+                    if let shareImage {
+                        ShareLink(item: shareImage, preview: SharePreview("Gut genutzt bei \(info.name)", image: shareImage)) {
+                            Label("Teilen", systemImage: "square.and.arrow.up")
+                        }
+                        .buttonStyle(.quiet)
+                    }
+                    Button("Fertig") { dismiss() }
+                        .buttonStyle(.primary)
+                }
+            }
+            .padding(.horizontal, Layout.page).padding(.top, Layout.section)
+            .frame(maxWidth: .infinity)
+        }
+        .background(Color.page.ignoresSafeArea())
+        .presentationDetents([.medium, .large])
+        .sensoryFeedback(.success, trigger: cheer)
+        .onAppear {
+            if !reduceMotion { cheer += 1 }
+            AccessibilityNotification.Announcement("Aufgebraucht. Gut genutzt: \(info.amount.euro) eingelöst.").post()
+            renderShareImage()
+        }
+    }
+
+    private func renderShareImage() {
+        let renderer = ImageRenderer(content: ShareCard(name: info.name, amount: info.amount))
+        renderer.scale = 3
+        if let ui = renderer.uiImage { shareImage = Image(uiImage: ui) }
+    }
+}
+
+/// Das geteilte Bild: Wortmarke, Laden, Betrag, Stempel – bewusst ohne Code und PIN. Immer hell gerendert.
+private struct ShareCard: View {
+    let name: String
+    let amount: Double
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Layout.group) {
+            Wordmark(size: 26)
+            DashedRule()
+            Text(name).font(.system(size: 22, weight: .bold))
+            Text("Gut genutzt – eingelöst:").font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.muted)
+            HStack(alignment: .bottom) {
+                AmountText(value: amount, size: 56)
+                Spacer(minLength: Layout.group)
+                // Stempel ohne Einblend-Animation: ImageRenderer ruft kein onAppear auf.
+                Text("AUFGEBRAUCHT")
+                    .font(.system(size: 17, weight: .heavy, design: .rounded)).kerning(2.5)
+                    .foregroundStyle(Color.onBrand)
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .overlay(RoundedRectangle(cornerRadius: Layout.controlRadius).strokeBorder(Color.onBrand, lineWidth: 3))
+                    .background(Color.brandYellow, in: .rect(cornerRadius: Layout.controlRadius))
+                    .rotationEffect(.degrees(-8))
+            }
+        }
+        .foregroundStyle(Color.ink)
+        .padding(28)
+        .frame(width: 380, alignment: .leading)
+        .background(Color.surface, in: TicketShape())
+        .padding(20)
+        .background(Color.page)
+        .environment(\.colorScheme, .light)
+        .dynamicTypeSize(.large)
     }
 }
 

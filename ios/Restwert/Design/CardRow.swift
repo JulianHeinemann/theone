@@ -6,24 +6,53 @@ struct CardRow: View {
     let card: GiftCard
     var warnDays: Int = 30
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var noColor
 
-    private var dueText: (String, Color) {
+    /// Fristangabe der Zeile, einmal pro Durchlauf berechnet (Restlaufzeit kostet eine Kalenderrechnung).
+    private struct Due {
+        enum Level { case calm, soon, urgent, bad }
+        let text: String
+        let level: Level
+        /// Ablaufdatum nur geschätzt (gesetzliche Frist), nicht vom Gutschein abgelesen.
+        let estimated: Bool
+
+        var color: Color {
+            switch level {
+            case .calm: .muted
+            case .soon: .soon
+            case .urgent: .warn
+            case .bad: .bad
+            }
+        }
+
+        /// Bis 14 Tage Ausrufezeichen, danach Uhr – unterscheidbar auch ohne Farbe.
+        var symbol: String? {
+            switch level {
+            case .urgent: "exclamationmark.circle.fill"
+            case .soon: "clock"
+            case .calm, .bad: nil
+            }
+        }
+    }
+
+    private var due: Due {
+        let days = card.daysLeft
         let status = card.status(warnDays: warnDays)
+        let estimated = card.expiresEstimated && card.isOpen && days >= 0 && !card.isArchived
         // Archiviert, aber noch gültig: so anzeigen und ansagen. Eingelöst und abgelaufen behalten ihren Status.
-        if card.isArchived, status == .valid || status == .expiringSoon { return ("archiviert", .muted) }
+        if card.isArchived, status == .valid || status == .expiringSoon { return Due(text: "archiviert", level: .calm, estimated: false) }
         return switch status {
-        case .expiringSoon:
-            // Bis 14 Tage dringend (rote Pill), danach nur orangener Text.
-            card.daysLeft <= 14
-                ? (card.daysLeft == 0 ? "Heute weg" : card.daysLeft == 1 ? "Morgen weg" : "noch \(card.daysLeft) Tage", .warn)
-                : ("noch \(card.daysLeft) Tage", .soon)
-        case .expired: ("abgelaufen", .bad)
-        case .redeemed: ("eingelöst", .muted)
-        case .valid: ("bis \(card.expires.dayMonthYear)", .muted)
+        case .expiringSoon where days <= 14:
+            Due(text: days == 0 ? "läuft heute ab" : days == 1 ? "läuft morgen ab" : "noch \(days)\u{00A0}Tage", level: .urgent, estimated: estimated)
+        case .expiringSoon: Due(text: "noch \(days)\u{00A0}Tage", level: .soon, estimated: estimated)
+        case .expired: Due(text: "abgelaufen", level: .bad, estimated: false)
+        case .redeemed: Due(text: "eingelöst", level: .calm, estimated: false)
+        case .valid: Due(text: "bis \(card.expires.dayMonthYear)", level: .calm, estimated: estimated)
         }
     }
 
     var body: some View {
+        let due = due
         // Bei sehr großer Schrift untereinander statt nebeneinander, damit nichts abgeschnitten wird.
         let layout = typeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
@@ -31,7 +60,7 @@ struct CardRow: View {
         layout {
             HStack(spacing: 14) {
                 MerchantMark(card: card)
-                nameBlock
+                nameBlock(due)
             }
             if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
             amountBlock
@@ -43,20 +72,21 @@ struct CardRow: View {
         .opacity(card.isActive ? 1 : 0.5)
         .contentShape(.rect)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(spoken)
+        .accessibilityLabel(spoken(due))
     }
 
-    /// Ein Satz für VoiceOver, z. B. „Thalia, 12,40 € von 25,00 €, bis 31.12.2028“.
-    private var spoken: String {
+    /// Ein Satz für VoiceOver, z. B. „Thalia, 12,40 € von 25,00 €, bis 31.12.2028, Datum geschätzt“.
+    private func spoken(_ due: Due) -> String {
         let amount = card.kind.isValueBased ? "\(card.headline) von \(card.value.euro)" : card.headline == card.kind.label ? card.kind.label : "\(card.headline) \(card.kind.label)"
         let who = card.owner.isEmpty ? "" : ", für \(card.owner)"
         let open = card.pendingSince != nil && card.isActive ? ", Betrag offen" : ""
-        return "\(card.name)\(who)\(open), \(amount), \(dueText.0)\(card.forGifting ? ", zum Verschenken" : "")"
+        let urgent = due.level == .urgent ? ", dringend" : ""
+        let estimated = due.estimated ? ", Datum geschätzt" : ""
+        return "\(card.name)\(who)\(open), \(amount), \(due.text)\(urgent)\(estimated)\(card.forGifting ? ", zum Verschenken" : "")"
     }
 
-    private var nameBlock: some View {
-        let due = dueText
-        return VStack(alignment: .leading, spacing: 3) {
+    private func nameBlock(_ due: Due) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
             // Name einzeilig; Zusatz-Etiketten stehen in der zweiten Zeile, damit der Name nicht umbricht.
             HStack(spacing: 6) {
                 Text(card.name).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
@@ -66,38 +96,44 @@ struct CardRow: View {
                         .accessibilityLabel("zum Verschenken")
                 }
                 if !card.owner.isEmpty {
+                    // „für Mia“ bekommt zuerst Platz, lieber kürzt sich der Ladenname.
                     Text("für \(card.owner)").font(.scaled(13)).foregroundStyle(Color.ink2).lineLimit(1)
+                        .layoutPriority(2)
                 }
             }
-            // Zwei Stufen: bis 14 Tage gefüllt mit Ausrufezeichen, danach nur umrandet mit Uhr.
-            let urgent = due.1 == .warn
+            // Zwei Stufen: bis 14 Tage Pille mit Ausrufezeichen, danach nur Text mit Uhr.
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 6) { dueLabel(due, urgent); tags }
-                VStack(alignment: .leading, spacing: 3) { dueLabel(due, urgent); HStack(spacing: 6) { tags } }
+                HStack(spacing: 6) { dueLabel(due); tags(due) }
+                VStack(alignment: .leading, spacing: 3) { dueLabel(due); HStack(spacing: 6) { tags(due) } }
             }
         }
     }
 
     @ViewBuilder
-    private var tags: some View {
+    private func tags(_ due: Due) -> some View {
         // Ruhige Zusätze als Text mit Trennpunkt statt eigener Pillen.
+        if due.estimated {
+            Text("· geschätzt").font(.scaled(13)).foregroundStyle(Color.muted).fixedSize()
+        }
         if card.pendingSince != nil && card.isActive {
             Text("· Betrag offen").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.warn).fixedSize()
         }
     }
 
-    private func dueLabel(_ due: (String, Color), _ urgent: Bool) -> some View {
-            Label {
-                Text(due.0)
-            } icon: {
-                if due.1 == .warn || due.1 == .soon { Image(systemName: "clock") }
-            }
-            .labelStyle(DueLabelStyle())
-            .lineLimit(1).minimumScaleFactor(0.75)
-            .font(.scaled(13, weight: due.1 == .muted ? .regular : .semibold))
-            .foregroundStyle(due.1)
-            .padding(.horizontal, urgent ? 8 : 0).padding(.vertical, urgent ? 3 : 0)
-            .background(urgent ? Color.warnSoft : Color.clear, in: .capsule)
+    private func dueLabel(_ due: Due) -> some View {
+        let urgent = due.level == .urgent
+        return Label {
+            // Ohne Farbunterscheidung steht „dringend“ zusätzlich im Text.
+            Text(urgent && noColor ? "\(due.text) · dringend" : due.text)
+        } icon: {
+            if let symbol = due.symbol { Image(systemName: symbol) }
+        }
+        .labelStyle(DueLabelStyle())
+        .lineLimit(1).minimumScaleFactor(0.75)
+        .font(.scaled(13, weight: due.level == .calm ? .regular : .semibold))
+        .foregroundStyle(due.color)
+        .padding(.horizontal, urgent ? 8 : 0).padding(.vertical, urgent ? 3 : 0)
+        .background(urgent ? Color.warnSoft : Color.clear, in: .capsule)
     }
 
     private var amountBlock: some View {

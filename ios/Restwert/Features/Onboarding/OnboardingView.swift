@@ -7,16 +7,17 @@ enum OnboardingExit { case browse, add, scan, manual }
 /// Einstieg in vier Seiten: Willkommen (Ticket), Sammeln (Liste), Erinnern (Mitteilung), Erster Gutschein.
 /// Jede Seite spielt ihre kleine Animation, sobald sie sichtbar wird. Bei „Bewegung reduzieren“ steht alles sofort da.
 /// Kein Login: Die App hat bewusst kein Konto. Wer schon Gutscheine hat, holt sie aus dem eigenen iCloud.
+/// Nach der Mitteilungs-Erlaubnis fragt erst das Formular beim ersten Speichern – nicht der Einstieg.
 struct OnboardingView: View {
     var onFinish: (OnboardingExit) -> Void
 
-    @Environment(Store.self) private var store
     @Environment(CloudSync.self) private var cloud
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var page = 0
-    @State private var tick = 0
 
     private let pages = 4
+    /// Alle Knopftexte liegen übereinander im Knopf, damit er auf jeder Seite gleich hoch ist.
+    private let primaryTitles = ["Los geht’s", "Weiter", "Weiter", "Gutschein hinzufügen"]
 
     var body: some View {
         VStack(spacing: 0) {
@@ -25,36 +26,41 @@ struct OnboardingView: View {
                 WelcomePage(active: page == 0).tag(0)
                 CollectPage(active: page == 1).tag(1)
                 RemindPage(active: page == 2).tag(2)
-                FirstCardPage(active: page == 3, onPick: onFinish).tag(3)
+                FirstCardPage(active: page == 3, onPick: onFinish, onRestore: restore).tag(3)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .sensoryFeedback(.selection, trigger: page)
-            dots
-                .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
-            actions
-                .padding(.horizontal, Layout.page).padding(.bottom, 8)
+            // Aktionszone: auf allen Seiten gleich aufgebaut und gleich hoch – Punkte und Knöpfe springen nicht.
+            VStack(spacing: Layout.group) {
+                dots
+                actions
+            }
+            .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, 8)
+            .background(Color.page)
         }
         .foregroundStyle(Color.ink)
         .background(Color.page.ignoresSafeArea())
     }
 
+    /// Wortmarke wie auf dem Start: gleiche Größe, 16 pt Rand, 44 pt hohe Leiste direkt unter der Statusleiste.
     private var header: some View {
         HStack {
-            Wordmark(size: 28)
+            Wordmark(size: 28).fixedSize()
             Spacer()
-            if page < pages - 1 {
-                Button("Überspringen") { withAnimation(.smooth) { page = pages - 1 } }
-                    .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
-                    .frame(minHeight: Layout.tap)
-                    .transition(.opacity)
-            }
+            Button("Überspringen") { go(to: pages - 1) }
+                .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                .frame(minWidth: Layout.tap, minHeight: Layout.tap)
+                .contentShape(.rect)
+                .opacity(page < pages - 1 ? 1 : 0)
+                .disabled(page == pages - 1)
+                .accessibilityHidden(page == pages - 1)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: page)
         }
         .frame(minHeight: Layout.tap)
         .lineLimit(1)
         // Kopfzeile wächst nur bis zu einer Größe, bei der Wortmarke und „Überspringen“ nebeneinander passen.
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-        .padding(.horizontal, Layout.page).padding(.top, 8)
-        .animation(.smooth, value: page)
+        .padding(.horizontal, Layout.page)
     }
 
     private var dots: some View {
@@ -65,90 +71,93 @@ struct OnboardingView: View {
             }
             Spacer()
         }
-        .animation(.spring(duration: 0.35, bounce: 0.3), value: page)
+        .frame(height: 7)
+        .animation(reduceMotion ? nil : .spring(duration: 0.35, bounce: 0.3), value: page)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Seite \(page + 1) von \(pages)")
     }
 
-    @ViewBuilder
     private var actions: some View {
         VStack(spacing: 4) {
-            switch page {
-            case 0:
-                Button("Los geht's") { next() }.buttonStyle(.primary)
-                quiet(" ") {}.hidden()
-            case 1:
-                Button("Weiter") { next() }.buttonStyle(.primary)
-                quiet(" ") {}.hidden()
-            case 2:
-                Button("Benachrichtigungen erlauben") {
-                    Task {
-                        await store.requestNotifications()
-                        next()
+            Button(action: primary) {
+                ZStack {
+                    ForEach(primaryTitles.indices, id: \.self) { i in
+                        Text(primaryTitles[i]).opacity(i == page ? 1 : 0)
                     }
                 }
-                .buttonStyle(.primary)
-                quiet("Später") { next() }
-            default:
-                Button("Gutschein hinzufügen") { onFinish(.add) }.buttonStyle(.primary)
-                quiet("Erstmal umschauen") { onFinish(.browse) }
-                Button {
-                    cloud.isEnabled = true
-                    onFinish(.browse)
-                } label: {
-                    (Text("Schon Gutscheine in iCloud? ").foregroundStyle(Color.muted)
-                     + Text("Wiederherstellen").fontWeight(.semibold).foregroundStyle(Color.ink))
-                        .font(.scaled(13)).multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity, minHeight: Layout.tap)
-                }
-                .buttonStyle(.plain)
             }
+            .buttonStyle(.primary)
+            .accessibilityLabel(primaryTitles[page])
+
+            // Zweiter Knopf nur auf der letzten Seite; der Platz ist überall reserviert.
+            Button("Erstmal umschauen") { onFinish(.browse) }
+                .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                .frame(maxWidth: .infinity, minHeight: Layout.tap)
+                .contentShape(.rect)
+                .opacity(page == pages - 1 ? 1 : 0)
+                .disabled(page != pages - 1)
+                .accessibilityHidden(page != pages - 1)
         }
-        .animation(.smooth, value: page)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: page)
     }
 
-    private func quiet(_ title: String, _ action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
-            .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
-            .frame(maxWidth: .infinity, minHeight: Layout.tap)
+    private func primary() {
+        if page == pages - 1 { onFinish(.add) } else { go(to: page + 1) }
     }
 
-    private func next() {
-        withAnimation(.smooth) { page = min(page + 1, pages - 1) }
+    private func restore() {
+        cloud.isEnabled = true
+        onFinish(.browse)
+    }
+
+    private func go(to target: Int) {
+        let target = min(target, pages - 1)
+        if reduceMotion { page = target } else { withAnimation(.smooth) { page = target } }
     }
 }
 
 // MARK: - Seitenrahmen
 
 /// Oben die Bühne mit der Animation, unten Überschrift und Text – auf allen Seiten gleich gesetzt.
+/// Passt alles, steht der Text unten; bei großer Schrift scrollt die Seite und ein Verlauf am unteren Rand zeigt, dass mehr kommt.
 private struct PageFrame<Stage: View>: View {
     let title: String
     let text: String
     let active: Bool
     @ViewBuilder var stage: Stage
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var moreBelow = false
 
     var body: some View {
-        // Passt alles, steht der Text unten wie im Entwurf; bei großer Schrift wird die Seite scrollbar.
-        ViewThatFits(in: .vertical) {
-            VStack(alignment: .leading, spacing: 0) {
-                Spacer(minLength: Layout.section)
-                stage.frame(maxWidth: .infinity)
-                Spacer(minLength: Layout.section)
-                copy
-            }
-            .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
+        GeometryReader { geo in
             ScrollView {
-                VStack(alignment: .leading, spacing: Layout.section) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Spacer(minLength: Layout.section)
                     stage.frame(maxWidth: .infinity)
+                    Spacer(minLength: Layout.section)
                     copy
                 }
-                .padding(.horizontal, Layout.page).padding(.vertical, Layout.section)
+                .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
+                .frame(minHeight: geo.size.height, alignment: .bottom)
             }
-            .scrollIndicators(.hidden)
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.visible)
+            .scrollIndicatorsFlash(trigger: active)
+            .onScrollGeometryChange(for: Bool.self) { g in
+                g.visibleRect.maxY < g.contentSize.height - 4
+            } action: { _, more in
+                moreBelow = more
+            }
+            .overlay(alignment: .bottom) {
+                LinearGradient(colors: [Color.page.opacity(0), Color.page], startPoint: .top, endPoint: .bottom)
+                    .frame(height: Layout.section + 8)
+                    .opacity(moreBelow ? 1 : 0)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
         }
         .opacity(active || reduceMotion ? 1 : 0.4)
-        .animation(.easeOut(duration: 0.3), value: active)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: active)
     }
 
     private var copy: some View {
@@ -165,6 +174,7 @@ private struct PageFrame<Stage: View>: View {
 }
 
 /// Zeitgesteuerter Auftritt: zählt Schritte hoch, sobald die Seite aktiv wird; bei „Bewegung reduzieren“ sofort am Ende.
+/// Verlässt man die Seite, springt sie ohne Animation auf den Anfang zurück, damit sie beim Wiederkommen neu spielt.
 private struct Stepper: ViewModifier {
     let active: Bool
     let steps: [Int]           // Millisekunden bis zu jedem Schritt
@@ -173,9 +183,13 @@ private struct Stepper: ViewModifier {
 
     func body(content: Content) -> some View {
         content.task(id: active) {
-            guard active else { return }
             if reduceMotion { step = steps.count; return }
-            step = 0
+            guard active else {
+                var reset = Transaction()
+                reset.disablesAnimations = true
+                withTransaction(reset) { step = 0 }
+                return
+            }
             for (i, ms) in steps.enumerated() {
                 try? await Task.sleep(for: .milliseconds(ms))
                 if Task.isCancelled { return }
@@ -185,19 +199,37 @@ private struct Stepper: ViewModifier {
     }
 }
 
+/// Implizite Animation, die bei „Bewegung reduzieren“ entfällt: dann stehen sofort die Endzustände da.
+private struct Motion<V: Equatable>: ViewModifier {
+    let animation: Animation
+    let value: V
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content.animation(reduceMotion ? nil : animation, value: value)
+    }
+}
+
+private extension View {
+    func motion<V: Equatable>(_ animation: Animation, value: V) -> some View {
+        modifier(Motion(animation: animation, value: value))
+    }
+}
+
 // MARK: - 01 Willkommen
 
 private struct WelcomePage: View {
     let active: Bool
     @State private var step = 0
-    @State private var amount: Double = 0
+    @State private var countStart: Date?
     @State private var tearY: CGFloat = 110
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var landed = 0
     private let total = 136.25
+    private let countDuration = 0.8
 
     var body: some View {
         PageFrame(title: "Kein Gutschein\nverfällt mehr.",
-                  text: "Restwert behält den Überblick über alles, was du noch einlösen kannst – Karten, Codes, Stadtgutscheine.",
+                  text: "Restwert behält den Überblick über alles, was du noch einlösen kannst – Geschenkkarten, Rabattcodes, Stadtgutscheine.",
                   active: active) {
             ZStack {
                 // Zweite Karte dahinter, schräg – wie ein Stapel in der Schublade.
@@ -212,34 +244,36 @@ private struct WelcomePage: View {
                     .opacity(step >= 1 ? 1 : 0)
             }
             .fixedSize(horizontal: false, vertical: true)
-            .animation(.spring(duration: 0.7, bounce: 0.3), value: step)
+            .motion(.spring(duration: 0.7, bounce: 0.3), value: step)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Beispiel: Noch \(total.euro) drauf, 5 Karten, 2 bald weg")
+            .accessibilityLabel("Beispiel: Noch \(total.euro) drauf, 5 Gutscheine, 2 laufen bald ab")
         }
         .modifier(Stepper(active: active, steps: [150, 500, 900], step: $step))
-        .task(id: step) {
-            // Hochzählen, sobald das Ticket gelandet ist.
-            guard step == 2 else {
-                if step == 0 { amount = 0 }
-                if step >= 3 || reduceMotion { amount = total }
-                return
-            }
-            let frames = 24
-            for f in 1...frames {
-                let t = Double(f) / Double(frames)
-                withAnimation(.snappy(duration: 0.1)) { amount = (total * (1 - pow(1 - t, 3)) * 100).rounded() / 100 }
-                try? await Task.sleep(for: .milliseconds(30))
-            }
-            amount = total
+        .onChange(of: step) { _, s in
+            // Hochzählen startet, sobald das Ticket gelandet ist; Haptik genau einmal, wenn die Abrisslinie steht.
+            countStart = s == 2 ? .now : nil
+            if s == 3 { landed += 1 }
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: step == 3)
+        .sensoryFeedback(.impact(weight: .light), trigger: landed)
+    }
+
+    /// Betrag zum Zeitpunkt `date`: vorher 0, danach der Endwert, dazwischen weich abgebremst (kubisch).
+    private func amount(at date: Date) -> Double {
+        if step < 2 { return 0 }
+        guard step == 2 else { return total }
+        let t = min(1, max(0, date.timeIntervalSince(countStart ?? date) / countDuration))
+        return (total * (1 - pow(1 - t, 3)) * 100).rounded() / 100
     }
 
     private var ticket: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Noch drauf").font(.scaled(15, weight: .semibold)).opacity(0.75)
-                AmountText(value: amount, size: 60)
+                // Eine durchgehende Zählbewegung pro Bildschirmbild statt vieler Einzelübergänge.
+                TimelineView(.animation(paused: step != 2)) { context in
+                    AmountText(value: amount(at: context.date), size: 60)
+                        .transaction { $0.animation = nil }
+                }
             }
             .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.ticketInset).padding(.bottom, Layout.inset)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -248,19 +282,21 @@ private struct WelcomePage: View {
                 .mask(alignment: .leading) {
                     GeometryReader { g in Rectangle().frame(width: step >= 3 ? g.size.width : 0) }
                 }
-                .animation(.easeOut(duration: 0.5), value: step)
+                .motion(.easeOut(duration: 0.5), value: step)
                 .padding(.horizontal, Layout.inset)
             VStack(alignment: .leading, spacing: 2) {
-                Text("5 Karten · 2 bald weg").font(.scaled(15, weight: .semibold))
+                Text("5 Gutscheine · 2 laufen bald ab").font(.scaled(15, weight: .semibold))
                 Text("+ 1 Rabattcode, nicht in der Summe").font(.scaled(13)).opacity(0.75)
             }
             .padding(.horizontal, Layout.ticketInset).padding(.vertical, Layout.group)
             .frame(maxWidth: .infinity, alignment: .leading)
             .opacity(step >= 3 ? 1 : 0)
-            .animation(.easeOut(duration: 0.3).delay(0.25), value: step)
+            .motion(.easeOut(duration: 0.3).delay(0.25), value: step)
         }
         .foregroundStyle(Color.sumText)
         .background(Color.sumFill, in: TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchFromTop: tearY + 0.5))
+        // Erst zusammensetzen, dann Schatten – sonst werfen die Buchstaben eigene Schatten.
+        .compositingGroup()
         .shadow(color: Color.shade, radius: 14, y: 6)
     }
 }
@@ -272,14 +308,14 @@ private struct CollectPage: View {
     @State private var step = 0
 
     private let rows: [(id: String, name: String, due: String, amount: String, sub: String)] = [
-        ("zalando", "Zalando", "bis 09.10.2026", "15 %", "Rabatt"),
-        ("ikea", "IKEA", "bis 21.10.2026", "50,00 €", "von 50,00 €"),
-        ("stadtgutschein", "Stadtgutschein", "bis 14.02.2027", "20,00 €", "von 20,00 €"),
+        ("zalando", "Zalando", "bis 09.10.2026", "15\u{00A0}%", "Rabatt"),
+        ("ikea", "IKEA", "bis 21.10.2026", "50,00\u{00A0}€", "von 50,00\u{00A0}€"),
+        ("stadtgutschein", "Stadtgutschein", "bis 14.02.2027", "20,00\u{00A0}€", "von 20,00\u{00A0}€"),
     ]
 
     var body: some View {
         PageFrame(title: "Alles an einem Ort.",
-                  text: "Egal ob Zalando, IKEA oder der Blumenladen um die Ecke: Gutschein rein, Restbetrag drauf, fertig.",
+                  text: "Egal ob Zalando, IKEA oder der Blumenladen um die Ecke: Gutschein rein, Restbetrag drauf, fertig. An der Kasse zeigst du den Code groß und ziehst ab, was du bezahlt hast.",
                   active: active) {
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
@@ -300,13 +336,14 @@ private struct CollectPage: View {
                     // Jede Zeile gleitet von rechts in die Liste.
                     .offset(x: step > i ? 0 : 60)
                     .opacity(step > i ? 1 : 0)
-                    .animation(.spring(duration: 0.5, bounce: 0.25), value: step)
+                    .motion(.spring(duration: 0.5, bounce: 0.25), value: step)
                 }
             }
             .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+            .compositingGroup()
             .shadow(color: Color.shade, radius: 14, y: 6)
             .scaleEffect(step >= 1 ? 1 : 0.96)
-            .animation(.spring(duration: 0.5), value: step)
+            .motion(.spring(duration: 0.5), value: step)
             .accessibilityHidden(true)
         }
         .modifier(Stepper(active: active, steps: [150, 160, 160], step: $step))
@@ -318,34 +355,34 @@ private struct CollectPage: View {
 private struct RemindPage: View {
     let active: Bool
     @State private var step = 0
+    @State private var arrived = 0
 
     var body: some View {
-        PageFrame(title: "Wir sagen Bescheid,\nbevor's zu spät ist.",
-                  text: "Rechtzeitig vor dem Ablaufdatum bekommst du eine Erinnerung. Ohne Spam, versprochen.",
+        PageFrame(title: "Wir sagen Bescheid,\nbevor’s zu spät ist.",
+                  text: "Rechtzeitig vor dem Ablaufdatum bekommst du eine Erinnerung. Ohne Spam, versprochen. Ob wir dir Mitteilungen schicken dürfen, fragen wir erst, wenn du deinen ersten Gutschein gespeichert hast.",
                   active: active) {
             VStack(spacing: Layout.group) {
                 // Mitteilung fällt von oben herein, wie auf dem Sperrbildschirm.
                 HStack(alignment: .top, spacing: 12) {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(hex: 0x111111))
-                        .frame(width: 40, height: 40)
-                        .overlay(Circle().fill(Color.brandYellow).frame(width: 14, height: 14))
+                    AppIconMark()
                     VStack(alignment: .leading, spacing: 2) {
                         HStack {
                             Text("Restwert").font(.scaled(13, weight: .semibold))
                             Spacer()
                             Text("jetzt").font(.scaled(13)).foregroundStyle(Color.muted)
                         }
-                        Text("Zalando läuft in 12 Tagen ab").font(.scaled(15, weight: .semibold))
-                        Text("15 % Rabatt, noch nicht eingelöst. Jetzt nutzen?").font(.scaled(15)).foregroundStyle(Color.ink2)
+                        Text("Zalando läuft in 12\u{00A0}Tagen ab").font(.scaled(15, weight: .semibold))
+                        Text("15\u{00A0}% Rabatt, noch nicht eingelöst. Jetzt nutzen?").font(.scaled(15)).foregroundStyle(Color.ink2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 .padding(Layout.inset)
                 .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                .compositingGroup()
                 .shadow(color: Color.shade, radius: 16, y: 8)
                 .offset(y: step >= 1 ? 0 : -120)
                 .opacity(step >= 1 ? 1 : 0)
-                .animation(.spring(duration: 0.55, bounce: 0.35), value: step)
+                .motion(.spring(duration: 0.55, bounce: 0.35), value: step)
                 .zIndex(1)
 
                 HStack(spacing: 14) {
@@ -359,25 +396,61 @@ private struct RemindPage: View {
                             .background(Color.warnSoft, in: .capsule)
                             // Kurzer Puls, wenn die Mitteilung gelandet ist.
                             .scaleEffect(step == 3 ? 1.08 : 1)
-                            .animation(.spring(duration: 0.3, bounce: 0.6), value: step)
+                            .motion(.spring(duration: 0.3, bounce: 0.6), value: step)
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 3) {
-                        Text("15 %").font(.amount(20))
+                        Text("15\u{00A0}%").font(.amount(20))
                         Text("Rabatt").font(.scaled(13)).foregroundStyle(Color.muted)
                     }
                 }
                 .padding(.horizontal, Layout.inset).padding(.vertical, Layout.group)
                 .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                .compositingGroup()
                 .shadow(color: Color.shade, radius: 14, y: 6)
                 .opacity(step >= 2 ? 1 : 0)
                 .offset(y: step >= 2 ? 0 : 16)
-                .animation(.easeOut(duration: 0.4), value: step)
+                .motion(.easeOut(duration: 0.4), value: step)
             }
             .accessibilityHidden(true)
         }
         .modifier(Stepper(active: active, steps: [250, 350, 350, 250], step: $step))
-        .sensoryFeedback(.impact(weight: .light), trigger: step == 1)
+        .onChange(of: step) { _, s in if s == 1 { arrived += 1 } }
+        .sensoryFeedback(.impact(weight: .light), trigger: arrived)
+    }
+}
+
+/// Das App-Icon im Kleinen: gelbes Ticket mit €, zwei Kerben und Abrisslinie auf Tinte – wie auf dem Home-Bildschirm.
+/// Feste Maße, weil es ein Bild ist und kein Text.
+private struct AppIconMark: View {
+    private let ticket = CGSize(width: 34, height: 23)
+    private let notchY: CGFloat = 0.55
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .fill(Color.onBrand)   // immer dunkel, wie das echte Icon
+            .frame(width: 40, height: 40)
+            .overlay {
+                TicketShape(radius: 3.5, notchRadius: 2.2, notchY: notchY)
+                    .fill(Color.brandYellow)
+                    .overlay(alignment: .top) {
+                        Text("€").font(.system(size: 9, weight: .black, design: .rounded))
+                            .foregroundStyle(Color.onBrand)
+                            .frame(height: ticket.height * notchY)
+                    }
+                    .overlay(alignment: .top) {
+                        DashLine(dash: 3.4, gap: 2)
+                            .fill(Color.onBrand)
+                            .frame(height: 1)
+                            .scaleEffect(y: 1.4)
+                            .padding(.horizontal, 5)
+                            .offset(y: ticket.height * notchY - 0.5)
+                    }
+                    .frame(width: ticket.width, height: ticket.height)
+            }
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Color.line.opacity(0.6), lineWidth: 0.5))
+            .dynamicTypeSize(.large)
+            .accessibilityHidden(true)
     }
 }
 
@@ -386,30 +459,55 @@ private struct RemindPage: View {
 private struct FirstCardPage: View {
     let active: Bool
     var onPick: (OnboardingExit) -> Void
+    var onRestore: () -> Void
     @State private var step = 0
 
     var body: some View {
         PageFrame(title: "Leg deinen ersten\nGutschein an.",
-                  text: "Dauert 20 Sekunden. Die Beispiele auf dem Startscreen verschwinden dann automatisch.",
+                  text: "Dauert 20 Sekunden. Die Beispiele auf „Start“ verschwinden dann automatisch.",
                   active: active) {
             VStack(spacing: Layout.group) {
-                option(icon: "viewfinder", title: "Karte scannen", text: "Barcode oder QR-Code abfotografieren",
-                       yellow: true, shown: step >= 1) { onPick(.scan) }
+                option(icon: "viewfinder", title: "Gutschein scannen", text: "Barcode oder QR-Code abfotografieren",
+                       strong: true, shown: step >= 1) { onPick(.scan) }
                 option(icon: "keyboard", title: "Code eintippen", text: "Betrag, Laden und Ablaufdatum eingeben",
-                       yellow: false, shown: step >= 2) { onPick(.manual) }
+                       strong: false, shown: step >= 2) { onPick(.manual) }
+                restoreLink
+                    .opacity(step >= 2 ? 1 : 0)
+                    .motion(.easeOut(duration: 0.3), value: step)
             }
         }
         .modifier(Stepper(active: active, steps: [150, 140], step: $step))
     }
 
-    private func option(icon: String, title: String, text: String, yellow: Bool, shown: Bool,
+    /// Kein Konto: „Wiederherstellen“ schaltet nur den iCloud-Abgleich ein.
+    private var restoreLink: some View {
+        Button(action: onRestore) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Schon Gutscheine in iCloud? \(Text("Wiederherstellen").fontWeight(.semibold).foregroundStyle(Color.ink))")
+                    .font(.scaled(15)).foregroundStyle(Color.ink2)
+                Text("Holt deine Gutscheine aus deinem eigenen iCloud – ganz ohne Konto.")
+                    .font(.scaled(13)).foregroundStyle(Color.muted)
+            }
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, minHeight: Layout.tap, alignment: .leading)
+            .padding(.horizontal, Layout.inset)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Wiederherstellen")
+        .accessibilityHint("Holt deine Gutscheine aus deinem eigenen iCloud – ganz ohne Konto.")
+    }
+
+    /// `strong`: Hauptweg in Tinte (Gelb bleibt der Marke vorbehalten), sonst neutrale Fläche.
+    private func option(icon: String, title: String, text: String, strong: Bool, shown: Bool,
                         action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 14) {
                 Image(systemName: icon).font(.scaled(22, weight: .semibold))
-                    .foregroundStyle(yellow ? Color.onBrand : Color.ink)
+                    .foregroundStyle(strong ? Color.onInk : Color.ink)
                     .frame(width: 56, height: 56)
-                    .background(yellow ? Color.brandYellow : Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+                    .background(strong ? Color.ink : Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.scaled(17, weight: .bold)).foregroundStyle(Color.ink)
                     Text(text).font(.scaled(15)).foregroundStyle(Color.ink2)
@@ -420,12 +518,13 @@ private struct FirstCardPage: View {
             }
             .padding(Layout.inset)
             .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+            .compositingGroup()
             .shadow(color: Color.shade, radius: 14, y: 6)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .offset(y: shown ? 0 : 24)
         .opacity(shown ? 1 : 0)
-        .animation(.spring(duration: 0.5, bounce: 0.3), value: shown)
+        .motion(.spring(duration: 0.5, bounce: 0.3), value: shown)
     }
 }

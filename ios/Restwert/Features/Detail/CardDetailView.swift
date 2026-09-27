@@ -24,6 +24,8 @@ struct CardDetailView: View {
     @State private var success = 0
     @State private var showPhoto = false
     @State private var notifStatus: UNAuthorizationStatus?
+    /// Dekodiertes Foto, damit UIImage(data:) nicht bei jedem Neuzeichnen läuft; `source` zeigt, zu welchen Daten es gehört.
+    @State private var photo: (source: Data, image: UIImage?)?
 
     var body: some View {
         Group {
@@ -84,8 +86,10 @@ struct CardDetailView: View {
         // Hauptaktion unten im Daumenbereich statt mitten im Inhalt.
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if card.isActive {
+                // Online-Codes haben keine Kasse; dieselbe Route zeigt dort den Online-Weg.
+                let online = card.merchant.category == .codeOnly
                 NavigationLink(value: Route.checkout(card.id)) {
-                    Label("An der Kasse zeigen", systemImage: "barcode")
+                    Label(online ? "Code einlösen" : "An der Kasse zeigen", systemImage: online ? "globe" : "barcode")
                 }
                 .buttonStyle(.primary)
                 .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, 4)
@@ -93,8 +97,9 @@ struct CardDetailView: View {
             }
         }
         .fullScreenCover(isPresented: $showPhoto) {
-            if let data = card.photo, let image = UIImage(data: data) { PhotoViewer(image: image) }
+            if let image = photo?.image { PhotoViewer(image: image) }
         }
+        .task(id: card.photo) { await decodePhoto(card.photo) }
         .toolbar(.hidden, for: .tabBar)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -132,7 +137,8 @@ struct CardDetailView: View {
         }
         .overlay {
             if card.redeemedAt != nil || stampVisible {
-                Stamp(date: card.redeemedAt ?? .now).allowsHitTesting(false)
+                // Nur frisch gestempelt fällt der Stempel; beim Öffnen eines alten Gutscheins liegt er schon.
+                Stamp(date: card.redeemedAt ?? .now, animated: stampVisible).allowsHitTesting(false)
             }
         }
     }
@@ -150,12 +156,13 @@ struct CardDetailView: View {
     /// Neben-Aktionen als Kacheln (Icon in Ladenfarbe) statt Einstellungs-Liste; Hauptaktion bleibt „An der Kasse zeigen“.
     private func actionGroup(_ card: GiftCard) -> some View {
         let hasPin = card.kind == .giftCard && !card.pin.isEmpty
-        let link = card.merchant.balanceURL.flatMap { url in card.merchant.balanceCheck.linkLabel.map { (url, $0) } }
+        // Codes und Coupons haben kein Guthaben: kein Link „Guthaben prüfen/ansehen“.
+        let link = !card.kind.isValueBased ? nil : card.merchant.balanceURL.flatMap { url in card.merchant.balanceCheck.linkLabel.map { (url, $0) } }
         let tint = (MerchantBrand.forID(card.merchantID) ?? MerchantBrand.fallback(for: card.name)).accent
         var tiles: [AnyView] = []
         if card.isActive {
             if card.kind.isValueBased {
-                tiles.append(AnyView(NavigationLink(value: Route.keypad(card.id)) { ActionTile(icon: "minus.circle", title: "Einkauf eintragen", tint: tint) }
+                tiles.append(AnyView(NavigationLink(value: Route.keypad(card.id)) { ActionTile(icon: "minus.circle", title: "Einkauf abziehen", tint: tint) }
                     .buttonStyle(.plain)))
             } else {
                 tiles.append(AnyView(Button { stamp(card) } label: { ActionTile(icon: "checkmark.seal", title: "Als eingelöst markieren", tint: tint) }
@@ -203,33 +210,65 @@ struct CardDetailView: View {
     /// Nach „Später eintragen“ an der Kasse: Betrag nachtragen oder verwerfen.
     private func pendingBanner(_ card: GiftCard) -> some View {
         // Neutraler Hinweis mit Streifen statt farbiger Fläche; eine Aktion, die zweite leise daneben.
-        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4)) : AnyLayout(HStackLayout(spacing: 12))
-        return layout {
-            if !typeSize.isAccessibilitySize {
-                Image(systemName: "clock").font(.scaled(17, weight: .semibold)).foregroundStyle(Color.notice)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Betrag offen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
-                Button("Nicht bezahlt") {
-                    store.setPending(card.id, false)
-                    clearLaterNotification(card.id)
+        // Bei großer Schrift die Knöpfe untereinander, damit nichts abgeschnitten wird.
+        let buttons = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+        return VStack(alignment: .leading, spacing: 8) {
+            Label("Betrag offen", systemImage: "clock")
+                .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                .labelStyle(PendingLabelStyle())
+            // Zwei echte Knöpfe mit 44 pt: leise Kontur für „Nicht bezahlt“, gefüllt für „Jetzt eintragen“.
+            buttons {
+                Button { dismissPending(card) } label: {
+                    Text("Nicht bezahlt").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                        .padding(.horizontal, 12).frame(maxWidth: .infinity, minHeight: Layout.tap)
+                        .overlay(RoundedRectangle(cornerRadius: Layout.controlRadius, style: .continuous).strokeBorder(Color.line, lineWidth: 1.5))
+                        .contentShape(.rect)
                 }
-                .font(.scaled(13)).foregroundStyle(Color.muted)
+                .buttonStyle(.plain)
+                .accessibilityHint("Entfernt den Hinweis und die Nachfrage. Rückgängig möglich.")
+                NavigationLink(value: Route.keypad(card.id)) {
+                    Text("Einkauf abziehen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.onInk)
+                        .padding(.horizontal, 12).frame(maxWidth: .infinity, minHeight: Layout.tap)
+                        .background(Color.ink, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
-            if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
-            NavigationLink(value: Route.keypad(card.id)) {
-                Text("Jetzt eintragen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
-                    .frame(minHeight: 44)
-            }
-            .buttonStyle(.plain)
         }
-        .padding(.leading, Layout.inset + 4).padding(.trailing, Layout.inset).padding(.vertical, 8)
+        .padding(.leading, Layout.inset + 4).padding(.trailing, Layout.inset).padding(.vertical, Layout.group)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.surface, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
         .overlay(alignment: .leading) {
             UnevenRoundedRectangle(topLeadingRadius: Layout.buttonRadius, bottomLeadingRadius: Layout.buttonRadius)
                 .fill(Color.notice).frame(width: 4)
         }
+    }
+
+    /// „Nicht bezahlt“: Hinweis sofort weg, mit Rückgängig. Die geplante Nachfrage wird vorher gemerkt
+    /// (der Store löscht sie beim Zurücksetzen) und beim Rückgängigmachen wieder eingeplant.
+    private func dismissPending(_ card: GiftCard) {
+        let id = card.id
+        Task {
+            let key = "\(id.uuidString)-later"
+            let center = UNUserNotificationCenter.current()
+            let saved = await center.pendingNotificationRequests().first { $0.identifier == key }
+            // Doppeltipp: nur einmal zurücksetzen.
+            guard store.card(id)?.pendingSince != nil else { return }
+            withAnimation(.smooth) { store.setPending(id, false) }
+            clearLaterNotification(id)
+            router.showUndo("„Betrag offen“ entfernt") {
+                withAnimation(.smooth) { store.setPending(id, true) }
+                if let saved { Task { try? await center.add(saved) } }
+            }
+        }
+    }
+
+    /// Foto einmal im Hintergrund dekodieren, nicht bei jedem Neuzeichnen.
+    private func decodePhoto(_ data: Data?) async {
+        guard let data else { photo = nil; return }
+        if photo?.source == data { return }
+        let image = await Task.detached(priority: .userInitiated) { UIImage(data: data)?.preparingForDisplay() ?? UIImage(data: data) }.value
+        guard !Task.isCancelled else { return }
+        photo = (data, image)
     }
 
     /// Aufgebraucht oder abgelaufen: direkt oben anbieten, den Gutschein aus der Liste zu nehmen.
@@ -367,7 +406,10 @@ struct CardDetailView: View {
     private func photoTicket(_ card: GiftCard) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Original").font(.scaled(16, weight: .bold))
-            if let data = card.photo, let image = UIImage(data: data) {
+            if card.photo != nil && photo?.source != card.photo {
+                // Wird gerade dekodiert.
+                ProgressView().frame(maxWidth: .infinity, minHeight: 120)
+            } else if let image = photo?.image {
                 Button { showPhoto = true } label: {
                     Image(uiImage: image).resizable().scaledToFit()
                         .frame(maxWidth: .infinity, maxHeight: 260)
@@ -392,7 +434,7 @@ struct CardDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(card.kind == .discountCode ? "Rabattcode" : "Kartennummer").font(.scaled(13)).foregroundStyle(Color.muted)
+                    Text(card.kind == .discountCode ? "Rabattcode" : card.kind == .giftCard ? "Kartennummer" : "Code").font(.scaled(13)).foregroundStyle(Color.muted)
                     Text(card.number.grouped).font(.scaled(17, weight: .semibold, design: .monospaced))
                         .foregroundStyle(Color.ink).textSelection(.enabled).lineLimit(2).minimumScaleFactor(0.7)
                 }
@@ -418,6 +460,7 @@ struct CardDetailView: View {
             if card.photo != nil {
                 Button("Original-Foto ansehen", systemImage: "photo") { showPhoto = true }
                     .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                    .disabled(photo?.image == nil)
             }
         }
         .padding(16)
@@ -458,8 +501,14 @@ struct CardDetailView: View {
 /// Roter Stempel „Eingelöst“, fällt mit Wucht aufs Papier.
 struct Stamp: View {
     let date: Date
-    @State private var landed = false
+    @State private var landed: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// `animated: false` für schon eingelöste Gutscheine: Stempel liegt still, ohne Fall und ohne Haptik.
+    init(date: Date, animated: Bool = true) {
+        self.date = date
+        _landed = State(initialValue: !animated)
+    }
 
     var body: some View {
         VStack(spacing: 2) {
@@ -473,6 +522,7 @@ struct Stamp: View {
         .scaleEffect(landed || reduceMotion ? 1 : 2.4)
         .opacity(landed || reduceMotion ? 1 : 0)
         .onAppear {
+            guard !landed else { return }
             if reduceMotion { landed = true } else { withAnimation(.spring(duration: 0.45, bounce: 0.5)) { landed = true } }
         }
         .accessibilityElement(children: .combine)
@@ -506,7 +556,7 @@ struct LocationSheet: View {
                 }
             }
             .sensoryFeedback(.selection, trigger: location)
-            LabeledField(label: "Notiz", placeholder: "z. B. oberste Schublade im Flur", text: $note)
+            LabeledField(label: "Notiz", placeholder: "z.\u{00A0}B. oberste Schublade im Flur", text: $note)
             Spacer()
             Button("Speichern") {
                 onSave(location, note.trimmingCharacters(in: .whitespaces))
@@ -566,6 +616,20 @@ struct CardBon: View {
             }
             Spacer()
             Text(amount).font(.scaled(15, weight: bold ? .heavy : .semibold, design: .monospaced))
+        }
+    }
+}
+
+/// Uhr in Hinweisfarbe vor dem Titel; bei sehr großer Schrift nur der Text.
+private struct PendingLabelStyle: LabelStyle {
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 8) {
+            if !typeSize.isAccessibilitySize {
+                configuration.icon.foregroundStyle(Color.notice)
+            }
+            configuration.title
         }
     }
 }

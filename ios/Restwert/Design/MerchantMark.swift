@@ -11,20 +11,43 @@ nonisolated struct MerchantBrand: Sendable {
     /// Farbe für Icons auf hellem Grund: die Ladenfarbe, bei sehr hellen Läden (dm, Google Play) deren Schriftfarbe.
     let accent: Color
 
+    /// Kachel dunkel genug für eine helle Innenkante im Dunkelmodus (sonst verschwimmt sie mit dem Grund).
+    let isDark: Bool
+
+    /// Schriftfarbe: die Hausfarbe des Ladens, wenn sie auf der Ladenfarbe mindestens 4,5 : 1 Kontrast hat,
+    /// sonst Weiß oder Tinte – je nachdem, was besser lesbar ist.
     init(_ bg: UInt32, _ fg: UInt32, _ mark: String? = nil) {
+        let text: UInt32 = Self.contrast(bg, fg) >= 4.5 ? fg
+            : Self.contrast(bg, 0xFFFFFF) >= Self.contrast(bg, 0x111111) ? 0xFFFFFF : 0x111111
         background = Color(hex: bg)
-        foreground = Color(hex: fg)
+        foreground = Color(hex: text)
         self.mark = mark
-        let r = Double((bg >> 16) & 0xFF), g = Double((bg >> 8) & 0xFF), b = Double(bg & 0xFF)
-        accent = (0.299 * r + 0.587 * g + 0.114 * b) > 215 ? Color(hex: fg) : Color(hex: bg)
+        isDark = Self.luminance(bg) < 0.12
+        // Icons auf weißer Fläche: Ladenfarbe nur, wenn sie dort genug Kontrast hat (≥ 3 : 1), sonst die Schriftfarbe.
+        accent = Self.contrast(bg, 0xFFFFFF) >= 3 ? Color(hex: bg) : Color(hex: text)
+    }
+
+    /// Relative Leuchtdichte nach WCAG 2.
+    static func luminance(_ hex: UInt32) -> Double {
+        func lin(_ c: UInt32) -> Double {
+            let v = Double(c & 0xFF) / 255
+            return v <= 0.03928 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * lin(hex >> 16) + 0.7152 * lin(hex >> 8) + 0.0722 * lin(hex)
+    }
+
+    static func contrast(_ a: UInt32, _ b: UInt32) -> Double {
+        let la = luminance(a), lb = luminance(b)
+        return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
     }
 
     static let neutral = MerchantBrand(0x52525B, 0xFFFFFF)
 
     /// Eigene Läden: feste Farbe aus dem Namen (FNV-1a, stabil über Starts), gedeckte Töne mit Weiß darauf.
     /// Regel: Ladenkacheln sind nie Schwarz und nie Gelb – Gelb gehört der App, Tinte der Hauptaktion.
-    /// Läden mit schwarzer Hausfarbe (Douglas, Zara, Nike …) bekommen Schiefergrau 52525B, das auch im Dunkeln sichtbar bleibt.
-    static let palette: [UInt32] = [0x1F6F68, 0x3B5BA5, 0x7A4FB5, 0xB5475A, 0xC2410C, 0x2F7D3B, 0x0369A1, 0x6B5B3E]
+    /// Läden mit schwarzer Hausfarbe (Zara, Nike …) bekommen Schiefergrau 52525B, das auch im Dunkeln sichtbar bleibt.
+    /// Palette ohne Blau: sonst sähe „Café am Markt“ aus wie C&A, IKEA oder Lidl. Kein Petrol wegen Thalia.
+    static let palette: [UInt32] = [0x7A4FB5, 0xB5475A, 0xC2410C, 0x2F7D3B, 0x6B5B3E, 0x8E3B76, 0x5B6B1F, 0x9A3412]
     static func fallback(for name: String) -> MerchantBrand {
         var h: UInt32 = 2166136261
         for b in name.lowercased().utf8 { h = (h ^ UInt32(b)) &* 16777619 }
@@ -34,7 +57,7 @@ nonisolated struct MerchantBrand: Sendable {
     static func forID(_ id: String?) -> MerchantBrand? { id.flatMap { table[$0] } }
 
     private static let table: [String: MerchantBrand] = [
-        "amazon": .init(0x232F3E, 0xFF9900, "a"),
+        "amazon": .init(0x3D5068, 0xFF9900, "a"),
         "zalando": .init(0xFF6900, 0xFFFFFF, "Z"),
         "otto": .init(0xD4021D, 0xFFFFFF, "OTTO"),
         "apple": .init(0x52525B, 0xFFFFFF, "\u{F8FF}"),
@@ -51,7 +74,7 @@ nonisolated struct MerchantBrand: Sendable {
         "zara": .init(0x52525B, 0xFFFFFF, "ZARA"),
         "tkmaxx": .init(0xD6001C, 0xFFFFFF, "TK"),
         "decathlon": .init(0x3643BA, 0xFFFFFF, "D"),
-        "douglas": .init(0x52525B, 0xFFFFFF, "D"),
+        "douglas": .init(0x9BDCCB, 0x111111, "D"),
         "hm": .init(0xE50010, 0xFFFFFF, "H&M"),
         "rossmann": .init(0xC3002F, 0xFFFFFF, "R"),
         "lidl": .init(0x0050AA, 0xFFF000, "Lidl"),
@@ -69,7 +92,7 @@ nonisolated struct MerchantBrand: Sendable {
         "breuninger": .init(0x52525B, 0xFFFFFF, "B"),
         "ca": .init(0x0054A0, 0xFFFFFF, "C&A"),
         "primark": .init(0x00A6E2, 0xFFFFFF, "P"),
-        "deichmann": .init(0x008C45, 0xFFFFFF, "D"),
+        "deichmann": .init(0x007A3C, 0xFFFFFF, "D"),
         "edeka": .init(0x1A4A99, 0xFFD400, "E"),
         "netto": .init(0xE2001A, 0xFFE500, "N"),
         "penny": .init(0xCD1719, 0xFFFFFF, "P"),
@@ -84,6 +107,7 @@ struct MerchantMark: View {
     let merchantID: String?
     let name: String
     var size: CGFloat = 44
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         let brand = MerchantBrand.forID(merchantID)
@@ -98,9 +122,10 @@ struct MerchantMark: View {
             .frame(width: size, height: size)
             .background(style.background, in: .rect(cornerRadius: size * 0.24, style: .continuous))
             .overlay {
-                // Kante, damit helle Kacheln im Hellen und dunkle im Dunkeln nicht verschwinden.
+                // Kante, damit helle Kacheln im Hellen und dunkle im Dunkeln nicht verschwinden:
+                // dunkle Läden bekommen im Dunkeln eine feine helle Innenkante, helle eine zarte dunkle.
                 RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
-                    .strokeBorder(Color.ink.opacity(0.12), lineWidth: 1)
+                    .strokeBorder(style.isDark ? Color.white.opacity(scheme == .dark ? 0.22 : 0) : Color.black.opacity(0.1), lineWidth: 1)
             }
             .accessibilityHidden(true)
     }
@@ -123,7 +148,7 @@ struct BalanceCard: View {
     /// Wie in der Liste: „läuft heute/morgen ab“ statt „noch 0/1 Tage“.
     private var badgeText: String {
         guard status == .expiringSoon else { return status.label }
-        return card.daysLeft == 0 ? "läuft heute ab" : card.daysLeft == 1 ? "läuft morgen ab" : "noch \(card.daysLeft) Tage"
+        return card.daysLeft == 0 ? "läuft heute ab" : card.daysLeft == 1 ? "läuft morgen ab" : "noch \(card.daysLeft)\u{00A0}Tage"
     }
 
     var body: some View {
@@ -137,7 +162,13 @@ struct BalanceCard: View {
                     // Dieselbe Kachel wie in der Liste: Kartenfarbe = Farbe des Ladens.
                     MerchantMark(card: card, size: 32)
                         .overlay(RoundedRectangle(cornerRadius: 32 * 0.24, style: .continuous).strokeBorder(.white.opacity(0.55), lineWidth: 1.5))
-                    Text(card.name).font(.scaled(20, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(card.name).font(.scaled(20, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
+                        // Für wen der Gutschein ist, wie in der Liste; VoiceOver liest es mit.
+                        if !card.owner.isEmpty {
+                            Text("für \(card.owner)").font(.scaled(13, weight: .semibold)).lineLimit(1).opacity(0.85)
+                        }
+                    }
                     Spacer(minLength: 8)
                     if status == .expiringSoon || status == .expired {
                         Text(badgeText)
@@ -186,7 +217,7 @@ struct BalanceCard: View {
                 Text("gültig bis \(card.expires.dayMonthYear)\(card.expiresEstimated ? " (geschätzt)" : "")")
                 if !typeSize.isAccessibilitySize { Spacer() }
                 if card.isActive && status != .expiringSoon {
-                    Text(card.daysLeft == 1 ? "noch 1 Tag" : "noch \(card.daysLeft) Tage")
+                    Text(card.daysLeft == 1 ? "noch 1\u{00A0}Tag" : "noch \(card.daysLeft)\u{00A0}Tage")
                 }
             }
             .font(.scaled(13, weight: .semibold)).monospacedDigit()
@@ -195,12 +226,15 @@ struct BalanceCard: View {
         .foregroundStyle(fg)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(brand.background, in: shape)
-        .overlay { shape.stroke(Color.ink.opacity(0.08), lineWidth: 1) }
+        // Dunkle Kante statt Tinte: `ink` ist im Dunkeln hell und würde als helle Linie leuchten.
+        .overlay { shape.stroke(Color.black.opacity(0.08), lineWidth: 1) }
         .overlay(alignment: .topTrailing) {
             if card.kind.isValueBased && card.balance <= 0 {
                 UsedUpStamp().padding(.top, 58).padding(.trailing, 16)
             }
         }
+        // Erst zusammenfassen, dann Schatten: sonst wirft jede Schrift ihren eigenen Schatten.
+        .compositingGroup()
         .shadow(color: Color.shade, radius: 14, y: 6)
         .accessibilityElement(children: .combine)
     }

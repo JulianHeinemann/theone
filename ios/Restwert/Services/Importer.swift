@@ -93,9 +93,16 @@ nonisolated enum Importer {
     @MainActor
     static func analyze(image: UIImage) async -> ScanOutcome {
         guard let cg = image.normalizedCGImage else { return ScanOutcome() }
+        // Vorschaubild parallel zur Erkennung und nicht auf dem Main Thread rechnen.
+        async let thumb = thumbnail(cg)
         var out = await analyze(cgImage: cg)
-        out.photo = image.thumbnailJPEG()
+        out.photo = await thumb
         return out
+    }
+
+    @concurrent
+    private static func thumbnail(_ cg: CGImage) async -> Data? {
+        UIImage(cgImage: cg).thumbnailJPEG()
     }
 
     /// E-Mail-Text: nur Parser und Apple Intelligence, kein Bild.
@@ -164,7 +171,8 @@ extension UIImage {
         return UIGraphicsImageRenderer(size: size, format: format).image { _ in draw(in: CGRect(origin: .zero, size: size)) }.cgImage
     }
 
-    func thumbnailJPEG(maxSide: CGFloat = 900) -> Data? {
+    /// Auch abseits des Main Threads nutzbar (UIGraphicsImageRenderer ist threadsicher).
+    nonisolated func thumbnailJPEG(maxSide: CGFloat = 900) -> Data? {
         let s = min(1, maxSide / max(size.width, size.height))
         let target = CGSize(width: size.width * s, height: size.height * s)
         let format = UIGraphicsImageRendererFormat.default()

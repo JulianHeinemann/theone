@@ -16,6 +16,7 @@ struct LiveScannerView: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var reading = false
     @State private var loadFailed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Simulator und Geräte ohne Neural Engine haben keinen Live-Scanner.
     private var supported: Bool { DataScannerViewController.isSupported }
@@ -70,6 +71,9 @@ struct LiveScannerView: View {
                 .padding(16)
         }
         .sensoryFeedback(.success, trigger: model.barcode)
+        .onChange(of: model.barcode) { _, code in
+            if code != nil { AccessibilityNotification.Announcement("\(model.format?.label ?? "Barcode") erkannt").post() }
+        }
         .alert("Foto konnte nicht geladen werden", isPresented: $loadFailed) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -93,9 +97,9 @@ struct LiveScannerView: View {
     }
 
     private var fallbackText: String {
-        if !supported { return "Auf diesem Gerät läuft der Live-Scan nicht, zum Beispiel im Simulator. Wähl ein Foto der Karte, Barcode und Text werden genauso gelesen." }
-        if denied { return "Erlaube Restwert in den Einstellungen den Zugriff auf die Kamera. Oder wähl ein Foto der Karte, das wird genauso gelesen." }
-        return "Die Kamera ist im Moment gesperrt oder belegt. Wähl ein Foto der Karte, das wird genauso gelesen."
+        if !supported { return "Auf diesem Gerät läuft der Live-Scan nicht, zum Beispiel im Simulator. Wähl ein Foto des Gutscheins. Barcode und Text werden genauso gelesen." }
+        if denied { return "Erlaube Restwert in den Einstellungen den Zugriff auf die Kamera. Oder wähl ein Foto des Gutscheins. Es wird genauso gelesen." }
+        return "Die Kamera ist im Moment gesperrt oder belegt. Wähl ein Foto des Gutscheins. Es wird genauso gelesen."
     }
 
     private func fallbackContent(spacers: Bool) -> some View {
@@ -103,14 +107,17 @@ struct LiveScannerView: View {
             if spacers { Spacer() }
             Image(systemName: supported ? "camera.fill" : "photo.on.rectangle")
                 .font(.scaled(28)).foregroundStyle(Color.ink2)
+                .accessibilityHidden(true)
             Text(fallbackTitle)
                 .font(.scaled(22, weight: .bold))
+                .accessibilityAddTraits(.isHeader)
             Text(fallbackText)
                 .font(.scaled(15)).foregroundStyle(Color.ink2)
                 .fixedSize(horizontal: false, vertical: true)
             if spacers { Spacer() }
+            let pickTitle = reading ? "Wird gelesen …" : "Foto des Gutscheins wählen"
             PhotosPicker(selection: $photoItem, matching: .images) {
-                Label(reading ? "Wird gelesen …" : "Foto der Karte wählen", systemImage: "photo")
+                Label(pickTitle, systemImage: "photo")
             }
             .buttonStyle(.accent)
             .disabled(reading)
@@ -130,18 +137,20 @@ struct LiveScannerView: View {
             HStack(spacing: 10) {
                 Image(systemName: model.barcode == nil ? "barcode.viewfinder" : "checkmark.circle.fill")
                     .font(.scaled(22, weight: .semibold))
-                    .foregroundStyle(model.barcode == nil ? Color.muted : Color.good)
+                    .foregroundStyle(model.barcode == nil ? Color.ink2 : Color.good)
                     .contentTransition(.symbolEffect(.replace))
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(model.barcode == nil ? "Halte die Rückseite ins Bild" : "\(model.format?.label ?? "Barcode") erkannt")
                         .font(.scaled(15, weight: .bold))
-                    Text(model.barcode ?? "\(model.texts.count) Textzeilen erkannt, auch Handschrift")
-                        .font(.scaled(13)).foregroundStyle(Color.ink2).lineLimit(1)
+                    Text(model.barcode?.grouped ?? "\(model.texts.count) Textzeilen erkannt, auch Handschrift")
+                        .font(.scaled(13)).foregroundStyle(Color.ink2).lineLimit(2)
                         .contentTransition(.numericText())
                 }
                 Spacer()
             }
             .foregroundStyle(Color.ink)
+            .accessibilityElement(children: .combine)
             Button {
                 Task {
                     let photo = await model.capturePhoto()
@@ -158,7 +167,7 @@ struct LiveScannerView: View {
         .padding(18)
         .glassEffect(.regular, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
         .padding(16)
-        .animation(.smooth, value: model.barcode)
+        .animation(reduceMotion ? nil : .smooth, value: model.barcode)
     }
 }
 

@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import UIKit
 
 /// Kleine Zusammenfassung, die die App in die gemeinsame App Group schreibt.
 /// Gleiche Struktur wie `WidgetSnapshot` in der App (bewusst doppelt, das Widget bindet RestwertKit nicht ein).
@@ -10,6 +11,8 @@ struct WidgetSnapshot: Codable {
         var headline: String
         var expires: Date
         var amount: Double?
+        /// Ladenfarbe (RRGGBB) wie die Kachel in der App; fehlt bei älteren Daten.
+        var color: String?
 
         /// Tage bis zum Ablauf, gerechnet vom Anzeigezeitpunkt aus.
         func daysLeft(at date: Date) -> Int {
@@ -43,9 +46,9 @@ struct WidgetSnapshot: Codable {
     static var sample: WidgetSnapshot {
         let day = { (d: Double) in Date.now.addingTimeInterval(d * 86_400) }
         return WidgetSnapshot(items: [
-            Item(id: "", name: "Zalando", headline: "15 %", expires: day(12)),
-            Item(id: "", name: "IKEA", headline: "50,00 €", expires: day(24), amount: 50),
-            Item(id: "", name: "Stadtgutschein", headline: "20,00 €", expires: day(140), amount: 20),
+            Item(id: "", name: "Zalando", headline: "15\u{00A0}%", expires: day(12), color: "FF6900"),
+            Item(id: "", name: "IKEA", headline: "50,00\u{00A0}€", expires: day(24), amount: 50, color: "0058A3"),
+            Item(id: "", name: "Stadtgutschein", headline: "20,00\u{00A0}€", expires: day(140), amount: 20, color: "52525B"),
         ], updated: .now)
     }
 }
@@ -76,11 +79,48 @@ struct Provider: TimelineProvider {
     }
 }
 
-private let brandYellow = Color(red: 1, green: 0.882, blue: 0.302)
-private let onBrand = Color(red: 0.055, green: 0.055, blue: 0.063)
+/// Wie in der App (Theme.swift): Gelb #FFD84D hell, #F5CE3E dunkel; Schrift darauf Tinte #111111.
+private let brandYellow = Color(light: 0xFFD84D, dark: 0xF5CE3E)
+private let onBrand = Color(hex: 0x111111)
+
+private extension Color {
+    init(hex: UInt32) {
+        self.init(.sRGB, red: Double((hex >> 16) & 0xFF) / 255, green: Double((hex >> 8) & 0xFF) / 255,
+                  blue: Double(hex & 0xFF) / 255, opacity: 1)
+    }
+
+    init(light: UInt32, dark: UInt32) {
+        func ui(_ hex: UInt32) -> UIColor {
+            UIColor(red: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
+                    blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
+        }
+        self.init(uiColor: UIColor { $0.userInterfaceStyle == .dark ? ui(dark) : ui(light) })
+    }
+
+    /// „0058A3“ → Farbe; nil bei ungültigem Wert.
+    init?(hexString: String?) {
+        guard let hexString, hexString.count == 6, let v = UInt32(hexString, radix: 16) else { return nil }
+        self.init(hex: v)
+    }
+}
+
+/// Kleine Kachel in Ladenfarbe vor dem Namen, wie in der App. Rein schmückend (für VoiceOver ausgeblendet).
+private struct BrandDot: View {
+    let hex: String?
+
+    var body: some View {
+        if let color = Color(hexString: hex) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .fill(color)
+                .frame(width: 10, height: 10)
+                .overlay(RoundedRectangle(cornerRadius: 3, style: .continuous).strokeBorder(onBrand.opacity(0.25), lineWidth: 0.5))
+                .accessibilityHidden(true)
+        }
+    }
+}
 
 private func dueText(_ d: Int) -> String {
-    d <= 0 ? "heute" : d == 1 ? "morgen" : "in \(d) Tagen"
+    d <= 0 ? "heute" : d == 1 ? "morgen" : "in \(d)\u{00A0}Tagen"
 }
 
 struct RestwertWidgetView: View {
@@ -123,7 +163,10 @@ struct RestwertWidgetView: View {
             Text(s.total).font(.system(size: 26, weight: .bold)).minimumScaleFactor(0.6).lineLimit(1)
             Spacer(minLength: 4)
             if let n = s.next.first {
-                Text(n.name).font(.caption.weight(.semibold)).lineLimit(1)
+                HStack(spacing: 5) {
+                    BrandDot(hex: n.color)
+                    Text(n.name).font(.caption.weight(.semibold)).lineLimit(1)
+                }
                 Text("läuft \(dueText(n.daysLeft(at: entry.date))) ab").font(.caption2).opacity(0.75)
             } else {
                 Text("\(s.count) Gutscheine").font(.caption)
@@ -146,7 +189,8 @@ struct RestwertWidgetView: View {
                 Text("Als Nächstes").font(.caption.weight(.medium)).opacity(0.7)
                 ForEach(s.next.prefix(3)) { n in
                     Link(destination: URL(string: "restwert://card/\(n.id)")!) {
-                        HStack {
+                        HStack(spacing: 5) {
+                            BrandDot(hex: n.color)
                             Text(n.name).font(.caption.weight(.semibold)).lineLimit(1)
                             Spacer(minLength: 4)
                             Text(dueText(n.daysLeft(at: entry.date))).font(.caption2).opacity(0.75)

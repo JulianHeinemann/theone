@@ -109,11 +109,11 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         Merchant("eventim", "Eventim", .codeOnly, .text, "https://www.eventim.de/helpcenter/?faq=2288", check: .info, "Online mit 16-stelliger Nummer."),
         Merchant("ticketmaster", "Ticketmaster", .codeOnly, .text, "https://sites.prepaytec.com/chopinweb/balanceCheck.do?customerCode=2013119751813114&loc=de&showCvc=1&showExpiryDate=1&brandingCode=bal_enq_tmgermany", check: .form, "Nummer plus 3-stelliger Sicherheitscode."),
         Merchant("ikea", "IKEA", .official, .code128, "https://www.ikea.com/de/de/gift-cards/", check: .account, "Digitale Karte wird vom Handy gescannt. Guthaben online nur mit Login."),
-        Merchant("thalia", "Thalia", .official, .code128, "https://www.thalia.de/geschenkkarte/", check: .form, "Digitale Karte wird vom Handy gescannt. 17-stellige Nummer und PIN für online."),
+        Merchant("thalia", "Thalia", .official, .code128, "https://www.thalia.de/geschenkkarte/", check: .form, "Digitale Karte wird vom Handy gescannt. Für online brauchst du Kartennummer und PIN."),
         Merchant("zara", "Zara", .official, .code128, "https://www.zara.com/de/de/z-zara-card/balance", check: .form, "E-Karte gilt in Filialen."),
         Merchant("tkmaxx", "TK Maxx", .official, .code128, "https://wbiprod.storedvalue.com/wbir/clients/tkmaxx-de", check: .form, "Digitalen Gutschein an der Kasse vorzeigen."),
         Merchant("decathlon", "Decathlon", .official, .code128, "https://www.decathlon.de/services/giftcard/balance", check: .form, "Offiziell auch digital auf dem Smartphone."),
-        Merchant("douglas", "Douglas", .official, .code128, "https://www.douglas.de/de/cp/helpv2wherecanicheckthebalanceofmygiftcard/help-where-can-i-check-the-balance-of-my-gift-card", check: .info, "eGift digital oder ausgedruckt. Online mit 17-stelliger Nummer und PIN."),
+        Merchant("douglas", "Douglas", .official, .code128, "https://www.douglas.de/de/cp/helpv2wherecanicheckthebalanceofmygiftcard/help-where-can-i-check-the-balance-of-my-gift-card", check: .info, "eGift digital oder ausgedruckt. Online mit Kartennummer und PIN."),
         Merchant("hm", "H&M", .official, .code128, "https://www2.hm.com/de_de/customer-service/geschenkkarten.html", check: .info, "E-Geschenkkarte am Handy zeigen."),
         Merchant("rossmann", "Rossmann", .official, .code128, "https://www.rossmann.de/de/service-und-hilfe/geschenkgutscheine", check: .info, "Digitaler Gutschein am Handy möglich. Guthaben nur an der Kasse."),
         Merchant("lidl", "Lidl", .official, .code128, "https://www.lidl.de/c/lidl-geschenkkarten/s10007775", check: .form, "PDF-Geschenkkarte am Handy zeigen. Guthaben mit Nummer und PIN."),
@@ -160,7 +160,7 @@ public enum VoucherKind: String, Codable, CaseIterable, Identifiable, Sendable {
         case .valueVoucher: "Wertgutschein"
         case .discountCode: "Rabattcode"
         case .custom: "Eigener Gutschein"
-        case .coupon: "Coupon"
+        case .coupon: "Aktionsgutschein"
         }
     }
 
@@ -228,7 +228,7 @@ public enum CardSortOrder: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .expiry: "Ablaufdatum"
         case .value: "Wert"
-        case .shop: "Shop"
+        case .shop: "Laden"
         }
     }
 }
@@ -299,6 +299,12 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     }
 
     public var isOpen: Bool { redeemedAt == nil && (!kind.isValueBased || balance > 0) }
+
+    /// Zählt zur Guthaben-Summe: wertbasiert, nicht als eingelöst gestempelt (z. B. früherer Rabattcode, der zum
+    /// Wertgutschein wurde), nicht abgelaufen, nicht archiviert und nicht zum Verschenken.
+    public func countsTowardTotal(now: Date = .now) -> Bool {
+        kind.isValueBased && redeemedAt == nil && daysLeft(now: now) >= 0 && !isArchived && !forGifting
+    }
     public var isActive: Bool { isOpen && daysLeft >= 0 && archivedAt == nil }
     public var isArchived: Bool { archivedAt != nil }
 
@@ -311,9 +317,10 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
 
     public var daysLeft: Int { daysLeft(now: .now) }
 
-    public func daysLeft(now: Date) -> Int {
-        let cal = Calendar.current
-        return cal.dateComponents([.day], from: cal.startOfDay(for: now), to: cal.startOfDay(for: expires)).day ?? 0
+    /// Ganze Kalendertage bis zum Ablauftag. `expires` liegt auf 12:00 Uhr (``CalendarDay/noon(_:calendar:)``),
+    /// damit ein Zeitzonenwechsel um bis zu ±11 Stunden den Tag nicht verschiebt.
+    public func daysLeft(now: Date, calendar: Calendar = .current) -> Int {
+        calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: expires)).day ?? 0
     }
 
     public var remainingShare: Double {
@@ -325,15 +332,19 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     public static func legalExpiry(from received: Date) -> Date {
         let cal = Calendar.current
         let year = cal.component(.year, from: received) + 3
-        return cal.date(from: DateComponents(year: year, month: 12, day: 31)) ?? received
+        return cal.date(from: DateComponents(year: year, month: 12, day: 31, hour: 12)) ?? received
     }
 
     /// Betrag abziehen und im Verlauf festhalten. Gibt den neuen Restwert zurück.
+    /// Gebucht wird höchstens das Guthaben (Überzahlung zahlt man an der Kasse drauf), damit Verlauf und
+    /// „Rückgängig“ nie mehr zurückgeben, als wirklich abgezogen wurde.
     @discardableResult
     public mutating func redeem(_ amount: Double, store: String = "", note: String = "", at date: Date = .now) -> Double {
-        guard amount > 0 else { return balance }
-        balance = max(0, ((balance - amount) * 100).rounded() / 100)
-        history.append(Redemption(date: date, amount: amount, store: store, note: note, balanceAfter: balance))
+        guard amount.isFinite, amount > 0 else { return balance }
+        let taken = (min(amount, max(0, balance)) * 100).rounded() / 100
+        guard taken > 0 else { return balance }
+        balance = max(0, ((balance - taken) * 100).rounded() / 100)
+        history.append(Redemption(date: date, amount: taken, store: store, note: note, balanceAfter: balance))
         modifiedAt = date
         return balance
     }
@@ -341,6 +352,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     /// Guthaben direkt auf einen neuen Stand setzen (laut Bon oder nach Aufladung). Die Differenz steht im Verlauf.
     @discardableResult
     public mutating func setBalance(_ newBalance: Double, note: String = "", at date: Date = .now) -> Double {
+        guard newBalance.isFinite else { return balance }
         let target = max(0, (newBalance * 100).rounded() / 100)
         let diff = ((balance - target) * 100).rounded() / 100
         guard diff != 0 else { return balance }
@@ -485,11 +497,17 @@ extension String {
     }
 }
 
-/// „12,50 €“, „12.50“, „1.234,56“, „1.000“ → Double
+/// Größter Betrag, den Restwert annimmt. Darüber ist es fast sicher ein Tippfehler oder eine Nummer.
+public let maxMoney: Double = 100_000
+
+/// „12,50 €“, „12.50“, „1.234,56“, „1.000“ → Double. Nur endliche Beträge von 0 bis ``maxMoney``;
+/// „nan“, „inf“ und negative Werte ergeben nil.
 public func parseMoney(_ text: String) -> Double? {
-    var s = text.replacingOccurrences(of: "€", with: "").replacingOccurrences(of: " ", with: "")
+    var s = text.replacingOccurrences(of: "€", with: "").filter { !$0.isWhitespace }
     if s.contains(",") { s = s.replacingOccurrences(of: ".", with: "").replacingOccurrences(of: ",", with: ".") }
     else if s.range(of: #"^\d{1,3}(\.\d{3})+$"#, options: .regularExpression) != nil { s = s.replacingOccurrences(of: ".", with: "") } // „1.000“ → 1000
-    guard let v = Double(s) else { return nil }
+    // Double("nan"), Double("inf") und Hex-Schreibweisen wären sonst gültig: nur Ziffern mit höchstens einem Punkt.
+    guard s.range(of: #"^\d+(\.\d*)?$|^\.\d+$"#, options: .regularExpression) != nil,
+          let v = Double(s), v.isFinite, v >= 0, v <= maxMoney else { return nil }
     return (v * 100).rounded() / 100
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import AppIntents
 import LocalAuthentication
 import UserNotifications
 import RestwertKit
@@ -8,10 +9,14 @@ struct RestwertApp: App {
     @UIApplicationDelegateAdaptor(NotificationHandler.self) private var notifications
     @State private var store = Store()
     @State private var cloud = CloudSync()
-    @State private var router = Router()
+    @State private var router: Router
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        // Router früh anlegen und für App Intents („Gutschein öffnen“) bereitstellen, auch beim Kaltstart.
+        let router = Router()
+        _router = State(initialValue: router)
+        AppDependencyManager.shared.add(dependency: router)
         #if DEBUG
         // Nur für Tests: `-resetOnboarding YES` zeigt den Einstieg wieder, dauerhaft bis „Fertig“.
         if UserDefaults.standard.bool(forKey: "resetOnboarding") {
@@ -43,6 +48,8 @@ struct RestwertApp: App {
             store.reloadIfNeeded()
             // Widget-Zeitleiste auffrischen (Tage und Summe hängen am Datum).
             WidgetBridge.update(cards: store.cards, total: store.total)
+            // Gutscheinnamen für Siri-Phrasen („Öffne Zalando in Restwert“) aktuell halten.
+            RestwertShortcuts.updateAppShortcutParameters()
             Task { await cloud.syncNow() }
         }
     }
@@ -157,6 +164,7 @@ struct RootView: View {
 struct MainTabView: View {
     @Environment(Router.self) private var router
     @Environment(Store.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var zoom
 
     var body: some View {
@@ -182,6 +190,9 @@ struct MainTabView: View {
                 NavigationStack { SettingsView() }
             }
 
+            // Bewusst mit Suchrolle: nur sie setzt den Tab als eigenen, schwebenden Knopf neben die Leiste.
+            // Ein normaler Tab verlöre diese Form, Toolbar oder Bottom-Accessory wären eine andere Optik.
+            // Die Suche selbst sitzt fest oben auf Start; Name und VoiceOver sagen „Hinzufügen“.
             Tab("Hinzufügen", systemImage: "plus", value: AppTab.scan, role: .search) {
                 NavigationStack { ScanView() }
             }
@@ -195,7 +206,7 @@ struct MainTabView: View {
                 ToastView(toast: toast) { if router.toast?.id == toast.id { router.toast = nil } }
                     .id(toast.id)
                     .padding(.horizontal, 16).padding(.bottom, 96)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
             }
         }
         .animation(.snappy, value: router.toast?.id)
@@ -298,7 +309,7 @@ struct ToastView: View {
         .tint(Color.onInk)
         .padding(.horizontal, 16).padding(.vertical, 14)
         .background(Color.ink, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
-        .shadow(color: Color.shade, radius: 16, y: 6)
+        .ticketShadow(radius: Shadow.float)
         .task {
             // Vorlesen, und mit VoiceOver ohne Zeitlimit stehen lassen, damit „Rückgängig“ erreichbar bleibt.
             AccessibilityNotification.Announcement(toast.undo == nil ? toast.message : "\(toast.message). Rückgängig möglich.").post()

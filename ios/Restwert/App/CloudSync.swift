@@ -132,11 +132,14 @@ final class CloudSync {
             throw WaitingForKey()
         }
         let decoded = decode(remote, key: key)
-        store.merge(SyncData(cards: decoded.cards, tests: decoded.tests, deleted: Array(remote.tombstones)))
+        store.merge(SyncData(cards: decoded.cards, tests: decoded.tests, deleted: Array(remote.tombstones.keys)),
+                    tombstoneDates: remote.tombstones)
         let plan = CloudPlan.upload(localCards: store.cards, localTests: store.tests, localDeleted: store.deletedIDs,
                                     remoteModified: decoded.modified, remoteTests: Set(decoded.tests.map(\.id)),
-                                    remoteTombstones: remote.tombstones)
-        try await upload(plan, key: key)
+                                    remoteTombstones: Set(remote.tombstones.keys))
+        // Löschvermerke älter als 180 Tage auch in iCloud aufräumen, damit die Liste nicht endlos wächst.
+        let expired = Set(remote.tombstones.keys).subtracting(Tombstones.pruned(remote.tombstones).keys)
+        try await upload(plan, expiredTombstones: expired, key: key)
     }
 
     private static func zoneIsGone(_ error: CKError) -> Bool {
@@ -174,7 +177,8 @@ final class CloudSync {
 
     private struct Remote {
         var blobs: [(type: String, id: UUID, blob: Data, modified: Date)] = []
-        var tombstones: Set<UUID> = []
+        /// Löschvermerke mit dem Zeitpunkt, zu dem sie in iCloud angelegt wurden.
+        var tombstones: [UUID: Date] = [:]
     }
 
     private func ensureZone() async throws {
@@ -194,7 +198,9 @@ final class CloudSync {
                 let r = mod.record
                 let name = r.recordID.recordName
                 if r.recordType == "Tombstone" {
-                    if let id = UUID(uuidString: String(name.dropFirst("del-".count))) { out.tombstones.insert(id) }
+                    if let id = UUID(uuidString: String(name.dropFirst("del-".count))) {
+                        out.tombstones[id] = r.creationDate ?? .now
+                    }
                 } else if let id = UUID(uuidString: name), let blob = r["blob"] as? Data {
                     out.blobs.append((r.recordType, id, blob, r["modified"] as? Date ?? .distantPast))
                 }
@@ -222,7 +228,7 @@ final class CloudSync {
         return (cards, tests, modified)
     }
 
-    private func upload(_ plan: CloudPlan.Upload, key: SymmetricKey) async throws {
+    private func upload(_ plan: CloudPlan.Upload, expiredTombstones: Set<UUID>, key: SymmetricKey) async throws {
         var records: [CKRecord] = []
         for c in plan.cards {
             let r = CKRecord(recordType: "Card", recordID: CKRecord.ID(recordName: c.id.uuidString, zoneID: Self.zone))
@@ -241,8 +247,10 @@ final class CloudSync {
             records.append(CKRecord(recordType: "Tombstone", recordID: CKRecord.ID(recordName: "del-\(id.uuidString)", zoneID: Self.zone)))
         }
         var deleting = plan.tombstones.map { CKRecord.ID(recordName: $0.uuidString, zoneID: Self.zone) }
-        guard !records.isEmpty else { return }
-        for chunk in stride(from: 0, to: records.count, by: 300).map({ Array(records[$0..<min($0 + 300, records.count)]) }) {
+            + expiredTombstones.map { CKRecord.ID(recordName: "del-\($0.uuidString)", zoneID: Self.zone) }
+        guard !records.isEmpty || !deleting.isEmpty else { return }
+        let chunks = records.isEmpty ? [[]] : stride(from: 0, to: records.count, by: 300).map { Array(records[$0..<min($0 + 300, records.count)]) }
+        for chunk in chunks {
             let (saved, deleted) = try await database.modifyRecords(saving: chunk, deleting: deleting,
                                                                     savePolicy: .allKeys, atomically: false)
             deleting = []   // Löschungen nur mit dem ersten Paket
@@ -268,7 +276,7 @@ final class CloudSync {
 // MARK: - Schlüsselbund
 
 /// Generischer Zugriff auf den iCloud-Schlüsselbund (synchronisiert zwischen den Geräten des Nutzers).
-enum SyncedKeychain {
+nonisolated enum SyncedKeychain {
     private static let service = "de.restwert.app.sync"
 
     static func get(_ account: String) -> Data? {
@@ -299,7 +307,7 @@ enum SyncedKeychain {
 }
 
 /// Der Schlüssel, mit dem alle Gutscheine in iCloud verschlüsselt sind.
-enum SyncKey {
+nonisolated enum SyncKey {
     /// Vorhandenen Schlüssel nehmen; nur einen neuen anlegen, wenn in iCloud noch nichts liegt.
     static func current(remoteHasData: Bool) -> SymmetricKey? {
         if let data = SyncedKeychain.get("cloud-key") { return CloudPayload.key(from: data) }
@@ -312,7 +320,7 @@ enum SyncKey {
 
 /// PINs einzeln im iCloud-Schlüsselbund, damit sie nie in der iCloud-Datenbank liegen.
 /// Jeder Eintrag trägt den Zeitpunkt der Änderung (``PinEntry``); eine leere PIN heißt „gelöscht“.
-enum PinVault {
+nonisolated enum PinVault {
     static func entry(for id: UUID) -> PinEntry? {
         SyncedKeychain.get(account(id)).flatMap(PinEntry.init(data:))
     }

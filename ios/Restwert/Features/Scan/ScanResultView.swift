@@ -6,6 +6,8 @@ struct ScanResultView: View {
     let outcome: ScanOutcome
     var onAdd: () -> Void
     var onRescan: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var revealed = false
 
     private struct Check: Identifiable {
@@ -24,9 +26,12 @@ struct ScanResultView: View {
                 HStack(spacing: 14) {
                     MerchantMark(merchantID: draft.merchantID, name: merchant?.name ?? draft.customName ?? "?")
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Erkannter Gutschein").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
-                        Text(merchant?.name ?? draft.customName ?? "Shop nicht erkannt").font(.scaled(20, weight: .bold))
+                        Text("Erkannter Gutschein").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.ink2)
+                        Text(merchant?.name ?? draft.customName ?? "Laden nicht erkannt").font(.scaled(20, weight: .bold))
+                            .fixedSize(horizontal: false, vertical: true)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(.isHeader)
                     Spacer()
                     if outcome.usedAppleIntelligence {
                         Image(systemName: "apple.intelligence")
@@ -40,9 +45,12 @@ struct ScanResultView: View {
                     Image(uiImage: img).resizable().scaledToFill()
                         .frame(height: 150).frame(maxWidth: .infinity)
                         .clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+                        .accessibilityLabel("Foto des Gutscheins")
                 }
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                    cell("Wert", draft.percent.map { "\(Int($0)) %" } ?? draft.value.map(\.euro) ?? "–", index: 0)
+                // Bei sehr großer Schrift eine Spalte, damit Code und Datum nicht abgeschnitten werden.
+                LazyVGrid(columns: typeSize.isAccessibilitySize ? [GridItem(.flexible())] : [GridItem(.flexible()), GridItem(.flexible())],
+                          spacing: 8) {
+                    cell("Wert", draft.percent.map { "\(Int($0))\u{00A0}%" } ?? draft.value.map(\.euro) ?? "–", index: 0)
                     cell("Gültig bis", draft.expires.map(\.dayMonthYear) ?? "nicht gefunden", index: 1)
                     cell("Code", code ?? "–", index: 2)
                     cell("Format", outcome.format?.label ?? (code == nil ? "–" : "Nur Code"), index: 3)
@@ -58,8 +66,11 @@ struct ScanResultView: View {
                 ForEach(checks(draft: draft, merchant: merchant)) { check in
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: icon(check.level)).foregroundStyle(tint(check.level))
+                            .accessibilityLabel(levelLabel(check.level))
                         Text(check.text).font(.scaled(15)).foregroundStyle(Color.ink2)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
+                    .accessibilityElement(children: .combine)
                 }
             }
             .padding(Layout.inset).frame(maxWidth: .infinity, alignment: .leading).cardSurface(radius: Layout.cardRadius)
@@ -74,14 +85,18 @@ struct ScanResultView: View {
 
     private func cell(_ label: String, _ value: String, index: Int) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.scaled(12)).foregroundStyle(Color.muted)
-            Text(value).font(.scaled(15, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
+            Text(label).font(.scaled(12, weight: .semibold)).foregroundStyle(Color.ink2)
+            Text(label == "Code" ? value.grouped : value)
+                .font(label == "Code" ? .scaled(15, weight: .bold, design: .monospaced) : .scaled(15, weight: .bold))
+                .lineLimit(typeSize.isAccessibilitySize ? nil : 1).minimumScaleFactor(0.6)
+                .fixedSize(horizontal: false, vertical: typeSize.isAccessibilitySize)
         }
         .padding(Layout.group).frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
-        .opacity(revealed ? 1 : 0)
-        .offset(y: revealed ? 0 : 12)
-        .animation(.spring(duration: 0.5, bounce: 0.3).delay(0.08 * Double(index)), value: revealed)
+        .accessibilityElement(children: .combine)
+        .opacity(revealed || reduceMotion ? 1 : 0)
+        .offset(y: revealed || reduceMotion ? 0 : 12)
+        .animation(reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.3).delay(0.08 * Double(index)), value: revealed)
     }
 
     private func icon(_ level: Check.Level) -> String {
@@ -92,11 +107,19 @@ struct ScanResultView: View {
         }
     }
 
+    private func levelLabel(_ level: Check.Level) -> String {
+        switch level {
+        case .ok: "In Ordnung"
+        case .warning: "Achtung"
+        case .info: "Hinweis"
+        }
+    }
+
     private func tint(_ level: Check.Level) -> Color {
         switch level {
         case .ok: .good
         case .warning: .warn
-        case .info: .muted
+        case .info: .ink2
         }
     }
 
@@ -114,11 +137,12 @@ struct ScanResultView: View {
             out.append(Check(level: .warning, text: "Kein Code gefunden. Bitte manuell eintragen."))
         }
         if let merchant {
-            out.append(Check(level: .ok, text: "Shop erkannt: \(merchant.name). \(merchant.category.long)."))
+            out.append(Check(level: .ok, text: "Laden erkannt: \(merchant.name). \(merchant.category.long)."))
+            if let howTo = merchant.redeemHowTo { out.append(Check(level: .info, text: howTo)) }
         } else if let name = draft.customName {
             out.append(Check(level: .info, text: "„\(name)“ steht nicht in der Liste der Läden. Prüf den Namen im nächsten Schritt."))
         } else {
-            out.append(Check(level: .info, text: "Shop nicht erkannt. Du wählst ihn im nächsten Schritt aus."))
+            out.append(Check(level: .info, text: "Laden nicht erkannt. Du trägst ihn im nächsten Schritt ein."))
         }
         if let expires = draft.expires {
             out.append(expires >= Calendar.current.startOfDay(for: .now)

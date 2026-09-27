@@ -27,8 +27,9 @@ extension Color {
     static let surface = Color(light: 0xFFFFFF, dark: 0x1E1D1B)
     static let fill = Color(light: 0xEFECE5, dark: 0x2A2926)
     static let ink = Color(light: 0x111111, dark: 0xF2F0EA)
-    static let ink2 = Color(light: 0x3A3A40, dark: 0xCFCDC6)
-    static let muted = Color(light: 0x5C5C63, dark: 0xA8A8AE)
+    // Grautöne warm wie das Papier, keine kalten Systemgraus. muted hält ≥ 4,5:1 auch auf `fill`.
+    static let ink2 = Color(light: 0x3A3833, dark: 0xCFCDC6)
+    static let muted = Color(light: 0x5C5953, dark: 0xA9A59C)
     static let line = Color(light: 0xE6E2D9, dark: 0x34322E)
     /// Text auf `ink`-Flächen (Hauptknopf, aktive Chips): weiß im Hellen, Tinte im Dunkeln.
     static let onInk = Color(light: 0xFFFFFF, dark: 0x111111)
@@ -48,8 +49,8 @@ extension Color {
     /// Frist bis 14 Tage (dringend) – als Pill mit 12 % Tönung.
     static let warn = Color(light: 0xC4221A, dark: 0xFF7A70)
     static let warnSoft = Color(light: 0xC4221A, dark: 0xFF7A70).opacity(0.12)
-    /// Frist 15–30 Tage – nur als Text.
-    static let soon = Color(light: 0xB35A00, dark: 0xFFB340)
+    /// Frist 15–30 Tage – nur als Text. Hell ≥ 5:1 auf page, surface und fill (#9A4C00: 5,6 / 6,2 / 5,2), dunkel ≥ 8:1.
+    static let soon = Color(light: 0x9A4C00, dark: 0xFFB340)
     /// Hinweis-Streifen (z. B. „Betrag offen“): dieselbe Tönung wie Fristen 15–30 Tage, kein eigenes Orange.
     static let notice = soon
     /// Schalter „an“: Grün wie iOS, weil Tinte im Dunkeln hell ist und der weiße Knopf sonst verschwindet.
@@ -59,7 +60,7 @@ extension Color {
         ? UIColor.black.withAlphaComponent(0.45) : UIColor(red: 0.07, green: 0.07, blue: 0.07, alpha: 0.08) })
     static let paper = Color(light: 0xFBF9F4, dark: 0x24221E)
     static let disabledFill = Color(light: 0xE4E0D7, dark: 0x2E2D2A)
-    static let disabledText = Color(light: 0x5C5C63, dark: 0xA8A8AE)
+    static let disabledText = muted
 }
 
 extension MerchantCategory {
@@ -181,6 +182,8 @@ struct FilterChip: View {
                 .foregroundStyle(on ? Color.onInk : Color.ink)
                 .padding(.horizontal, Layout.inset).frame(minHeight: Layout.tap)
                 .background(on ? Color.ink : Color.surface, in: .capsule)
+                // Inaktiv: feine Kante, sonst verschwimmt Weiß auf dem Papiergrund.
+                .overlay { if !on { Capsule().strokeBorder(Color.line, lineWidth: 1) } }
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
@@ -302,7 +305,7 @@ struct ReceiptPaper<Content: View>: View {
             ZigZag(top: false).fill(Color.paper).frame(height: 10)
         }
         .foregroundStyle(Color.ink)
-        .shadow(color: Color.shade, radius: 12, y: 6)
+        .ticketShadow(radius: 12)
     }
 }
 
@@ -317,15 +320,33 @@ struct Shake: GeometryEffect {
     }
 }
 
+// MARK: - Schatten
+
+/// Schatten der App: zwei Stufen, beide in `Color.shade`.
+/// Regel: Schatten immer über `.compositingGroup()` – sonst wirft jeder Text und jedes Symbol auf der Karte
+/// einen eigenen Schatten (im Dunkeln 45 % Schwarz: Gelb wird Senf, Text bekommt einen braunen Hof).
+enum Shadow {
+    /// Karten, Tickets, Bon.
+    static let card: CGFloat = 14
+    /// Schwebendes über allem (Toast).
+    static let float: CGFloat = 16
+}
+
 extension View {
+    /// Schatten für Karten und Tickets: erst zu einer Ebene zusammenfassen, dann ein einziger Schatten.
+    func ticketShadow(radius: CGFloat = Shadow.card, y: CGFloat = 6) -> some View {
+        compositingGroup().shadow(color: Color.shade, radius: radius, y: y)
+    }
+
     func cardSurface(radius: CGFloat = Layout.cardRadius) -> some View {
         background(Color.surface, in: .rect(cornerRadius: radius, style: .continuous))
-            .shadow(color: Color.shade, radius: 14, y: 6)
+            .ticketShadow()
     }
 
     /// Einheitlicher Seitenhintergrund mit weicher Scroll-Kante oben auf allen Screens.
+    /// Unten ebenfalls weich, damit Inhalt unter Tab-Leiste und `safeAreaBar`-Leisten ausblendet statt hart zu enden.
     func pageBackground() -> some View {
-        scrollEdgeEffectStyle(.soft, for: .top)
+        scrollEdgeEffectStyle(.soft, for: [.top, .bottom])
             // Die schwebende Tab-Leiste steckt schon in der Safe Area; nur ein Abschnittsabstand Luft dazu.
             .contentMargins(.bottom, Layout.section, for: .scrollContent)
             .background(Color.page.ignoresSafeArea())
@@ -410,9 +431,15 @@ struct TearLine: View {
 
 /// Beträge wie auf einem Preisschild: große Euro mit Komma auf der Grundlinie, kleine hochgestellte Cent und €-Zeichen.
 /// Die Cent schließen oben mit den Euro-Ziffern ab.
+///
+/// Unterschneidung gemessen an SF Rounded Heavy (proportionale Ziffern, je Anteil der Schriftgröße):
+/// Ziffern haben rechts ~0,04 Fleisch, die „1“ aber ~0,105 – dahinter klaffte ein Loch. Das Komma hat rechts ~0,075,
+/// die kleine Cent-Ziffer links ~0,02 – das ergab „136, 25“. Tabellarische Ziffern wären noch schlimmer (die „1“ dort ~0,19).
 struct AmountText: View {
     let value: Double
     var size: CGFloat = 56
+    /// Alle Beträge hängen an „Large Title“ (Font.scaled ab 28 pt); Abstände wachsen mit.
+    @ScaledMetric(relativeTo: .largeTitle) private var scale: CGFloat = 1
 
     private var parts: (String, String) {
         let s = value.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE")))
@@ -420,10 +447,31 @@ struct AmountText: View {
         return (comps.first ?? s, comps.count > 1 ? comps[1] : "00")
     }
 
-    var body: some View {
+    private var attributed: AttributedString {
         let (euros, cents) = parts
-        (Text("\(euros),").font(.display(size)).kerning(-size * 0.02)
-         + Text("\(cents) €").font(.display(size * 0.46)).baselineOffset(size * 0.40))
+        let em = size * scale
+        var text = AttributedString()
+        for ch in euros {
+            var digit = AttributedString(String(ch))
+            digit.font = .display(size)
+            // Grundunterschneidung -0,02; nach der „1“ zusätzlich ihr überschüssiges Fleisch abziehen.
+            digit.kern = -em * (ch == "1" ? 0.085 : 0.02)
+            text += digit
+        }
+        var comma = AttributedString(",")
+        comma.font = .display(size)
+        // Komma rückt an die Cent heran: bleibt ~1 pt Luft, keine sichtbare Lücke.
+        comma.kern = -em * 0.075
+        text += comma
+        var small = AttributedString("\(cents) €")
+        small.font = .display(size * 0.46)
+        small.baselineOffset = em * 0.40
+        text += small
+        return text
+    }
+
+    var body: some View {
+        Text(attributed)
             .contentTransition(.numericText(value: value))
             .lineLimit(1).minimumScaleFactor(0.5)
             .accessibilityLabel(value.euro)

@@ -14,13 +14,14 @@ public enum CardQueries {
         }
     }
 
-    /// Offener Restwert aller wertbasierten, nicht abgelaufenen und nicht archivierten Gutscheine.
-    public static func openTotal(_ cards: [GiftCard]) -> Double {
-        cards.filter { $0.kind.isValueBased && $0.daysLeft >= 0 && !$0.isArchived && !$0.forGifting }.reduce(0) { $0 + $1.balance }
+    /// Offener Restwert aller Gutscheine, die zur Summe zählen (``GiftCard/countsTowardTotal(now:)``).
+    /// Als eingelöst gestempelte Gutscheine zählen nie, auch wenn sie inzwischen eine wertbasierte Art haben.
+    public static func openTotal(_ cards: [GiftCard], now: Date = .now) -> Double {
+        cards.filter { $0.countsTowardTotal(now: now) }.reduce(0) { $0 + $1.balance }
     }
 
-    public static func originalTotal(_ cards: [GiftCard]) -> Double {
-        cards.filter { $0.kind.isValueBased && $0.daysLeft >= 0 && !$0.isArchived && !$0.forGifting }.reduce(0) { $0 + $1.value }
+    public static func originalTotal(_ cards: [GiftCard], now: Date = .now) -> Double {
+        cards.filter { $0.countsTowardTotal(now: now) }.reduce(0) { $0 + $1.value }
     }
 
     public static func expiringSoon(_ cards: [GiftCard], warnDays: Int) -> [GiftCard] {

@@ -1,11 +1,14 @@
 import Foundation
+import SwiftUI
+import UIKit
 import WidgetKit
 import OSLog
 import RestwertKit
 
-/// Schreibt eine kleine Zusammenfassung für das Widget in die App Group (nur Namen, Beträge, Ablaufdaten – keine Codes oder PINs).
-/// Gleiche Struktur wie `WidgetSnapshot` im Widget-Target. Tage und Summe rechnet das Widget zur Anzeigezeit selbst.
-enum WidgetBridge {
+/// Schreibt eine kleine Zusammenfassung für das Widget in die App Group (nur Namen, Beträge, Ablaufdaten und
+/// Ladenfarben – keine Codes oder PINs). Gleiche Struktur wie `WidgetSnapshot` im Widget-Target.
+/// Tage und Summe rechnet das Widget zur Anzeigezeit selbst. Läuft ohne Main Thread (der Store ruft es im Hintergrund).
+nonisolated enum WidgetBridge {
     private struct Snapshot: Codable {
         struct Item: Codable {
             var id: String
@@ -14,6 +17,10 @@ enum WidgetBridge {
             var expires: Date
             /// Restwert in Euro, nur bei wertbasierten Gutscheinen (für die Summe).
             var amount: Double?
+            /// Ladenfarbe als Hex (RRGGBB), nach denselben Regeln wie die Kacheln in der App (``MerchantBrand``).
+            var color: String?
+
+            var fingerprint: String { "\(id)|\(name)|\(headline)|\(expires.timeIntervalSince1970)|\(amount ?? -1)|\(color ?? "")" }
         }
         var items: [Item]
         var updated: Date
@@ -30,15 +37,31 @@ enum WidgetBridge {
         let active = (own.isEmpty ? cards : own).filter { $0.isActive && !$0.forGifting }.sorted { $0.expires < $1.expires }
         let snap = Snapshot(items: active.prefix(200).map {
                                 .init(id: $0.id.uuidString, name: $0.name, headline: $0.headline, expires: $0.expires,
-                                      amount: $0.kind.isValueBased ? $0.balance : nil)
+                                      amount: $0.kind.isValueBased ? $0.balance : nil, color: brandHex($0))
                             },
                             updated: .now)
         guard let data = try? JSONEncoder().encode(snap) else { return }
+        let url = dir.appending(path: "widget.json")
+        // Unverändert (bis auf den Zeitstempel): Datei und Zeitleiste in Ruhe lassen.
+        if let old = try? Data(contentsOf: url), let prev = try? JSONDecoder().decode(Snapshot.self, from: old),
+           prev.items.map(\.fingerprint) == snap.items.map(\.fingerprint),
+           Calendar.current.isDate(prev.updated, inSameDayAs: snap.updated) {
+            return
+        }
         do {
-            try data.write(to: dir.appending(path: "widget.json"), options: .atomic)
+            try data.write(to: url, options: .atomic)
         } catch {
             Logger(subsystem: "de.restwert.app", category: "widget").error("Widget-Daten: \(error.localizedDescription, privacy: .public)")
         }
         WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// Kachelfarbe wie in der App: bekannte Läden in Hausfarbe, eigene Läden mit fester Farbe aus dem Namen.
+    private static func brandHex(_ card: GiftCard) -> String? {
+        let brand = MerchantBrand.forID(card.merchantID) ?? (card.name.isEmpty ? .neutral : MerchantBrand.fallback(for: card.name))
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        guard UIColor(brand.background).getRed(&r, green: &g, blue: &b, alpha: &a) else { return nil }
+        func byte(_ v: CGFloat) -> Int { Int((min(max(v, 0), 1) * 255).rounded()) }
+        return String(format: "%02X%02X%02X", byte(r), byte(g), byte(b))
     }
 }

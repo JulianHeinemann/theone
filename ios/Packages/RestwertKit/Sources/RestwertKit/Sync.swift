@@ -37,26 +37,59 @@ public enum SyncMerge {
     }
 
     /// Neuere Änderung gewinnt, Löschungen gelten überall, PIN und Foto bleiben lokal.
-    /// `deleted` enthält IDs gelöschter Gutscheine und Kassentests; Tests gelöschter Gutscheine fallen mit weg.
+    /// `deleted` enthält IDs gelöschter Gutscheine, Kassentests und zurückgenommener Verlaufseinträge;
+    /// Tests gelöschter Gutscheine fallen mit weg. Buchungen beider Seiten bleiben erhalten (``unite(_:_:deleted:)``).
     public static func merge(localCards: [GiftCard], localTests: [TestResult], localDeleted: Set<UUID>, remote: SyncData) -> Result {
         let deleted = localDeleted.union(remote.deleted)
         var byID = Dictionary(localCards.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         for r in remote.cards {
             if let local = byID[r.id] {
-                guard isNewer(r.modifiedAt, than: local.modifiedAt) else { continue }
-                var merged = r
-                if merged.pin.isEmpty { merged.pin = local.pin }
-                if merged.photo == nil { merged.photo = local.photo }
-                byID[r.id] = merged
+                if isNewer(r.modifiedAt, than: local.modifiedAt) {
+                    var merged = unite(r, local, deleted: deleted)
+                    if merged.pin.isEmpty { merged.pin = local.pin }
+                    if merged.photo == nil { merged.photo = local.photo }
+                    byID[r.id] = merged
+                } else {
+                    byID[r.id] = unite(local, r, deleted: deleted)
+                }
             } else {
-                byID[r.id] = r
+                byID[r.id] = unite(r, r, deleted: deleted)
             }
+        }
+        for (id, c) in byID where c.history.contains(where: { deleted.contains($0.id) }) {
+            byID[id] = unite(c, c, deleted: deleted)
         }
         let cards = byID.values.filter { !deleted.contains($0.id) }.sorted { $0.expires < $1.expires }
         let known = Set(localTests.map(\.id))
         let tests = (localTests + remote.tests.filter { !known.contains($0.id) })
             .filter { t in !deleted.contains(t.id) && !(t.cardID.map(deleted.contains) ?? false) }
         return Result(cards: cards, tests: tests, deleted: deleted)
+    }
+
+    /// Gleichzeitige Buchungen zusammenführen: Die neuere Fassung (`winner`) bleibt die Grundlage; Verlaufseinträge,
+    /// die nur die andere Fassung kennt, werden nachgebucht (Guthaben entsprechend verrechnet). Zurückgenommene
+    /// Einträge (ID in `deleted`) fallen heraus und ihr Betrag wird wieder gutgeschrieben.
+    /// Hat sich dadurch etwas geändert, rückt `modifiedAt` 2 ms weiter, damit der vereinigte Stand wieder hochgeht.
+    /// Einschränkung: Eine Guthaben-Korrektur im Formular ohne Verlaufseintrag kann nicht verrechnet werden.
+    public static func unite(_ winner: GiftCard, _ other: GiftCard, deleted: Set<UUID>) -> GiftCard {
+        var c = winner
+        let known = Set(winner.history.map(\.id))
+        let extra = other.history.filter { !known.contains($0.id) && !deleted.contains($0.id) }
+        let undone = winner.history.filter { deleted.contains($0.id) }
+        guard !extra.isEmpty || !undone.isEmpty else { return winner }
+        var balance = c.balance
+        for e in undone { balance += e.amount }
+        for e in extra { balance -= e.amount }
+        c.balance = max(0, (balance * 100).rounded() / 100)
+        if c.balance > c.value { c.value = c.balance }
+        c.history = (winner.history.filter { !deleted.contains($0.id) } + extra).sorted { $0.date < $1.date }
+        // Eingelöst-Stempel eines Codes/Coupons von der anderen Seite übernehmen.
+        if !c.kind.isValueBased, c.redeemedAt == nil,
+           let stamp = extra.first(where: { $0.amount == 0 && $0.note == "\(c.kind.label) eingelöst" }) {
+            c.redeemedAt = stamp.date
+        }
+        c.modifiedAt = max(winner.modifiedAt, other.modifiedAt).addingTimeInterval(0.002)
+        return c
     }
 
     /// Sicherung vorbereiten: Gutscheine, die hier schon gelöscht wurden, bekommen eine neue ID,
