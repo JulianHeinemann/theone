@@ -268,6 +268,8 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     public var forGifting: Bool = false
     /// An der Kasse benutzt, Betrag aber noch nicht eingetragen („Später eintragen“).
     public var pendingSince: Date?
+    /// Ablaufdatum nicht auf dem Gutschein gefunden, sondern geschätzt (gesetzliche Frist). Zeigt „geschätzt“ an.
+    public var expiresEstimated: Bool = false
 
     public init(id: UUID = UUID(), kind: VoucherKind = .giftCard, merchantID: String, customName: String = "", number: String,
                 format: CodeFormat, pin: String = "", value: Double, balance: Double, percent: Double? = nil,
@@ -359,7 +361,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case id, kind, merchantID, customName, number, format, pin, value, balance, percent, received, expires
-        case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt, archivedAt, reminderAt, owner, forGifting, pendingSince
+        case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt, archivedAt, reminderAt, owner, forGifting, pendingSince, expiresEstimated
     }
 
     /// Tolerantes Dekodieren, damit ältere Speicherstände nach Updates lesbar bleiben.
@@ -389,6 +391,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
         owner = try c.decodeIfPresent(String.self, forKey: .owner) ?? ""
         forGifting = try c.decodeIfPresent(Bool.self, forKey: .forGifting) ?? false
         pendingSince = try c.decodeIfPresent(Date.self, forKey: .pendingSince)
+        expiresEstimated = try c.decodeIfPresent(Bool.self, forKey: .expiresEstimated) ?? false
     }
 }
 

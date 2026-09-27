@@ -43,7 +43,7 @@ struct ScanResultView: View {
                 }
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                     cell("Wert", draft.percent.map { "\(Int($0)) %" } ?? draft.value.map(\.euro) ?? "–", index: 0)
-                    cell("Gültig bis", draft.expires.map(\.dayMonthYear) ?? "–", index: 1)
+                    cell("Gültig bis", draft.expires.map(\.dayMonthYear) ?? "nicht gefunden", index: 1)
                     cell("Code", code ?? "–", index: 2)
                     cell("Format", outcome.format?.label ?? (code == nil ? "–" : "Nur Code"), index: 3)
                 }
@@ -124,6 +124,9 @@ struct ScanResultView: View {
             out.append(expires >= Calendar.current.startOfDay(for: .now)
                        ? Check(level: .ok, text: "Gültig bis \(expires.dayMonthYear).")
                        : Check(level: .warning, text: "Das Ablaufdatum \(expires.dayMonthYear) liegt in der Vergangenheit."))
+        } else {
+            let legal = GiftCard.legalExpiry(from: .now).dayMonthYear
+            out.append(Check(level: .warning, text: "Kein Ablaufdatum gefunden. Vorausgefüllt wird die gesetzliche Frist (\(legal)) – bitte mit dem Gutschein vergleichen."))
         }
         if let value = draft.value, value > 500 {
             out.append(Check(level: .warning, text: "Ungewöhnlich hoher Wert (\(value.euro)). Bitte prüfen."))

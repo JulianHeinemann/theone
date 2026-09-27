@@ -484,3 +484,48 @@ struct DataLayerTests {
         #expect(lines[1].hasPrefix("\"'=HYPERLINK(1)\""))
     }
 }
+
+@Suite("Ablaufdatum in allen Schreibweisen")
+struct ExpiryFormats {
+    private let now = date(2026, 9, 27)
+
+    private func ymd(_ text: String) -> [Int]? {
+        TextParser.expiry(in: text, now: now).map {
+            let c = Calendar.current.dateComponents([.year, .month, .day], from: $0)
+            return [c.year ?? 0, c.month ?? 0, c.day ?? 0]
+        }
+    }
+
+    @Test("Erkannte Formate", arguments: [
+        ("Gültig bis 31.12.2027", [2027, 12, 31]),
+        ("gültig bis 31.12.27", [2027, 12, 31]),
+        ("Ablauf: 31/12/2027", [2027, 12, 31]),
+        ("expires 2027-12-31", [2027, 12, 31]),
+        ("Gültig bis 31. Dezember 2027", [2027, 12, 31]),
+        ("einlösbar bis 1. März 2028", [2028, 3, 1]),
+        ("gültig bis 15. Okt. 2027", [2027, 10, 15]),
+        ("Valid until Dec 31, 2027", [2027, 12, 31]),
+        ("gültig bis 12/27", [2027, 12, 31]),
+        ("Gültig bis 02/2028", [2028, 2, 29]),
+        ("gültig bis Juni 2027", [2027, 6, 30]),
+        ("Einlösbar bis Ende 2028", [2028, 12, 31]),
+        ("Dieser Gutschein ist 3 Jahre gültig.", [2029, 9, 27]),
+        ("Gültigkeit: 24 Monate ab Ausstellung", [2028, 9, 27]),
+        ("Gutschein gültig für drei Jahre", [2029, 9, 27]),
+        ("Kaufdatum 12.03.2026, einlösbar im Laden. 31.12.2028", [2028, 12, 31]),
+    ])
+    func formats(_ text: String, _ expected: [Int]) {
+        #expect(ymd(text) == expected)
+    }
+
+    @Test("Kein Datum, falsche Daten und Beträge werden nicht zum Ablaufdatum", arguments: [
+        "Wert 25,00 € – danke für deinen Einkauf",
+        "Kaufdatum 12.03.2026",            // Vergangenheit ohne Beschriftung
+        "gültig bis 31.02.2027",           // gibt es nicht
+        "Filiale 12/27 Hauptstraße",       // Monat/Jahr ohne Beschriftung
+        "Marktplatz 3, 50667 Köln",
+    ])
+    func noDate(_ text: String) {
+        #expect(ymd(text) == nil)
+    }
+}

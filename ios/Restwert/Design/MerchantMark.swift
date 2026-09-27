@@ -183,7 +183,7 @@ struct BalanceCard: View {
             // Bei großer Schrift untereinander, damit das Datum nicht abgeschnitten wird.
             let footerLayout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout())
             footerLayout {
-                Text("gültig bis \(card.expires.dayMonthYear)")
+                Text("gültig bis \(card.expires.dayMonthYear)\(card.expiresEstimated ? " (geschätzt)" : "")")
                 if !typeSize.isAccessibilitySize { Spacer() }
                 if card.isActive && status != .expiringSoon {
                     Text(card.daysLeft == 1 ? "noch 1 Tag" : "noch \(card.daysLeft) Tage")

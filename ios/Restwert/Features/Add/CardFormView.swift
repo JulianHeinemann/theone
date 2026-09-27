@@ -33,6 +33,8 @@ struct CardFormView: View {
     @State private var formatLocked = false
     /// „Gültig bis“ ist nur der gesetzliche Vorschlag und darf „Erhalten am“ folgen.
     @State private var expiresIsSuggestion = true
+    /// Formular kam aus Scan oder Import: dann ist ein fehlendes Datum ein Befund, kein Normalfall.
+    @State private var fromScan = false
     /// Beim Bearbeiten war schon eine PIN gespeichert: nur die bleibt verdeckt.
     @State private var hadStoredPin = false
     @State private var loaded = false
@@ -56,8 +58,6 @@ struct CardFormView: View {
             VStack(alignment: .leading, spacing: 14) {
                 photoSlot
                 fields
-                Text("Kein Datum auf dem Gutschein? Dann gilt er meist drei Jahre, gerechnet ab Ende des Kaufjahres. Das Datum ist schon so vorausgefüllt.")
-                    .font(.scaled(13)).foregroundStyle(Color.ink2).padding(.horizontal, 4)
                 if !errors.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(errors, id: \.self) { Label($0, systemImage: "exclamationmark.circle.fill") }
@@ -252,7 +252,9 @@ struct CardFormView: View {
                     LabeledField(label: "oder Wert in €", placeholder: "optional", text: $valueText, keyboard: .decimalPad)
                 }
             }
-            dateBox("Gültig bis", Binding(get: { expires }, set: { expires = $0; expiresIsSuggestion = false }))
+            dateBox(expiresIsSuggestion ? "Gültig bis · geschätzt" : "Gültig bis",
+                    Binding(get: { expires }, set: { expires = $0; expiresIsSuggestion = false }))
+            if expiresIsSuggestion { estimateHint }
             LabeledField(label: kind == .discountCode ? "Rabattcode" : "Code oder Kartennummer (falls vorhanden)",
                          placeholder: "wird beim Scannen ausgefüllt", text: $number)
             Button {
@@ -334,6 +336,31 @@ struct CardFormView: View {
         pinRevealed = (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "PIN anzeigen")) ?? false
     }
 
+    /// Hinweis, dass „Gültig bis“ nur die gesetzliche Frist ist. Nach einem Scan deutlich, sonst leise.
+    @ViewBuilder
+    private var estimateHint: some View {
+        if fromScan {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Kein Ablaufdatum gefunden").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                Text("Vorausgefüllt ist die gesetzliche Frist: \(expires.dayMonthYear), drei Jahre ab Ende des Kaufjahres. Steht auf dem Gutschein ein anderes Datum, trag es oben ein.")
+                    .font(.scaled(13)).foregroundStyle(Color.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.leading, Layout.inset + 4).padding(.trailing, Layout.inset).padding(.vertical, Layout.group)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.surface, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+            .overlay(alignment: .leading) {
+                UnevenRoundedRectangle(topLeadingRadius: Layout.buttonRadius, bottomLeadingRadius: Layout.buttonRadius)
+                    .fill(Color.notice).frame(width: 4)
+            }
+            .accessibilityElement(children: .combine)
+        } else {
+            Text("Kein Datum auf dem Gutschein? Dann gilt er meist drei Jahre, gerechnet ab Ende des Kaufjahres. So ist es vorausgefüllt.")
+                .font(.scaled(13)).foregroundStyle(Color.ink2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     private func dateBox(_ label: String, _ date: Binding<Date>) -> some View {
         LabeledBox(label: label) {
             DatePicker(label, selection: date, displayedComponents: .date)
@@ -346,6 +373,7 @@ struct CardFormView: View {
 
     private func apply(_ o: ScanOutcome) {
         let d = o.draft
+        fromScan = true
         if let id = d.merchantID {
             merchantID = id
         } else if let name = d.customName {
@@ -381,7 +409,7 @@ struct CardFormView: View {
         hadStoredPin = !c.pin.isEmpty
         received = c.received
         expires = c.expires
-        expiresIsSuggestion = false
+        expiresIsSuggestion = c.expiresEstimated
         location = c.location
         locationNote = c.locationNote
         owner = c.owner
@@ -458,6 +486,7 @@ struct CardFormView: View {
         card.percent = kind.isValueBased ? nil : parseMoney(percentText)
         card.received = received
         card.expires = expires
+        card.expiresEstimated = expiresIsSuggestion
         card.location = location
         card.locationNote = locationNote.trimmingCharacters(in: .whitespaces)
         card.owner = owner.trimmingCharacters(in: .whitespaces)
