@@ -95,7 +95,7 @@ struct CardRow: View {
                 if due.1 != .muted { Image(systemName: urgent ? "exclamationmark.circle.fill" : "clock") }
             }
             .labelStyle(DueLabelStyle())
-            .lineLimit(1).fixedSize()
+            .lineLimit(1).minimumScaleFactor(0.75)
             .font(.scaled(due.1 == .muted ? 14 : 13, weight: due.1 == .muted ? .regular : (urgent ? .bold : .semibold)))
             .foregroundStyle(due.1)
             .padding(.horizontal, due.1 == .muted ? 0 : 8).padding(.vertical, due.1 == .muted ? 0 : 3)
@@ -117,12 +117,16 @@ struct CardRow: View {
                     .font(.scaled(13)).monospacedDigit().foregroundStyle(Color.muted)
                     .lineLimit(1).fixedSize()
             } else {
-                // Rabattcodes sind kein Geld: als Etikett statt in der Euro-Spalte.
-                Label((card.percent ?? 0) > 0 || card.value > 0 ? "\(card.headline) Rabatt" : card.kind.label, systemImage: "tag")
-                    .font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink)
-                    .padding(.horizontal, 10).padding(.vertical, 5)
-                    .background(Color.fill, in: .capsule)
-                    .overlay(Capsule().strokeBorder(Color.line, lineWidth: 1))
+                // Rabattcodes sind kein Geld: Etikett-Symbol vor dem Wert, darunter „Rabatt“ statt „von … €“.
+                let hasValue = (card.percent ?? 0) > 0 || card.value > 0
+                HStack(spacing: 4) {
+                    Image(systemName: "tag.fill").font(.scaled(13)).foregroundStyle(Color.ink2)
+                    Text(hasValue ? card.headline : card.kind.label)
+                        .font(.scaled(typeSize.isAccessibilitySize ? 16 : (hasValue ? 20 : 15), weight: .bold)).monospacedDigit()
+                        .foregroundStyle(Color.ink)
+                }
+                .lineLimit(1).fixedSize()
+                Text(hasValue ? "Rabatt" : "Code").font(.scaled(13)).foregroundStyle(Color.muted)
                     .lineLimit(1).fixedSize()
             }
             if card.kind.isValueBased && card.balance < card.value {

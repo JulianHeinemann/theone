@@ -179,10 +179,10 @@ struct HomeView: View {
                 if store.cards.contains(where: \.forGifting) { chip("Zum Verschenken", .gifts) }
                 ForEach(owners, id: \.self) { chip("Für \($0)", .owner($0)) }
             }
-            .padding(.horizontal, 16)
         }
         .scrollIndicators(.hidden)
-        .padding(.horizontal, -16)
+        // Chips dürfen beim Scrollen bis zum Rand laufen, ohne die Spalte breiter zu machen.
+        .scrollClipDisabled()
         .sensoryFeedback(.selection, trigger: activeFilter)
     }
 
