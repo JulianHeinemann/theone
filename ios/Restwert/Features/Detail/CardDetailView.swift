@@ -45,40 +45,53 @@ struct CardDetailView: View {
     private func content(_ card: GiftCard) -> some View {
         let status = card.status(warnDays: warnDays)
         return ScrollView {
-            VStack(spacing: 16) {
-                if !card.isActive && !card.isArchived {
-                    archiveBanner(card, status)
-                }
-                summary(card, status)
-                if card.pendingSince != nil && card.isActive {
-                    pendingBanner(card)
-                }
-                if card.isActive {
-                    NavigationLink(value: Route.checkout(card.id)) {
-                        Label("An der Kasse zeigen", systemImage: "barcode")
+            // Gruppen mit 12 pt innen, 24 pt zwischen den Abschnitten.
+            VStack(spacing: Layout.section) {
+                VStack(spacing: Layout.group) {
+                    if !card.isActive && !card.isArchived {
+                        archiveBanner(card, status)
                     }
-                    .buttonStyle(.primary)
+                    summary(card, status)
+                    if card.pendingSince != nil && card.isActive {
+                        pendingBanner(card)
+                    }
                 }
                 actionGroup(card)
-                codeTicket(card)
-                locationRow(card)
-                // Eigene Erinnerungen plant der Store nur für echte, eigene Gutscheine.
-                if card.isActive && !card.isExample && !card.forGifting { reminderRow(card) }
-                CardBon(card: card).padding(.top, 6)
-                if !card.kind.isValueBased && card.redeemedAt != nil {
-                    Button("Doch nicht eingelöst", systemImage: "arrow.uturn.backward") { unmarkRedeemed(card.id) }
-                        .buttonStyle(.quiet)
+                VStack(spacing: Layout.group) {
+                    codeTicket(card)
+                    locationRow(card)
+                    // Eigene Erinnerungen plant der Store nur für echte, eigene Gutscheine.
+                    if card.isActive && !card.isExample && !card.forGifting { reminderRow(card) }
                 }
-                if card.isArchived {
-                    Button("Wiederherstellen", systemImage: "tray.and.arrow.up") { store.setArchived(card.id, false) }
-                        .buttonStyle(.quiet)
+                CardBon(card: card)
+                VStack(spacing: Layout.group) {
+                    if !card.kind.isValueBased && card.redeemedAt != nil {
+                        Button("Doch nicht eingelöst", systemImage: "arrow.uturn.backward") { unmarkRedeemed(card.id) }
+                            .buttonStyle(.quiet)
+                    }
+                    if card.isArchived {
+                        Button("Wiederherstellen", systemImage: "tray.and.arrow.up") { store.setArchived(card.id, false) }
+                            .buttonStyle(.quiet)
+                    }
+                    Button("Gutschein entfernen", systemImage: "trash", role: .destructive) { confirmDelete = true }
+                        .font(.scaled(15, weight: .bold)).foregroundStyle(Color.bad)
+                        .frame(minHeight: Layout.tap)
                 }
-                Button("Gutschein entfernen", systemImage: "trash", role: .destructive) { confirmDelete = true }
-                    .font(.scaled(15, weight: .bold)).padding(.top, 6)
             }
-            .padding(.horizontal, Layout.page).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.top, 4).padding(.bottom, Layout.section)
         }
         .scrollIndicators(.hidden)
+        // Hauptaktion unten im Daumenbereich statt mitten im Inhalt.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if card.isActive {
+                NavigationLink(value: Route.checkout(card.id)) {
+                    Label("An der Kasse zeigen", systemImage: "barcode")
+                }
+                .buttonStyle(.primary)
+                .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, 4)
+                .background(Color.page.ignoresSafeArea())
+            }
+        }
         .fullScreenCover(isPresented: $showPhoto) {
             if let data = card.photo, let image = UIImage(data: data) { PhotoViewer(image: image) }
         }
@@ -135,33 +148,39 @@ struct CardDetailView: View {
     }
 
     /// Neben-Aktionen als Kacheln (Icon in Ladenfarbe) statt Einstellungs-Liste; Hauptaktion bleibt „An der Kasse zeigen“.
-    @ViewBuilder
     private func actionGroup(_ card: GiftCard) -> some View {
         let hasPin = card.kind == .giftCard && !card.pin.isEmpty
         let link = card.merchant.balanceURL.flatMap { url in card.merchant.balanceCheck.linkLabel.map { (url, $0) } }
         let tint = (MerchantBrand.forID(card.merchantID) ?? MerchantBrand.fallback(for: card.name)).accent
+        var tiles: [AnyView] = []
+        if card.isActive {
+            if card.kind.isValueBased {
+                tiles.append(AnyView(NavigationLink(value: Route.keypad(card.id)) { ActionTile(icon: "minus.circle", title: "Einkauf eintragen", tint: tint) }
+                    .buttonStyle(.plain)))
+            } else {
+                tiles.append(AnyView(Button { stamp(card) } label: { ActionTile(icon: "checkmark.seal", title: "Als eingelöst markieren", tint: tint) }
+                    .buttonStyle(.plain).disabled(stampVisible)))
+            }
+        }
+        if hasPin {
+            tiles.append(AnyView(Button { Task { await togglePin(card) } } label: {
+                ActionTile(icon: pinVisible ? "lock.open" : "faceid", title: pinVisible ? card.pin : "PIN anzeigen", tint: tint)
+                    .privacySensitive()
+            }
+            .buttonStyle(.plain)))
+        }
+        if let (url, label) = link {
+            tiles.append(AnyView(Link(destination: url) { ActionTile(icon: "arrow.up.right", title: label, tint: tint) }
+                .buttonStyle(.plain)))
+        }
+        // Zwei Spalten; eine übrige Kachel geht über die volle Breite, damit keine Lücke bleibt.
         // Bei sehr großer Schrift eine Spalte, sonst brechen die Titel mitten im Wort.
-        let columns = Array(repeating: GridItem(.flexible(), spacing: Layout.group), count: typeSize.isAccessibilitySize ? 1 : 2)
-        LazyVGrid(columns: columns, spacing: Layout.group) {
-            if card.isActive {
-                if card.kind.isValueBased {
-                    NavigationLink(value: Route.keypad(card.id)) { ActionTile(icon: "minus.circle", title: "Einkauf eintragen", tint: tint) }
-                        .buttonStyle(.plain)
-                } else {
-                    Button { stamp(card) } label: { ActionTile(icon: "checkmark.seal", title: "Als eingelöst markieren", tint: tint) }
-                        .buttonStyle(.plain).disabled(stampVisible)
+        let perRow = typeSize.isAccessibilitySize ? 1 : 2
+        return VStack(spacing: Layout.group) {
+            ForEach(Array(stride(from: 0, to: tiles.count, by: perRow)), id: \.self) { start in
+                HStack(spacing: Layout.group) {
+                    ForEach(start..<min(start + perRow, tiles.count), id: \.self) { i in tiles[i] }
                 }
-            }
-            if hasPin {
-                Button { Task { await togglePin(card) } } label: {
-                    ActionTile(icon: pinVisible ? "lock.open" : "faceid", title: pinVisible ? card.pin : "PIN anzeigen", tint: tint)
-                        .privacySensitive()
-                }
-                .buttonStyle(.plain)
-            }
-            if let (url, label) = link {
-                Link(destination: url) { ActionTile(icon: "arrow.up.right", title: label, tint: tint) }
-                    .buttonStyle(.plain)
             }
         }
     }
@@ -204,7 +223,7 @@ struct CardDetailView: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.leading, 18).padding(.trailing, 14).padding(.vertical, 8)
+        .padding(.leading, Layout.inset + 4).padding(.trailing, Layout.inset).padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.surface, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
         .overlay(alignment: .leading) {
@@ -251,7 +270,7 @@ struct CardDetailView: View {
                 Label("Eigene Erinnerung", systemImage: "bell")
                     .font(.scaled(16, weight: .semibold))
             }
-            .tint(Color.ink)
+            .tint(Color.toggleOn)
             if let date = card.reminderAt {
                 DatePicker("Am", selection: Binding(get: { min(max(date, range.lowerBound), range.upperBound) },
                                                    set: { store.setReminder(card.id, $0) }),
@@ -318,19 +337,19 @@ struct CardDetailView: View {
     private func locationRow(_ card: GiftCard) -> some View {
         Button { showLocation = true } label: {
             HStack(spacing: 14) {
-                Image(systemName: card.location.symbol).font(.scaled(18, weight: .semibold))
+                Image(systemName: card.location.symbol).font(.scaled(17, weight: .semibold))
                     .contentTransition(.symbolEffect(.replace))
                     .frame(width: 44, height: 44)
-                    .background(Color.fill, in: .rect(cornerRadius: 12, style: .continuous))
+                    .background(Color.fill, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Aufbewahrt: \(card.location.label)").font(.scaled(16, weight: .semibold))
                     Text(card.locationNote.isEmpty ? "Notiz hinzufügen" : card.locationNote)
                         .font(.scaled(13)).foregroundStyle(Color.muted).lineLimit(2)
                 }
                 Spacer()
-                Text("Ändern").font(.scaled(14, weight: .bold))
+                Text("Ändern").font(.scaled(15, weight: .bold))
             }
-            .foregroundStyle(Color.ink).padding(12).cardSurface(radius: Layout.cardRadius)
+            .foregroundStyle(Color.ink).padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
         }
         .buttonStyle(.plain)
     }
@@ -352,20 +371,20 @@ struct CardDetailView: View {
                 Button { showPhoto = true } label: {
                     Image(uiImage: image).resizable().scaledToFit()
                         .frame(maxWidth: .infinity, maxHeight: 260)
-                        .clipShape(.rect(cornerRadius: 14, style: .continuous))
+                        .clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Foto des Gutscheins groß anzeigen")
                 Text("An der Kasse das Foto zeigen oder das Original mitnehmen.").font(.scaled(13)).foregroundStyle(Color.ink2)
             } else {
                 Text("Kein Foto und kein Code gespeichert. Tipp oben auf den Stift, um eins hinzuzufügen.")
-                    .font(.scaled(14)).foregroundStyle(Color.ink2)
+                    .font(.scaled(15)).foregroundStyle(Color.ink2)
             }
         }
         .foregroundStyle(Color.ink)
-        .padding(18)
+        .padding(Layout.inset)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .cardSurface(radius: Layout.cardRadius)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
     }
 
     /// Code als Text zum Kopieren; den Barcode gibt es nur an der Kasse, damit er nicht doppelt erscheint.
@@ -398,7 +417,7 @@ struct CardDetailView: View {
             }
             if card.photo != nil {
                 Button("Original-Foto ansehen", systemImage: "photo") { showPhoto = true }
-                    .font(.scaled(14, weight: .medium)).foregroundStyle(Color.ink2)
+                    .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
             }
         }
         .padding(16)
@@ -440,6 +459,7 @@ struct CardDetailView: View {
 struct Stamp: View {
     let date: Date
     @State private var landed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(spacing: 2) {
@@ -448,11 +468,14 @@ struct Stamp: View {
         }
         .foregroundStyle(Color.bad.opacity(0.85))
         .padding(.horizontal, 18).padding(.vertical, 10)
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.bad.opacity(0.85), lineWidth: 4))
-        .rotationEffect(.degrees(landed ? -14 : -30))
-        .scaleEffect(landed ? 1 : 2.4)
-        .opacity(landed ? 1 : 0)
-        .onAppear { withAnimation(.spring(duration: 0.45, bounce: 0.5)) { landed = true } }
+        .overlay(RoundedRectangle(cornerRadius: Layout.controlRadius).stroke(Color.bad.opacity(0.85), lineWidth: 4))
+        .rotationEffect(.degrees(landed || reduceMotion ? -14 : -30))
+        .scaleEffect(landed || reduceMotion ? 1 : 2.4)
+        .opacity(landed || reduceMotion ? 1 : 0)
+        .onAppear {
+            if reduceMotion { landed = true } else { withAnimation(.spring(duration: 0.45, bounce: 0.5)) { landed = true } }
+        }
+        .accessibilityElement(children: .combine)
         .sensoryFeedback(.impact(weight: .heavy), trigger: landed)
     }
 }
@@ -466,7 +489,7 @@ struct LocationSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Wo liegt der Gutschein?").font(.scaled(24, weight: .heavy)).padding(.top, 24)
+            Text("Wo liegt der Gutschein?").font(.scaled(22, weight: .heavy)).padding(.top, 24)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                 ForEach(StorageLocation.allCases) { loc in
                     Button { withAnimation(.snappy) { location = loc } } label: {
@@ -477,7 +500,7 @@ struct LocationSheet: View {
                         }
                         .foregroundStyle(location == loc ? Color.onInk : Color.ink)
                         .frame(maxWidth: .infinity, minHeight: 84)
-                        .background(location == loc ? Color.ink : Color.fill, in: .rect(cornerRadius: 18, style: .continuous))
+                        .background(location == loc ? Color.ink : Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
                     }
                     .buttonStyle(.plain)
                 }
@@ -536,25 +559,14 @@ struct CardBon: View {
     private func row(_ title: String, _ sub: String, _ amount: String, bold: Bool = false) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.scaled(14, weight: bold ? .heavy : .semibold, design: .monospaced))
+                Text(title).font(.scaled(15, weight: bold ? .heavy : .semibold, design: .monospaced))
                 if !sub.isEmpty {
-                    Text(sub).font(.scaled(11.5, design: .monospaced)).foregroundStyle(Color.muted)
+                    Text(sub).font(.scaled(12, design: .monospaced)).foregroundStyle(Color.muted)
                 }
             }
             Spacer()
-            Text(amount).font(.scaled(14, weight: bold ? .heavy : .semibold, design: .monospaced))
+            Text(amount).font(.scaled(15, weight: bold ? .heavy : .semibold, design: .monospaced))
         }
-    }
-}
-
-/// Kleiner weißer Knopf, halb so hoch wie der Hauptknopf.
-private struct SecondaryPill: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink)
-            .lineLimit(1).minimumScaleFactor(0.8)
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background(Color.surface, in: .rect(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -563,14 +575,17 @@ private struct ActionTile: View {
     let icon: String
     let title: String
     let tint: Color
+    @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: icon).font(.scaled(20, weight: .semibold)).foregroundStyle(tint)
+            // Ladenfarbe nur im Hellen; im Dunkeln wären dunkle Ladenfarben auf der Fläche zu schwach.
+            Image(systemName: icon).font(.scaled(20, weight: .semibold)).foregroundStyle(scheme == .dark ? Color.ink2 : tint)
+                .accessibilityHidden(true)
             Text(title).font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
                 .lineLimit(2).minimumScaleFactor(0.8).multilineTextAlignment(.leading)
         }
-        .padding(14)
+        .padding(Layout.inset)
         .frame(maxWidth: .infinity, minHeight: 72, alignment: .topLeading)
         .background(Color.surface, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
         .contentShape(.rect)

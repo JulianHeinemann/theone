@@ -43,3 +43,26 @@ Die Marke ist gestiegen (+1,0), die Wirkung wird aber durch Inkonsistenz gebrems
 ## Nicht ändern (Lob)
 Gelbes Summen-Ticket, Regel „Ladenfarbe = Kartenfarbe“, ruhige Kasse, Kerben auf der Abrisslinie auch bei XL,
 warme Dunkelflächen, kalibrierte Status-Tokens (muted/warn ≥ 4,8:1), Texte in den Kernmomenten, CardRow-VoiceOver-Satz.
+
+## Umsetzung (nach der Runde)
+
+| Befund | Umgesetzt |
+|---|---|
+| Stempel im Dunkeln unlesbar | `UsedUpStamp` nutzt `onBrand` (immer Tinte auf Gelb) |
+| Schatten mit `ink` | neues Token `shade` (hell 8 % Tinte, dunkel 45 % Schwarz) an allen 5 Stellen |
+| Schalter im Dunkeln | Token `toggleOn` (Grün) für alle Toggles |
+| Onboarding ohne Marke | gemeinsame `Wordmark`, gelbes Summen-Ticket, Rand 16 pt, Claim „Kein Restwert bleibt liegen.“ |
+| Zwei Ticket-Systeme | `Perforation` entfernt; Kasse nutzt `TicketHalf` (echte halbe Kerben), eine Strichelung `DashLine` für Ticket und Bon, beginnt und endet mit vollem Strich |
+| Abreißen | unterer Abschnitt samt Papier kippt nach unten weg (Drehung +9°, 160 pt) |
+| Betragsschrift | Komma auf der Grundlinie, proportionale Ziffern (`Font.display`), Cent oben bündig |
+| Kasse | „Bezahlt“ → eigener Ziffernblock (Route `.pay`, zählt als Kassentest); Knöpfe im Daumenbereich; bei XL untereinander |
+| Detail | „An der Kasse zeigen“ unten fixiert; Gruppen 12/24 pt; übrige Kachel volle Breite |
+| Unterer Leerraum | `contentMargins` 120 → 24 pt; weiche Scroll-Kante überall |
+| Tokens | `Layout.inset` 16 / `ticketInset` 20 / `tap` 44; Radien auf 3 Tokens; Schriftgrößen von 25 auf 9 Stufen |
+| Chips/Auswahl | ein `FilterChip` (44 pt) für Start, Läden, Verlauf (statt Glas-Chips und Segment-Picker) |
+| Ladenfarben | keine fast schwarzen Kacheln mehr (#52525B); Text auf Karte voll deckend; Aktions-Icons im Dunkeln neutral |
+| Barrierefreiheit | Tippziele ≥ 44 pt („…“, Chips, „Alles“, Sortierung), Überschriften für VoiceOver, Ziffernblock sagt Betrag an und meldet Ablehnung, Stempel „Eingelöst“ beachtet Reduce Motion, Formular-Hinweis im Label statt im Platzhalter |
+| Farben außerhalb | Orange → `soon`, Löschen → `bad`, Scan-Kachel in Tinte als Ticket |
+| Sonstiges | Listenzeilen gleich hoch, Läden-Beschreibung 2 Zeilen, Kartennummer überall Mono und einzeilig, Wortmarke im Bon, App-Icon größer mit Dark- und Tinted-Variante, ungenutzte Bausteine entfernt |
+
+Offen: „…“-Menü in „Alle Ablauftermine“, Such-Platzhalter (Systemfarbe).

@@ -44,12 +44,12 @@ struct MerchantsView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 10) {
+            LazyVStack(alignment: .leading, spacing: Layout.group) {
                 filters
                 if !mine.isEmpty {
-                    Text("Deine Läden").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 4)
+                    header("Deine Läden").padding(.top, Layout.group)
                     ForEach(mine) { row($0) }
-                    Text("Alle Läden").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2).padding(.top, 8)
+                    header("Alle Läden").padding(.top, Layout.group)
                 }
                 ForEach(items) { merchant in
                     row(merchant)
@@ -58,7 +58,7 @@ struct MerchantsView: View {
                     ContentUnavailableView.search(text: trimmedQuery)
                 }
             }
-            .padding(.horizontal, Layout.page).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
             .animation(.smooth, value: category)
         }
         .scrollIndicators(.hidden)
@@ -68,28 +68,25 @@ struct MerchantsView: View {
     }
 
     private var filters: some View {
+        // Dieselben Chips wie auf dem Start: Tinte = aktiv, Fläche = inaktiv.
         ScrollView(.horizontal) {
-            GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
-                    segment("Alle", category == nil) { category = nil }
-                    ForEach(MerchantCategory.allCases) { c in segment(c.label, category == c) { category = c } }
-                }
-                .padding(.vertical, 4)
+            HStack(spacing: 8) {
+                segment("Alle", category == nil) { category = nil }
+                ForEach(MerchantCategory.allCases) { c in segment(c.label, category == c) { category = c } }
             }
         }
         .scrollIndicators(.hidden)
+        .scrollClipDisabled()
         .sensoryFeedback(.selection, trigger: category)
     }
 
     private func segment(_ title: String, _ on: Bool, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title).font(.scaled(14.5, weight: .semibold))
-                .foregroundStyle(on ? Color.onInk : Color.ink)
-                .padding(.horizontal, 16).padding(.vertical, 10)
-        }
-        .buttonStyle(.plain)
-        .glassEffect(on ? .regular.tint(Color.ink).interactive() : .regular.interactive(), in: .capsule)
-        .accessibilityAddTraits(on ? .isSelected : [])
+        FilterChip(title: title, on: on) { withAnimation(.snappy) { action() } }
+    }
+
+    private func header(_ title: String) -> some View {
+        Text(title).font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+            .accessibilityAddTraits(.isHeader)
     }
 
     private func row(_ m: Merchant) -> some View {
@@ -110,7 +107,8 @@ struct MerchantsView: View {
                 }
                 Label(m.category.label, systemImage: m.category.symbol)
                     .font(.scaled(13, weight: .medium)).foregroundStyle(m.category.tint)
-                Text(m.tip).font(.scaled(14)).foregroundStyle(Color.ink2).lineLimit(1)
+                Text(m.tip).font(.scaled(15)).foregroundStyle(Color.ink2).lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let url = m.balanceURL, let label = m.balanceCheck.linkLabel {
                     Link(destination: url) {
                         Label(label, systemImage: "arrow.up.right").font(.scaled(13, weight: .medium))
@@ -122,6 +120,6 @@ struct MerchantsView: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(14).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+        .padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
     }
 }

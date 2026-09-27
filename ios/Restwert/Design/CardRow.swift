@@ -39,7 +39,7 @@ struct CardRow: View {
                 .padding(.leading, typeSize.isAccessibilitySize ? 58 : 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 14).padding(.vertical, 12)
+        .padding(.leading, Layout.inset).padding(.trailing, 4).padding(.vertical, Layout.group)
         .opacity(card.isActive ? 1 : 0.5)
         .contentShape(.rect)
         .accessibilityElement(children: .ignore)
@@ -122,8 +122,13 @@ struct CardRow: View {
                 Text(hasValue ? "Rabatt" : "Code").font(.scaled(13)).foregroundStyle(Color.muted)
                     .lineLimit(1).fixedSize()
             }
-            if card.kind.isValueBased && card.balance < card.value {
+            // Balken immer einplanen (unsichtbar bei vollem Guthaben), damit alle Zeilen gleich hoch sind.
+            if card.kind.isValueBased {
                 RemainingBar(share: card.remainingShare).frame(width: 64)
+                    .opacity(card.balance < card.value ? 1 : 0)
+                    .accessibilityHidden(true)
+            } else {
+                Color.clear.frame(width: 64, height: 4)
             }
         }
     }

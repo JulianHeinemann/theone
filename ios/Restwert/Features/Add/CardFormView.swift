@@ -62,9 +62,9 @@ struct CardFormView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(errors, id: \.self) { Label($0, systemImage: "exclamationmark.circle.fill") }
                     }
-                    .font(.scaled(14, weight: .semibold)).foregroundStyle(Color.bad)
-                    .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.badSoft, in: .rect(cornerRadius: 16, style: .continuous))
+                    .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.bad)
+                    .padding(Layout.inset).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.badSoft, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
                     .modifier(Shake(animatableData: CGFloat(shake)))
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
@@ -160,7 +160,7 @@ struct CardFormView: View {
             if let photo, let image = UIImage(data: photo) {
                 Button { showPhoto = true } label: {
                     Image(uiImage: image).resizable().scaledToFill()
-                        .frame(width: 84, height: 84).clipShape(.rect(cornerRadius: 14, style: .continuous))
+                        .frame(width: 84, height: 84).clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Foto ansehen")
@@ -170,7 +170,7 @@ struct CardFormView: View {
                         PhotosPicker("Ersetzen", selection: $photoItem, matching: .images)
                         Button("Entfernen", role: .destructive) { self.photo = nil }
                     }
-                    .font(.scaled(14, weight: .medium))
+                    .font(.scaled(15, weight: .medium))
                 }
             } else {
                 VStack(alignment: .leading, spacing: 10) {
@@ -185,13 +185,13 @@ struct CardFormView: View {
                         PhotosPicker(selection: $photoItem, matching: .images) { Label("Aus Fotos", systemImage: "photo") }
                             .buttonStyle(.bordered)
                     }
-                    .font(.scaled(14, weight: .semibold)).tint(Color.ink)
+                    .font(.scaled(15, weight: .semibold)).tint(Color.ink)
                 }
             }
             Spacer(minLength: 0)
         }
-        .padding(14)
-        .background(Color.surface, in: .rect(cornerRadius: 16, style: .continuous))
+        .padding(Layout.inset)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
         .padding(.top, 8)
     }
 
@@ -224,7 +224,7 @@ struct CardFormView: View {
                             Button { shopText = m.name } label: {
                                 HStack(spacing: 6) {
                                     MerchantMark(merchantID: m.id, name: m.name, size: 22)
-                                    Text(m.name).font(.scaled(14, weight: .medium))
+                                    Text(m.name).font(.scaled(15, weight: .medium))
                                 }
                                 .padding(.horizontal, 10).padding(.vertical, 6)
                                 .background(Color.fill, in: .capsule)
@@ -263,7 +263,7 @@ struct CardFormView: View {
                     Spacer()
                     Image(systemName: "chevron.down").rotationEffect(.degrees(showMore ? 180 : 0))
                 }
-                .font(.scaled(14, weight: .medium)).foregroundStyle(Color.ink2)
+                .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
                 .padding(.horizontal, 4).padding(.vertical, 10).contentShape(.rect)
             }
             .buttonStyle(.plain)
@@ -273,13 +273,14 @@ struct CardFormView: View {
                     LabeledField(label: "Guthaben jetzt, falls schon benutzt", placeholder: "wie Betrag", text: $balanceText, keyboard: .decimalPad)
                 }
                 if kind == .giftCard { pinField }
-                LabeledField(label: "Für wen?", placeholder: "leer = für mich, z. B. Mia oder Oma", text: $owner)
+                LabeledField(label: "Für wen? Leer lassen, wenn für dich", placeholder: "z. B. Mia oder Oma", text: $owner)
                 Toggle(isOn: $forGifting) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Zum Verschenken").font(.scaled(16, weight: .semibold))
                         Text("Zählt nicht zu deinem Guthaben").font(.scaled(13)).foregroundStyle(Color.muted)
                     }
                 }
+                .tint(Color.toggleOn)
                 .tint(Color.ink)
                 .padding(.horizontal, 4).padding(.vertical, 10)
                 LabeledBox(label: "Barcode-Typ (wird meist automatisch erkannt)") {
@@ -299,7 +300,7 @@ struct CardFormView: View {
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 4)
-        .background(Color.surface, in: .rect(cornerRadius: 16, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
         .animation(.snappy, value: kind)
         .animation(.snappy, value: merchantID)
     }

@@ -33,7 +33,7 @@ struct RadarView: View {
                             let total = group.cards.filter(\.kind.isValueBased).reduce(0) { $0 + $1.balance }
                             if total > 0 {
                                 Text("\(total.euro) Guthaben")
-                                    .font(.scaled(14)).monospacedDigit().foregroundStyle(Color.muted)
+                                    .font(.scaled(15)).monospacedDigit().foregroundStyle(Color.muted)
                                     .accessibilityLabel("\(total.euro) Guthaben laufen in diesem Monat ab")
                             }
                         }

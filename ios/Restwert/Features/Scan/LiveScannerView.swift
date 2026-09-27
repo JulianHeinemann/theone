@@ -102,7 +102,7 @@ struct LiveScannerView: View {
         VStack(alignment: .leading, spacing: 14) {
             if spacers { Spacer() }
             Image(systemName: supported ? "camera.fill" : "photo.on.rectangle")
-                .font(.scaled(30)).foregroundStyle(Color.ink2)
+                .font(.scaled(28)).foregroundStyle(Color.ink2)
             Text(fallbackTitle)
                 .font(.scaled(22, weight: .bold))
             Text(fallbackText)
@@ -156,7 +156,7 @@ struct LiveScannerView: View {
             .disabled(!hasSomething)
         }
         .padding(18)
-        .glassEffect(.regular, in: .rect(cornerRadius: 28, style: .continuous))
+        .glassEffect(.regular, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
         .padding(16)
         .animation(.smooth, value: model.barcode)
     }

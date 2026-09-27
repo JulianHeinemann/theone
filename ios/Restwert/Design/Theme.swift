@@ -50,8 +50,13 @@ extension Color {
     static let warnSoft = Color(light: 0xC4221A, dark: 0xFF7A70).opacity(0.12)
     /// Frist 15–30 Tage – nur als Text.
     static let soon = Color(light: 0xB35A00, dark: 0xFFB340)
-    /// Hinweis-Streifen (z. B. „Betrag offen“).
-    static let notice = Color(hex: 0xFF9F0A)
+    /// Hinweis-Streifen (z. B. „Betrag offen“): dieselbe Tönung wie Fristen 15–30 Tage, kein eigenes Orange.
+    static let notice = soon
+    /// Schalter „an“: Grün wie iOS, weil Tinte im Dunkeln hell ist und der weiße Knopf sonst verschwindet.
+    static let toggleOn = Color(light: 0x1F7A4D, dark: 0x34A76E)
+    /// Schatten: im Hellen zarte Tinte, im Dunkeln echtes Schwarz (helle Tinte würde grau schimmern).
+    static let shade = Color(uiColor: UIColor { $0.userInterfaceStyle == .dark
+        ? UIColor.black.withAlphaComponent(0.45) : UIColor(red: 0.07, green: 0.07, blue: 0.07, alpha: 0.08) })
     static let paper = Color(light: 0xFBF9F4, dark: 0x24221E)
     static let disabledFill = Color(light: 0xE4E0D7, dark: 0x2E2D2A)
     static let disabledText = Color(light: 0x5C5C63, dark: 0xA8A8AE)
@@ -108,11 +113,16 @@ extension VoucherStatus {
 
 // MARK: - Raster
 
-/// Ein Raster für alle Screens: 16 pt Seitenrand, 24 pt zwischen Abschnitten, feste Radien.
+/// Ein Raster für alle Screens: Stufen 4/8/12/16/20/24/32, 16 pt Seitenrand, 24 pt zwischen Abschnitten, feste Radien.
 enum Layout {
     static let page: CGFloat = 16
     static let section: CGFloat = 24
     static let group: CGFloat = 12
+    /// Innenabstand aller Karten und Kacheln; Tickets bekommen etwas mehr.
+    static let inset: CGFloat = 16
+    static let ticketInset: CGFloat = 20
+    /// Mindestgröße für Tippziele.
+    static let tap: CGFloat = 44
     /// Radien: groß 24 (Karten), mittel 16 (Knöpfe, Kacheln), klein 10 (Felder); sonst Capsule.
     static let cardRadius: CGFloat = 24
     static let buttonRadius: CGFloat = 16
@@ -120,9 +130,14 @@ enum Layout {
 }
 
 extension Font {
-    /// Beträge und Zahlen: SF Rounded, fett, gleich breite Ziffern.
+    /// Beträge in Listen: SF Rounded, fett, gleich breite Ziffern (damit Spalten fluchten).
     static func amount(_ size: CGFloat) -> Font {
         .scaled(size, weight: .heavy, design: .rounded).monospacedDigit()
+    }
+
+    /// Große Einzelbeträge: proportionale Ziffern, sonst klafft hinter der „1“ ein Loch.
+    static func display(_ size: CGFloat) -> Font {
+        .scaled(size, weight: .heavy, design: .rounded)
     }
 }
 
@@ -135,6 +150,8 @@ struct FilledButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.scaled(16, weight: .bold))
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, Layout.inset).padding(.vertical, 12)
             .frame(maxWidth: .infinity, minHeight: 56)
             .foregroundStyle(isEnabled ? foreground : Color.disabledText)
             .background(isEnabled ? background : Color.disabledFill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
@@ -152,29 +169,22 @@ extension ButtonStyle where Self == FilledButtonStyle {
 
 // MARK: - Bausteine
 
-/// Ruhige Aktionszeile (Icon, Titel, optional Untertitel, Pfeil) für Neben-Aktionen in einer Gruppe.
-struct ActionRow: View {
-    let icon: String
+/// Auswahl-Chip für alle Filter der App: Tinte = aktiv, Fläche = inaktiv, 44 pt hoch.
+struct FilterChip: View {
     let title: String
-    var subtitle: String? = nil
-    var chevron = true
+    let on: Bool
+    let action: () -> Void
 
     var body: some View {
-        HStack(spacing: 14) {
-            Image(systemName: icon).font(.scaled(17, weight: .medium)).foregroundStyle(Color.ink)
-                .frame(width: 36, height: 36)
-                .background(Color.fill, in: .circle)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
-                if let subtitle { Text(subtitle).font(.scaled(13)).foregroundStyle(Color.muted) }
-            }
-            Spacer(minLength: 8)
-            if chevron {
-                Image(systemName: "chevron.right").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
-            }
+        Button(action: action) {
+            Text(title).font(.scaled(15, weight: .semibold))
+                .foregroundStyle(on ? Color.onInk : Color.ink)
+                .padding(.horizontal, Layout.inset).frame(minHeight: Layout.tap)
+                .background(on ? Color.ink : Color.surface, in: .capsule)
+                .contentShape(.capsule)
         }
-        .padding(.horizontal, 16).padding(.vertical, 12)
-        .contentShape(.rect)
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(on ? .isSelected : [])
     }
 }
 
@@ -189,26 +199,6 @@ struct Chip: View {
             .foregroundStyle(fg)
             .padding(.horizontal, 10).padding(.vertical, 4)
             .background(bg, in: .capsule)
-    }
-}
-
-struct SectionHeader<Trailing: View>: View {
-    let title: String
-    @ViewBuilder var trailing: Trailing
-
-    var body: some View {
-        HStack {
-            Text(title).font(.scaled(20, weight: .bold))
-            Spacer()
-            trailing
-        }
-    }
-}
-
-extension SectionHeader where Trailing == EmptyView {
-    init(title: String) {
-        self.title = title
-        self.trailing = EmptyView()
     }
 }
 
@@ -241,25 +231,6 @@ struct LabeledField: View {
     }
 }
 
-/// Perforierte Trennlinie wie bei einem Ticket.
-struct Perforation: View {
-    var holeColor: Color = .page
-
-    var body: some View {
-        ZStack {
-            HLine().stroke(style: StrokeStyle(lineWidth: 2, dash: [6, 6])).foregroundStyle(Color.line)
-                .frame(height: 2).padding(.horizontal, 22)
-            HStack {
-                Circle().fill(holeColor).frame(width: 28, height: 28).offset(x: -14)
-                Spacer()
-                Circle().fill(holeColor).frame(width: 28, height: 28).offset(x: 14)
-            }
-        }
-        .frame(height: 28)
-        .accessibilityHidden(true)
-    }
-}
-
 struct HLine: Shape {
     func path(in rect: CGRect) -> Path {
         Path { p in
@@ -269,9 +240,27 @@ struct HLine: Shape {
     }
 }
 
+/// Gestrichelte Linie mit gleichmäßig verteilten Strichen: beginnt und endet immer mit einem vollen Strich.
+/// Eine Strichelung für die ganze App (Ticket, Bon).
+struct DashLine: Shape {
+    var dash: CGFloat = 4
+    var gap: CGFloat = 4
+
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        let n = max(1, Int(((rect.width + gap) / (dash + gap)).rounded(.down)))
+        let step = n > 1 ? (rect.width - dash) / CGFloat(n - 1) : 0
+        for i in 0..<n {
+            let x = rect.minX + CGFloat(i) * step
+            p.addRect(CGRect(x: x, y: rect.midY - 0.5, width: dash, height: 1))
+        }
+        return p
+    }
+}
+
 struct DashedRule: View {
     var body: some View {
-        HLine().stroke(style: StrokeStyle(lineWidth: 1.2, dash: [5, 4])).foregroundStyle(Color.muted.opacity(0.6)).frame(height: 1)
+        DashLine().fill(Color.muted.opacity(0.6)).frame(height: 1).accessibilityHidden(true)
     }
 }
 
@@ -307,13 +296,13 @@ struct ReceiptPaper<Content: View>: View {
         VStack(spacing: 0) {
             ZigZag(top: true).fill(Color.paper).frame(height: 10)
             content
-                .padding(.horizontal, 18).padding(.vertical, 8)
+                .padding(.horizontal, Layout.inset).padding(.vertical, 8)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.paper)
             ZigZag(top: false).fill(Color.paper).frame(height: 10)
         }
         .foregroundStyle(Color.ink)
-        .shadow(color: Color.ink.opacity(0.08), radius: 12, y: 6)
+        .shadow(color: Color.shade, radius: 12, y: 6)
     }
 }
 
@@ -329,16 +318,16 @@ struct Shake: GeometryEffect {
 }
 
 extension View {
-    func cardSurface(radius: CGFloat = 26) -> some View {
+    func cardSurface(radius: CGFloat = Layout.cardRadius) -> some View {
         background(Color.surface, in: .rect(cornerRadius: radius, style: .continuous))
-            .shadow(color: Color.ink.opacity(0.06), radius: 14, y: 6)
+            .shadow(color: Color.shade, radius: 14, y: 6)
     }
 
-    /// Einheitlicher Seitenhintergrund. Harte Scroll-Kante oben, damit Inhalt nicht lesbar unter dem Titel durchläuft.
+    /// Einheitlicher Seitenhintergrund mit weicher Scroll-Kante oben auf allen Screens.
     func pageBackground() -> some View {
-        scrollEdgeEffectStyle(.hard, for: .top)
-            // Platz für die schwebende Tab-Leiste, damit die letzte Zeile am Listenende ganz frei steht.
-            .contentMargins(.bottom, 120, for: .scrollContent)
+        scrollEdgeEffectStyle(.soft, for: .top)
+            // Die schwebende Tab-Leiste steckt schon in der Safe Area; nur ein Abschnittsabstand Luft dazu.
+            .contentMargins(.bottom, Layout.section, for: .scrollContent)
             .background(Color.page.ignoresSafeArea())
     }
 }
@@ -388,11 +377,30 @@ struct TicketShape: Shape {
     }
 }
 
+/// Eine Hälfte eines Tickets zum Abreißen: außen gerundet, an der Naht gerade mit halben Kerben.
+struct TicketHalf: Shape {
+    var top: Bool
+    var radius: CGFloat = 24
+    var notchRadius: CGFloat = 9
+
+    func path(in rect: CGRect) -> Path {
+        let r = top ? RectangleCornerRadii(topLeading: radius, topTrailing: radius)
+                    : RectangleCornerRadii(bottomLeading: radius, bottomTrailing: radius)
+        var p = UnevenRoundedRectangle(cornerRadii: r, style: .continuous).path(in: rect)
+        let y = top ? rect.maxY : rect.minY
+        var cut = Path()
+        cut.addEllipse(in: CGRect(x: rect.minX - notchRadius, y: y - notchRadius, width: notchRadius * 2, height: notchRadius * 2))
+        cut.addEllipse(in: CGRect(x: rect.maxX - notchRadius, y: y - notchRadius, width: notchRadius * 2, height: notchRadius * 2))
+        p = p.subtracting(cut)
+        return p
+    }
+}
+
 /// Gestrichelte Abrisslinie zwischen den Kerben.
 struct TearLine: View {
     var color: Color = .ink
     var body: some View {
-        HLine().stroke(style: StrokeStyle(lineWidth: 1, dash: [4, 4])).foregroundStyle(color.opacity(0.22))
+        DashLine().fill(color.opacity(0.3))
             .frame(height: 1)
             .accessibilityHidden(true)
     }
@@ -400,7 +408,8 @@ struct TearLine: View {
 
 // MARK: - Betrag
 
-/// Beträge wie auf einem Preisschild: große Euro, kleine hochgestellte Cent und €-Zeichen.
+/// Beträge wie auf einem Preisschild: große Euro mit Komma auf der Grundlinie, kleine hochgestellte Cent und €-Zeichen.
+/// Die Cent schließen oben mit den Euro-Ziffern ab.
 struct AmountText: View {
     let value: Double
     var size: CGFloat = 56
@@ -413,9 +422,8 @@ struct AmountText: View {
 
     var body: some View {
         let (euros, cents) = parts
-        (Text(euros).font(.amount(size)).kerning(-size * 0.025)
-         + Text(",\(cents) €").font(.amount(size * 0.46)).baselineOffset(size * 0.36))
-            .monospacedDigit()
+        (Text("\(euros),").font(.display(size)).kerning(-size * 0.02)
+         + Text("\(cents) €").font(.display(size * 0.46)).baselineOffset(size * 0.40))
             .contentTransition(.numericText(value: value))
             .lineLimit(1).minimumScaleFactor(0.5)
             .accessibilityLabel(value.euro)
@@ -431,14 +439,34 @@ struct UsedUpStamp: View {
     var body: some View {
         Text(text)
             .font(.scaled(22, weight: .heavy, design: .rounded)).kerning(3)
-            .foregroundStyle(Color.ink.opacity(0.75))
-            .padding(.horizontal, 14).padding(.vertical, 6)
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.ink.opacity(0.75), lineWidth: 3))
-            .background(Color.brandYellow, in: .rect(cornerRadius: 8))
+            // Immer Tinte auf Gelb – `ink` wäre im Dunkeln hell und damit unlesbar.
+            .foregroundStyle(Color.onBrand)
+            .padding(.horizontal, 16).padding(.vertical, 8)
+            .overlay(RoundedRectangle(cornerRadius: Layout.controlRadius).strokeBorder(Color.onBrand, lineWidth: 3))
+            .background(Color.brandYellow, in: .rect(cornerRadius: Layout.controlRadius))
             .rotationEffect(.degrees(-8))
             .scaleEffect(landed || reduceMotion ? 1 : 1.3)
             .opacity(landed || reduceMotion ? 1 : 0)
             .onAppear { withAnimation(.spring(duration: 0.25, bounce: 0.3)) { landed = true } }
             .accessibilityLabel("Aufgebraucht")
+    }
+}
+
+// MARK: - Wortmarke
+
+/// Wortmarke: „Restwert“ in der Betragsschrift mit gelbem Punkt. Überall dieselbe, der Punkt wächst mit der Schrift.
+struct Wordmark: View {
+    var size: CGFloat = 30
+    @ScaledMetric(relativeTo: .largeTitle) private var scale: CGFloat = 1
+
+    var body: some View {
+        HStack(alignment: .lastTextBaseline, spacing: size * 0.1) {
+            Text("Restwert").font(.scaled(size, weight: .heavy, design: .rounded)).foregroundStyle(Color.ink)
+            Circle().fill(Color.brandYellow).frame(width: size * 0.36 * scale, height: size * 0.36 * scale)
+                .overlay(Circle().strokeBorder(Color.ink.opacity(0.2), lineWidth: 0.5))
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Restwert")
+        .accessibilityAddTraits(.isHeader)
     }
 }

@@ -62,7 +62,7 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Layout.section) {
                 // Der Kopf beschreibt immer den ganzen Bestand, unabhängig von Filter und Suche.
-                Wordmark().padding(.horizontal, 4)
+                Wordmark()
                 TotalHeader(total: store.total, cards: store.activeCards.filter { !$0.forGifting }, soon: dueSoonAll.count,
                             examples: !store.cards.isEmpty && store.cards.allSatisfy(\.isExample))
                 if showFilters { filterBar }
@@ -83,7 +83,7 @@ struct HomeView: View {
                     NavigationLink(value: Route.radar) {
                         Label("Alle Ablauftermine", systemImage: "calendar")
                             .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
-                            .frame(maxWidth: .infinity, minHeight: 50)
+                            .frame(maxWidth: .infinity, minHeight: 56)
                             .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                     }
                     .buttonStyle(.plain)
@@ -118,13 +118,13 @@ struct HomeView: View {
     @ViewBuilder
     private func section(_ title: String, cards: [GiftCard], sortable: Bool = false) -> some View {
         if !cards.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: Layout.group) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(title).font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                        .accessibilityAddTraits(.isHeader)
                     Spacer()
                     if sortable { sortMenu }
                 }
-                .padding(.horizontal, 4)
                 VStack(spacing: 0) {
                     ForEach(Array(cards.enumerated()), id: \.element.id) { i, c in
                         if i > 0 { Divider().padding(.leading, 72) }
@@ -137,10 +137,10 @@ struct HomeView: View {
                             // Sichtbarer Weg zu Kasse, Bearbeiten, Archivieren, Entfernen (nicht nur langes Drücken).
                             Menu { rowMenu(c) } label: {
                                 Image(systemName: "ellipsis").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
-                                    .frame(width: 36, height: 44).contentShape(.rect)
+                                    .frame(width: Layout.tap, height: Layout.tap).contentShape(.rect)
                             }
                             .accessibilityLabel("Aktionen für \(c.name)")
-                            .padding(.trailing, 6)
+                            .padding(.trailing, 4)
                         }
                         .contextMenu { rowMenu(c) }
                     }
@@ -168,15 +168,7 @@ struct HomeView: View {
     }
 
     private func chip(_ title: String, _ value: CardFilter) -> some View {
-        let on = activeFilter == value
-        return Button { withAnimation(.snappy) { filter = value } } label: {
-            Text(title).font(.scaled(14, weight: .semibold))
-                .foregroundStyle(on ? Color.onInk : Color.ink)
-                .padding(.horizontal, 14).frame(minHeight: 36)
-                .background(on ? Color.ink : Color.surface, in: .capsule)
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(on ? .isSelected : [])
+        FilterChip(title: title, on: activeFilter == value) { withAnimation(.snappy) { filter = value } }
     }
 
     @ViewBuilder
@@ -197,7 +189,7 @@ struct HomeView: View {
 
     /// Aufgebrauchte, abgelaufene und archivierte Gutscheine, eingeklappt, damit die Liste ruhig bleibt.
     private var doneSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: Layout.group) {
             Button {
                 withAnimation(.snappy) { showDone.toggle() }
             } label: {
@@ -208,9 +200,10 @@ struct HomeView: View {
                     Image(systemName: "chevron.down").rotationEffect(.degrees(showDone ? 180 : 0))
                         .font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
                 }
-                .padding(.horizontal, 4).contentShape(.rect)
+                .frame(minHeight: Layout.tap).contentShape(.rect)
             }
             .buttonStyle(.plain)
+            .accessibilityAddTraits(.isHeader)
             if showDone {
                 VStack(spacing: 0) {
                     ForEach(Array(done.enumerated()), id: \.element.id) { i, c in
@@ -220,7 +213,7 @@ struct HomeView: View {
                                 .buttonStyle(.plain)
                             Button("Entfernen", systemImage: "trash") { deleting = c }
                                 .labelStyle(.iconOnly).accessibilityLabel("\(c.name) entfernen").foregroundStyle(Color.bad)
-                                .frame(width: 44, height: 44).padding(.trailing, 8)
+                                .frame(width: Layout.tap, height: Layout.tap).padding(.trailing, 4)
                         }
                         .contextMenu { rowMenu(c) }
                     }
@@ -238,9 +231,10 @@ struct HomeView: View {
         } label: {
             HStack(spacing: 4) {
                 Text(order.label)
-                Image(systemName: "chevron.up.chevron.down").font(.scaled(11, weight: .semibold))
+                Image(systemName: "chevron.up.chevron.down").font(.scaled(12, weight: .semibold))
             }
-            .font(.scaled(14)).foregroundStyle(Color.muted)
+            .font(.scaled(15)).foregroundStyle(Color.muted)
+            .frame(minHeight: Layout.tap).contentShape(.rect)
         }
     }
 }
@@ -278,7 +272,7 @@ private struct TotalHeader: View {
                 AmountText(value: total, size: big ? 60 : 36)
                     .animation(.snappy, value: total)
             }
-            .padding(.horizontal, 20).padding(.top, big ? 18 : 14).padding(.bottom, 14)
+            .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.ticketInset).padding(.bottom, Layout.inset)
             .frame(maxWidth: .infinity, alignment: .leading)
             // Gemessen, damit die Kerben bei jeder Schriftgröße genau auf der Abrisslinie sitzen.
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tearY = $0 }
@@ -289,7 +283,7 @@ private struct TotalHeader: View {
                 if let codesNote { Text(codesNote).font(.scaled(13)).opacity(0.75) }
                 if examples { Text("Nur Beispiele – dein erster Gutschein ersetzt sie").font(.scaled(13)).opacity(0.75) }
             }
-            .padding(.horizontal, 20).padding(.vertical, 12)
+            .padding(.horizontal, Layout.ticketInset).padding(.vertical, Layout.group)
         }
         .foregroundStyle(Color.sumText)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -298,19 +292,6 @@ private struct TotalHeader: View {
     }
 }
 
-/// Wortmarke: „Restwert“ in der Betragsschrift mit gelbem Punkt.
-private struct Wordmark: View {
-    var body: some View {
-        HStack(alignment: .lastTextBaseline, spacing: 3) {
-            Text("Restwert").font(.scaled(30, weight: .heavy, design: .rounded)).foregroundStyle(Color.ink)
-            Circle().fill(Color.brandYellow).frame(width: 9, height: 9)
-                .overlay(Circle().strokeBorder(Color.ink.opacity(0.15), lineWidth: 0.5))
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Restwert")
-        .accessibilityAddTraits(.isHeader)
-    }
-}
 
 private struct EmptyState: View {
     let onScan: () -> Void

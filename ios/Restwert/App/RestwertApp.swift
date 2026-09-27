@@ -45,6 +45,8 @@ enum Route: Hashable {
     case card(UUID)
     case checkout(UUID)
     case keypad(UUID)
+    /// Ziffernblock direkt nach „Bezahlt“ an der Kasse: zählt als Kassentest.
+    case pay(UUID)
     case radar
     case tests
 }
@@ -92,6 +94,7 @@ extension View {
                     .navigationTransition(.zoom(sourceID: id, in: zoom))
             case .checkout(let id): CheckoutView(cardID: id)
             case .keypad(let id): KeypadView(cardID: id)
+            case .pay(let id): KeypadView(cardID: id, checkout: true)
             case .radar: RadarView(zoom: zoom)
             case .tests: TestsView()
             }
@@ -272,8 +275,8 @@ struct ToastView: View {
         .foregroundStyle(Color.onInk)
         .tint(Color.onInk)
         .padding(.horizontal, 16).padding(.vertical, 14)
-        .background(Color.ink, in: .rect(cornerRadius: 16, style: .continuous))
-        .shadow(color: Color.ink.opacity(0.2), radius: 16, y: 6)
+        .background(Color.ink, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+        .shadow(color: Color.shade, radius: 16, y: 6)
         .task {
             // Vorlesen, und mit VoiceOver ohne Zeitlimit stehen lassen, damit „Rückgängig“ erreichbar bleibt.
             AccessibilityNotification.Announcement(toast.undo == nil ? toast.message : "\(toast.message). Rückgängig möglich.").post()

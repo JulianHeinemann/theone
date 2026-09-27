@@ -54,7 +54,7 @@ struct ScanView: View {
                         .font(.scaled(15, weight: .semibold))
                 }
                 .padding(28)
-                .glassEffect(.regular, in: .rect(cornerRadius: 24, style: .continuous))
+                .glassEffect(.regular, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                 .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
         }
@@ -106,7 +106,7 @@ struct ScanView: View {
     // MARK: Quellen
 
     private var sources: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: Layout.section) {
             Button { showScanner = true } label: { ViewfinderTeaser() }
                 .buttonStyle(.plain)
             VStack(spacing: 0) {
@@ -130,12 +130,12 @@ struct ScanView: View {
             .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
             VStack(alignment: .leading, spacing: 6) {
                 Label("PDF aus einer Mail übernehmen", systemImage: "envelope.open").font(.scaled(15, weight: .semibold))
-                Text("1. Anhang in Mail lange drücken  2. „Teilen“  3. Restwert wählen")
-                    .font(.scaled(14)).foregroundStyle(Color.ink2)
+                Text("1. Anhang in Mail lange drücken  2. „Teilen“  3. Rest\u{2060}wert wählen")
+                    .font(.scaled(15)).foregroundStyle(Color.ink2)
             }
             .foregroundStyle(Color.ink)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
+            .padding(Layout.inset)
             .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
             Label("Texterkennung läuft nur auf deinem iPhone.", systemImage: "lock")
                 .font(.scaled(13)).foregroundStyle(Color.muted).padding(.horizontal, 4)
@@ -213,17 +213,17 @@ private struct EmailImportSheet: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Kopier in Mail den Text der Gutschein-E-Mail und füg ihn hier ein. Restwert sucht Shop, Wert, Code, PIN und Ablaufdatum heraus.")
-                    .font(.scaled(14)).foregroundStyle(Color.ink2)
+                Text("Kopier in Mail den Text der Gutschein-E-Mail und füg ihn hier ein. Rest\u{2060}wert sucht Shop, Wert, Code, PIN und Ablaufdatum heraus.")
+                    .font(.scaled(15)).foregroundStyle(Color.ink2)
                 PasteButton(payloadType: String.self) { strings in
                     Task { @MainActor in text = strings.joined(separator: "\n") }
                 }
                 .labelStyle(.titleAndIcon)
                 TextEditor(text: $text)
-                    .font(.scaled(14))
+                    .font(.scaled(15))
                     .scrollContentBackground(.hidden)
-                    .padding(10)
-                    .background(Color.fill, in: .rect(cornerRadius: 16, style: .continuous))
+                    .padding(Layout.group)
+                    .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
                 Button("Auswerten") {
                     dismiss()
                     onAnalyze(text)
@@ -247,18 +247,19 @@ struct ViewfinderTeaser: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ViewfinderCorners()
-                .stroke(Color.white.opacity(0.9), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .stroke(Color.onInk.opacity(0.9), style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .frame(width: 64, height: 44)
             Spacer(minLength: 28)
             Text("Karte scannen").font(.scaled(22, weight: .bold))
             Text("Barcode und Text auf der Rückseite werden automatisch gelesen.")
-                .font(.scaled(14)).foregroundStyle(.white.opacity(0.7))
+                .font(.scaled(15)).foregroundStyle(Color.onInk.opacity(0.8))
                 .padding(.top, 4)
         }
-        .foregroundStyle(.white)
-        .padding(20)
+        .foregroundStyle(Color.onInk)
+        .padding(Layout.ticketInset)
         .frame(maxWidth: .infinity, minHeight: 190, alignment: .leading)
-        .background(Color(light: 0x0E0E10, dark: 0x26262B), in: .rect(cornerRadius: 22, style: .continuous))
+        // Hauptaktion in Tinte, als Ticket: hier entsteht ein neuer Gutschein.
+        .background(Color.ink, in: TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchY: 0.5))
         .contentShape(.rect)
     }
 }

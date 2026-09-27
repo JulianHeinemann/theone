@@ -25,12 +25,12 @@ struct ScanResultView: View {
                     MerchantMark(merchantID: draft.merchantID, name: merchant?.name ?? draft.customName ?? "?")
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Erkannter Gutschein").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
-                        Text(merchant?.name ?? draft.customName ?? "Shop nicht erkannt").font(.scaled(19, weight: .bold))
+                        Text(merchant?.name ?? draft.customName ?? "Shop nicht erkannt").font(.scaled(20, weight: .bold))
                     }
                     Spacer()
                     if outcome.usedAppleIntelligence {
                         Image(systemName: "apple.intelligence")
-                            .font(.scaled(18, weight: .semibold))
+                            .font(.scaled(17, weight: .semibold))
                             .symbolRenderingMode(.multicolor)
                             .symbolEffect(.bounce, value: revealed)
                             .accessibilityLabel("Mit Apple Intelligence gelesen")
@@ -39,7 +39,7 @@ struct ScanResultView: View {
                 if let img = outcome.photo.flatMap(UIImage.init(data:)) {
                     Image(uiImage: img).resizable().scaledToFill()
                         .frame(height: 150).frame(maxWidth: .infinity)
-                        .clipShape(.rect(cornerRadius: 18, style: .continuous))
+                        .clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
                 }
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                     cell("Wert", draft.percent.map { "\(Int($0)) %" } ?? draft.value.map(\.euro) ?? "–", index: 0)
@@ -51,18 +51,18 @@ struct ScanResultView: View {
                     BarcodeView(number: code, format: format, height: 70).padding(.top, 4)
                 }
             }
-            .padding(18).cardSurface(radius: Layout.cardRadius)
+            .padding(Layout.inset).cardSurface(radius: Layout.cardRadius)
 
             VStack(alignment: .leading, spacing: 10) {
                 Label("Echtheits-Hinweis", systemImage: "checkmark.shield").font(.scaled(17, weight: .bold))
                 ForEach(checks(draft: draft, merchant: merchant)) { check in
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: icon(check.level)).foregroundStyle(tint(check.level))
-                        Text(check.text).font(.scaled(14)).foregroundStyle(Color.ink2)
+                        Text(check.text).font(.scaled(15)).foregroundStyle(Color.ink2)
                     }
                 }
             }
-            .padding(18).frame(maxWidth: .infinity, alignment: .leading).cardSurface(radius: Layout.cardRadius)
+            .padding(Layout.inset).frame(maxWidth: .infinity, alignment: .leading).cardSurface(radius: Layout.cardRadius)
 
             Button("Hinzufügen", action: onAdd).buttonStyle(.primary)
             Button("Erneut scannen", action: onRescan).buttonStyle(.quiet)
@@ -77,8 +77,8 @@ struct ScanResultView: View {
             Text(label).font(.scaled(12)).foregroundStyle(Color.muted)
             Text(value).font(.scaled(15, weight: .bold)).lineLimit(1).minimumScaleFactor(0.6)
         }
-        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.fill, in: .rect(cornerRadius: 16, style: .continuous))
+        .padding(Layout.group).frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
         .opacity(revealed ? 1 : 0)
         .offset(y: revealed ? 0 : 12)
         .animation(.spring(duration: 0.5, bounce: 0.3).delay(0.08 * Double(index)), value: revealed)

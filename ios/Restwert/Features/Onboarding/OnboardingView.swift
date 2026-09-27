@@ -4,6 +4,7 @@ import RestwertKit
 /// Einstieg: zeigt direkt, wie die App aussieht, statt Deko-Grafik.
 struct OnboardingView: View {
     var onStart: () -> Void
+    @State private var tearY: CGFloat = 100
 
     /// Bewusst gemischt: Kette, Papierzettel vom Café, Online-Code, Stadtgutschein.
     private let preview: [(id: String?, name: String, due: String, dueSoon: Bool, amount: String, of: String)] = [
@@ -16,13 +17,13 @@ struct OnboardingView: View {
     var body: some View {
         // Scrollbar, damit bei großer Schrift alles lesbar bleibt; der Knopf bleibt fest unten.
         ScrollView {
-            content.padding(.horizontal, 20).padding(.bottom, 16)
+            content.padding(.horizontal, Layout.page).padding(.bottom, Layout.inset)
         }
         .scrollBounceBehavior(.basedOnSize)
         .safeAreaInset(edge: .bottom) {
             Button("Los geht's", action: onStart)
                 .buttonStyle(.primary)
-                .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 16)
+                .padding(.horizontal, Layout.page).padding(.top, 8).padding(.bottom, Layout.inset)
                 .background(Color.page)
         }
         .foregroundStyle(Color.ink)
@@ -31,48 +32,73 @@ struct OnboardingView: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Restwert").font(.scaled(17, weight: .bold))
-                .padding(.top, 24)
-            Text("Deine Gutscheine,\nan einem Ort.")
-                .font(.scaled(36, weight: .bold)).kerning(-0.8)
+            Wordmark()
+                .padding(.top, Layout.section)
+            Text("Kein Restwert\nbleibt liegen.")
+                .font(.scaled(34, weight: .heavy, design: .rounded)).kerning(-0.6)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 28)
-            Text("Ob Karte, Papierzettel vom Café oder Code aus einer Mail: fotografieren, Betrag eintragen, fertig. Vor dem Ablauf kommt eine Erinnerung, an der Kasse zeigst du den Barcode.")
+                .padding(.top, Layout.section)
+            Text("Karte, Papierzettel vom Café oder Code aus einer Mail: fotografieren, fertig. Vor dem Ablauf kommt eine Erinnerung, an der Kasse zeigst du den Code.")
                 .font(.scaled(17)).foregroundStyle(Color.ink2)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 14)
+                .padding(.top, Layout.group)
             Text("So sieht es aus (Beispiel)").font(.scaled(13, weight: .medium)).foregroundStyle(Color.muted)
-                .padding(.horizontal, 4).padding(.top, 24).padding(.bottom, 8)
-            VStack(spacing: 0) {
-                ForEach(Array(preview.enumerated()), id: \.offset) { i, row in
-                    if i > 0 { Divider().padding(.leading, 72) }
-                    HStack(spacing: 14) {
-                        MerchantMark(merchantID: row.id, name: row.name)
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(row.name).font(.scaled(16, weight: .semibold))
-                            Text(row.due).font(.scaled(13, weight: row.dueSoon ? .semibold : .regular))
+                .padding(.top, Layout.section).padding(.bottom, Layout.group)
+            VStack(spacing: Layout.group) {
+                // Dasselbe gelbe Ticket wie auf dem Start: die Marke gleich beim ersten Kontakt.
+                VStack(alignment: .leading, spacing: 0) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Noch drauf").font(.scaled(15, weight: .semibold)).opacity(0.75)
+                        AmountText(value: 75, size: 48)
+                    }
+                    .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.ticketInset).padding(.bottom, Layout.inset)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tearY = $0 }
+                    TearLine(color: .sumText).padding(.horizontal, Layout.inset)
+                    Text("4 Karten · 1 bald weg").font(.scaled(15, weight: .semibold))
+                        .padding(.horizontal, Layout.ticketInset).padding(.vertical, Layout.group)
+                }
+                .foregroundStyle(Color.sumText)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.sumFill, in: TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchFromTop: tearY + 0.5))
+                VStack(spacing: 0) {
+                    ForEach(Array(preview.enumerated()), id: \.offset) { i, row in
+                        if i > 0 { Divider().padding(.leading, 74) }
+                        HStack(spacing: 14) {
+                            MerchantMark(merchantID: row.id, name: row.name)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(row.name).font(.scaled(16, weight: .semibold))
+                                Label {
+                                    Text(row.due)
+                                } icon: {
+                                    if row.dueSoon { Image(systemName: "clock") }
+                                }
+                                .labelStyle(DueLabelStyle())
+                                .font(.scaled(13, weight: row.dueSoon ? .semibold : .regular))
                                 .fixedSize(horizontal: false, vertical: true)
                                 .foregroundStyle(row.dueSoon ? Color.warn : Color.muted)
+                                .padding(.horizontal, row.dueSoon ? 8 : 0).padding(.vertical, row.dueSoon ? 3 : 0)
+                                .background(row.dueSoon ? Color.warnSoft : Color.clear, in: .capsule)
+                            }
+                            Spacer()
+                            VStack(alignment: .trailing, spacing: 3) {
+                                Text(row.amount).font(.amount(20))
+                                Text(row.of).font(.scaled(13)).monospacedDigit().foregroundStyle(Color.muted)
+                            }
                         }
-                        Spacer()
-                        VStack(alignment: .trailing, spacing: 3) {
-                            Text(row.amount).font(.scaled(17, weight: .semibold)).monospacedDigit()
-                            Text(row.of).font(.scaled(12)).foregroundStyle(Color.muted)
-                        }
+                        .padding(.horizontal, Layout.inset).padding(.vertical, Layout.group)
                     }
-                    .padding(.horizontal, 14).padding(.vertical, 12)
                 }
+                .foregroundStyle(Color.ink)
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
             }
-            .foregroundStyle(Color.ink)
-            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 8) {
                 Label("Kein Konto, keine Werbung, keine Tracker", systemImage: "person.crop.circle.badge.xmark")
                 Label("Kein Server von uns: Wir sehen deine Gutscheine nie", systemImage: "lock")
             }
             .fixedSize(horizontal: false, vertical: true)
-            .font(.scaled(14)).foregroundStyle(Color.ink2)
-            .padding(.top, 24)
+            .font(.scaled(15)).foregroundStyle(Color.ink2)
+            .padding(.top, Layout.section)
         }
     }
 }

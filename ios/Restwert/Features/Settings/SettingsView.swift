@@ -64,7 +64,7 @@ struct SettingsView: View {
             } header: {
                 Text("Sicherheit & Erinnerungen")
             }
-            .tint(Color.ink)
+            .tint(Color.toggleOn)
 
             Section {
                 Picker(selection: $sortRaw) {
@@ -93,7 +93,7 @@ struct SettingsView: View {
             } header: {
                 Text("So funktioniert Restwert")
             }
-            .font(.scaled(14))
+            .font(.scaled(15))
             .foregroundStyle(Color.ink2)
 
             Section {
@@ -105,7 +105,7 @@ struct SettingsView: View {
                     ShareLink(item: url) { Label("Als Tabelle exportieren (CSV)", systemImage: "tablecells") }
                 }
                 if let restoreMessage {
-                    Text(restoreMessage).font(.scaled(14)).foregroundStyle(Color.ink2)
+                    Text(restoreMessage).font(.scaled(15)).foregroundStyle(Color.ink2)
                 }
             } header: {
                 Text("Sicherung")
@@ -223,13 +223,13 @@ struct SettingsView: View {
                 Text(inCloud ? "Ende-zu-Ende verschlüsselt, auf allen deinen Apple-Geräten."
                      : syncOn ? "Bis iCloud bereit ist, bleibt alles auf diesem iPhone."
                      : "Nichts geht an uns. Texterkennung läuft auf dem Gerät. Das iCloud-Backup deines iPhones enthält die Gutscheine.")
-                    .font(.scaled(14)).foregroundStyle(Color.ink2)
+                    .font(.scaled(15)).foregroundStyle(Color.ink2)
             }
         }
         Toggle(isOn: Binding(get: { syncOn }, set: { cloud.isEnabled = $0 })) {
             settingLabel("iCloud-Sync", "Für iPhone, iPad und ein neues Gerät", "icloud")
         }
-        .tint(Color.ink)
+        .tint(Color.toggleOn)
         if syncOn {
             HStack(spacing: 8) {
                 switch cloud.state {
@@ -247,7 +247,7 @@ struct SettingsView: View {
                     Text(cloud.lastSync.map { "Abgeglichen \($0.formatted(.relative(presentation: .named)))" } ?? "Noch nicht abgeglichen")
                 }
             }
-            .font(.scaled(13.5)).foregroundStyle(Color.ink2)
+            .font(.scaled(13)).foregroundStyle(Color.ink2)
             .animation(.smooth, value: cloud.state)
             Button("Jetzt abgleichen", systemImage: "arrow.triangle.2.circlepath") { Task { await cloud.syncNow() } }
                 .foregroundStyle(Color.ink)
@@ -283,7 +283,7 @@ struct ReminderSettingsView: View {
             } footer: {
                 Text("Du kannst mehrere wählen. Unabhängig davon steht ein Gutschein ab \(warnDays) Tagen vor Ablauf unter „Läuft bald ab“.")
             }
-            .tint(Color.ink)
+            .tint(Color.toggleOn)
             Section("Uhrzeit") {
                 Picker("Erinnern um", selection: $reminderHour) {
                     ForEach(6...22, id: \.self) { h in Text("\(h):00 Uhr").tag(h) }
@@ -314,7 +314,7 @@ struct PrivacyExplainer: View {
                 Label {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(row.title).font(.scaled(16, weight: .semibold))
-                        Text(row.text).font(.scaled(14)).foregroundStyle(Color.ink2)
+                        Text(row.text).font(.scaled(15)).foregroundStyle(Color.ink2)
                     }
                     .padding(.vertical, 4)
                 } icon: {

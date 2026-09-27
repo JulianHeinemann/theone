@@ -35,19 +35,23 @@ struct BonView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: Layout.inset) {
                 Text("Was du wann und wo eingelöst hast.").foregroundStyle(Color.muted)
-                Picker("Zeitraum", selection: $period.animation(.smooth)) {
-                    ForEach(Period.allCases) { Text($0.rawValue).tag($0) }
+                ScrollView(.horizontal) {
+                    HStack(spacing: 8) {
+                        ForEach(Period.allCases) { p in
+                            FilterChip(title: p.rawValue, on: period == p) { withAnimation(.smooth) { period = p } }
+                        }
+                    }
                 }
-                .pickerStyle(.segmented)
+                .scrollIndicators(.hidden).scrollClipDisabled()
 
                 receipt
 
                 NavigationLink(value: Route.tests) {
                     HStack {
-                        Image(systemName: "checkmark.seal").font(.scaled(18, weight: .semibold))
-                            .frame(width: 42, height: 42).background(Color.fill, in: .rect(cornerRadius: 12))
+                        Image(systemName: "checkmark.seal").font(.scaled(17, weight: .semibold))
+                            .frame(width: 44, height: 44).background(Color.fill, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Kassentests").font(.scaled(16, weight: .semibold))
                             Text(store.tests.isEmpty ? "Noch kein Kassentest – teste, ob die Kasse das Handy nimmt"
@@ -58,11 +62,11 @@ struct BonView: View {
                         Spacer()
                         Image(systemName: "chevron.right").foregroundStyle(Color.muted)
                     }
-                    .foregroundStyle(Color.ink).padding(14).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                    .foregroundStyle(Color.ink).padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, Layout.page).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
         }
         .scrollIndicators(.hidden)
         .pageBackground()
@@ -73,7 +77,8 @@ struct BonView: View {
         ReceiptPaper {
             VStack(alignment: .leading, spacing: 10) {
                 VStack(spacing: 4) {
-                    Text("RESTWERT").font(.scaled(22, weight: .heavy, design: .monospaced)).kerning(3)
+                    // Kopf mit der Wortmarke: der Bon ist die Sammlung deiner abgerissenen Ticket-Abschnitte.
+                    Wordmark(size: 22)
                     Text("EINLÖSUNGEN · \(period.rawValue.uppercased())").font(.scaled(12, design: .monospaced))
                         .foregroundStyle(Color.muted)
                         .contentTransition(.interpolate)
@@ -86,13 +91,13 @@ struct BonView: View {
                 DashedRule()
                 if days.isEmpty {
                     Text("NOCH KEINE POSTEN\nZieh einen Einkauf ab oder mach einen Kassentest.")
-                        .font(.scaled(12.5, design: .monospaced)).foregroundStyle(Color.muted)
+                        .font(.scaled(13, design: .monospaced)).foregroundStyle(Color.muted)
                         .multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.vertical, 12)
                 }
                 ForEach(days, id: \.day) { day in
                     Text(day.day.formatted(.dateTime.weekday(.abbreviated).day().month(.twoDigits).year()
                         .locale(Locale(identifier: "de_DE"))).uppercased())
-                        .font(.scaled(11, weight: .bold, design: .monospaced)).foregroundStyle(Color.muted)
+                        .font(.scaled(12, weight: .bold, design: .monospaced)).foregroundStyle(Color.muted)
                     ForEach(day.lines) { line in
                         NavigationLink(value: Route.card(line.cardID)) { lineRow(line) }
                             .buttonStyle(.plain)
@@ -134,7 +139,7 @@ struct BonView: View {
     private func lineRow(_ line: BonLine) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(line.cardName.uppercased()).font(.scaled(14, weight: .bold, design: .monospaced))
+                Text(line.cardName.uppercased()).font(.scaled(15, weight: .bold, design: .monospaced))
                 // Händlername steht schon darüber, also nur die Filiale („thalia Köln“ → „Köln“, „Thalia“ → nichts).
                 let place = Self.place(line.redemption.store, merchant: line.cardName)
                 // Rabattcodes haben keinen Rest; gelöschte Karten zeigen ihn weiter.
@@ -145,7 +150,7 @@ struct BonView: View {
             }
             Spacer()
             Text(line.redemption.amount > 0 ? "−" + line.redemption.amount.euro : line.redemption.amount < 0 ? "+" + (-line.redemption.amount).euro : "✓")
-                .font(.scaled(14, weight: .bold, design: .monospaced))
+                .font(.scaled(15, weight: .bold, design: .monospaced))
         }
         .foregroundStyle(Color.ink)
         .contentShape(.rect)
@@ -176,23 +181,22 @@ struct TestsView: View {
         let ok = all.filter(\.success).count
         let shown = all.filter { filter == 0 || (filter == 1 ? $0.success : !$0.success) }
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: Layout.inset) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("An der Kasse angenommen").font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink2)
+                    Text("An der Kasse angenommen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
                     // Unter 5 Tests ist eine Prozentzahl irreführend, dann in Worten.
                     Text(all.isEmpty ? "Noch nicht getestet" : all.count < 5 ? "\(ok) von \(all.count) Mal" : "\(ok * 100 / all.count) %")
-                        .font(.scaled(40, weight: .bold))
+                        .font(.display(40))
                         .contentTransition(.numericText())
                     Text("Wie oft Kassen den Barcode vom Handy genommen haben").font(.scaled(13)).foregroundStyle(Color.ink2)
                 }
-                .padding(18).frame(maxWidth: .infinity, alignment: .leading)
+                .padding(Layout.ticketInset).frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
-                Picker("Filter", selection: $filter.animation(.smooth)) {
-                    Text("Alle").tag(0)
-                    Text("Geklappt").tag(1)
-                    Text("Abgelehnt").tag(2)
+                HStack(spacing: 8) {
+                    ForEach([(0, "Alle"), (1, "Geklappt"), (2, "Abgelehnt")], id: \.0) { tag, title in
+                        FilterChip(title: title, on: filter == tag) { withAnimation(.smooth) { filter = tag } }
+                    }
                 }
-                .pickerStyle(.segmented)
                 if all.isEmpty {
                     Text("Noch keine Tests. Öffne einen Gutschein und tipp auf „An der Kasse zeigen“.").foregroundStyle(Color.muted)
                 } else if shown.isEmpty {
@@ -202,8 +206,8 @@ struct TestsView: View {
                     HStack(spacing: 14) {
                         Image(systemName: test.success ? "checkmark" : "xmark").font(.scaled(17, weight: .bold))
                             .foregroundStyle(test.success ? Color.good : Color.bad)
-                            .frame(width: 46, height: 46)
-                            .background(test.success ? Color.goodSoft : Color.badSoft, in: .rect(cornerRadius: 14, style: .continuous))
+                            .frame(width: 44, height: 44)
+                            .background(test.success ? Color.goodSoft : Color.badSoft, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 6) {
                                 Text(test.merchantName).font(.scaled(16, weight: .bold))
@@ -214,11 +218,11 @@ struct TestsView: View {
                         }
                         Spacer()
                     }
-                    .padding(12).cardSurface(radius: Layout.cardRadius)
+                    .padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                     .transition(.scale(scale: 0.95).combined(with: .opacity))
                 }
             }
-            .padding(.horizontal, Layout.page).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
         }
         .pageBackground()
         .navigationTitle("Kassentest")

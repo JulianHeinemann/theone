@@ -87,7 +87,7 @@ struct BarcodeView: View {
                     Text(number).textSelection(.enabled)
                 }
             }
-            .font(.scaled(26, weight: .heavy, design: .monospaced))
+            .font(.scaled(28, weight: .heavy, design: .monospaced))
             .multilineTextAlignment(.center)
             .padding(.vertical, 12)
         }
