@@ -5,11 +5,6 @@ import Observation
 import Security
 import RestwertKit
 
-enum APIConfig {
-    /// Nur noch für Datenschutz- und Impressumsseiten. Gutscheine gehen nicht mehr an diesen Server.
-    static let baseURL = URL(string: "https://api-production-9130.up.railway.app")!
-}
-
 /// Synchronisation über die private iCloud-Datenbank des Nutzers.
 ///
 /// - Kein eigenes Konto, keine eigene Datenbank: Die Daten liegen im iCloud des Nutzers.

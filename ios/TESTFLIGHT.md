@@ -17,8 +17,23 @@ Die Freischaltung dauert meist wenige Stunden bis zwei Tage.
 - Plattform: iOS
 - Name: **Restwert**. Ist der Name vergeben, einen Zusatz wählen, z. B. „Restwert – Gutscheine“.
 - Primäre Sprache: Deutsch
-- Bundle-ID: neu registrieren, z. B. `de.deinname.restwert`. `de.restwert.app` geht nur, wenn sie noch frei ist.
+- Bundle-ID: `de.restwert.app` (steht so im Projekt; das Widget heißt `de.restwert.app.widget`).
+  Nimmst du eine andere, musst du sie im Projekt für App und Widget ändern und iCloud-Container und App-Gruppe mit umbenennen.
 - SKU: beliebig, z. B. `restwert-ios`
+
+## 2b. iCloud und App-Gruppe freischalten
+
+Die App braucht zwei Berechtigungen, sonst schlägt das Signieren fehl:
+
+- iCloud mit CloudKit, Container `iCloud.de.restwert.app` (für den freiwilligen Sync)
+- App Groups, Gruppe `group.de.restwert.app` (App und Widget teilen sich die Übersicht)
+
+Am einfachsten: `ios/Restwert.xcodeproj` in Xcode öffnen → Target **Restwert** → „Signing & Capabilities“ → Team wählen,
+bei iCloud den Container und bei App Groups die Gruppe anhaken. Beim Target **RestwertWidget** nur die App-Gruppe.
+
+Danach einmal eine Debug-Version mit eingeschaltetem iCloud-Sync starten und im CloudKit-Dashboard
+(<https://icloud.developer.apple.com>) das Schema von „Development“ nach **„Production“** deployen.
+Ohne diesen Schritt funktioniert der Sync in TestFlight- und Store-Versionen nicht.
 
 ## 3. API-Schlüssel erstellen
 
@@ -45,11 +60,7 @@ Repository → Settings → Secrets and variables → Actions.
 | `ASC_KEY_ID` | Key ID aus Schritt 3 |
 | `ASC_KEY_P8` | kompletter Inhalt der `.p8`-Datei, inklusive `-----BEGIN PRIVATE KEY-----` |
 
-**Variable** (Tab „Variables“ → „New repository variable“):
-
-| Name | Inhalt |
-|---|---|
-| `BUNDLE_ID` | die Bundle-ID aus Schritt 2 |
+Eine Variable für die Bundle-ID ist nicht mehr nötig – sie kommt aus dem Projekt.
 
 ## 5. Hochladen
 
@@ -61,6 +72,13 @@ Nach etwa 10 Minuten ist der Build hochgeladen. Apple verarbeitet ihn danach noc
   Auf dem iPhone die App **TestFlight** installieren und die Einladung annehmen.
 - **Extern testen** (Freunde, bis 10.000 Personen): externe Gruppe anlegen. Der erste Build geht durch eine kurze Beta-Prüfung bei Apple.
   Dafür werden eine Datenschutz-URL und eine Kontakt-E-Mail verlangt.
-  Die URL ist `https://api-production-9130.up.railway.app/datenschutz`. Vorher dort Name und Adresse eintragen, siehe `server/public/datenschutz.html`.
+  Die URL ist `https://julianheinemann.github.io/theone/datenschutz.html` (GitHub Pages, Quelle `site/`).
+  Vorher Name, Anschrift und E-Mail in `site/` und in der App eintragen – siehe `docs/appstore/README.md`.
 
 Jeder Lauf erhöht die Build-Nummer automatisch. Die Version (1.0) steht in Xcode unter „Marketing Version“.
+
+## 6. In den App Store
+
+Store-Texte, Screenshots, Datenschutz-Angaben und die Checkliste stehen in `docs/appstore/README.md`.
+In App Store Connect: Version anlegen → Texte und Screenshots eintragen → den TestFlight-Build auswählen → „Zur Prüfung einreichen“.
+Die Prüfung dauert meist 1–3 Tage.

@@ -22,7 +22,7 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: Layout.section) {
                 // Der Kopf beschreibt immer den ganzen Bestand, unabhängig von Filter und Suche.
                 TotalHeader(total: store.total, cards: lists.active.filter { !$0.forGifting }, soon: lists.dueSoonCount,
-                            saved: lists.saved, examples: lists.examplesOnly)
+                            saved: lists.saved, examples: lists.examplesOnly && !Self.storeShots)
                 if store.cards.isEmpty {
                     EmptyState { router.tab = .scan }
                 } else {
@@ -425,4 +425,15 @@ private struct EmptyState: View {
 enum CardFilter: Hashable {
     case all, balance, codes, gifts
     case owner(String)
+}
+
+extension HomeView {
+    /// Nur für App-Store-Bilder (`-storeShots YES`): Beispiel-Hinweis im Summen-Ticket ausblenden.
+    static var storeShots: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: "storeShots")
+        #else
+        false
+        #endif
+    }
 }
