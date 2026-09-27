@@ -75,6 +75,11 @@ final class CloudSync {
     @MainActor
     func syncNow() async {
         guard isEnabled, !deleting, let store else { return }
+        #if NO_ICLOUD
+        // Testversion ohne iCloud-Berechtigung (z. B. aufs iPhone ohne eingerichteten Container): nie CloudKit anfassen.
+        state = .unavailable("iCloud ist in dieser Testversion nicht eingerichtet.")
+        return
+        #endif
         // Läuft schon ein Abgleich, danach noch einmal, damit Änderungen von währenddessen hochgehen.
         guard !running else { resyncRequested = true; return }
         store.reloadIfNeeded()
@@ -145,6 +150,10 @@ final class CloudSync {
     /// auf allen Geräten. Beim erneuten Einschalten entstehen Zone und Schlüssel neu und alles wird wieder hochgeladen.
     @MainActor
     func deleteCloudData(includingKeychain: Bool = true) async throws {
+        #if NO_ICLOUD
+        isEnabled = false
+        return
+        #endif
         pushTask?.cancel()
         // Sperren, damit kein laufender Abgleich die Zone gleich wieder anlegt.
         deleting = true
