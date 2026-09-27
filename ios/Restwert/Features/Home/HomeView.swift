@@ -21,8 +21,10 @@ struct HomeView: View {
     private var owners: [String] {
         Array(Set(store.cards.map(\.owner).filter { !$0.isEmpty })).sorted()
     }
+    /// Suche und Filter erst, wenn es genug zu durchsuchen gibt – sonst sind es nur Blöcke vor dem ersten Gutschein.
+    private var manyCards: Bool { store.cards.count > 6 }
     private var showFilters: Bool {
-        !owners.isEmpty || store.cards.contains(where: \.forGifting) || store.cards.contains { !$0.kind.isValueBased }
+        manyCards && (!owners.isEmpty || store.cards.contains(where: \.forGifting) || store.cards.contains { !$0.kind.isValueBased })
     }
 
     /// Filter, deren Chip gerade angeboten wird. Ohne Filterleiste nur „Alle“.
@@ -61,7 +63,6 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: Layout.section) {
                 // Der Kopf beschreibt immer den ganzen Bestand, unabhängig von Filter und Suche.
                 TotalHeader(total: store.total, cards: store.activeCards.filter { !$0.forGifting }, soon: dueSoonAll.count)
-                if store.hasExamples && store.cards.allSatisfy(\.isExample) { exampleHint }
                 if showFilters { filterBar }
                 if store.cards.isEmpty {
                     EmptyState { router.tab = .scan }
@@ -86,11 +87,6 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                     if !done.isEmpty { doneSection }
                 }
-                if store.hasExamples {
-                    Button("Beispielkarten entfernen") { withAnimation(.smooth) { store.clearExamples() } }
-                        .font(.scaled(15, weight: .medium)).foregroundStyle(Color.muted)
-                        .frame(maxWidth: .infinity)
-                }
             }
             .padding(.horizontal, Layout.page)
             .padding(.top, 4)
@@ -99,7 +95,7 @@ struct HomeView: View {
         .scrollIndicators(.hidden)
         .pageBackground()
         .navigationTitle("Restwert")
-        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Gutschein suchen")
+        .modifier(SearchIfNeeded(enabled: manyCards, text: $query))
         .onChange(of: offeredFilters) { _, offered in
             if !offered.contains(filter) { withAnimation(.snappy) { filter = .all } }
         }
@@ -113,30 +109,6 @@ struct HomeView: View {
                 deleting = nil
             }
         }
-    }
-
-    /// Solange nur Beispielkarten da sind: deutlich sagen, dass die Summe nicht echt ist.
-    private var exampleHint: some View {
-        // Schmales Banner statt großer Box, damit die Liste oben bleibt.
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 10) { hintText; Spacer(minLength: 4); hintActions }
-            VStack(alignment: .leading, spacing: 8) { hintText; HStack(spacing: 16) { hintActions } }
-        }
-        .padding(.horizontal, 14).padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.fill, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
-    }
-
-    private var hintText: some View {
-        Label("Beispieldaten", systemImage: "sparkles").font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink)
-    }
-
-    @ViewBuilder
-    private var hintActions: some View {
-        Button("Hinzufügen") { router.tab = .scan }
-            .font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink)
-        Button("Entfernen") { withAnimation(.smooth) { store.clearExamples() } }
-            .font(.scaled(14, weight: .medium)).foregroundStyle(Color.ink2)
     }
 
     @ViewBuilder
@@ -288,15 +260,15 @@ private struct TotalHeader: View {
 
     private var full: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Guthaben auf allen Karten").font(.scaled(15, weight: .medium)).foregroundStyle(Color.onBrand.opacity(0.7))
+            Text("Guthaben auf allen Karten").font(.scaled(15, weight: .medium)).foregroundStyle(Color.sumText.opacity(0.7))
             Text(total.euro)
-                .font(.amount(60)).kerning(-1.5)
+                .font(.amount(60)).kerning(-1.5).foregroundStyle(Color.sumAmount)
                 .contentTransition(.numericText(value: total))
                 .animation(.snappy, value: total)
                 .minimumScaleFactor(0.6).lineLimit(1)
-            Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.onBrand.opacity(0.75))
+            Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.sumText.opacity(0.75))
             if let codesNote {
-                Text(codesNote).font(.scaled(14)).foregroundStyle(Color.onBrand.opacity(0.75))
+                Text(codesNote).font(.scaled(14)).foregroundStyle(Color.sumText.opacity(0.75))
             }
         }
     }
@@ -312,22 +284,22 @@ private struct TotalHeader: View {
             if typeSize.isAccessibilitySize {
                 // Bei sehr großer Schrift eine kompakte Summe, damit die Liste sichtbar bleibt.
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Guthaben auf allen Karten").font(.scaled(13, weight: .medium)).foregroundStyle(Color.onBrand.opacity(0.7))
-                    Text(total.euro).font(.amount(34))
+                    Text("Guthaben auf allen Karten").font(.scaled(13, weight: .medium)).foregroundStyle(Color.sumText.opacity(0.7))
+                    Text(total.euro).font(.amount(34)).foregroundStyle(Color.sumAmount)
                         .minimumScaleFactor(0.6).lineLimit(1)
-                    Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.onBrand.opacity(0.75))
+                    Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.sumText.opacity(0.75))
                     if let codesNote {
-                        Text(codesNote).font(.scaled(13)).foregroundStyle(Color.onBrand.opacity(0.75))
+                        Text(codesNote).font(.scaled(13)).foregroundStyle(Color.sumText.opacity(0.75))
                     }
                 }
             } else {
                 full
             }
         }
-        .foregroundStyle(Color.onBrand)
+        .foregroundStyle(Color.sumText)
         .padding(typeSize.isAccessibilitySize ? 14 : 20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.brandYellow, in: .rect(cornerRadius: Layout.cardRadius + 4, style: .continuous))
+        .background(Color.sumFill, in: .rect(cornerRadius: Layout.cardRadius + 4, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 }
@@ -350,4 +322,18 @@ private struct EmptyState: View {
 enum CardFilter: Hashable {
     case all, balance, codes, gifts
     case owner(String)
+}
+
+/// Suchfeld nur, wenn es sich lohnt.
+private struct SearchIfNeeded: ViewModifier {
+    let enabled: Bool
+    @Binding var text: String
+
+    func body(content: Content) -> some View {
+        if enabled {
+            content.searchable(text: $text, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Gutschein suchen")
+        } else {
+            content
+        }
+    }
 }

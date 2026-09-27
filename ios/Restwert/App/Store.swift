@@ -256,7 +256,14 @@ final class Store {
         c.isExample = false
         c.modifiedAt = .now
         if (self.card(c.id)?.pin ?? "") != c.pin { pinChangedAt[c.id] = .now }
-        if let i = cards.firstIndex(where: { $0.id == c.id }) { cards[i] = c } else { cards.append(c) }
+        if let i = cards.firstIndex(where: { $0.id == c.id }) {
+            cards[i] = c
+        } else {
+            // Erster eigener Gutschein: Beispiele verschwinden von selbst, wie im Onboarding versprochen.
+            cards.removeAll(where: \.isExample)
+            tests.removeAll(where: \.isExample)
+            cards.append(c)
+        }
         save()
     }
 

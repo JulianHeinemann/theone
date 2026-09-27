@@ -116,7 +116,10 @@ struct BalanceCard: View {
         let fg = brand.foreground
         let crossed = status == .redeemed || status == .expired
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline) {
+            HStack(alignment: .center, spacing: 10) {
+                // Dieselbe Kachel wie in der Liste: zeigt, dass die Kartenfarbe die Farbe des Ladens ist.
+                MerchantMark(card: card, size: 32)
+                    .overlay(RoundedRectangle(cornerRadius: 32 * 0.24, style: .continuous).strokeBorder(.white.opacity(0.55), lineWidth: 1.5))
                 Text(card.name).font(.scaled(20, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
                 Spacer(minLength: 8)
                 if status != .valid {

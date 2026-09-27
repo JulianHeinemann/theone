@@ -36,11 +36,15 @@ extension Color {
     /// Markengelb: nur für Markenmomente (Summe, Widget), nicht für Aktionen. Im Dunkeln gedämpft, damit es nicht blendet.
     static let brandYellow = Color(light: 0xFFE14D, dark: 0xE3C53C)
     static let keyBlue = Color(hex: 0x2451FF)
+    /// Summenkarte: im Hellen gelbe Fläche, im Dunkeln dunkle Fläche mit gelbem Betrag (kein Senf-Ton).
+    static let sumFill = Color(light: 0xFFE14D, dark: 0x1C1C1F)
+    static let sumText = Color(light: 0x0E0E10, dark: 0xC9CAD0)
+    static let sumAmount = Color(light: 0x0E0E10, dark: 0xFFE14D)
     static let good = Color(light: 0x1F7A4D, dark: 0x4CC38A)
     static let goodSoft = Color(light: 0xCFF0DC, dark: 0x163A28)
-    static let bad = Color(light: 0xE0413A, dark: 0xFF6B63)
+    static let bad = Color(light: 0xE0413A, dark: 0xFF8078)
     static let badSoft = Color(light: 0xFBDCDA, dark: 0x3D1614)
-    static let warn = Color(light: 0xB42318, dark: 0xFF8A75)
+    static let warn = Color(light: 0xB42318, dark: 0xFF9C8A)
     static let warnSoft = Color(light: 0xFDECE8, dark: 0x3A1712)
     static let paper = Color(light: 0xFBF9F4, dark: 0x24221E)
     static let disabledFill = Color(light: 0xE6E6EA, dark: 0x2C2C31)

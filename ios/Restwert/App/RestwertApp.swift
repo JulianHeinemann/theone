@@ -149,7 +149,7 @@ struct MainTabView: View {
                 }
             }
 
-            Tab("Händler", systemImage: "storefront", value: AppTab.merchants) {
+            Tab("Läden", systemImage: "storefront", value: AppTab.merchants) {
                 NavigationStack { MerchantsView() }
             }
 

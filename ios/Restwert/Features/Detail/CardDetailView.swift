@@ -377,11 +377,16 @@ struct CardDetailView: View {
         .cardSurface(radius: Layout.cardRadius)
     }
 
+    /// Code als Text zum Kopieren; den Barcode gibt es nur an der Kasse, damit er nicht doppelt erscheint.
     private func barcodeTicket(_ card: GiftCard) -> some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("Code").font(.scaled(16, weight: .bold))
-                Spacer()
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(card.kind == .discountCode ? "Rabattcode" : "Kartennummer").font(.scaled(13)).foregroundStyle(Color.muted)
+                    Text(card.number.grouped).font(.scaled(17, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(Color.ink).textSelection(.enabled).lineLimit(2).minimumScaleFactor(0.7)
+                }
+                Spacer(minLength: 8)
                 Button {
                     // Nur auf diesem Gerät und nach 2 Minuten wieder weg.
                     UIPasteboard.general.setItems([[UTType.plainText.identifier: card.number]],
@@ -393,28 +398,21 @@ struct CardDetailView: View {
                         copied = false
                     }
                 } label: {
-                    Label(copied ? "Kopiert" : "Code kopieren", systemImage: copied ? "checkmark" : "doc.on.doc")
-                        .font(.scaled(14, weight: .bold))
+                    Label(copied ? "Kopiert" : "Kopieren", systemImage: copied ? "checkmark" : "doc.on.doc")
+                        .font(.scaled(15, weight: .semibold))
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(Color.ink)
             }
-            .padding(.horizontal, 18).padding(.top, 16).padding(.bottom, 4)
-            Perforation()
-            VStack(spacing: 8) {
-                BarcodeView(number: card.number, format: card.format, height: 84)
-                if card.format != .text {
-                    Text(card.number.grouped).font(.scaled(17, weight: .bold)).kerning(2).textSelection(.enabled)
-                }
-                if card.photo != nil {
-                    Button("Original-Foto ansehen", systemImage: "photo") { showPhoto = true }
-                        .font(.scaled(14, weight: .medium)).foregroundStyle(Color.ink2).padding(.top, 4)
-                }
+            if card.photo != nil {
+                Button("Original-Foto ansehen", systemImage: "photo") { showPhoto = true }
+                    .font(.scaled(14, weight: .medium)).foregroundStyle(Color.ink2)
             }
-            .padding(.horizontal, 18).padding(.bottom, 18)
         }
-        .cardSurface(radius: Layout.cardRadius)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
     }
 
     /// Stempel zurücknehmen (Store entfernt Einlösedatum und Verlaufseintrag).

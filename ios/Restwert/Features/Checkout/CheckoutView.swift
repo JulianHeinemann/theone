@@ -349,14 +349,14 @@ struct KeypadView: View {
                 }
                 .padding(.horizontal, 18).padding(.top, 22)
 
-                if !correct { GlassEffectContainer(spacing: 8) {
-                    HStack(spacing: 8) {
-                        ForEach([5.0, 10, 20].filter { $0 < card.balance }, id: \.self) { q in chip("\(Int(q)) €") { input = "\(Int(q))" } }
-                        chip("Alles") { input = card.balance.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE"))).replacingOccurrences(of: ".", with: "") }
+                // Nur ein leiser Kurzweg statt Schnellwahl-Chips, die mit dem Tastenfeld konkurrieren.
+                if !correct {
+                    Button("Ganzes Guthaben (\(card.balance.euro))") {
+                        input = card.balance.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE"))).replacingOccurrences(of: ".", with: "")
                     }
-                    .padding(.horizontal, 16).padding(.vertical, 4)
+                    .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                    .padding(.horizontal, 18).padding(.top, 12)
                 }
-                .padding(.top, 14) }
 
                 Group {
                     if showStore {
@@ -415,7 +415,7 @@ struct KeypadView: View {
                 } label: {
                     Text(correct ? (input.isEmpty ? "Neuen Stand eingeben" : "Stand auf \(value.euro) setzen")
                          : value > card.balance ? "Alles abziehen (\(card.balance.euro))"
-                         : value > 0 ? "\(value.euro) abziehen" : "Erst Betrag wählen")
+                         : value > 0 ? "\(value.euro) abziehen" : "Abziehen")
                 }
                 .buttonStyle(.accent)
                 .disabled(correct ? input.isEmpty : value <= 0)
@@ -434,15 +434,6 @@ struct KeypadView: View {
         }
         if value > 0 { return "Danach übrig: \(max(0, card.balance - value).euro)" }
         return "Wird vom Guthaben abgezogen"
-    }
-
-    private func chip(_ title: String, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title).font(.scaled(16, weight: .bold)).foregroundStyle(Color.ink)
-                .frame(maxWidth: .infinity, minHeight: 46)
-        }
-        .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 14, style: .continuous))
     }
 
     private func press(_ key: String) {

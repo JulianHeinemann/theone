@@ -65,7 +65,7 @@ struct MerchantsView: View {
         }
         .scrollIndicators(.hidden)
         .pageBackground()
-        .navigationTitle("Händler")
+        .navigationTitle("Läden")
         .searchable(text: $query, prompt: "Händler suchen")
     }
 
