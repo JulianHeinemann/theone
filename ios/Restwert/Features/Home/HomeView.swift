@@ -7,262 +7,422 @@ struct HomeView: View {
     @Environment(Router.self) private var router
     @AppStorage("sortOrder") private var sortRaw = CardSortOrder.expiry.rawValue
     @AppStorage("warnDays") private var warnDays = 30
-    @State private var selected: UUID?
+
+    @State private var query = ""
+    @State private var filter: CardFilter = .all
+    @State private var showDone = false
+    @State private var deleting: GiftCard?
 
     private var order: CardSortOrder { CardSortOrder(rawValue: sortRaw) ?? .expiry }
-    private var sorted: [GiftCard] { store.cards(sortedBy: order) }
-    private var soon: Int { store.soonCount(warnDays: warnDays) }
-    private var currentCard: GiftCard? { selected.flatMap { store.card($0) } ?? sorted.first }
 
     var body: some View {
+        // Alle Listen einmal pro Durchlauf, nicht pro Abschnitt oder Karte.
+        let lists = HomeLists(cards: store.cards, order: order, warnDays: warnDays, filter: filter, query: query)
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                HeroTotal(total: store.total, original: store.totalValue, count: store.cards.count, soon: soon)
-                carousel.padding(.top, 22)
-                dots.padding(.top, 12)
-                quickActions.padding(.top, 22)
-                NavigationLink(value: Route.radar) {
-                    RadarTeaser(cards: store.activeCards)
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 24)
-                list.padding(.top, 26)
-                if store.hasExamples {
-                    Button("Beispielkarten entfernen") { withAnimation(.smooth) { store.clearExamples() } }
-                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.muted)
-                        .frame(maxWidth: .infinity).padding(.top, 20)
+            VStack(alignment: .leading, spacing: Layout.section) {
+                // Der Kopf beschreibt immer den ganzen Bestand, unabhängig von Filter und Suche.
+                TotalHeader(total: store.total, cards: lists.active.filter { !$0.forGifting }, soon: lists.dueSoonCount,
+                            saved: lists.saved, examples: lists.examplesOnly)
+                if store.cards.isEmpty {
+                    EmptyState { router.tab = .scan }
+                } else {
+                    // Dringendes zuerst, damit es ohne Scrollen sichtbar ist. Die Suche wirkt hier, die Chips erst darunter.
+                    section("Läuft bald ab", cards: lists.dueSoon)
+                    if !lists.active.isEmpty {
+                        ExpiryRadarSection(items: lists.active.map { RadarItem(card: $0) },
+                                           onSelect: { router.homePath.append(.card($0.id)) },
+                                           onShowAll: { router.homePath.append(.radar) })
+                    }
+                    if lists.showFilters { filterBar(lists) }
+                    if lists.searchEmpty {
+                        ContentUnavailableView.search(text: lists.query)
+                    } else if lists.filterEmpty {
+                        ContentUnavailableView(lists.query.isEmpty ? "Keine Gutscheine in diesem Filter" : "Keine Treffer in diesem Filter",
+                                               systemImage: "line.3.horizontal.decrease.circle")
+                    }
+                    // Mit Filter zeigt die Liste alles Passende, auch was oben unter „Läuft bald ab“ steht.
+                    // Der Zoom-Übergang hängt dann nur an der oberen Zeile, sonst gäbe es zwei Quellen mit derselben ID.
+                    section(listTitle(lists), cards: lists.list, sortable: true,
+                            zoomSkip: lists.activeFilter == .all ? [] : Set(lists.dueSoon.map(\.id)))
+                    NavigationLink(value: Route.radar) {
+                        Label("Alle Ablauftermine", systemImage: "calendar")
+                            .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
+                            .frame(maxWidth: .infinity, minHeight: 56)
+                            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    if !lists.done.isEmpty { doneSection(lists.done) }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            .padding(.horizontal, Layout.page)
+            .padding(.top, 4)
+            .padding(.bottom, Layout.section)
         }
         .scrollIndicators(.hidden)
+        // Solange der Rückgängig-Hinweis über der Tab-Leiste steht, lässt sich das Listenende darüber schieben.
+        .safeAreaPadding(.bottom, router.toast == nil ? 0 : 88)
         .pageBackground()
         .navigationTitle("Restwert")
+        .toolbarTitleDisplayMode(.inline)
+        // Wortmarke und Suchfeld stehen fest oben und bleiben beim Scrollen sichtbar.
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink(value: Route.radar) {
-                    Image(systemName: soon > 0 ? "bell.badge" : "bell")
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(Color.warn, Color.ink)
-                        .symbolEffect(.wiggle, value: soon)
+            ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) }
+            // Das Toolbar-Element bringt rund 4 pt Eigenabstand mit; zurückgeschoben fluchtet die Marke mit Suchfeld und Ticket (16 pt).
+            ToolbarItem(placement: .topBarLeading) { Wordmark(size: 28).fixedSize().offset(x: -4) }
+                .sharedBackgroundVisibility(.hidden)
+        }
+        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Gutschein, Code oder Notiz")
+        .onChange(of: lists.offered) { _, offered in
+            if !offered.contains(filter) { withAnimation(.snappy) { filter = .all } }
+        }
+        .confirmationDialog("„\(deleting?.name ?? "")“ endgültig entfernen?", isPresented: Binding(
+            get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
+            Button("Entfernen", role: .destructive) {
+                if let c = deleting {
+                    withAnimation(.snappy) { store.delete(c.id) }
+                    router.showUndo("„\(c.name)“ entfernt") { withAnimation(.snappy) { store.undoDelete(c) } }
                 }
-                .accessibilityLabel("\(soon) Gutscheine laufen bald ab")
+                deleting = nil
             }
         }
     }
 
-    // MARK: Karussell
+    private func listTitle(_ lists: HomeLists) -> String {
+        if lists.activeFilter != .all { return chipTitle(lists.activeFilter) }
+        return lists.dueSoon.isEmpty ? "Deine Gutscheine" : "Weitere"
+    }
 
-    private var carousel: some View {
+    @ViewBuilder
+    private func section(_ title: String, cards: [GiftCard], sortable: Bool = false, zoomSkip: Set<UUID> = []) -> some View {
+        if !cards.isEmpty {
+            VStack(alignment: .leading, spacing: Layout.group) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(title).font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                        .accessibilityAddTraits(.isHeader)
+                    Spacer()
+                    if sortable { sortMenu }
+                }
+                VStack(spacing: 0) {
+                    ForEach(Array(cards.enumerated()), id: \.element.id) { i, c in
+                        if i > 0 { Divider().padding(.leading, 72) }
+                        HStack(spacing: 0) {
+                            NavigationLink(value: Route.card(c.id)) {
+                                if zoomSkip.contains(c.id) {
+                                    CardRow(card: c, warnDays: warnDays)
+                                } else {
+                                    CardRow(card: c, warnDays: warnDays).matchedTransitionSource(id: c.id, in: zoom)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            // Sichtbarer Weg zu Kasse, Bearbeiten, Archivieren, Entfernen (nicht nur langes Drücken).
+                            Menu { rowMenu(c) } label: {
+                                Image(systemName: "ellipsis").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                                    .frame(width: Layout.tap, height: Layout.tap).contentShape(.rect)
+                            }
+                            .accessibilityLabel("Aktionen für \(c.name)")
+                            .padding(.trailing, 4)
+                        }
+                        .contextMenu { rowMenu(c) }
+                    }
+                }
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+            }
+            .animation(.snappy, value: cards.map(\.id))
+        }
+    }
+
+    private func filterBar(_ lists: HomeLists) -> some View {
         ScrollView(.horizontal) {
-            LazyHStack(spacing: 12) {
-                if store.cards.isEmpty {
-                    Button { router.tab = .scan } label: { EmptyCard() }
-                        .buttonStyle(.plain)
-                        .containerRelativeFrame(.horizontal)
-                }
-                ForEach(sorted) { card in
-                    NavigationLink(value: Route.card(card.id)) {
-                        FolderCardView(card: card, warnDays: warnDays)
-                            .matchedTransitionSource(id: card.id, in: zoom)
+            HStack(spacing: 8) {
+                ForEach(lists.offered, id: \.self) { value in
+                    FilterChip(title: chipTitle(value), on: lists.activeFilter == value) {
+                        withAnimation(.snappy) { filter = value }
                     }
-                    .buttonStyle(.plain)
-                    .containerRelativeFrame(.horizontal) { width, _ in width * 0.86 }
-                    .scrollTransition(axis: .horizontal) { content, phase in
-                        content
-                            .scaleEffect(phase.isIdentity ? 1 : 0.9)
-                            .rotation3DEffect(.degrees(phase.value * -12), axis: (x: 0, y: 1, z: 0))
-                            .opacity(phase.isIdentity ? 1 : 0.7)
-                    }
-                    .id(card.id)
                 }
             }
-            .scrollTargetLayout()
         }
-        .scrollTargetBehavior(.viewAligned)
-        .scrollPosition(id: $selected)
         .scrollIndicators(.hidden)
-        .contentMargins(.horizontal, 16, for: .scrollContent)
-        .padding(.horizontal, -16)
-        .sensoryFeedback(.selection, trigger: selected)
+        // Chips dürfen beim Scrollen bis zum Rand laufen, ohne die Spalte breiter zu machen.
+        .scrollClipDisabled()
+        .sensoryFeedback(.selection, trigger: lists.activeFilter)
     }
 
-    private var dots: some View {
-        HStack(spacing: 6) {
-            ForEach(sorted) { c in
-                let active = c.id == currentCard?.id
-                Capsule().fill(active ? Color.ink : Color.line)
-                    .frame(width: active ? 22 : 6, height: 6)
+    private func chipTitle(_ value: CardFilter) -> String {
+        switch value {
+        case .all: "Alle"
+        case .balance: "Guthaben"
+        case .codes: "Rabattcodes"
+        case .gifts: "Zum Verschenken"
+        case .owner(let name): "Für \(name)"
+        }
+    }
+
+    @ViewBuilder
+    private func rowMenu(_ c: GiftCard) -> some View {
+        if c.isActive {
+            Button("An der Kasse zeigen", systemImage: "barcode") { router.homePath.append(.checkout(c.id)) }
+        }
+        Button("Bearbeiten", systemImage: "pencil") { router.editing = c }
+        Button(c.isArchived ? "Wiederherstellen" : "Archivieren", systemImage: c.isArchived ? "tray.and.arrow.up" : "archivebox") {
+            let archive = !c.isArchived
+            withAnimation(.snappy) { store.setArchived(c.id, archive) }
+            if archive {
+                router.showUndo("„\(c.name)“ archiviert") { withAnimation(.snappy) { store.setArchived(c.id, false) } }
             }
         }
-        .frame(maxWidth: .infinity)
-        .animation(.snappy, value: selected)
+        Button("Entfernen", systemImage: "trash", role: .destructive) { deleting = c }
     }
 
-    // MARK: Schnellaktionen
-
-    private var quickActions: some View {
-        GlassEffectContainer(spacing: 16) {
-            HStack {
-                QuickAction(icon: "plus", label: "Scannen", highlight: true) { router.tab = .scan }
-                if let c = currentCard {
-                    NavigationLink(value: Route.checkout(c.id)) { QuickActionLabel(icon: "barcode", label: "An der Kasse") }
-                        .buttonStyle(.plain)
-                    NavigationLink(value: Route.card(c.id)) { QuickActionLabel(icon: "scissors", label: "Einlösen") }
-                        .buttonStyle(.plain)
-                } else {
-                    QuickAction(icon: "barcode", label: "An der Kasse") { router.tab = .scan }
-                    QuickAction(icon: "scissors", label: "Einlösen") { router.tab = .scan }
+    /// Aufgebrauchte, abgelaufene und archivierte Gutscheine, eingeklappt, damit die Liste ruhig bleibt.
+    private func doneSection(_ done: [GiftCard]) -> some View {
+        VStack(alignment: .leading, spacing: Layout.group) {
+            Button {
+                withAnimation(.snappy) { showDone.toggle() }
+            } label: {
+                HStack {
+                    Text("Erledigt & archiviert (\(done.count))")
+                        .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                    Spacer()
+                    Image(systemName: "chevron.down").rotationEffect(.degrees(showDone ? 180 : 0))
+                        .font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
                 }
-                NavigationLink(value: Route.tests) { QuickActionLabel(icon: "checkmark.seal", label: "Kassentest") }
-                    .buttonStyle(.plain)
+                .frame(minHeight: Layout.tap).contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityValue(showDone ? "aufgeklappt" : "eingeklappt")
+            if showDone {
+                VStack(spacing: 0) {
+                    ForEach(Array(done.enumerated()), id: \.element.id) { i, c in
+                        if i > 0 { Divider().padding(.leading, 72) }
+                        HStack(spacing: 0) {
+                            NavigationLink(value: Route.card(c.id)) { CardRow(card: c, warnDays: warnDays) }
+                                .buttonStyle(.plain)
+                            Button("Entfernen", systemImage: "trash") { deleting = c }
+                                .labelStyle(.iconOnly).accessibilityLabel("\(c.name) entfernen").foregroundStyle(Color.bad)
+                                .frame(width: Layout.tap, height: Layout.tap).padding(.trailing, 4)
+                        }
+                        .contextMenu { rowMenu(c) }
+                    }
+                }
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
             }
         }
     }
 
-    // MARK: Liste
+    private var sortMenu: some View {
+        Menu {
+            Picker("Sortierung", selection: $sortRaw) {
+                ForEach(CardSortOrder.allCases) { Text($0.label).tag($0.rawValue) }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text(order.label)
+                Image(systemName: "chevron.up.chevron.down").font(.scaled(12, weight: .semibold))
+            }
+            .font(.scaled(15)).foregroundStyle(Color.muted)
+            .frame(minHeight: Layout.tap).contentShape(.rect)
+        }
+        .accessibilityLabel("Sortierung: \(order.label)")
+    }
+}
 
-    private var list: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Deine Gutscheine") {
-                Menu {
-                    Picker("Sortierung", selection: $sortRaw) {
-                        ForEach(CardSortOrder.allCases) { Text($0.label).tag($0.rawValue) }
-                    }
-                } label: {
-                    Label("nach \(order.label)", systemImage: "arrow.up.arrow.down")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Color.muted)
-                }
-            }
-            if store.cards.isEmpty {
-                Text("Fotografier die Rückseite einer Gutscheinkarte, importier eine E-Mail oder scanne einen handgeschriebenen Gutschein.")
-                    .font(.system(size: 15)).foregroundStyle(Color.muted)
-            }
-            ForEach(sorted) { c in
-                NavigationLink(value: Route.card(c.id)) { CardRow(card: c, warnDays: warnDays) }
-                    .buttonStyle(.plain)
-                    .scrollTransition(.animated(.smooth)) { content, phase in
-                        content
-                            .opacity(phase.isIdentity ? 1 : 0.3)
-                            .scaleEffect(phase.isIdentity ? 1 : 0.94)
-                            .blur(radius: phase.isIdentity ? 0 : 2)
-                    }
-                    .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity),
-                                            removal: .scale(scale: 0.9).combined(with: .opacity)))
+// MARK: - Listen
+
+/// Alles, was die Startseite aus dem Bestand ableitet. Restlaufzeiten werden je Karte einmal gerechnet,
+/// nicht in jedem Sortiervergleich neu (dort kostet jede Kalenderrechnung).
+private struct HomeLists {
+    /// Aktive Gutscheine nach Ablauf – für Kopf und Radar, ohne Filter.
+    private(set) var active: [GiftCard] = []
+    /// Bald ablaufend (ohne Verschenken), mit Suche, ohne Chip-Filter.
+    private(set) var dueSoon: [GiftCard] = []
+    /// Bald ablaufend im ganzen Bestand, für den Kopf.
+    private(set) var dueSoonCount = 0
+    /// Hauptliste: ohne Filter alles Übrige, mit Filter alles Passende.
+    private(set) var list: [GiftCard] = []
+    private(set) var done: [GiftCard] = []
+    private(set) var offered: [CardFilter] = [.all]
+    private(set) var activeFilter: CardFilter = .all
+    private(set) var showFilters = false
+    /// Summe echter Abzüge aus dem Verlauf, ohne Beispiele.
+    private(set) var saved: Double = 0
+    private(set) var examplesOnly = false
+    let query: String
+
+    var searchEmpty: Bool { !query.isEmpty && dueSoon.isEmpty && list.isEmpty && done.isEmpty }
+    var filterEmpty: Bool { activeFilter != .all && list.isEmpty && done.isEmpty }
+
+    private struct Entry {
+        let card: GiftCard
+        let days: Int
+        let active: Bool
+        let name: String
+    }
+
+    init(cards: [GiftCard], order: CardSortOrder, warnDays: Int, filter: CardFilter, query rawQuery: String, now: Date = .now) {
+        query = rawQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        let entries = cards.map { c in
+            let d = c.daysLeft(now: now)
+            return Entry(card: c, days: d, active: c.isOpen && d >= 0 && !c.isArchived, name: c.name)
+        }
+        // Wie CardQueries.sorted: offene zuerst, dann nach gewählter Ordnung.
+        let sorted = entries.sorted { a, b in
+            if a.active != b.active { return a.active }
+            switch order {
+            case .expiry: return a.card.expires < b.card.expires
+            case .value: return a.card.balance > b.card.balance
+            case .shop: return a.name.localizedCompare(b.name) == .orderedAscending
             }
         }
-        .animation(.spring(duration: 0.45, bounce: 0.25), value: sorted.map(\.id))
+        let activeEntries = order == .expiry
+            ? sorted.filter(\.active)
+            : entries.filter(\.active).sorted { $0.card.expires < $1.card.expires }
+        active = activeEntries.map(\.card)
+
+        // Chips, sobald es mehr als eine Art gibt; bei ganz wenigen Karten wären sie nur Ballast.
+        let owners = Set(cards.map(\.owner).filter { !$0.isEmpty }).sorted()
+        let hasBalance = cards.contains { $0.kind.isValueBased && !$0.forGifting }
+        let hasCodes = cards.contains { !$0.kind.isValueBased }
+        let hasGifts = cards.contains(where: \.forGifting)
+        let kinds = [hasBalance, hasCodes, hasGifts].filter { $0 }.count + owners.count
+        showFilters = cards.count > 3 && kinds > 1
+        if showFilters {
+            var f: [CardFilter] = [.all]
+            if hasBalance { f.append(.balance) }
+            if hasCodes { f.append(.codes) }
+            if hasGifts { f.append(.gifts) }
+            offered = f + owners.map { .owner($0) }
+        }
+        // Verschwindet der Chip des gewählten Filters, gilt wieder „Alle“, sonst bliebe die Liste ohne Ausweg leer.
+        activeFilter = offered.contains(filter) ? filter : .all
+
+        let search = Search(query)
+        let chip = activeFilter
+        func passesChip(_ c: GiftCard) -> Bool {
+            switch chip {
+            case .all: true
+            case .balance: c.kind.isValueBased && !c.forGifting
+            case .codes: !c.kind.isValueBased
+            case .gifts: c.forGifting
+            case .owner(let name): c.owner == name
+            }
+        }
+
+        let due = activeEntries.filter { $0.days <= warnDays && !$0.card.forGifting }
+        dueSoonCount = due.count
+        dueSoon = due.map(\.card).filter(search.matches)
+        let dueIDs = Set(dueSoon.map(\.id))
+        list = sorted.compactMap { e in
+            guard e.active, search.matches(e.card) else { return nil }
+            if chip == .all { return dueIDs.contains(e.card.id) ? nil : e.card }
+            return passesChip(e.card) ? e.card : nil
+        }
+        done = sorted.compactMap { e in !e.active && search.matches(e.card) && passesChip(e.card) ? e.card : nil }
+
+        let real = cards.filter { !$0.isExample }
+        saved = (real.reduce(0) { sum, c in sum + c.history.reduce(0) { $0 + max(0, $1.amount) } } * 100).rounded() / 100
+        examplesOnly = !cards.isEmpty && real.isEmpty
+    }
+
+    /// Suche über Name, „für wen“, Ort und Notiz, Art, Betrag/Prozent und Kartennummer.
+    private struct Search {
+        let text: String
+        /// Ohne Leerzeichen, damit „1234 5678“ und „12345678“ gleich gefunden werden.
+        let compact: String
+
+        init(_ query: String) {
+            text = query
+            compact = query.filter { !$0.isWhitespace }
+        }
+
+        func matches(_ c: GiftCard) -> Bool {
+            guard !text.isEmpty else { return true }
+            for field in [c.name, c.owner, c.locationNote, c.location.label, c.kind.label]
+            where field.localizedCaseInsensitiveContains(text) { return true }
+            // „15 %“ und „15%“ gleich behandeln, ebenso Beträge wie „12,40 €“.
+            if c.headline.filter({ !$0.isWhitespace }).localizedCaseInsensitiveContains(compact) { return true }
+            // Nummern erst ab drei Zeichen, sonst trifft jede Ziffer fast jede Karte.
+            if compact.count >= 3, c.number.filter({ !$0.isWhitespace && $0 != "-" }).localizedCaseInsensitiveContains(compact.filter { $0 != "-" }) {
+                return true
+            }
+            return false
+        }
     }
 }
 
 // MARK: - Bausteine
 
-/// Gesamtguthaben auf einem lebendigen Pastell-Verlauf.
-private struct HeroTotal: View {
+/// Offenes Guthaben als ruhige Zahl, ohne Deko.
+private struct TotalHeader: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let total: Double
-    let original: Double
-    let count: Int
+    let cards: [GiftCard]
     let soon: Int
+    /// Schon eingelöst (echte Abzüge aus dem Verlauf), klein im Fuß – nur wenn es etwas gibt.
+    var saved: Double = 0
+    var examples = false
+    @State private var tearY: CGFloat = 110
+
+    /// Die Summe enthält nur Euro-Guthaben. Rabattcodes stehen extra, damit die Rechnung aufgeht.
+    private var caption: String {
+        let value = cards.filter(\.kind.isValueBased).count
+        var parts = [value == 1 ? "1 Gutschein" : "\(value) Gutscheine"]
+        if soon > 0 { parts.append(soon == 1 ? "1 läuft bald ab" : "\(soon) laufen bald ab") }
+        return parts.joined(separator: " · ")
+    }
+
+    private var codesNote: String? {
+        let codes = cards.filter { !$0.kind.isValueBased }.count
+        guard codes > 0 else { return nil }
+        return codes == 1 ? "+ 1 Rabattcode, nicht in der Summe" : "+ \(codes) Rabattcodes, nicht in der Summe"
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(Locale(identifier: "de_DE"))))
-                .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.ink.opacity(0.55))
-            Text("Guthaben in deiner Schublade").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color.ink2)
-            Text(total.euro)
-                .font(.system(size: 50, weight: .heavy)).kerning(-1.5).monospacedDigit()
-                .contentTransition(.numericText(value: total))
-                .animation(.snappy, value: total)
-                .minimumScaleFactor(0.6).lineLimit(1)
-            HStack(spacing: 28) {
-                stat("\(count)", "Gutscheine", original > 0 ? "\(Int(total / original * 100)) % übrig" : nil)
-                stat("\(soon)", "laufen bald ab", nil)
+        let big = !typeSize.isAccessibilitySize
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Noch drauf").font(.scaled(15, weight: .semibold)).opacity(0.75)
+                AmountText(value: total, size: big ? 60 : 36)
+                    .animation(.snappy, value: total)
             }
-            .padding(.top, 6)
+            .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.ticketInset).padding(.bottom, Layout.inset)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            // Gemessen, damit die Kerben bei jeder Schriftgröße genau auf der Abrisslinie sitzen.
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tearY = $0 }
+            // Abrisslinie auf Höhe der Kerben: oben der Betrag, unten der Abschnitt.
+            TearLine(color: .sumText).padding(.horizontal, Layout.inset)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(caption).font(.scaled(15, weight: .semibold))
+                if let codesNote { Text(codesNote).font(.scaled(13)).opacity(0.75) }
+                if saved > 0 { Text("\(saved.euro) schon eingelöst").font(.scaled(13)).opacity(0.75) }
+                if examples { Text("Nur Beispiele – dein erster Gutschein ersetzt sie").font(.scaled(13)).opacity(0.75) }
+            }
+            .padding(.horizontal, Layout.ticketInset).padding(.vertical, Layout.group)
         }
-        .foregroundStyle(Color.ink)
-        .padding(20)
+        .foregroundStyle(Color.sumText)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background { LivingMesh().clipShape(.rect(cornerRadius: 30, style: .continuous)) }
-        .padding(.top, 4)
-    }
-
-    private func stat(_ big: String, _ label: String, _ extra: String?) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(big).font(.system(size: 22, weight: .heavy)).contentTransition(.numericText())
-            Text(extra.map { "\(label) · \($0)" } ?? label).font(.system(size: 13)).foregroundStyle(Color.ink2)
-        }
+        .background(Color.sumFill, in: TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchFromTop: tearY + 0.5))
+        .accessibilityElement(children: .combine)
     }
 }
 
-/// Sanft wabernder Mesh-Verlauf in den Markenfarben (hell, nie schwarz).
-struct LivingMesh: View {
-    var colors: [Color] = [
-        Color(hex: 0xFFF1A8), Color(hex: 0xFFE14D), Color(hex: 0xF9D8E8),
-        Color(hex: 0xE4D7FB), Color(hex: 0xFFF6D6), Color(hex: 0xCDEFE3),
-        Color(hex: 0xD9E2FB), Color(hex: 0xFBE1CF), Color(hex: 0xFFF1A8),
-    ]
+
+private struct EmptyState: View {
+    let onScan: () -> Void
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30)) { timeline in
-            let t = timeline.date.timeIntervalSinceReferenceDate
-            let dx = Float(sin(t * 0.6)) * 0.12
-            let dy = Float(cos(t * 0.45)) * 0.1
-            MeshGradient(width: 3, height: 3, points: [
-                [0, 0], [0.5, 0], [1, 0],
-                [0, 0.5], [0.5 + dx, 0.5 + dy], [1, 0.5],
-                [0, 1], [0.5, 1], [1, 1],
-            ], colors: colors)
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Noch keine Gutscheine").font(.scaled(17, weight: .semibold))
+            Text("Fotografier deinen Gutschein, füg eine Gutschein-Mail ein oder tipp den Code ab.")
+                .font(.scaled(15)).foregroundStyle(Color.ink2)
+            Button("Ersten Gutschein erfassen", action: onScan).buttonStyle(.accent)
         }
-    }
-}
-
-private struct QuickActionLabel: View {
-    let icon: String
-    let label: String
-    var highlight = false
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(Color.ink)
-                .frame(width: 62, height: 62)
-                .glassEffect(highlight ? .regular.tint(Color.brandYellow).interactive() : .regular.interactive(), in: .circle)
-            Text(label).font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.ink)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
-private struct QuickAction: View {
-    let icon: String
-    let label: String
-    var highlight = false
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) { QuickActionLabel(icon: icon, label: label, highlight: highlight) }
-            .buttonStyle(.plain)
-    }
-}
-
-private struct EmptyCard: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Noch leer").font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted)
-            Text(0.0.euro).font(.system(size: 32, weight: .heavy))
-            Spacer()
-            Label("Ersten Gutschein scannen", systemImage: "plus").font(.system(size: 16, weight: .bold))
-        }
-        .foregroundStyle(Color.ink)
         .padding(20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .aspectRatio(1.72, contentMode: .fit)
-        .background(RoundedRectangle(cornerRadius: 24, style: .continuous)
-            .strokeBorder(Color.muted.opacity(0.5), style: StrokeStyle(lineWidth: 1.5, dash: [6, 6])))
-        .padding(.top, 16)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
     }
+}
+
+enum CardFilter: Hashable {
+    case all, balance, codes, gifts
+    case owner(String)
 }

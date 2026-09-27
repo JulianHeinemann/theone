@@ -1,0 +1,4173 @@
+[
+ {
+  "persona": "Anna, 19, Studentin, sehr technikaffin, hat 8 Geschenkkarten in der Schublade und keine Ahnung, was noch drauf ist.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Einen neuen Gutschein erfassen (Karte in der Hand)",
+    "success": "mit Mühe",
+    "note": "Es gibt kein Plus und keinen Tab namens 'Hinzufügen'. Erst nach etwas Suchen kapiert, dass der runde Barcode-Knopf unten rechts zum Scannen führt. Danach ist 'Karte scannen' klar und die Alternativen (Fotos, Mail, Datei, von Hand) sind super."
+   },
+   {
+    "task": "Prüfen, wie viel Guthaben insgesamt offen ist",
+    "success": "leicht",
+    "note": "Die große gelbe Karte mit 136,25 € sieht man sofort. Ich weiß aber nicht, ob der Zalando-Code mit 15 % da irgendwie drin steckt und was mit den 6 Gutscheinen gemeint ist."
+   },
+   {
+    "task": "Die App zum ersten Mal öffnen und verstehen, wofür sie ist",
+    "success": "leicht",
+    "note": "Überschrift und der eine Satz darunter erklären alles in 3 Sekunden. 'Los geht's' ist klar. Kein Login, keine Fragen, sehr angenehm."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Kein erkennbarer Hinzufügen-Button",
+    "detail": "Zum Hinzufügen gibt es nur das kleine Barcode-Symbol unten rechts neben der Tab-Leiste, ohne Beschriftung. Ich habe ein '+' gesucht. Das Symbol sieht eher nach 'Barcode an der Kasse zeigen' aus als nach 'neue Karte anlegen'.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Beispieldaten widersprechen sich",
+    "detail": "Im Onboarding steht bei IKEA 'noch 9 Tage', auf dem Start-Tab 'noch 24 Tage'. Das ist klein, aber bei einer App, die mir Fristen erklären soll, sinkt da mein Vertrauen sofort.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Gesamtsumme und Prozentcodes unklar",
+    "detail": "'136,25 €, 6 Gutscheine' – Zalando zählt mit 15 % Rabatt, hat aber keinen Eurowert. Ich weiß nicht, ob die Summe alle Karten abdeckt und ob unbenutzte Karten voll mitzählen. Ein kleiner Hinweis wie 'plus 1 Rabattcode' würde helfen.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Letzter Listeneintrag unter Tab-Leiste verschwommen",
+    "detail": "Die schwebende Tab-Leiste verdeckt den letzten Gutschein (man sieht nur '30...'). Ich muss scrollen, um zu sehen, dass es noch mehr Karten gibt.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Formular für schnelles Erfassen lang",
+    "detail": "Wenn ich 8 Karten nacheinander eintrage, sind Barcode-Typ, 'Erhalten am', Aufbewahrungsort und Notiz viele Felder. Ich will nur Shop, Betrag, Code. Die Typ-Chips oben laufen rechts aus dem Bild ('%' abgeschnitten). Dass 'Restwert' das Guthaben ist, hat mich kurz irritiert.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_scan.png",
+    "title": "Keine Mehrfach-Erfassung erkennbar",
+    "detail": "Ich habe 8 Karten in der Hand. Nirgends sehe ich, dass ich mehrere nacheinander scannen kann, ohne jedes Mal zurückzugehen. Ein 'Nächste Karte scannen' wäre für mich das wichtigste Feature.",
+    "severity": "idee",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol oben rechts rätselhaft",
+    "detail": "Das Symbol oben rechts ist nicht beschriftet. Ich vermute Ablauftermine, muss es aber ausprobieren.",
+    "severity": "minor",
+    "kind": "bedienung"
+   }
+  ],
+  "positives": [
+   "Onboarding erklärt den Zweck in einem Satz, kein Konto nötig",
+   "Die riesige Gesamtsumme in Gelb ist genau das, was ich wissen will",
+   "'Bald fällig' ganz oben mit orangem Countdown ist super nützlich",
+   "Viele Wege zum Erfassen: Scan, Fotos, E-Mail, PDF, von Hand",
+   "Hinweis zur gesetzlichen 3-Jahres-Frist beim Datum ist echt hilfreich",
+   "Fortschrittsbalken beim Restguthaben zeigt auf einen Blick, wie viel verbraucht ist"
+  ],
+  "quote": "Die App sieht richtig gut aus und die Summe oben ist genau das, was ich brauche, aber ich habe ewig nach dem Plus gesucht, um meine Karten reinzubekommen."
+ },
+ {
+  "persona": "Mehmet, 53, Lehrer, datenskeptisch, verwaltet Gutscheine für die Familie und will alles in 3 Sekunden.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Nächsten verfallenden Gutschein finden",
+    "success": "leicht",
+    "note": "Auf dem Start-Screen steht Zalando mit 'noch 12 Tage' ganz oben unter 'Bald fällig'. Das hat eine Sekunde gedauert."
+   },
+   {
+    "task": "Douglas-Restguthaben online prüfen",
+    "success": "mit Mühe",
+    "note": "Im Detail steht der Link 'Guthaben online prüfen' unter dem Barcode und wird halb von der Tab-Leiste verdeckt. In der Händlerliste ist bei Douglas der Link unten abgeschnitten, man muss erst scrollen."
+   },
+   {
+    "task": "Erinnerungen einstellen",
+    "success": "mit Mühe",
+    "note": "Die Erinnerungen stecken unter Einstellungen > 'Sicherheit & Erinnerungen'. Man kann sie nur an- oder ausschalten, die Termine (30/7 Tage, 10 Uhr) lassen sich nicht ändern. Das Kalender-Symbol oben auf Start führt nur zu den Ablaufterminen und nicht zu den Erinnerungen."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeitpunkt nicht einstellbar",
+    "detail": "Beim Schalter steht fest '30 und 7 Tage vor dem Ablauf, um 10 Uhr'. Ich will z.B. 3 Tage vorher erinnert werden, finde dafür aber keine Einstellung. Einzelne Gutscheine kann ich auch nicht anders einstellen.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Guthaben-Link unter Tab-Leiste versteckt",
+    "detail": "'Guthaben online prüfen' klebt direkt über der schwebenden Tab-Leiste und ist halb verdeckt. Ich habe den Link fast übersehen.",
+    "severity": "major",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Konto-Aufforderung schreckt ab",
+    "detail": "Ganz oben steht ein großer schwarzer Button 'Anmelden oder Konto erstellen'. Ich will keine Daten abgeben und lese das als Druck. Dass alles nur auf dem iPhone liegt, steht nur klein daneben.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Icon ohne Beschriftung",
+    "detail": "Oben rechts ist ein Kalendersymbol ohne Text. Ich habe nicht gewusst, ob es zu den Erinnerungen oder zu einer Ablaufliste führt.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Listenende von Tab-Leiste verdeckt",
+    "detail": "Der letzte Gutschein (Amazon) liegt unter der Tab-Leiste und dem Scan-Knopf, der Name ist nur gespiegelt und verschwommen zu erkennen.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Douglas-Aktion abgeschnitten",
+    "detail": "Bei Douglas sieht man den Link zum Guthaben erst nach dem Scrollen. Einen Händler zu suchen kostet zusätzlich Schritte, obwohl ich die Karte schon in der App habe.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "'Gutschein entfernen' zu nah am Verlauf",
+    "detail": "Der rote Button zum Entfernen sitzt direkt unter dem Verlauf. Wenn ich schnell tippe, erwische ich ihn womöglich aus Versehen.",
+    "severity": "idee",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Familienüberblick fehlt",
+    "detail": "Ich sehe nicht, welcher Gutschein wem in der Familie gehört oder was ich verschenkt habe. Eine Möglichkeit, Gutscheine einer Person zuzuordnen, fehlt.",
+    "severity": "idee",
+    "kind": "fehlt"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme und 'Bald fällig' sieht man sofort, das spart Zeit",
+   "Die Ablauftermine sind nach Monat gruppiert und übersichtlich",
+   "Der Hinweis 'Alles liegt nur auf diesem iPhone' beruhigt",
+   "Die Schnellbeträge beim Einlösen und die Anzeige 'Danach übrig' sind praktisch",
+   "Die PIN ist mit Face ID geschützt"
+  ],
+  "quote": "Was als Nächstes verfällt, sehe ich sofort, das gefällt mir. Aber warum darf ich nicht selbst festlegen, wann die App mich erinnert?"
+ },
+ {
+  "persona": "Lukas, 24, Azubi, nutzt das Handy meist einhändig unterwegs, hat letztes Jahr einen 50-Euro-Gutschein verfallen lassen.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Thalia-Barcode an der Kasse zeigen und 12,60 Euro eintragen",
+    "success": "mit Mühe",
+    "note": "Barcode liegt im Detail direkt oben, gut. 'An der Kasse zeigen & testen' finde ich aber erst weit unten. Nach 'Geklappt' ist mir nicht klar, ob ich dann auch den Betrag eingebe. 12,60 geht nur über 'Betrag genau eintippen', der Slider mit 5/10/20 hilft nicht. Die Tastatur hat nur 0-9 und Komma, das klappt dann aber."
+   },
+   {
+    "task": "Herausfinden, ob man bei REWE vom Handy zeigen kann",
+    "success": "mit Mühe",
+    "note": "Unter Händler steht REWE nicht auf dem ersten Bildschirm, ich muss scrollen oder oben ins Suchfeld tippen, das ist einhändig weit weg. Der Filter 'Am Handy vorzeigbar' ist aber gut."
+   },
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "'PIN anzeigen' steht im Detail und an der Kasse. Das Face-ID-Symbol davor zeigt mir, dass das geschützt ist."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail.png",
+    "title": "Kassenansicht zu weit unten versteckt",
+    "detail": "Der Hauptbutton 'An der Kasse zeigen & testen' erscheint erst nach dem Scrollen (03_detail_b). An der Kasse will ich mit einem Tipp oben rechts oder direkt auf der Karte dahin. Oben rechts ist aber nur der Stift.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Nach 'Geklappt' ist der Betrag unklar",
+    "detail": "'Hat es geklappt?' mit Geklappt/Abgelehnt, aber nirgends steht, wie viel ich eingelöst habe. Ich weiß nicht, ob der Restwert dann automatisch stimmt oder ob ich die 12,60 noch woanders eintragen muss.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Slider für krumme Beträge nutzlos",
+    "detail": "12,60 Euro mit dem Slider genau zu treffen, geht mit einer Hand nicht. Die Schnelltasten 5/10/20/Alles passen auch nicht. 'Betrag genau eintippen' ist nur kleiner grauer Text und leicht zu übersehen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Suche oben, schwer mit Daumen erreichbar",
+    "detail": "Um REWE zu finden, muss ich lange scrollen oder hoch zum Suchfeld greifen. Es gibt keinen Buchstaben-Index an der Seite und keine Suche unten.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Tab-Leiste verdeckt den Einlösen-Bereich",
+    "detail": "Unten schaut 'Einlösen 10,00 Euro' halb hinter der Tab-Leiste hervor und wirkt abgeschnitten. Unter dem Barcode wird außerdem 'Guthaben online prüfen' knapp von der Leiste überlagert.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Hinweis 'Code 128' zu klein und unklar",
+    "detail": "Die graue Mini-Zeile 'Code 128 · Helligkeit auf Maximum' kann ich kaum lesen, und 'Code 128' sagt mir nichts.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "'Gutschein entfernen' zu nah am Verlauf",
+    "detail": "Der rote Löschen-Link liegt direkt unter dem Verlauf, genau da, wo mein Daumen beim Scrollen landet. Ich hoffe, dass danach noch eine Bestätigung kommt.",
+    "severity": "idee",
+    "kind": "vertrauen"
+   }
+  ],
+  "positives": [
+   "Restwert riesig und sofort lesbar",
+   "Barcode groß, mit gut lesbarer Nummer darunter",
+   "'Danach übrig: 2,40 Euro' vor dem Einlösen ist super",
+   "Der Einlöse-Verlauf als Kassenbon ist verständlich und sieht cool aus",
+   "Beim Händler steht klar 'Am Handy vorzeigbar', dazu gibt es den passenden Filter",
+   "Die eigene Zifferntastatur mit großen Tasten ist einhändig gut"
+  ],
+  "quote": "Sieht echt gut aus und hätte mir die 50 Euro gerettet, aber an der Kasse muss ich zu viel scrollen und weiß am Ende nicht, ob der Betrag abgezogen ist."
+ },
+ {
+  "persona": "Sabine, 58, Softwareentwicklerin, Power-Userin (Apple Wallet und Stocard jeden Tag), hat nur 1–2 Gutscheine im Jahr, Deutsch ist ihre Zweitsprache",
+  "rating": 7,
+  "would_use": false,
+  "tasks": [
+   {
+    "task": "Prüfen, wie viel Guthaben insgesamt noch offen ist",
+    "success": "leicht",
+    "note": "Die große gelbe Karte oben zeigt 136,25 €. Das sehe ich sofort. Die Zeile „Auf allen Karten zusammen“ ist verständlich. Aber zählen die 15 % Rabatt von Zalando mit? Das ist nicht klar."
+   },
+   {
+    "task": "Einen abgelaufenen oder aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "Um einen Gutschein zu löschen, muss ich im Detail ganz nach unten scrollen. Dort steht klein und rot „Gutschein entfernen“. Ein Wischen nach links in der Liste, wie bei iOS üblich, sehe ich nirgends. Eine Rubrik für abgelaufene oder aufgebrauchte Gutscheine sehe ich auf dem Start-Screen auch nicht."
+   },
+   {
+    "task": "Einen neuen Gutschein erfassen (Karte in der Hand)",
+    "success": "mit Mühe",
+    "note": "Der Scan-Knopf unten rechts ist nur ein Symbol ohne Text. Ich habe ihn zuerst für einen Barcode zum Vorzeigen gehalten. Wenn ich ihn gefunden habe, ist „Karte scannen“ klar. Ein „+“ oder „Hinzufügen“ fehlt aber."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Kein sichtbarer Hinzufügen-Knopf",
+    "detail": "Auf dem Start-Screen gibt es kein „+“. Der runde Knopf unten rechts zeigt nur ein Scan-Symbol ohne Beschriftung, und oben rechts ist ein Kalender-Symbol. Jemand, der die App selten nutzt, sucht hier.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Löschen versteckt ganz unten",
+    "detail": "„Gutschein entfernen“ steht erst nach langem Scrollen unter dem Verlauf. Wischen zum Löschen in der Liste sehe ich nicht. Auch einen Hinweis „abgelaufen, entfernen?“ gibt es nicht.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Rabattcode bei der Gesamtsumme unklar",
+    "detail": "Zalando hat „15 %“. Ich weiß nicht, ob die 136,25 € diesen Gutschein enthalten oder nicht. Die Summe sagt „6 Gutscheine“, das verwirrt mich.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Einlösen und Kasse zeigen verwechselbar",
+    "detail": "„Einlösen“ ist der große gelbe Knopf, „An der Kasse zeigen & testen“ steht darunter. An der Kasse will ich zuerst den Barcode sehen und nicht sofort Geld abziehen. Die Reihenfolge ist falsch.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tab-Leiste verdeckt die letzte Karte",
+    "detail": "Die schwebende Leiste liegt über der letzten Zeile. Den Text dort kann ich nicht lesen.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Wörter schwer für Nicht-Muttersprachler",
+    "detail": "„Restwert“, „Einlöse-Verlauf“, „Bald fällig“ sind für mich nicht sofort klar. „Fällig“ kenne ich von Rechnungen, nicht von Gutscheinen. „Läuft bald ab“ wäre einfacher. Eine englische Sprachoption sehe ich nicht.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Schieberegler zum Einlösen ungenau",
+    "detail": "Der Betrag wird mit einem Schieberegler eingestellt. Für genaue Beträge wie 12,60 € ist das ungenau. „Betrag genau eintippen“ ist nur ein kleiner grauer Link.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kein Wallet-Export",
+    "detail": "Ich nutze Apple Wallet. Bei 1–2 Gutscheinen im Jahr will ich keine eigene App. Eine Funktion „Zu Wallet hinzufügen“ sehe ich nicht.",
+    "severity": "idee",
+    "kind": "fehlt"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme ist groß und sofort zu sehen",
+   "„Bald fällig“ mit „noch 12 Tage“ in Orange ist nützlich",
+   "Beim Scannen gibt es viele Wege: Foto, E-Mail, Datei, von Hand",
+   "„Danach übrig: 2,40 €“ vor dem Einlösen gibt Sicherheit",
+   "Der Verlauf im Kassenbon-Stil ist gut lesbar"
+  ],
+  "quote": "Die Summe sehe ich sofort, aber für zwei Gutscheine im Jahr installiere ich keine Extra-App, wenn ich nicht mal einen Plus-Knopf finde."
+ },
+ {
+  "persona": "Jonas, 29, selbstständiger Friseur, eher unsicher mit Apps, bekommt Gutscheine meist als PDF per E-Mail, Rot-Grün-Farbsehschwäche.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Beim Händler online das Restguthaben einer Douglas-Karte prüfen",
+    "success": "mit Mühe",
+    "note": "Im Detail steht der Link „Guthaben online prüfen“ ganz klein unter dem Barcode und wird halb von der Tab-Leiste verdeckt. Alternativ bei Händler > Douglas, aber da ist der Link auch unten abgeschnitten und ich muss erst scrollen."
+   },
+   {
+    "task": "App zum ersten Mal öffnen und verstehen, wofür sie ist",
+    "success": "leicht",
+    "note": "Überschrift und die drei Beispielkarten sind klar. Wie ich einen PDF-Gutschein aus einer Mail reinbekomme, steht da aber nirgends, nur „abfotografieren“."
+   },
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "„Bald fällig“ zeigt Zalando oben. Die orange Schrift „noch 12 Tage“ erkenne ich als Farbe kaum, aber der Text reicht mir."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail.png",
+    "title": "Guthaben-prüfen-Link versteckt unter Tab-Leiste",
+    "detail": "„Guthaben online prüfen“ ist kleine graue Schrift direkt unter der Nummer und wird von der schwebenden Tab-Leiste teilweise verdeckt. Ich hätte es fast übersehen, das sollte ein richtiger Button sein.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Kein Hinweis auf PDF-Gutscheine aus E-Mail",
+    "detail": "Onboarding sagt nur „Karte abfotografieren“. Meine Gutscheine kommen als PDF per Mail, ich weiß nicht, ob ich die importieren kann oder den Bildschirm abfotografieren soll.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Grün als einziges Signal für „vorzeigbar“",
+    "detail": "„Am Handy vorzeigbar“ ist grün; bei Rot-Grün-Schwäche sieht das für mich fast grau/braun aus. Zum Glück steht Text dabei, aber ein negativer Status (z. B. nur online) wäre farblich nicht unterscheidbar.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Orange Warnfarbe schwer von Grau zu unterscheiden",
+    "detail": "„noch 12 Tage“ in Orange neben grauem „bis 13.02.2027“: den Dringlichkeitsunterschied erkenne ich nur über den Text, kein Icon oder fette Markierung.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Icon oben rechts unklar",
+    "detail": "Das Symbol oben rechts führt zu den Ablaufterminen, ist aber ohne Beschriftung. Ich hätte nicht gewusst, dass es da eine Übersicht gibt.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Douglas-Eintrag unten abgeschnitten",
+    "detail": "Der Guthaben-Link bei Douglas liegt hinter der Tab-Leiste; ich muss scrollen und wissen, dass da noch was kommt.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Balken statt Wort bei teilweise genutzten Karten",
+    "detail": "Bei Douglas/Thalia steht statt „unbenutzt“ nur ein schwarzer Strich. Was der bedeutet (verbrauchter Anteil?), ist nicht beschriftet.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "„Gutschein entfernen“ in Rot kaum erkennbar",
+    "detail": "Der rote Löschtext ist für mich schwer von normalem Text zu unterscheiden; ohne Icon merke ich nicht sofort, dass das gefährlich ist.",
+    "severity": "idee",
+    "kind": "barrierefreiheit"
+   }
+  ],
+  "positives": [
+   "Onboarding erklärt in einem Satz, worum es geht",
+   "Große Gesamtsumme oben ist sofort verständlich",
+   "„Bald fällig“ zeigt direkt, was als Nächstes verfällt, mit Text statt nur Farbe",
+   "Ablauftermine nach Monat sortiert sind übersichtlich",
+   "Einlösen mit festen Beträgen (5, 10, 20, Alles) ist einfach",
+   "Händlerliste erklärt, wo man am Handy zeigen darf"
+  ],
+  "quote": "Was verfällt, sehe ich sofort, aber den Link zum Guthaben-Check musste ich richtig suchen, und ob meine PDF-Gutscheine reingehen, sagt mir niemand."
+ },
+ {
+  "persona": "Fatma, 63, Lieferfahrerin, sehr technikaffin, sammelt Rabattcodes, Sehschwäche mit großer Schrift",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "REWE am Handy vorzeigbar?",
+    "success": "mit Mühe",
+    "note": "Händler-Tab hat Suche und Filter, gut. REWE steht aber nicht im sichtbaren Bereich, ich muss suchen. Die grünen Status-Texte sind klein und blass."
+   },
+   {
+    "task": "Ablauferinnerungen einstellen",
+    "success": "leicht",
+    "note": "In Einstellungen oben: 30 und 7 Tage, 10 Uhr. Aber Tage und Uhrzeit kann ich dort nicht ändern, nur an/aus."
+   },
+   {
+    "task": "Thalia Barcode zeigen und 12,60 € eintragen",
+    "success": "mit Mühe",
+    "note": "Barcode groß und gut. Thalia hat aber nur 12,40 €, 12,60 € geht also gar nicht. Keine klare Meldung sichtbar, was bei Überschreitung passiert."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_keypad.png",
+    "title": "Betrag über Guthaben unklar",
+    "detail": "Ich will 12,60 € eintragen, verfügbar sind 12,40 €. Auf dem Screen steht kein Hinweis, was dann passiert (Rest bar bezahlt? Fehler?). Der Button 'Abziehen' ist blassgelb mit grauer Schrift, ich sehe kaum, ob er aktiv ist.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Grüne Statuszeile schwer lesbar",
+    "detail": "'Am Handy vorzeigbar' in hellgrüner kleiner Schrift auf Weiß, mit winzigem Handy-Icon. Mit meiner Sehschwäche kaum lesbar. Beschreibungstexte darunter auch klein.",
+    "severity": "major",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeitpunkt nicht einstellbar",
+    "detail": "30 und 7 Tage um 10 Uhr sind fest. Ich fahre morgens aus und hätte gern abends oder einen Tag vorher. Nur ein Schalter.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tab-Leiste verdeckt letzte Karte",
+    "detail": "Die schwebende Tab-Leiste liegt über dem letzten Gutschein, man sieht nur verschwommene Reste. Die Tab-Beschriftungen ('Verlauf', 'Händler') sind sehr klein.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Zweck von 'Geklappt/Abgelehnt' unklar",
+    "detail": "Ich will danach den Betrag eintragen. Ob 'Geklappt' mich dahin führt, ist nicht erkennbar. Ein Button 'Betrag abziehen' wäre eindeutiger.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Hinweistext zu klein und grau",
+    "detail": "'Code 128 · Helligkeit auf Maximum' ist winzig und hellgrau, kaum lesbar.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Icon oben rechts rätselhaft",
+    "detail": "Das runde Symbol oben rechts hat keine Beschriftung. Ich wusste nicht, dass dort Ablauftermine sind.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Filterleiste abgeschnitten",
+    "detail": "Der dritte/vierte Filter-Chip wird rechts abgeschnitten, bei großer Schrift wird das noch schlimmer.",
+    "severity": "idee",
+    "kind": "optik"
+   }
+  ],
+  "positives": [
+   "Gesamtsumme groß und gelb, sofort lesbar",
+   "Barcode an der Kasse groß mit Nummer darunter",
+   "Rabattcodes (15 %) werden auch unterstützt",
+   "Händlerliste mit Suche und Filter 'Am Handy vorzeigbar'",
+   "Schnellbeträge und großes Zahlenfeld beim Abziehen"
+  ],
+  "quote": "Die großen Zahlen sind super, aber alles Grüne und Graue drumherum muss ich mit der Lupe lesen, und bei 12,60 € auf 12,40 € weiß ich nicht, was die App mit mir macht."
+ },
+ {
+  "persona": "Karl-Heinz, 34, Kassierer im Supermarkt, misstraut Apps, die Daten sammeln.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Abgelaufenen/aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht ganz unten im Detail, nach Slider, Einlösen-Button und Verlauf. Man muss erst durchscrollen. In der Liste selbst habe ich kein Löschen gesehen, einen Bereich 'Abgelaufen' oder 'Aufgebraucht' auf dem Startscreen auch nicht."
+   },
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "Unter 'An der Kasse' gibt es einen Button 'PIN anzeigen' direkt unter dem Barcode. Gut, dass sie nicht gleich offen dasteht. Im Detail selbst muss ich aber erst auf 'An der Kasse zeigen & testen' tippen, das hätte ich nicht vermutet."
+   },
+   {
+    "task": "Gesamtes offenes Guthaben prüfen",
+    "success": "leicht",
+    "note": "136,25 € stehen riesig oben auf Gelb. Nur: Zalando mit '15 %' kann doch nicht in die Summe einfließen, was genau ist da drin?"
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail_c.png",
+    "title": "Entfernen ganz unten versteckt",
+    "detail": "'Gutschein entfernen' ist rote Schrift am Ende einer langen Scrollseite, unter dem Kassenbon. Zum Aufräumen alter Karten muss ich jede einzeln öffnen und bis ganz runter scrollen. Wischen zum Löschen in der Liste würde ich erwarten.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Keine Gruppe für abgelaufen/aufgebraucht",
+    "detail": "Die Liste hat 'Bald fällig' und 'Weitere'. Wo landen leere oder abgelaufene Karten? Ich sehe keine Ecke, in der ich den Müll auf einen Blick finde.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Gesamtsumme unklar bei Prozentcodes",
+    "detail": "'136,25 € auf allen Karten' bei 6 Gutscheinen, einer davon ist ein 15-%-Code. Mir ist nicht klar, ob der mitgezählt wird. Ein kleiner Hinweis 'ohne Rabattcodes' würde helfen.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Einlösen-Slider vor Kassen-Barcode",
+    "detail": "An der Kasse brauche ich zuerst den Barcode. Im Detail ist aber der große gelbe Button 'Einlösen'. 'An der Kasse zeigen' ist nur ein weißer Button darunter. Wenn die Schlange wartet, drücke ich schnell mal das Falsche und buche Geld ab.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Hat-es-geklappt fragt zu früh",
+    "detail": "'Geklappt/Abgelehnt' steht sofort unter dem Barcode. Wenn mir der Kunde das Handy hinhält, tippt man leicht versehentlich darauf. Was dann passiert, ist nicht erklärt (wird abgebucht?).",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Unterstes Listenelement von Tabbar verdeckt",
+    "detail": "Die letzte Karte in der Liste ('30...') verschwindet hinter der schwebenden Tabbar und ist kaum lesbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Nichts zu Datenschutz sichtbar",
+    "detail": "Ich speichere hier PINs und Kartennummern. Auf den gesehenen Screens steht nirgends 'nur auf deinem Gerät' oder Ähnliches. Das wäre für mich das Wichtigste, bevor ich was eintippe.",
+    "severity": "major",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kassen-Knopf unten rechts unbeschriftet",
+    "detail": "Der runde Button mit dem Barcode-Symbol unten rechts: scannen oder vorzeigen? Ohne Beschriftung rate ich.",
+    "severity": "idee",
+    "kind": "bedienung"
+   }
+  ],
+  "positives": [
+   "Gesamtsumme riesig und sofort sichtbar",
+   "'Bald fällig' mit Tagen in Orange ist praktisch",
+   "Barcode groß mit Nummer zum Abtippen, Helligkeit geht auf Maximum",
+   "PIN ist versteckt, bis ich sie antippe",
+   "Der Einlöse-Verlauf als Kassenbon ist verständlich, weil ich das von der Arbeit kenne"
+  ],
+  "quote": "Den Barcode hätte ich gern mit einem Tipp und ohne den gelben Einlösen-Knopf davor. Und bevor ich da meine PINs reinschreibe, will ich schwarz auf weiß sehen, wo die landen."
+ },
+ {
+  "persona": "Lea, 68, Vertriebsmitarbeiterin, nutzt WhatsApp, Banking und Amazon, hat 8 Geschenkkarten in der Schublade und wenig Geduld.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "App zum ersten Mal öffnen und verstehen",
+    "success": "leicht",
+    "note": "Überschrift und die drei Beispielkarten sagen sofort, worum es geht. Das hat keine 3 Sekunden gedauert."
+   },
+   {
+    "task": "Neuen Gutschein erfassen (Karte in der Hand)",
+    "success": "mit Mühe",
+    "note": "Auf dem Start-Tab gibt es keinen Plus-Knopf. Erst nach einer Weile gemerkt, dass das runde Barcode-Symbol unten rechts zum Scannen führt. Auf dem Scannen-Screen ist 'Karte scannen' dann klar."
+   },
+   {
+    "task": "Douglas-Guthaben online prüfen",
+    "success": "mit Mühe",
+    "note": "Beim Douglas-Eintrag unter Händler ist der Link 'Guthaben online prüfen' von der Tab-Leiste verdeckt, ich muss scrollen. Dass der Link auch im Gutschein-Detail steckt, sehe ich auf den Screenshots nicht direkt."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Kein sichtbarer Knopf zum Hinzufügen",
+    "detail": "Ich will eine Karte eintragen und suche ein Plus. Da ist nur ein Barcode-Symbol unten rechts ohne Beschriftung, und oben rechts ein Kalender-Symbol. Ich hätte fast aufgegeben.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Douglas-Prüflink von Tab-Leiste verdeckt",
+    "detail": "Beim Douglas-Eintrag verschwindet die Zeile mit dem Link hinter der schwebenden Tab-Leiste. Ich sehe nur 'Nummer und PIN' und keinen Knopf.",
+    "severity": "major",
+    "kind": "optik"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Symbole ohne Beschriftung",
+    "detail": "Kalender-Symbol oben und Scan-Symbol unten haben keinen Text. Mit 68 rate ich nicht gern herum.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Zu viele Zahlen zum Einlösen",
+    "detail": "Schieberegler, 5/10/20/Alles, 'genau eintippen' und 'Danach übrig'. Ich will nur 'Guthaben ändern'. Dauert zu lange.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Graue Kleinschrift schwer lesbar",
+    "detail": "'bis 13.02.2027' und 'unbenutzt' sind hellgrau und klein, der Fortschrittsbalken unter Douglas sagt mir nichts.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Gutschein entfernen zu nah",
+    "detail": "Der rote Text 'Gutschein entfernen' steht direkt unter dem Verlauf, da tippt man leicht aus Versehen drauf.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "03_scan.png",
+    "title": "Unklar ob Guthaben erkannt wird",
+    "detail": "Dort steht, dass Barcode und Text gelesen werden. Ob das Guthaben mitkommt oder ob ich es selbst prüfen muss, sagt mir keiner.",
+    "severity": "idee",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme im großen gelben Kasten sehe ich sofort",
+   "'Bald fällig' mit orangen Tagen ist genau das, was ich vergesse",
+   "Beim Onboarding nur ein Knopf, kein Konto, keine Anmeldung",
+   "Der Händler-Filter 'Am Handy vorzeigbar' ist praktisch"
+  ],
+  "quote": "Die Summe oben ist klasse, aber wo tippe ich hin, um meine Karte reinzukriegen? Ein Plus hätte es auch getan."
+ },
+ {
+  "persona": "Dimitri, 38, Pflegekraft, nutzt Apple Wallet und Stocard täglich, bedient das Handy meist mit einer Hand",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "mit Mühe",
+    "note": "In den Einstellungen gefunden: Schalter an, 30 und 7 Tage vorher, um 10 Uhr. Die Tage und die Uhrzeit kann ich aber nirgends ändern, und pro Gutschein geht es auch nicht."
+   },
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "Auf dem Start-Tab steht unter „Bald fällig“ ganz oben Zalando, noch 12 Tage. Das Kalender-Icon oben rechts führt zu den Ablaufterminen, das ist aber kaum zu erreichen."
+   },
+   {
+    "task": "Herausfinden, ob man bei REWE vom Handy zeigen kann",
+    "success": "mit Mühe",
+    "note": "REWE steht im Händler-Tab nicht oben, ich muss suchen oder weit scrollen. Laut Code gibt es einen Hinweis: nur den Strich-Barcode, keinen QR-Code."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeitpunkt nicht anpassbar",
+    "detail": "Beim Schalter steht fest „30 und 7 Tage vorher, 10 Uhr“. Ich kann weder die Tage noch die Uhrzeit ändern. Wenn ich um 10 Uhr im Frühdienst bin, sehe ich die Erinnerung nicht.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Icon oben rechts einhändig unerreichbar",
+    "detail": "Den Weg zu den Ablaufterminen gibt es nur über das kleine Icon ganz oben rechts. Einhändig komme ich da nicht hin, und ohne Beschriftung weiß ich auch nicht, was es tut.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "REWE nicht direkt auffindbar",
+    "detail": "Die Liste ist alphabetisch und fängt bei Aldi an. Für REWE muss ich lange scrollen oder oben in die Suche tippen, die für den Daumen weit weg ist.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_radar.png",
+    "title": "Ablaufseite springt auf Start-Tab",
+    "detail": "In der Tab-Leiste ist „Start“ markiert, obwohl ich auf der Ablauftermine-Seite bin. Der Zurück-Pfeil oben links ist einhändig schwer zu erreichen.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Tab-Leiste verdeckt Einstellungsinhalt",
+    "detail": "Der Abschnitt „So funktioniert Restwert“ scheint unter der schwebenden Tab-Leiste durch und ist nicht lesbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Keine Erinnerung pro Gutschein",
+    "detail": "Für Gutscheine, die ich verschenken will, hätte ich gerne eigene Erinnerungen. Man kann nur alle gemeinsam an- oder ausschalten.",
+    "severity": "idee",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Kassenhinweis nur im Kleingedruckten",
+    "detail": "Wichtige Hinweise wie bei REWE (nur Strich-Barcode, kein QR-Code) gehören als Warnung direkt auf den Kassen-Screen, nicht nur in die Händlerliste.",
+    "severity": "idee",
+    "kind": "vertrauen"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme und „Bald fällig“ sehe ich sofort",
+   "Die Händlerliste mit „Am Handy vorzeigbar“ ist genau, was mir bei Stocard fehlt",
+   "Der Scan-Button unten rechts ist gut mit dem Daumen zu erreichen",
+   "Die Ablauftermine sind übersichtlich nach Monaten gruppiert"
+  ],
+  "quote": "Ich sehe sofort, was bald verfällt, das ist top. Aber die Erinnerung um 10 Uhr kann ich nicht verschieben, und da stehe ich auf Station."
+ },
+ {
+  "persona": "Hannah, 74 Jahre, Handwerkerin, Deutsch ist Zweitsprache, unsicher mit Apps.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "PIN ansehen",
+    "success": "leicht",
+    "note": "Der große Knopf 'PIN anzeigen' ist gleich im Detail zu sehen. Das Gesichts-Symbol hat mich aber unsicher gemacht, ob ich jetzt mein Gesicht zeigen muss."
+   },
+   {
+    "task": "Barcode bei Thalia zeigen, 12,60 € eintragen",
+    "success": "mit Mühe",
+    "note": "Der Barcode an der Kasse ist gut. Danach steht dort nur 'Geklappt' oder 'Abgelehnt', ein Feld für den Betrag gibt es nicht. Im Detail stehen 10 € schon fertig drin, und die 12,60 € finde ich nur über den kleinen grauen Text 'Betrag genau eintippen'. Den hätte ich fast übersehen."
+   },
+   {
+    "task": "Abgelaufenen Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht ganz unten in Rot. Man muss sehr weit scrollen, und die Leiste unten liegt fast darüber."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail_c.png",
+    "title": "Einlösen-Betrag steht schon auf 10 €",
+    "detail": "Der Schieber ist schon auf 10,00 € gestellt. Beim schnellen Tippen auf 'Einlösen' wird der falsche Betrag abgezogen. Den genauen Betrag kann ich nur über einen kleinen grauen Link eintippen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Nach 'Geklappt' fehlt die Frage nach dem Betrag",
+    "detail": "An der Kasse kann ich nur 'Geklappt' oder 'Abgelehnt' wählen. Ich weiß nicht, ob damit schon Geld abgezogen wird und wie viel.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Text 'Betrag genau eintippen' zu klein und blass",
+    "detail": "Grauer Text auf hellem Grund, für alte Augen schwer zu lesen. Man erkennt nicht, dass man darauf tippen kann.",
+    "severity": "major",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Leiste unten verdeckt Inhalt",
+    "detail": "Die Leiste mit 'Start / Verlauf / Händler' liegt über 'Guthaben online prüfen' und 'Einlösen'. Das verwirrt.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Löschen ganz unten versteckt",
+    "detail": "'Gutschein entfernen' sehe ich nur nach sehr langem Scrollen. Für aufgebrauchte Gutscheine wünsche ich mir einen Hinweis wie 'Aufgebraucht – entfernen?'.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Fachwörter 'Code 128' und 'Restwert'",
+    "detail": "'Code 128' verstehe ich nicht. Mit 'Restwert' kann ich als Nicht-Muttersprachlerin wenig anfangen, 'Restguthaben' ist klarer.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Gesichts-Symbol bei PIN verunsichert",
+    "detail": "Ich weiß nicht, ob ich eine Kamera oder Face ID brauche, um die PIN zu sehen.",
+    "severity": "idee",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Barcode an der Kasse ist groß und klar",
+   "'Bald fällig' mit 'noch 12 Tage' in Orange ist sehr hilfreich, so wäre mein 50-€-Gutschein nicht verfallen",
+   "Große Summe oben, gut lesbar",
+   "Verlauf wie ein Kassenbon ist leicht verständlich"
+  ],
+  "quote": "Den Barcode finde ich schnell, aber beim Einlösen hätte ich aus Versehen 10 Euro statt 12,60 abgezogen."
+ },
+ {
+  "persona": "Tobias, 42, Buchhalter, sehr technikaffin, hat nur 1-2 Gutscheine im Jahr und eine Rot-Grün-Farbsehschwäche.",
+  "rating": 7,
+  "would_use": false,
+  "tasks": [
+   {
+    "task": "Neuen Gutschein erfassen (Karte in der Hand)",
+    "success": "mit Mühe",
+    "note": "Das Scannen versteckt sich hinter einem runden Knopf ohne Beschriftung rechts neben der Tab-Leiste. Das habe ich erst im zweiten Anlauf als Tab erkannt. Danach ist 'Karte scannen' klar. Das Formular ist lang, aber die Felder sind verständlich."
+   },
+   {
+    "task": "Offenes Gesamtguthaben prüfen",
+    "success": "leicht",
+    "note": "136,25 EUR stehen riesig auf gelbem Grund. Als Buchhalter frage ich mich aber, wie der 15-%-Rabattcode von Zalando in diese Summe eingeht. Eine Aufschlüsselung wird nicht angezeigt."
+   },
+   {
+    "task": "App zum ersten Mal öffnen und verstehen",
+    "success": "leicht",
+    "note": "Überschrift und die drei Sätze erklären den Zweck in fünf Sekunden. Nach 'Los geht's' fehlt allerdings ein Hinweis, wie ich die erste Karte anlege."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Scan-Knopf ohne Beschriftung neben Tab-Leiste",
+    "detail": "Alle vier Tabs haben eine Beschriftung, nur der wichtigste Knopf (Scannen/Hinzufügen) ist ein abgesetzter Kreis mit Barcode-Symbol und ohne Text. Ich dachte zuerst, er öffnet den Kassen-Barcode. Ein Plus oder die Beschriftung 'Hinzufügen' wäre eindeutig.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Gesamtsumme mischt Prozent-Codes und Euro",
+    "detail": "'6 Gutscheine' und dazu 136,25 EUR, aber der Zalando-Code steht als '15 %'. Nachgerechnet: 20+23,85+12,40+50+30 = 136,25, der Code zählt also nicht mit. Das steht aber nirgends. Ein Satz wie '5 Guthaben + 1 Rabattcode' würde das klären.",
+    "severity": "major",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Restguthaben-Balken ohne Bezugswert",
+    "detail": "Bei Douglas und Thalia gibt es nur einen schwarzen Balken unter dem Betrag, auf der Startseite fehlt 'von 40,00 EUR' (im Onboarding stand es noch da). Ohne Zahl ist der Balken für mich nur Deko.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Fälligkeit nur über Orange erkennbar",
+    "detail": "'noch 12 Tage' ist orange, 'bis 13.02.2027' grau. Bei Rot-Grün-Schwäche kann ich das Orange gerade noch unterscheiden, aber es ist schwach. Zum Glück ist der Text anders formuliert. Ein Symbol (Uhr oder Ausrufezeichen) wäre trotzdem robuster.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Onboarding ohne nächsten Schritt",
+    "detail": "Der Zweck ist klar, aber zu Erinnerungen (Mitteilungs-Erlaubnis) und zum Anlegen der ersten Karte kommt nichts. Bei 1-2 Gutscheinen im Jahr vergesse ich die App, wenn ich sie nicht sofort benutze.",
+    "severity": "minor",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Formular für Einmalnutzer zu umfangreich",
+    "detail": "PIN, Barcode-Typ, Erhalten am, Aufbewahrungsort und Notiz: Für meinen einen Gutschein brauche ich nur Shop, Betrag und Datum. Außerdem ist der dritte Typ-Tab ('%') abgeschnitten. Wahlfelder sollten eingeklappt sein.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Unterschied Wert und Restwert unklar",
+    "detail": "'Wert in EUR' neben 'Restwert': Muss ich bei einer neuen Karte beides eintragen? Es wird nicht angezeigt, ob der Restwert automatisch übernommen wird.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_radar.png",
+    "title": "Kalender-Symbol oben rechts unklar",
+    "detail": "Auf der Startseite führt ein Kalender-Symbol ohne Text zu 'Ablauftermine'. Das finde ich nur durch Ausprobieren. Die Monatsgruppierung mit Summen gefällt mir als Buchhalter aber sehr.",
+    "severity": "idee",
+    "kind": "bedienung"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme ist sofort sichtbar und groß",
+   "Der Onboarding-Text erklärt den Zweck in drei Sätzen",
+   "Ablauftermine nach Monat gruppiert und mit Summen, fast wie eine Fälligkeitsliste",
+   "Hinweis auf die gesetzliche Frist nach § 195 BGB, wenn kein Datum angegeben ist",
+   "Viele Importwege: Foto, Mail, PDF, Teilen-Menü",
+   "Farben werden nie allein verwendet, der Status steht immer auch als Text da"
+  ],
+  "quote": "Sauber gemacht, aber bei zwei Gutscheinen im Jahr muss mir die App den Weg zum Hinzufügen und das Zustandekommen der Summe schon deutlicher zeigen."
+ },
+ {
+  "persona": "Ingrid, 81 Jahre, Rentnerin mit Sehschwäche, nutzt große Schrift und traut Apps nicht, die Daten sammeln.",
+  "rating": 5,
+  "would_use": false,
+  "tasks": [
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "Unter 'Bald fällig' steht Zalando, 'noch 12 Tage'. Das ist klar. Die orange Schrift auf Weiß ist für mich aber schwer zu lesen."
+   },
+   {
+    "task": "Online-Restguthaben der Douglas-Karte prüfen",
+    "success": "mit Mühe",
+    "note": "Im Detail ist der Link 'Guthaben online prüfen' klein und halb hinter der unteren Leiste versteckt. Bei den Händlern wird der Link für Douglas von der Leiste abgeschnitten."
+   },
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "mit Mühe",
+    "note": "Unter Einstellungen gibt es einen Schalter mit '30 und 7 Tage, 10 Uhr'. Ich kann aber weder die Tage noch die Uhrzeit ändern, und es gibt keine Erinnerung für einzelne Gutscheine."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail.png",
+    "title": "Link 'Guthaben online prüfen' von Leiste verdeckt",
+    "detail": "Der Link steht ganz unten in kleiner grauer Schrift direkt hinter der schwebenden Tab-Leiste. Ich habe ihn fast nicht gefunden.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Graue Kleinschrift kaum lesbar",
+    "detail": "'bis 13.02.2027', 'unbenutzt', 'Rabattcode' sind hellgrau und klein. Das Wichtigste, nämlich das Ablaufdatum, ist am schwersten zu lesen.",
+    "severity": "major",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kein Weg für PDF aus E-Mail sichtbar",
+    "detail": "Meine Gutscheine kommen als PDF per E-Mail. Ich sehe nur einen Scan-Knopf, aber keinen Knopf für 'PDF importieren'.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeiten nicht änderbar",
+    "detail": "30 und 7 Tage und 10 Uhr sind fest vorgegeben. Ich möchte zusätzlich einen Tag vorher erinnert werden.",
+    "severity": "minor",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "'Anmelden oder Konto erstellen' macht misstrauisch",
+    "detail": "Der große schwarze Knopf steht ganz oben. Er wirkt, als müsste ich ein Konto anlegen. Die Datenschutzerklärung ist unten von der Leiste verdeckt.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol oben ohne Beschriftung",
+    "detail": "Ich wusste nicht, dass hinter dem kleinen Kalender die Ablauftermine stecken. Ein Wort daneben würde helfen.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Rotes 'Gutschein entfernen' zu nah",
+    "detail": "Der Knopf liegt direkt unter dem Verlauf. Ich habe Angst, ihn aus Versehen anzutippen.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Händlerliste von Leiste überdeckt",
+    "detail": "Bei Douglas ist der Link zum Guthaben von der Tab-Leiste verdeckt.",
+    "severity": "minor",
+    "kind": "optik"
+   }
+  ],
+  "positives": [
+   "Die große Gesamtsumme auf gelbem Grund ist gut lesbar",
+   "'Bald fällig' mit 'noch 12 Tage' ist sofort verständlich",
+   "Die Ablauftermine sind nach Monaten übersichtlich geordnet",
+   "Man braucht kein Konto, 'Alles liegt nur auf diesem iPhone' beruhigt mich",
+   "Die Knöpfe 5 €, 10 €, 20 €, Alles sind groß"
+  ],
+  "quote": "Das Wichtigste, nämlich wann der Gutschein abläuft, steht in winziger grauer Schrift. Und meine PDFs aus der E-Mail bekomme ich hier gar nicht rein."
+ },
+ {
+  "persona": "Yusuf, 47, in Elternzeit, nutzt WhatsApp, Banking und Amazon und sammelt Rabattcodes",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Bei Thalia den Barcode zeigen und 12,60 € eintragen",
+    "success": "mit Mühe",
+    "note": "Der Barcode unter „An der Kasse“ ist groß und gut. Nach „Geklappt“ kann ich aber keinen Betrag eingeben. Das Eintragen läuft über den Schieberegler im Detail, und die Schritte sind 5/10/20 €. Für 12,60 € muss ich „Betrag genau eintippen“ finden, das ist ein kleiner grauer Link."
+   },
+   {
+    "task": "Herausfinden, ob REWE Gutscheine am Handy akzeptiert",
+    "success": "mit Mühe",
+    "note": "Unter „Händler“ gibt es eine Suche und einen Filter „Am Handy vorzeigbar“, das finde ich gut. REWE steht aber nicht auf dem ersten Bildschirm, ich muss suchen oder scrollen."
+   },
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "„PIN anzeigen“ steht im Detail direkt oben und an der Kasse noch einmal."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_checkout.png",
+    "title": "Nach „Geklappt“ keine Betragseingabe",
+    "detail": "Ich frage mich: Was wird bei „Geklappt“ eingetragen? Das ganze Guthaben? Ich möchte direkt dort 12,60 € eintippen können.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Genauen Betrag eintippen ist versteckt",
+    "detail": "Mit dem Schieberegler und den Buttons 5/10/20 € kommt man nicht auf krumme Beträge. „Betrag genau eintippen“ ist ein blasser grauer Text, den ich fast übersehen hätte.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Menüleiste verdeckt den Einlösen-Bereich",
+    "detail": "Unten ist „Einlösen 10,00 €“ halb von der Menüleiste verdeckt. Ich sehe nicht, dass man darunter weiterscrollen muss.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Zwei Wege zur Kasse verwirren",
+    "detail": "Im Detail oben steht der Barcode, weiter unten „An der Kasse zeigen & testen“. Welchen zeige ich der Kassiererin? „testen“ macht mich unsicher.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "REWE nicht sofort sichtbar",
+    "detail": "Die Liste ist alphabetisch und lang. Eine Schnellwahl der häufigen Supermärkte wäre gut.",
+    "severity": "idee",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Einlösen-Button zu nah am Entfernen-Button",
+    "detail": "„Gutschein entfernen“ in Rot steht direkt unter dem Verlauf. Ich habe Angst, dass ich ihn versehentlich antippe.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   }
+  ],
+  "positives": [
+   "Großer, klarer Barcode mit Nummer und maximaler Helligkeit",
+   "Restwert ist sofort groß sichtbar",
+   "PIN ist leicht zu finden",
+   "Der Verlauf wie ein Kassenbon ist verständlich",
+   "Den Filter „Am Handy vorzeigbar“ finde ich sehr praktisch"
+  ],
+  "quote": "Den Barcode zeigen geht super, aber 12,60 € eintragen hat mich gesucht – warum kann ich das nicht direkt nach „Geklappt“ eingeben?"
+ },
+ {
+  "persona": "Marie, 19, Studentin, Power-Userin, nutzt Apple Wallet und Stocard täglich",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Gesamtguthaben prüfen",
+    "success": "leicht",
+    "note": "136,25 € riesig im gelben Kasten, in 1 Sekunde gesehen. Zählt aber der 15%-Zalando-Code da mit rein? Unklar."
+   },
+   {
+    "task": "Abgelaufenen/aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht erst ganz unten im Detail, nach Einlösen-Block und Bon. Kein Swipe-to-Delete auf der Startliste zu erkennen."
+   },
+   {
+    "task": "Neuen Gutschein erfassen",
+    "success": "leicht",
+    "note": "Scan-Button unten rechts und 'Karte scannen' sind klar. Das Icon unten rechts ist allerdings ohne Beschriftung."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Kein Schnellzugriff auf Barcode aus Liste",
+    "detail": "An der Kasse will ich direkt den Barcode. Ich muss erst ins Detail, dann runter scrollen zu 'An der Kasse zeigen & testen'. Das sind zu viele Schritte, Wallet macht das mit einem Tap.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Löschen ganz unten versteckt",
+    "detail": "'Gutschein entfernen' erst nach dreimal Scrollen, unter dem Bon. Ich erwarte Swipe-to-Delete in der Liste oder im Stift-Menü oben.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Kasse-Button zu weit unten",
+    "detail": "'An der Kasse zeigen & testen' liegt unter dem Einlöse-Slider. Das ist die wichtigste Aktion und sollte ganz oben sein.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Unklare Summe mit Prozent-Code",
+    "detail": "Zalando zeigt 15 %, trotzdem steht 'Auf allen Karten zusammen 136,25 €'. Zählt der Code mit? Irritiert mich.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Scan-Icon ohne Label",
+    "detail": "Der runde Button unten rechts hat keine Beschriftung, man muss raten, dass er zum Scannen führt.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Wallet-Export fehlt",
+    "detail": "Ich hätte meine Karten gern in Apple Wallet bzw. per Widget auf dem Sperrbildschirm. Keine Option sichtbar.",
+    "severity": "idee",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Keine Suche in der Liste",
+    "detail": "Bei vielen Karten will ich tippen 'Thal' statt scrollen. Keine Suchleiste zu sehen.",
+    "severity": "minor",
+    "kind": "fehlt"
+   }
+  ],
+  "positives": [
+   "Gesamtsumme riesig und sofort lesbar",
+   "Bald fällige Gutscheine oben mit Resttagen in Orange",
+   "Kassen-Screen mit großem Barcode, Nummer und Auto-Helligkeit",
+   "Scannen-Screen bietet Fotos, Mail, Datei und Hand-Eingabe",
+   "Einlösen mit 5/10/20/Alles-Buttons ist schnell"
+  ],
+  "quote": "Sieht schick aus, aber an der Kasse brauch ich den Barcode mit einem Tap, nicht nach Scrollen im Detail."
+ },
+ {
+  "persona": "Felix, 53, Lehrer, eher unsicher mit Apps, bedient das Handy meist einhändig.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Beim Händler online das Restguthaben einer Douglas-Karte prüfen",
+    "success": "mit Mühe",
+    "note": "Douglas-Karte in der Liste gefunden. Im Detail steht der Link 'Guthaben online prüfen' klein unter dem Barcode und wird halb von der Tab-Leiste verdeckt. Ich hätte ihn fast übersehen und oben neben dem Betrag gesucht."
+   },
+   {
+    "task": "Die App zum ersten Mal öffnen und verstehen, wofür sie ist",
+    "success": "leicht",
+    "note": "Überschrift und die drei Sätze sind klar, das Beispiel mit IKEA, Douglas und Thalia hilft. Ich war nur unsicher, ob das schon meine Karten sind."
+   },
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "'Bald fällig' auf dem Start-Screen zeigt Zalando mit 'noch 12 Tage' ganz oben. Das Kalender-Symbol oben rechts habe ich erst später als Ablauftermine erkannt."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail.png",
+    "title": "Online-Prüflink versteckt unter Tab-Leiste",
+    "detail": "'Guthaben online prüfen' ist kleiner grauer Text unter dem Barcode und wird von der schwebenden Tab-Leiste überdeckt. Genau diese Funktion suche ich bei 8 Karten mit unbekanntem Guthaben, sie sollte ein richtiger Knopf weiter oben sein.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tab-Leiste verdeckt den letzten Gutschein",
+    "detail": "Die unterste Zeile (Amazon, 30 €) liegt halb unter der Tab-Leiste und ist kaum lesbar. Man merkt nicht, dass man weiterscrollen muss.",
+    "severity": "major",
+    "kind": "optik"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol oben rechts unklar",
+    "detail": "Das kleine Symbol ohne Beschriftung erkenne ich nicht als 'Ablauftermine'. Für jemanden wie mich braucht es ein Wort daneben. Außerdem ist es oben rechts einhändig schwer erreichbar.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Beispielkarten wirken wie echte Daten",
+    "detail": "Im Onboarding stehen IKEA, Douglas und Thalia mit Beträgen. Ich dachte kurz, die App hätte meine Karten schon gefunden. Es sollte dort 'Beispiel' stehen. Einen Hinweis, wie ich meine 8 Karten schnell erfasse, gibt es auch nicht.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Einlösen-Regler zu leicht versehentlich bedienbar",
+    "detail": "Der Schieberegler und der große gelbe 'Einlösen'-Knopf sind direkt da, wo der Daumen beim Scrollen landet. Aus Versehen Geld abziehen wäre ärgerlich, und ob es eine Rückfrage gibt, sehe ich nicht.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Zwei Scan-Symbole verwirren",
+    "detail": "Der runde Knopf unten rechts neben der Tab-Leiste hat keine Beschriftung. Ich wusste nicht, ob er zum Scannen einer neuen Karte oder zum Vorzeigen an der Kasse dient.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Zalando '15 %' nicht mitgezählt?",
+    "detail": "Die Summe 136,25 € und der Rabattcode mit 15 % sind nicht erklärt. Ich weiß nicht, ob der Rabatt in der Gesamtsumme steckt.",
+    "severity": "idee",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Die große gelbe Gesamtsumme sagt mir sofort, wie viel Geld in der Schublade liegt.",
+   "'Bald fällig' mit 'noch 12 Tage' in Orange ist sehr verständlich.",
+   "Ablauftermine nach Monaten gruppiert, das ist übersichtlich.",
+   "'Aufbewahrt: Schublade' passt genau zu mir.",
+   "Große Schrift bei den Beträgen, gut lesbar."
+  ],
+  "quote": "Was auf den Karten ist, sehe ich schnell. Den Knopf zum Nachprüfen musste ich aber unter der Leiste suchen."
+ },
+ {
+  "persona": "Olga, 24, Azubi, sehr technikaffin, Deutsch ist Zweitsprache, verwaltet Gutscheine für die Familie.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Herausfinden, ob man bei REWE den Gutschein vom Handy zeigen kann",
+    "success": "mit Mühe",
+    "note": "Händler-Tab gefunden, aber auf dem Screenshot ist REWE nicht sichtbar, die Liste ist alphabetisch und ich muss scrollen oder suchen. Die Filter-Chips sind abgeschnitten, ein vierter Chip ist nur halb sichtbar."
+   },
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "leicht",
+    "note": "In Einstellungen gibt es den Schalter 'Ablauf-Erinnerungen' (30 und 7 Tage, 10 Uhr). Aber ich kann die Tage oder Uhrzeit nicht ändern, das sieht man nicht."
+   },
+   {
+    "task": "Bei Thalia Barcode zeigen und 12,60 € eintragen",
+    "success": "mit Mühe",
+    "note": "Barcode ist gut sichtbar. Aber die Karte hat nur 12,40 € Restguthaben, 12,60 € geht also eigentlich nicht. Im Tastenfeld sehe ich nicht, was passiert, wenn der Betrag zu hoch ist. Wo ich nach 'Geklappt' lande, war mir nicht sofort klar."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_keypad.png",
+    "title": "Betrag höher als Guthaben unklar",
+    "detail": "Ich soll 12,60 € abziehen, aber nur 12,40 € sind verfügbar. Der Screen sagt nicht, was passiert: Wird der Rest bar bezahlt? Kommt ein Fehler? Ein Hinweis wie 'Nur 12,40 € möglich, Rest zahlst du an der Kasse' fehlt.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Filter-Chips abgeschnitten",
+    "detail": "Rechts ist ein vierter Chip nur zur Hälfte zu sehen. Man merkt kaum, dass man seitlich wischen kann.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Tab-Leiste verdeckt Listeneinträge",
+    "detail": "Unten verdeckt die schwebende Tab-Leiste den Douglas-Text und H&M. Für mich wirkt das unruhig und ich lese Text nicht fertig.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeiten nicht änderbar",
+    "detail": "'30 und 7 Tage vor dem Ablauf, um 10 Uhr' ist fest. Für Familienkarten möchte ich z. B. 60 Tage vorher erinnert werden. Ich finde keinen Weg, das anzupassen.",
+    "severity": "minor",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "'Abgelehnt' – was passiert danach?",
+    "detail": "Wenn ich 'Abgelehnt' drücke, weiß ich nicht, ob der Gutschein gelöscht oder nur markiert wird. Das Wort ist für mich etwas hart, ich hätte Angst zu drücken.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Doppelt verschachtelte Begriffe schwer",
+    "detail": "'„Läuft bald ab“ ab 30 Tagen' und 'Bald fällig' sind für mich als Nicht-Muttersprachlerin verwirrend: zwei verschiedene Wörter für dieselbe Sache.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Technische Zeile 'Code 128' unnötig",
+    "detail": "'Code 128 · Helligkeit auf Maximum' verstehe ich halb. Code 128 ist für Kunden egal, die Info zur Helligkeit ist gut.",
+    "severity": "idee",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Barcode an der Kasse groß und klar, mit Nummer darunter",
+   "Händlerliste mit grünem 'Am Handy vorzeigbar' ist super hilfreich",
+   "Schnellbeträge 5/10/20/50/Alles beim Abziehen",
+   "PIN mit Face ID schützen – gut für geteilte Familien-Gutscheine",
+   "Kein Konto nötig, alles lokal"
+  ],
+  "quote": "Die App ist schnell und schön, aber wenn der Gutschein nicht reicht, sagt sie mir nicht, was ich an der Kasse machen soll."
+ },
+ {
+  "persona": "Ben, 58, Softwareentwickler, skeptisch bei datensammelnden Apps, hat eine Rot-Grün-Schwäche",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Abgelaufenen oder aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht ganz unten im Detail, erst unter Einlösen, Kassentest und Verlauf. Auf der Startliste gibt es keinen Hinweis darauf, dass man dort löschen kann."
+   },
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "'PIN anzeigen' steht gut sichtbar im Detail, geschützt durch Face ID. Das gefällt mir."
+   },
+   {
+    "task": "Offenes Gesamtguthaben prüfen",
+    "success": "mit Mühe",
+    "note": "136,25 € steht groß oben. Darin steckt aber offenbar ein Zalando-Code mit '15 %'. Wie der in einer Euro-Summe gezählt wird, ist unklar."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Prozent-Code in Euro-Gesamtsumme unklar",
+    "detail": "'6 Gutscheine' mit 136,25 €, aber Zalando ist ein 15-%-Code. Zählt der mit 0 € oder mit etwas anderem? Ich traue der Summe nicht.",
+    "severity": "major",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Löschen ganz unten versteckt",
+    "detail": "'Gutschein entfernen' kommt erst nach langem Scrollen. Für einen verbrauchten Gutschein will ich eine Wisch-Aktion in der Liste oder ein Menü oben.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Rote Löschschrift schwer erkennbar",
+    "detail": "Mit meiner Rot-Grün-Schwäche wirkt der rote Text wie normaler grauer Text. Ein Mülleimer-Symbol oder ein Button-Rahmen würde helfen.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Schalter nur über Grün unterscheidbar",
+    "detail": "Die grünen An-Schalter sind für mich kaum von grauen Aus-Schaltern zu unterscheiden. Die iOS-Option für Ein/Aus-Beschriftungen wird nicht unterstützt oder ergänzt.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Orange 'noch 12 Tage' zu schwach",
+    "detail": "Die Dringlichkeit wird nur durch orange Farbe gezeigt. Neben 'bis 13.02.2027' in Grau fällt das kaum auf. Ein Warnsymbol fehlt.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "'Anmelden' prominent, Datenschutz versteckt",
+    "detail": "Ein großer schwarzer Konto-Button ist das Erste, was ich sehe. Der Datenschutz-Text ist unter der Tab-Leiste abgeschnitten. Ich will sofort lesen können, dass nichts hochgeladen wird.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Aufgebrauchte oder abgelaufene Gutscheine nicht sichtbar",
+    "detail": "Ich sehe keinen Bereich für abgelaufene oder leere Gutscheine. So weiß ich nicht, wo ein verfallener Gutschein landet und ob ich ihn überhaupt aufräumen muss.",
+    "severity": "idee",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Barcode wird von Tab-Leiste verdeckt",
+    "detail": "'Guthaben online prüfen' wird von der schwebenden Tab-Leiste überlagert.",
+    "severity": "minor",
+    "kind": "optik"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme steht groß und sofort sichtbar oben",
+   "Die PIN ist durch Face ID geschützt",
+   "'Kein Konto – alles liegt nur auf diesem iPhone' beruhigt mich",
+   "Der Einlöse-Verlauf als Bon ist nachvollziehbar",
+   "Erinnerungen 30 und 7 Tage vorher, das hätte mir meine 50 € gerettet"
+  ],
+  "quote": "Solide Idee und lokal gespeichert, gut so. Aber die Summe muss ehrlich sein, und das Löschen darf ich nicht erst suchen müssen."
+ },
+ {
+  "persona": "Gisela, 29, selbstständige Friseurin, durchschnittlich technikfit, Sehschwäche, nutzt große Schrift",
+  "rating": 6,
+  "would_use": false,
+  "tasks": [
+   {
+    "task": "App zum ersten Mal öffnen und verstehen",
+    "success": "leicht",
+    "note": "Die große Überschrift und der kurze Text sind klar. Die Beispielkarten haben mich aber verwirrt: Sind das schon meine Karten?"
+   },
+   {
+    "task": "Neuen Gutschein erfassen",
+    "success": "mit Mühe",
+    "note": "Das Scannen-Symbol unten rechts ist nur ein kleines Icon ohne Beschriftung. Erst dann sehe ich 'Karte scannen'. Das Formular hat sehr viele Felder, und die Feldnamen sind winzig und grau."
+   },
+   {
+    "task": "Restguthaben der Douglas-Karte online prüfen",
+    "success": "mit Mühe",
+    "note": "Im Tab 'Händler' finde ich Douglas zwar, aber der Link 'Guthaben online prüfen' ist unter der Tab-Leiste versteckt. Auf der Douglas-Detailseite habe ich keinen solchen Link gesehen."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_form.png",
+    "title": "Feldbeschriftungen zu klein und blass",
+    "detail": "'Wert in €', 'Restwert', 'PIN', 'Gültig bis' und Hinweise wie § 195 BGB stehen in kleiner hellgrauer Schrift. Mit meiner Sehschwäche kann ich das kaum lesen. Der Platzhalter 'optional, z. B. rotes Portemonnaie' ist fast unsichtbar.",
+    "severity": "major",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Hinzufügen-Button nicht als solcher erkennbar",
+    "detail": "Unten rechts gibt es nur ein Barcode-Symbol ohne Text. Nirgends steht 'Gutschein hinzufügen' oder ein Plus. Ich musste raten, wo ich meine neue Karte anlege.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Guthaben-Link von Tab-Leiste verdeckt",
+    "detail": "Bei Douglas wird der Eintrag unten von der schwebenden Tab-Leiste verdeckt. Den Link zum Prüfen des Guthabens sehe ich erst nach dem Scrollen, wenn überhaupt.",
+    "severity": "major",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Guthaben-Prüfung fehlt beim Gutschein selbst",
+    "detail": "Wenn ich meine Douglas-Karte öffne, erwarte ich dort einen Button 'Guthaben beim Händler prüfen'. Stattdessen muss ich in einen anderen Tab (Händler) wechseln.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Graue Hilfetexte schlecht lesbar",
+    "detail": "'Danach übrig: 2,40 €' und 'Betrag genau eintippen' sind hellgrau auf Weiß. Diese Infos sind wichtig, aber für mich zu kontrastarm.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Beispielkarten wirken wie echte Daten",
+    "detail": "IKEA, Douglas und Thalia mit Beträgen: Ich dachte kurz, die App hätte schon Karten von mir. Die Karten sollten als Beispiel gekennzeichnet sein.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Löschen-Link liegt zu nah an Tab-Leiste",
+    "detail": "Das rote 'Gutschein entfernen' steht direkt über der unteren Leiste. Mit großen Fingern und schlechten Augen tippe ich da leicht daneben.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Zu viele Felder für wenige Gutscheine",
+    "detail": "Ich habe nur 1-2 Gutscheine im Jahr. Barcode-Typ 'Code 128', Aufbewahrungsort und Notiz verstehe ich zum Teil nicht und brauche sie nicht. Das schreckt ab; die nötigsten Felder sollten zuerst kommen.",
+    "severity": "idee",
+    "kind": "bedienung"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme auf gelbem Grund ist groß und sofort lesbar",
+   "'Bald fällig' mit 'noch 12 Tage' in Orange ist sehr hilfreich",
+   "Die Buttons 5 €, 10 €, 20 € und 'Alles' beim Einlösen sind einfach",
+   "Der Scannen-Screen erklärt die Wege klar, auch 'Von Hand eingeben'",
+   "Der Einlöse-Verlauf sieht aus wie ein Kassenbon und ist gut verständlich"
+  ],
+  "quote": "Sieht schick aus, aber die Hälfte der grauen Schrift kann ich ohne Brille nicht lesen, und wo ich meine Karte hinzufüge, musste ich raten."
+ },
+ {
+  "persona": "Kemal, 63, Lieferfahrer, Power-User mit Apple Wallet und Stocard, bekommt Gutscheine meist als PDF per E-Mail.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "mit Mühe",
+    "note": "In Einstellungen gibt es nur einen An/Aus-Schalter mit festen 30 und 7 Tagen um 10 Uhr. Die Zeiten kann ich nicht ändern, und ich muss sie auch nicht erst suchen."
+   },
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "Auf dem Start-Tab steht unter „Bald fällig“ oben Zalando mit „noch 12 Tage“. Die Ablauftermine sind nach Monaten gruppiert und gut lesbar."
+   },
+   {
+    "task": "Herausfinden, ob man bei REWE den Gutschein vom Handy zeigen kann",
+    "success": "mit Mühe",
+    "note": "Die Händlerliste mit dem Filter „Am Handy vorzeigbar“ ist genau das Richtige. REWE steht aber nicht im sichtbaren Bereich, ich muss suchen oder weit scrollen. Auf dem Screenshot ist es nicht belegt."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeitpunkte nicht einstellbar",
+    "detail": "„30 und 7 Tage vor dem Ablauf, um 10 Uhr“ ist fest vorgegeben. Ich fahre ab 6 Uhr und will einen Tag vorher abends erinnert werden. Man kann nur an- oder ausschalten.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Zwei ähnliche Fristen verwirren",
+    "detail": "Die Erinnerung kommt 30/7 Tage vorher, und „Läuft bald ab“ hat einen eigenen Regler auf 30 Tage. Hängen die zusammen? Das wird nicht erklärt.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "REWE nicht direkt auffindbar",
+    "detail": "Die Liste ist alphabetisch, zu sehen sind nur Aldi bis Douglas. Für eine schnelle Frage an der Kasse muss ich tippen oder scrollen. Von der Karte selbst gibt es keinen Hinweis.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Icon oben rechts unklar",
+    "detail": "Das kleine Icon ohne Beschriftung führt zu den Ablaufterminen. Das habe ich nur durch Ausprobieren gefunden.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tab-Leiste verdeckt die Liste",
+    "detail": "Die schwebende Tab-Leiste liegt über dem letzten Gutschein (Amazon, 30 €), der nur halb zu lesen ist.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Text unter der Tab-Leiste",
+    "detail": "„So funktioniert Restwert“ und der Datenschutztext scheinen durch die Tab-Leiste hindurch und sind nicht lesbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_radar.png",
+    "title": "Keine Wallet-Übernahme erkennbar",
+    "detail": "Ich nutze Apple Wallet täglich. Ich sehe nirgends, wie ich einen Gutschein in die Wallet lege oder ein PDF aus der Mail importiere.",
+    "severity": "idee",
+    "kind": "fehlt"
+   }
+  ],
+  "positives": [
+   "Der nächste Ablauf ist sofort auf dem Start-Tab zu sehen",
+   "Die Ablauftermine sind nach Monat gruppiert, mit Summen",
+   "Die Händlerliste mit „Am Handy vorzeigbar“ beantwortet eine Frage, die ich an der Kasse wirklich habe",
+   "Die große Gesamtsumme ist gut lesbar"
+  ],
+  "quote": "Was als Nächstes abläuft, sehe ich sofort, aber wann die App mich erinnert, will ich selbst bestimmen, nicht um 10 Uhr, wenn ich im Transporter sitze."
+ },
+ {
+  "persona": "Sophie, 34, Kassiererin im Supermarkt, unsicher mit Apps, ungeduldig",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "Im Detail steht direkt oben 'PIN anzeigen'. Hat gut geklappt. Auf dem Kasse-Screen gibt es ihn auch nochmal."
+   },
+   {
+    "task": "Bei Thalia Barcode zeigen und 12,60 € eintragen",
+    "success": "mit Mühe",
+    "note": "Barcode war schnell da. Danach kommt aber nur 'Geklappt' oder 'Abgelehnt', kein Betrag. Zum Eintragen muss ich zurück ins Detail, runterscrollen, den Schieberegler auf 10 € wegschieben und 'Betrag genau eintippen' finden. Das dauert viel zu lang."
+   },
+   {
+    "task": "Abgelaufenen/aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht ganz unten im Detail, klein und rot. Wisch-zum-Löschen auf der Startliste habe ich nicht gesehen."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_checkout.png",
+    "title": "Nach 'Geklappt' kein Betrag eintragbar",
+    "detail": "Ich stehe an der Kasse, zeige den Code, drücke 'Geklappt' – und wo trage ich jetzt die 12,60 € ein? Das gehört direkt hierher, nicht versteckt im Detail.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Schieberegler steht auf 10 € voreingestellt",
+    "detail": "Ich will 12,60 €. Der Regler steht schon auf 10 €, die Knöpfe sind 5/10/20. Krumme Beträge gehen nur über den kleinen grauen Text 'Betrag genau eintippen', den ich fast übersehen hätte.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Einlösen-Bereich zu tief unten",
+    "detail": "Das Wichtigste, was ich brauche, liegt unter dem Barcode hinter der Tab-Leiste versteckt. Ich muss scrollen.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "'Gutschein entfernen' schwer zu finden",
+    "detail": "Ganz unten nach dem Verlauf, kleiner roter Text. Beim Aufräumen will ich auf der Startliste einfach wischen oder einen Knopf 'Aufgebraucht'.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Zwei Barcode-Stellen verwirren",
+    "detail": "Im Detail ist schon ein Barcode, und dann gibt es noch 'An der Kasse zeigen & testen' und unten rechts einen Scan-Knopf. Welchen soll ich an der Kasse nehmen?",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Unterer Listeneintrag hinter Tab-Leiste",
+    "detail": "Der letzte Gutschein ist von der Leiste halb verdeckt und unlesbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "'Abgelehnt' – und dann?",
+    "detail": "Unklar, was passiert, wenn ich 'Abgelehnt' drücke. Wird der Gutschein gelöscht?",
+    "severity": "idee",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Gesamtsumme groß und gelb, sofort klar",
+   "'Bald fällig' ganz oben mit Tagen, super",
+   "'PIN anzeigen' sofort sichtbar",
+   "Kasse-Screen schlicht mit großem Barcode und Helligkeit auf Maximum",
+   "Verlauf wie ein Kassenbon, verstehe ich als Kassiererin sofort"
+  ],
+  "quote": "Barcode zeigen geht fix, aber danach 12,60 € eintragen dauert ewig – das muss direkt nach 'Geklappt' kommen."
+ },
+ {
+  "persona": "Paul, 68, Vertriebsmitarbeiter, sehr technikaffin, nutzt das Handy meist einhändig unterwegs.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Neuen Gutschein erfassen (Karte in der Hand)",
+    "success": "mit Mühe",
+    "note": "Auf dem Start-Tab gibt es kein Plus. Erst nach einer Weile habe ich das Barcode-Symbol unten rechts als 'Scannen' erkannt. Der Scannen-Screen selbst ist dann gut: 'Karte scannen' ist groß und klar."
+   },
+   {
+    "task": "Gesamtes offenes Guthaben prüfen",
+    "success": "leicht",
+    "note": "Die gelbe Karte mit 136,25 € sieht man sofort. Allerdings zählt der Zalando-Rabatt mit 15 % nicht in den Eurobetrag, und das steht nirgends dabei."
+   },
+   {
+    "task": "App zum ersten Mal öffnen und verstehen",
+    "success": "leicht",
+    "note": "Der Onboarding-Satz erklärt in einer Zeile alles. Mit 'Los geht's' unten komme ich auch einhändig gut weiter."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Hinzufügen-Button nicht als solcher erkennbar",
+    "detail": "Unten rechts ist nur ein Barcode-Symbol ohne Beschriftung. Ich habe ein '+' gesucht. Dass ich hier einen neuen Gutschein anlege, errate ich nur.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Icon oben rechts ohne Beschriftung",
+    "detail": "Das Icon oben rechts führt vermutlich zu den Ablaufterminen. Es ist unbeschriftet und liegt einhändig außer Reichweite des Daumens.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kein schneller Weg zum richtigen Gutschein an der Kasse",
+    "detail": "Es gibt keine Suche und keine Filterung nach Händler. Bei vielen Karten muss ich an der Kasse scrollen. Die Tab-Leiste verdeckt zudem die letzte Zeile.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Summe ignoriert Prozent-Gutschein stillschweigend",
+    "detail": "Die Karte sagt '6 Gutscheine', die Summe von 136,25 € enthält aber den 15-%-Code nicht. Ein Hinweis dazu fehlt.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Speichern-Button halb abgeschnitten",
+    "detail": "'Änderungen speichern' ragt unten aus dem Bild. Der dritte Typ-Tab '%' ist ebenfalls abgeschnitten. Welche Optionen es gibt, muss ich raten.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Langes Formular für einhändige Nutzung",
+    "detail": "Das Formular hat viele Felder. Das Schließen-X liegt oben links, also weit weg vom Daumen.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_scan.png",
+    "title": "Grauer Hinweistext schwer lesbar",
+    "detail": "Der Tipp zum Teilen von PDFs ist klein und hellgrau. Mit 68 lese ich ihn draußen kaum.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   }
+  ],
+  "positives": [
+   "Riesige, sofort sichtbare Gesamtsumme",
+   "Der Bereich 'Bald fällig' mit orangefarbenen Tagen ist sehr hilfreich",
+   "Das Onboarding ist kurz und auf den Punkt",
+   "Viele Wege zum Erfassen: Foto, Mail, Datei, von Hand",
+   "Die Tab-Leiste unten ist gut per Daumen erreichbar"
+  ],
+  "quote": "Die Summe sehe ich sofort, aber wo ich einen neuen Gutschein hinzufüge, musste ich erst suchen. Ein simples Plus hätte gereicht."
+ },
+ {
+  "persona": "Renate, 38 Jahre, Pflegekraft, Deutsch ist Zweitsprache, misstrauisch bei Apps, die Daten sammeln",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "Unter „Bald fällig“ steht Zalando oben mit „noch 12 Tage“ in Orange. Das habe ich sofort gesehen. Das Kalender-Symbol oben rechts habe ich aber nicht als „Ablauftermine“ erkannt."
+   },
+   {
+    "task": "Online das Restguthaben der Douglas-Karte prüfen",
+    "success": "mit Mühe",
+    "note": "Auf der Detailseite liegt der Link „Guthaben online prüfen“ klein unter dem Barcode und fast unter der Tab-Leiste. Bei den Händlern sieht man bei Douglas zuerst keinen Link, nur Text über eine 17-stellige Nummer und PIN."
+   },
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "mit Mühe",
+    "note": "Ich habe es in den Einstellungen gefunden. Der Schalter ist schon an, 30 und 7 Tage vorher um 10 Uhr. Ich kann aber weder die Tage noch die Uhrzeit ändern, und für meine Schichtarbeit passt 10 Uhr nicht."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_settings.png",
+    "title": "Uhrzeit und Tage der Erinnerung nicht änderbar",
+    "detail": "Da steht nur „30 und 7 Tage vor dem Ablauf, um 10 Uhr“ und ein Schalter. Ich arbeite im Schichtdienst, um 10 Uhr schlafe ich vielleicht. Ich möchte die Zeit selbst wählen können.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "„Guthaben online prüfen“ zu klein und versteckt",
+    "detail": "Der Link ist klein, grau und hängt unter dem Barcode, halb verdeckt von der Tab-Leiste. Dabei ist genau das meine Hauptfrage bei 8 Karten aus der Schublade: Wie viel ist noch drauf?",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Konto-Button macht mich misstrauisch",
+    "detail": "Der große schwarze Button „Anmelden oder Konto erstellen“ ist das Auffälligste auf der Seite. Ich will keine Daten abgeben. „Alles liegt nur auf diesem iPhone“ ist gut, sollte aber wichtiger sein als die Werbung für ein Konto.",
+    "severity": "major",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol ohne Beschriftung",
+    "detail": "Das Symbol oben rechts führt zu den Ablaufterminen, aber es steht kein Wort daran. Ich habe gedacht, es ist ein Kalender-Export.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Douglas-Eintrag ohne direkten Prüf-Link",
+    "detail": "Bei Aldi und Decathlon gibt es einen Link „Guthaben online prüfen“. Bei Douglas sehe ich zuerst nur einen langen Satz mit „eGift“ und „17-stelliger Nummer“. „eGift“ verstehe ich nicht.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "„Läuft bald ab“-Einstellung schwer verständlich",
+    "detail": "Den Satz „Ab dann erscheint ein Gutschein unter ‚Bald fällig‘“ musste ich dreimal lesen. „Fällig“ kenne ich von Rechnungen, nicht von Gutscheinen. Einfacher wäre: „Läuft ab in“.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Viele Begriffe: Restwert, Einlösen, Bon",
+    "detail": "„Restwert“, „Einlösen“, „Einlöse-Verlauf“ und „RESTWERT“ auf einem Screen. Mit Zweitsprache ist das viel. Ein einfaches „Noch übrig“ wäre klarer.",
+    "severity": "idee",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Wie trage ich meine 8 Karten schnell ein?",
+    "detail": "Ich sehe nur das kleine Scan-Symbol unten rechts. Es gibt keinen klaren Knopf „Karte hinzufügen“. Bei 8 Karten aus der Schublade will ich wissen, wo ich anfange.",
+    "severity": "minor",
+    "kind": "bedienung"
+   }
+  ],
+  "positives": [
+   "Die große Gesamtsumme und „2 davon bald fällig“ versteht man sofort",
+   "Die orangen „noch 12 Tage“ fallen gut auf",
+   "Der Screen „Ablauftermine“ mit Monaten ist klar",
+   "„Aufbewahrt: Schublade“ ist genau richtig für mich",
+   "„Alles liegt nur auf diesem iPhone“, auch ohne Konto",
+   "Der PIN wird erst nach Face ID gezeigt, das gibt mir Sicherheit"
+  ],
+  "quote": "Welche Karte zuerst abläuft, habe ich schnell gesehen. Aber um 10 Uhr schlafe ich nach der Nachtschicht, und der große Konto-Button macht mich misstrauisch."
+ },
+ {
+  "persona": "Nico, 74, Handwerker im Ruhestand, verwaltet Gutscheine für die Familie, Rot-Grün-Schwäche.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Barcode bei Thalia zeigen, 12,60 € eintragen",
+    "success": "mit Mühe",
+    "note": "Der Barcode ist gut zu sehen. Nach dem Scannen muss ich Geklappt drücken, aber da kann ich keinen Betrag eingeben. Also zurück, runterscrollen und den Regler von 10 € auf 12,60 € schieben. Das schafft man mit dem Finger nicht, erst über das kleine graue „Betrag genau eintippen“."
+   },
+   {
+    "task": "Herausfinden, ob REWE Handy-Gutscheine annimmt",
+    "success": "mit Mühe",
+    "note": "Unter Händler gibt es eine Suche. Die Liste geht aber nur alphabetisch bis Douglas, REWE muss ich also suchen. Das grüne „Am Handy vorzeigbar“ ist für mich kaum von einem roten Hinweis zu unterscheiden. Nur das Handysymbol hilft."
+   },
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "„PIN anzeigen“ steht deutlich in der Detailansicht und auch an der Kasse."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_checkout.png",
+    "title": "Nach „Geklappt“ fehlt die Betragseingabe",
+    "detail": "An der Kasse weiß ich, was abgebucht wurde, hier 12,60 €. Auf dem Kassenbildschirm gibt es aber nur Geklappt/Abgelehnt und kein Feld für den Betrag. Ich muss zurück ins Detail und dort suchen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Krumme Beträge schwer einstellbar",
+    "detail": "Es gibt Knöpfe für 5, 10 und 20 € und einen Regler. 12,60 € lässt sich damit nicht treffen. „Betrag genau eintippen“ ist kleiner grauer Text und sieht nicht aus wie ein Knopf.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Status nur über Grün erkennbar",
+    "detail": "„Am Handy vorzeigbar“ ist grün gefärbt. Bei Rot-Grün-Schwäche erkenne ich den Unterschied zu einem Warnhinweis nur am kleinen Symbol. Ein klares Ja/Nein oder ein Haken wäre besser.",
+    "severity": "major",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Geklappt/Abgelehnt nur farblich getrennt",
+    "detail": "Das grüne und das rote Feld sehen für mich fast gleich aus. Zum Glück stehen Haken, X und Text dabei. Die Farben allein helfen mir nicht.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Einlösen-Bereich von der Leiste verdeckt",
+    "detail": "Unten schaut „Einlösen 10,00 €“ halb hinter der Tab-Leiste hervor. Dass ich dafür scrollen muss, merke ich erst spät.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Knopf zum Entfernen zu nah am Verlauf",
+    "detail": "Das rote „Gutschein entfernen“ steht direkt unter dem Verlauf. Beim Scrollen kann man da leicht aus Versehen draufkommen.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Grauer Hilfetext zu blass",
+    "detail": "„Danach übrig: 2,40 €“ und „Betrag genau eintippen“ sind hellgrau und sehr klein. In meinem Alter kann ich das kaum lesen.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   }
+  ],
+  "positives": [
+   "Der Barcode ist groß, die Nummer darunter gut lesbar",
+   "PIN anzeigen findet man sofort",
+   "Der Verlauf sieht aus wie ein Kassenbon, das verstehe ich gleich",
+   "Das Restguthaben ist sehr groß und deutlich angezeigt",
+   "In der Händlerliste steht Aldi-Kasse und Ähnliches in klaren Worten"
+  ],
+  "quote": "Der Barcode ist prima. Aber wenn ich an der Kasse 12,60 € bezahlt habe, will ich das auch gleich dort eintragen und nicht mit einem Schieberegler herumprobieren."
+ },
+ {
+  "persona": "Aylin, 42, Buchhalterin, Power-Userin (Apple Wallet, Stocard), liest mit großer Schrift wegen Sehschwäche",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Gesamtguthaben prüfen",
+    "success": "leicht",
+    "note": "136,25 € riesig auf Gelb, top. Ich frage mich aber, ob der 15-%-Zalando-Code da mitzählt. Als Buchhalterin will ich wissen, was in der Summe drin ist."
+   },
+   {
+    "task": "Abgelaufenen/aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht ganz unten im Detail, unter Einlösen und Verlauf. Ohne Scrollen findet man es nicht. Ob ein Swipe in der Liste geht, sehe ich nicht."
+   },
+   {
+    "task": "Neuen Gutschein erfassen",
+    "success": "leicht",
+    "note": "Der Scan-Knopf unten rechts und der Tab 'Karte scannen' sind klar. 'Von Hand eingeben' ist auch da."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail_c.png",
+    "title": "Entfernen-Knopf versteckt ganz unten",
+    "detail": "'Gutschein entfernen' ist kleiner roter Text am Ende der Seite. Um eine aufgebrauchte Karte zu archivieren, muss ich durch alles scrollen. Außerdem fehlt ein 'Archivieren statt Löschen', damit der Verlauf erhalten bleibt.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Unklar, was die Gesamtsumme enthält",
+    "detail": "'Auf allen Karten zusammen 136,25 €', aber Zalando ist ein 15-%-Code ohne Eurowert. Zählt der mit? Es gibt keine Aufschlüsselung und keinen Hinweis.",
+    "severity": "major",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Graue Kleintexte kaum lesbar",
+    "detail": "'unbenutzt', 'Rabattcode', 'bis 13.02.2027' und 'Ablaufdatum' sind hellgrau und klein. Mit meiner Sehschwäche ist der Kontrast zu schwach. Die dünnen Fortschrittsbalken sagen mir nichts.",
+    "severity": "major",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tab-Leiste überdeckt Listeneinträge",
+    "detail": "Der letzte Eintrag (verwischt, 30 €) liegt unter der schwebenden Leiste. Mit großer Schrift wird das noch schlimmer.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Einlösen-Slider neben Entfernen riskant",
+    "detail": "Der Slider ist vorab auf 10 € gestellt, und ein großer gelber Einlösen-Knopf ist sehr präsent. Ein versehentlicher Tipp bucht 10 € ab. Gibt es ein Rückgängig?",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Typ-Tabs rechts abgeschnitten",
+    "detail": "Der dritte Tab '%' ist abgeschnitten. Mit großer Schrift sieht man noch weniger Typen, und es gibt keinen Hinweis aufs Scrollen.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Speichern-Knopf unter dem Rand",
+    "detail": "'Änderungen speichern' ist unten abgeschnitten. Das Feld 'Restwert' ist neben 'Wert' nicht klar als editierbar erkennbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Icon oben ohne Beschriftung",
+    "detail": "Das Icon oben rechts hat keine Beschriftung. Ich musste raten, dass es zu den Ablaufterminen führt.",
+    "severity": "idee",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Riesige Gesamtsumme, auch für mich gut lesbar",
+   "'Bald fällig' mit 'noch 12 Tage' in Orange: genau das hätte meine 50 € gerettet",
+   "Mehrere Import-Wege (Foto, Mail, PDF, Hand)",
+   "Kassenbon-artiger Verlauf ist nachvollziehbar, perfekt für Buchhalter",
+   "Der Hinweis auf § 195 BGB zur 3-Jahres-Frist ist hilfreich"
+  ],
+  "quote": "Die Summe oben ist klasse, aber ich will wissen, was drinsteckt. Und die grauen Minischriften kann ich schlicht nicht lesen."
+ },
+ {
+  "persona": "Jürgen, 81, Rentner und früher Schlosser, hat pro Jahr höchstens ein oder zwei Gutscheine",
+  "rating": 6,
+  "would_use": false,
+  "tasks": [
+   {
+    "task": "Douglas-Restguthaben online prüfen",
+    "success": "mit Mühe",
+    "note": "Auf der Startseite habe ich Douglas angetippt. Unten in der Detailansicht steht dann klein „Guthaben online prüfen“, halb verdeckt von der Leiste mit Start/Verlauf. Das habe ich erst beim zweiten Hinschauen gefunden."
+   },
+   {
+    "task": "App zum ersten Mal öffnen und verstehen",
+    "success": "leicht",
+    "note": "„Deine Gutscheine, an einem Ort“ und die drei Sätze darunter verstehe ich. Nur „Los geht's“, und dann weiß ich nicht, wie ich meinen eigenen Gutschein hineinbekomme."
+   },
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "Oben steht „Bald fällig“ mit Zalando „noch 12 Tage“. Das ist klar. Das Kalender-Symbol oben rechts hätte ich aber nicht angetippt."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail.png",
+    "title": "Online prüfen versteckt unter der Leiste",
+    "detail": "Der Link „Guthaben online prüfen“ ist klein und grau und steht direkt hinter der schwebenden Leiste mit Start/Verlauf/Händler. Mit meinen Augen und Fingern treffe ich den nicht. Den würde ich als richtigen, großen Knopf haben wollen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kein sichtbarer Knopf zum Hinzufügen",
+    "detail": "Wo lege ich meinen Gutschein an? Ein Plus sehe ich nicht. Unten rechts ist nur ein Symbol ohne Beschriftung, das nach Strichcode aussieht. Dass man darüber etwas hinzufügt, steht nirgends.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Beispielkarten sehen aus wie meine",
+    "detail": "Auf dem ersten Bildschirm stehen IKEA, Douglas und Thalia mit Beträgen. Ich dachte, das wären schon meine Gutscheine. Da sollte „Beispiel“ dranstehen.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Einlösen-Schieber zu fummelig",
+    "detail": "Mit dem Schieber und den 5/10/20-Knöpfen habe ich Angst, aus Versehen etwas abzubuchen. „Gutschein entfernen“ steht in Rot gleich darunter. Wird vor dem Löschen nachgefragt?",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol ohne Beschriftung",
+    "detail": "Oben rechts ist ein kleines Kalender-Symbol ohne Text. Dass sich dahinter die Ablauftermine verbergen, errät man nicht.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_radar.png",
+    "title": "Graue Schrift schwer lesbar",
+    "detail": "„bis 31.03.2027“, „unbenutzt“ und die Monatssummen sind in hellem Grau und klein geschrieben. Für mich ist das zu blass.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Fachwörter wie Rabattcode, Restwert, Verlauf",
+    "detail": "Bei Zalando steht „15 %“ und „Rabattcode“ zwischen lauter Euro-Beträgen. Das verwirrt mich, ist das Geld oder nicht? Und der Tab „Händler“, wozu brauche ich den?",
+    "severity": "idee",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Große, klare Zahlen für den Restbetrag",
+   "„noch 12 Tage“ in Orange fällt sofort auf",
+   "Die Startseite ist ruhig und aufgeräumt",
+   "Der Barcode ist groß genug zum Vorzeigen an der Kasse"
+  ],
+  "quote": "Für meine zwei Gutscheine im Jahr ist das zu viel Gedöns, und das Wichtigste steht ganz klein unten, wo mein Finger nicht hinkommt."
+ },
+ {
+  "persona": "Clara, 47, in Elternzeit, sehr technikaffin, bekommt Gutscheine meist als PDF per E-Mail und will alles in 3 Sekunden.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Herausfinden, ob man bei REWE den Gutschein vom Handy zeigen kann",
+    "success": "mit Mühe",
+    "note": "Händler-Tab gefunden, aber die Liste ist lang und alphabetisch, REWE sieht man nicht. Ich muss erst ins Suchfeld tippen. Die Filter-Chips helfen, sind aber abgeschnitten (rechts hängt ein vierter halb raus)."
+   },
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "leicht",
+    "note": "In den Einstellungen gleich oben: Ablauf-Erinnerungen 30 und 7 Tage, 10 Uhr. Schalter ist schon an. Die Tage oder Uhrzeit ändern kann ich hier aber nicht, das nervt."
+   },
+   {
+    "task": "Bei Thalia Barcode zeigen und 12,60 € als eingelöst eintragen",
+    "success": "mit Mühe",
+    "note": "Barcode groß und klar, super. Aber Thalia hat nur 12,40 €. 12,60 geht also gar nicht, und ob mir das Tastenfeld das sagt oder einfach stumm bleibt, sehe ich nicht. Die 20 Cent Differenz an der Kasse muss ich anders zahlen, die App hilft da nicht."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_keypad.png",
+    "title": "Betrag über Restguthaben: keine klare Führung",
+    "detail": "Ich soll 12,60 € abziehen, verfügbar sind 12,40 €. Auf dem Screen steht kein Hinweis, was passiert, wenn ich mehr eintippe. Ich will sofort sehen: 'Nur 12,40 € möglich, 0,20 € zahlst du bar' und einen Knopf dafür.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "REWE nicht auf einen Blick findbar",
+    "detail": "Lange Kartenliste, riesige Einträge, nur vier Händler pro Bildschirm. Ich muss suchen. Kompaktere Zeilen oder ein Buchstaben-Index wären schneller.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Filter-Chips rechts abgeschnitten",
+    "detail": "Hinter 'Nur online' ragt ein weiterer Chip halb ins Bild; ich weiß nicht, was da noch kommt.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeitpunkte nicht einstellbar",
+    "detail": "30 und 7 Tage um 10 Uhr sind fest. Ich will z. B. 3 Tage vorher oder abends erinnert werden. Nur an/aus ist mir zu wenig.",
+    "severity": "minor",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Nach 'Geklappt' unklar, ob Betrag abgezogen wird",
+    "detail": "'Hat es geklappt?' mit Geklappt/Abgelehnt: Ich weiß nicht, ob 'Geklappt' schon Geld abzieht oder erst zum Tastenfeld führt. Besser: 'Betrag eintragen'.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_scan.png",
+    "title": "PDF-Import versteckt im Kleingedruckten",
+    "detail": "Mein Hauptfall (PDF aus Mail) steht als dritte Zeile und der Teilen-Tipp ganz klein grau unten. Das sollte prominent sein.",
+    "severity": "idee",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Konto-Knopf dominiert Einstellungen",
+    "detail": "Riesiger schwarzer 'Anmelden'-Button oben, obwohl ich nur Erinnerungen suche. Wirkt wie ein Zwang zum Konto.",
+    "severity": "idee",
+    "kind": "vertrauen"
+   }
+  ],
+  "positives": [
+   "Gesamtsumme groß und sofort sichtbar",
+   "Barcode an der Kasse riesig, mit lesbarer Nummer und PIN hinter Knopf",
+   "Händler-Status 'Am Handy vorzeigbar' grün und klar",
+   "Schnellbeträge 5/10/20/50/Alles beim Abziehen",
+   "Erinnerungen schon standardmäßig an"
+  ],
+  "quote": "Der Barcode an der Kasse ist top, aber wenn mein Einkauf mehr kostet als drauf ist, lässt die App mich allein."
+ },
+ {
+  "persona": "Emre, 19, Student, sammelt Rabattcodes für Online-Shops, bedient das Handy meist einhändig und ist skeptisch gegenüber Apps, die Daten sammeln.",
+  "rating": 6,
+  "would_use": false,
+  "tasks": [
+   {
+    "task": "Abgelaufenen/aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht ganz unten im Detail unter Einlösen und Bon. Das hab ich erst nach dreimal Scrollen gefunden. In der Liste gibt es keinen Hinweis auf Wischen zum Löschen."
+   },
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "Der Button 'PIN anzeigen' ist im Detail oben gut sichtbar, das Face-ID-Symbol macht klar, dass er geschützt ist."
+   },
+   {
+    "task": "Gesamtguthaben prüfen",
+    "success": "leicht",
+    "note": "136,25 € stehen groß in der gelben Karte. Aber: Zalando '15 %' ist ein Rabattcode ohne Eurowert. Ist der mitgezählt? Unklar."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail_c.png",
+    "title": "Löschen ganz unten versteckt",
+    "detail": "'Gutschein entfernen' steht erst nach langem Scrollen unter dem Bon. Einhändig heißt das: ewig nach unten scrollen. Für aufgebrauchte Karten sollte man direkt eine Aktion wie 'Archivieren' angeboten bekommen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Rabattcodes in Gesamtsumme unklar",
+    "detail": "Zalando zeigt '15 %', die Summe sagt 'Auf allen Karten zusammen 136,25 €' und '6 Gutscheine'. Ich weiß nicht, ob Prozentcodes da drin sind oder ignoriert werden. Für meine Rabattcodes ist das die Hauptfrage.",
+    "severity": "major",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Button oben rechts unbeschriftet",
+    "detail": "Das Symbol oben rechts hat keine Beschriftung und ist einhändig schwer zu erreichen. Ich musste raten, dass es zu den Ablaufterminen führt.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Wichtige Buttons oben außer Daumenreichweite",
+    "detail": "Zurück und Bearbeiten sitzen oben in den Ecken. Einhändig auf dem 17 Pro komme ich da nicht hin.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tabbar verdeckt letzte Listeneinträge",
+    "detail": "Der letzte Eintrag scheint durch die schwebende Tabbar durch und ist nicht lesbar. Das wirkt unfertig.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Unklar, wohin 'Guthaben online prüfen' führt",
+    "detail": "Als Datenschutz-Skeptiker will ich wissen, ob meine Kartennummer an eine Website geschickt wird. Es gibt keinen Hinweis darauf.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme ist sofort riesig sichtbar",
+   "Der PIN ist hinter Face ID geschützt",
+   "Die Rubrik 'Bald fällig' mit Tagen in Orange ist praktisch",
+   "Der Einlöse-Verlauf als Bon sieht cool aus und ist verständlich",
+   "Einlösen geht mit den Schnellbeträgen 5/10/20/Alles schnell"
+  ],
+  "quote": "Sieht schick aus, aber ich hab keine Ahnung, ob meine 15-%-Codes in der Summe stecken, und zum Löschen muss ich bis ans Ende der Welt scrollen."
+ },
+ {
+  "persona": "Monika, 53, Lehrerin, Deutsch ist meine Zweitsprache, nutze WhatsApp, Banking und Amazon",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "App zum ersten Mal öffnen und verstehen",
+    "success": "leicht",
+    "note": "Überschrift und Beispielkarten sind klar. Die Wörter 'Restguthaben nachtragen' musste ich zweimal lesen."
+   },
+   {
+    "task": "Neuen Gutschein erfassen",
+    "success": "mit Mühe",
+    "note": "Auf dem Start-Tab gibt es keinen Plus-Knopf. Ich habe erst nach einer Weile verstanden, dass der runde Knopf unten rechts mit dem Barcode-Symbol zum Scannen und Anlegen ist. Danach war 'Karte scannen' klar. Im Formular sind viele Fachwörter: Wertgutschein, Code 128, § 195 BGB."
+   },
+   {
+    "task": "Restguthaben der Douglas-Karte online prüfen",
+    "success": "mit Mühe",
+    "note": "Im Detail steht 'Guthaben online prüfen' ganz klein unter dem Barcode, halb von der Tab-Leiste verdeckt. In der Händlerliste wird bei Douglas der Link genau von der Leiste verdeckt."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Kein sichtbarer Knopf zum Hinzufügen",
+    "detail": "Auf dem Start-Tab gibt es kein '+' und kein 'Gutschein hinzufügen'. Der runde Knopf rechts neben der Tab-Leiste zeigt nur ein Barcode-Symbol ohne Text. Als Kundin denke ich, der ist zum Bezahlen und nicht zum Anlegen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Guthaben-Link von Tab-Leiste verdeckt",
+    "detail": "'Guthaben online prüfen' ist kleine graue Schrift direkt über der schwebenden Tab-Leiste und wird teilweise überdeckt. Das ist genau die Funktion, die ich gesucht habe, und ich hätte sie fast übersehen.",
+    "severity": "major",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Douglas-Eintrag unten abgeschnitten",
+    "detail": "Beim Douglas-Eintrag wird die Zeile mit dem Link zur Guthabenprüfung von der Tab-Leiste verdeckt. Ich muss raten, dass ich scrollen muss.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Fachwörter im Formular unverständlich",
+    "detail": "Was ist der Unterschied zwischen Geschenkkarte und Wertgutschein? 'Barcode: Code 128', 'gesetzliche Frist § 195 BGB' und 'Digitale Karte am Handy offiziell möglich' sind für mich mit Deutsch als Zweitsprache schwer. Einfachere Sprache oder ein kleines Fragezeichen mit Erklärung würden helfen.",
+    "severity": "major",
+    "kind": "text"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Dritter Typ-Reiter abgeschnitten",
+    "detail": "Rechts oben sieht man nur '%'. Dass man zur Seite wischen kann, erkennt man nicht.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "An der Kasse fehlt ein schneller Weg",
+    "detail": "Ich stehe an der Kasse und muss zuerst die Karte in der Liste suchen, dann nach unten scrollen bis 'An der Kasse zeigen'. Eine Suche oder ein großer Knopf 'Karte zeigen' ganz oben im Detail würde mir helfen.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "'Einlösen' Schieberegler ist verwirrend",
+    "detail": "Ich weiß nicht, ob 'Einlösen' schon an der Kasse bezahlt oder nur in der App notiert wird. Die Schere als Symbol verstehe ich nicht.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol oben ohne Beschriftung",
+    "detail": "Oben rechts ist ein Symbol ohne Text. Ich weiß nicht, was passiert, wenn ich es antippe.",
+    "severity": "idee",
+    "kind": "bedienung"
+   }
+  ],
+  "positives": [
+   "Die große Gesamtsumme in Gelb ist sofort verständlich",
+   "'Bald fällig' mit orangem 'noch 12 Tage' ist sehr hilfreich",
+   "Der Barcode im Detail ist groß und gut lesbar",
+   "Scannen-Seite erklärt alle Wege (Foto, E-Mail, Datei, von Hand) klar",
+   "Aufbewahrungsort 'Schublade' ist eine tolle Idee für mich, weil ich Karten immer verlege"
+  ],
+  "quote": "Die App ist schön und ich sehe gleich, wie viel Geld ich habe, aber wo ich eine neue Karte hinzufüge, musste ich erst suchen, und die wichtigen kleinen Links sind unter der Leiste versteckt."
+ },
+ {
+  "persona": "Tim, 24, Azubi, Power-User mit Apple Wallet und Stocard, Rot-Grün-Farbsehschwäche, 8 Geschenkkarten in der Schublade.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "mit Mühe",
+    "note": "In den Einstellungen gefunden: Toggle ist an, '30 und 7 Tage vorher, 10 Uhr'. Das kann ich aber nur an- oder ausschalten, Tage und Uhrzeit lassen sich nicht ändern. Ob der Toggle an ist, sehe ich bei Rot-Grün-Schwäche nur an der Position des Knopfs."
+   },
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "Auf dem Start-Tab steht unter 'Bald fällig' Zalando mit 'noch 12 Tage'. Das Kalender-Icon oben rechts führt zu 'Ablauftermine', das ist gut gemacht. Welches Icon das ist, musste ich aber raten."
+   },
+   {
+    "task": "Herausfinden, ob man bei REWE vom Handy zeigen kann",
+    "success": "mit Mühe",
+    "note": "Im Tab Händler steht REWE nicht auf dem ersten Screen, ich muss suchen oder scrollen. Im Code gibt es REWE als 'official' mit Hinweis, nur den Strich-Barcode zu zeigen. Der Status 'Am Handy vorzeigbar' ist grün eingefärbt, trägt aber zum Glück auch Text."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeitpunkt nicht einstellbar",
+    "detail": "'30 und 7 Tage vor dem Ablauf, um 10 Uhr' ist fest vorgegeben. Ich will z. B. 3 Tage vorher oder 18 Uhr, das geht nur per An/Aus. Pro Gutschein kann man es auch nicht einstellen.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Grüne Toggles für mich schwer unterscheidbar",
+    "detail": "Die Schalter sind grün, das Grün sehe ich kaum gegen Grau. Den Zustand lese ich nur an der Knopfposition ab. iOS hat dafür die Option 'Ein/Aus-Beschriftungen', die App könnte zusätzlich einen Statustext zeigen.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Icon ohne Beschriftung",
+    "detail": "Das runde Icon oben rechts führt zu den Ablaufterminen, das ist aber nicht erkennbar. Ich hatte zuerst im Tab 'Verlauf' gesucht.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Orange 'noch 12 Tage' als einziges Warnsignal",
+    "detail": "Die Dringlichkeit wird nur durch orange Schrift markiert. Mit Rot-Grün-Schwäche sehe ich Orange und Braun ähnlich. Ein Icon oder fette Schrift würde helfen.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "REWE nicht direkt auffindbar",
+    "detail": "Die Liste ist alphabetisch und lang, ich muss suchen. Die Filter-Chips sind gut, aber die Karte meines Supermarkts will ich schneller finden, zum Beispiel über 'Meine Händler' oben.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Grüner Status-Text, Farbe als Bedeutung",
+    "detail": "'Am Handy vorzeigbar' ist grün, vermutlich sind andere Status orange oder rot. Das Handy-Icon ist gut, aber bei den anderen Status muss der Text allein tragen, ohne dass die Farbe nötig ist.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tab-Leiste verdeckt letzten Gutschein",
+    "detail": "Der unterste Eintrag (30 €) liegt halb hinter der schwebenden Tab-Leiste und ist unlesbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kein Import aus Wallet/Stocard",
+    "detail": "Ich habe meine Karten schon in Stocard und Wallet. Einen Import oder 'Zu Wallet hinzufügen' finde ich nirgends, alle 8 Karten einzeln zu scannen nervt.",
+    "severity": "idee",
+    "kind": "fehlt"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme oben ist sofort klar: 136,25 €, davon 2 bald fällig",
+   "'Bald fällig' steht direkt auf dem Start-Tab, der nächste Ablauf ist ohne Suchen sichtbar",
+   "Die Ablauftermine sind nach Monat gruppiert und mit Summen versehen, das ist sehr übersichtlich",
+   "Händlerliste mit Filter 'Am Handy vorzeigbar' plus Link zur Guthabenprüfung beantwortet genau meine Frage",
+   "Die Einstellung für 'Läuft bald ab' ab X Tagen ist praktisch"
+  ],
+  "quote": "Den nächsten Ablauf sehe ich sofort, aber wann ich erinnert werde, kann ich nicht selbst bestimmen, und bei den grünen Schaltern muss ich raten."
+ },
+ {
+  "persona": "Svetlana, 58, Softwareentwicklerin, sieht schlecht und nutzt große Schrift, verwaltet Gutscheine für die Familie",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "PIN ansehen",
+    "success": "leicht",
+    "note": "'PIN anzeigen' steht direkt oben im Detail, gut. Auf dem Kassen-Screen ist der Knopf aber klein und in Schreibmaschinenschrift."
+   },
+   {
+    "task": "Thalia Barcode zeigen und 12,60 € eintragen",
+    "success": "mit Mühe",
+    "note": "Barcode ist schön groß. Nach 'Geklappt' bleibt aber unklar, wo ich die 12,60 € eintrage. Der Regler springt in 5-€-Schritten, also muss ich den kleinen grauen Link 'Betrag genau eintippen' finden."
+   },
+   {
+    "task": "Aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht ganz unten nach dem Verlauf, klein und rot. Das habe ich erst nach langem Scrollen gefunden."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail_c.png",
+    "title": "Genauen Betrag eintippen kaum sichtbar",
+    "detail": "'Betrag genau eintippen' ist ein kleiner hellgrauer Text unter dem gelben Knopf. Mit Sehschwäche übersehe ich ihn. Der Regler mit 5/10/20 € passt nicht zu krummen Beträgen wie 12,60 €.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Nach 'Geklappt' fehlt die Betragsabfrage",
+    "detail": "Die Frage 'Hat es geklappt?' führt nicht sichtbar zum Eintragen des Betrags. Ich will direkt danach sagen können: 12,60 € abgezogen.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Entfernen ganz unten versteckt",
+    "detail": "'Gutschein entfernen' steht nur am Ende einer langen Seite. Einen Hinweis wie 'aufgebraucht – entfernen?' oben gibt es nicht.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Tab-Leiste verdeckt Inhalt",
+    "detail": "Die schwebende Tab-Leiste liegt über 'Guthaben online prüfen' und dem Einlösen-Bereich. Das wirkt unruhig und abgeschnitten.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Graue Hilfstexte zu blass",
+    "detail": "'Danach übrig: 2,40 €', 'Notiz hinzufügen' und die Daten im Verlauf sind sehr hellgrau und klein. Für mich schlecht lesbar.",
+    "severity": "major",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "PIN-Knopf klein und uneinheitlich",
+    "detail": "Auf dem Kassen-Screen ist 'PIN anzeigen' eine kleine Pille in Schreibmaschinenschrift. Im Detail sieht der Knopf dagegen anders aus.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Zwei Kassen-Buttons verwirren",
+    "detail": "Es gibt 'Einlösen' und 'An der Kasse zeigen & testen'. Was davon ziehe ich an der Kasse? Und was bedeutet 'testen'?",
+    "severity": "minor",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Restwert ist riesig und gut lesbar",
+   "Barcode an der Kasse groß mit Helligkeit auf Maximum",
+   "Aufbewahrungsort 'Schublade' hilft für die Familie",
+   "Der Verlauf als Kassenbon ist verständlich"
+  ],
+  "quote": "Das Wichtigste ist schön groß, aber alles, was ich danach noch tun muss, ist klein und grau versteckt."
+ },
+ {
+  "persona": "Max, 29, selbstständiger Friseur, sehr technikaffin, hat letztes Jahr einen 50-€-Gutschein verfallen lassen.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Neuen Gutschein erfassen (Karte in der Hand)",
+    "success": "mit Mühe",
+    "note": "Auf dem Start-Screen gibt es kein Plus. Das Scannen steckt hinter dem runden Barcode-Symbol rechts unten, das keine Beschriftung hat. Erst durch Ausprobieren kam ich auf den Scannen-Screen. Der ist dann gut: großer Button 'Karte scannen' und dazu Fotos, E-Mail, Datei und 'Von Hand'."
+   },
+   {
+    "task": "Gesamtes offenes Guthaben prüfen",
+    "success": "leicht",
+    "note": "Die gelbe Karte mit 136,25 € sieht man sofort. Ich weiß aber nicht, ob der Zalando-Code mit '15 %' da mitgezählt wird."
+   },
+   {
+    "task": "App zum ersten Mal öffnen und verstehen",
+    "success": "leicht",
+    "note": "Die Überschrift und der Satz dazu erklären die App klar. Mit der Beispielliste versteht man sie in drei Sekunden."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Hinzufügen-Button nicht als solcher erkennbar",
+    "detail": "Ich wollte einen Gutschein anlegen und habe nach einem '+' gesucht. Der einzige Einstieg ist ein rundes Barcode-Icon ohne Text neben der Tab-Leiste. Das habe ich für 'An der Kasse zeigen' gehalten, nicht für 'Neuen Gutschein anlegen'.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Unklar, ob Prozent-Codes in der Summe stecken",
+    "detail": "Laut Karte sind es 6 Gutscheine mit 136,25 €, aber Zalando hat nur '15 %'. Zählt der mit oder nicht? Ein Hinweis wie 'plus 1 Rabattcode' würde das klären.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Speichern-Button am unteren Rand abgeschnitten",
+    "detail": "'Änderungen speichern' ist unten nur halb zu sehen und klebt an der Kante. Man muss scrollen, um sicher zu sein, dass es gespeichert wird.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Typ-Tabs oben laufen aus dem Bild",
+    "detail": "Rechts neben 'Wertgutschein' ist nur noch ein abgeschnittenes '%' zu sehen. Dass man seitlich wischen kann und was dieser dritte Typ ist, versteht man nicht.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Letzte Listenzeile unter der Tab-Leiste",
+    "detail": "Der vierte Eintrag unter 'Weitere' liegt verschwommen hinter der schwebenden Tab-Leiste und ist nicht lesbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Kein Hinweis auf Erinnerungs-Berechtigung",
+    "detail": "Wegen meines verfallenen Gutscheins sind mir die Erinnerungen am wichtigsten. Das Onboarding nennt sie nur in einem Nebensatz und hat keinen Schritt 'Mitteilungen erlauben'. Auf den Screenshots sieht man nicht, wann gefragt wird.",
+    "severity": "idee",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Icon oben rechts ohne Beschriftung",
+    "detail": "Oben rechts gibt es ein Kalendersymbol ohne Text. Ich vermute, es führt zu den Ablaufterminen, aber sicher bin ich nicht.",
+    "severity": "idee",
+    "kind": "bedienung"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme in der großen gelben Karte ist sofort klar",
+   "'Bald fällig' ganz oben mit orangem 'noch X Tage' ist genau das, was mir letztes Jahr gefehlt hat",
+   "Viele Wege zum Import: Kamera, Foto, E-Mail, PDF, von Hand",
+   "Hinweis auf die gesetzliche 3-Jahres-Frist nach § 195 BGB im Formular ist nützlich",
+   "Das Onboarding ist kurz und ohne Bla"
+  ],
+  "quote": "Die Summe und 'Bald fällig' sind top, aber zum Anlegen musste ich raten, welches Icon das ist."
+ },
+ {
+  "persona": "Helga, 63, Lieferfahrerin, misstrauisch gegenüber datensammelnden Apps, hat 1-2 Gutscheine im Jahr und will alles in 3 Sekunden erledigen.",
+  "rating": 6,
+  "would_use": false,
+  "tasks": [
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "Steht gleich oben unter 'Bald fällig': Zalando, noch 12 Tage. Das ging in 3 Sekunden."
+   },
+   {
+    "task": "Online das Restguthaben der Douglas-Karte prüfen",
+    "success": "mit Mühe",
+    "note": "Douglas antippen, dann nach unten scrollen. Der Link 'Guthaben online prüfen' steht klein unter dem Barcode und ist halb von der Tab-Leiste verdeckt. Ich hab ihn erst beim zweiten Hinsehen gefunden."
+   },
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "mit Mühe",
+    "note": "Unter Einstellungen gibt es einen Schalter, der ist schon an: 30 und 7 Tage vorher, um 10 Uhr. Die Tage oder die Uhrzeit kann ich dort aber nicht ändern, und für einen einzelnen Gutschein finde ich gar nichts. Direkt darüber drängelt sich 'Anmelden oder Konto erstellen'."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail.png",
+    "title": "Online-Prüflink unter Tab-Leiste versteckt",
+    "detail": "'Guthaben online prüfen' ist kleiner grauer Text direkt über der schwebenden Tab-Leiste und wird davon teilweise verdeckt. Man sieht nicht auf Anhieb, dass man ihn antippen kann.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeitpunkt nicht einstellbar",
+    "detail": "Es gibt nur An/Aus. Den Text '30 und 7 Tage, 10 Uhr' kann ich nicht ändern. Um 10 Uhr fahre ich, da seh ich keine Mitteilung.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Konto-Knopf drängt sich zuerst auf",
+    "detail": "Das Erste in den Einstellungen ist ein großer schwarzer Knopf 'Anmelden oder Konto erstellen'. Für mich klingt das nach Daten sammeln. Dass alles auf dem iPhone bleibt, steht nur klein daneben.",
+    "severity": "major",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Rote Löschen-Schrift zu nah",
+    "detail": "'Gutschein entfernen' steht direkt unter dem Verlauf und über der Tab-Leiste. Beim schnellen Scrollen tippt man da leicht aus Versehen drauf.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol oben unbeschriftet",
+    "detail": "Das runde Symbol oben rechts führt zu den Ablaufterminen, sagt es aber nicht. Ich hab es nur durch Raten gefunden.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Liste unten von Leiste verdeckt",
+    "detail": "Die letzte Zeile (Amazon) ist unter der Tab-Leiste halb durchsichtig und nicht lesbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Zu viel Kram für zwei Gutscheine",
+    "detail": "Schieberegler, 5/10/20/Alles, Kassentest, Bon-Verlauf und Aufbewahrungsort: Für meine ein, zwei Gutscheine im Jahr ist mir das viel zu viel.",
+    "severity": "idee",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Grenze 'Läuft bald ab' unverständlich",
+    "detail": "Was die Grenze von 30 Tagen mit Plus und Minus bewirkt und wie sie mit den Erinnerungen zusammenhängt, ist nicht klar. Ich dachte zuerst, hier stelle ich die Erinnerung ein.",
+    "severity": "minor",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Die Summe und 'Bald fällig' sieht man sofort, groß und gelb",
+   "Die Tage bis zum Ablauf stehen orange da, das ist klar",
+   "Laut Einstellungen ist kein Konto nötig und alles bleibt auf dem Handy",
+   "Der Barcode ist groß und gut lesbar"
+  ],
+  "quote": "Was als Nächstes abläuft, seh ich sofort, gut. Aber den Online-Link muss ich suchen, und als Erstes will die App, dass ich ein Konto mache. Da bin ich raus."
+ },
+ {
+  "persona": "Jan, 34, Kassierer im Supermarkt, bekommt Gutscheine meist als PDF per Mail und bedient das Handy fast immer einhändig.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Bei Thalia den Barcode zeigen und 12,60 € eintragen",
+    "success": "mit Mühe",
+    "note": "Der Barcode ist im Detail direkt zu sehen, gut. Zum Eintragen muss ich aber runterscrollen: Der Regler steht auf 10 €, und für 12,60 € muss ich den kleinen Link „Betrag genau eintippen“ finden. Auf dem Kassen-Screen gibt es nur „Geklappt“ und „Abgelehnt“, einen Betrag kann ich dort nicht eingeben."
+   },
+   {
+    "task": "Herausfinden, ob REWE Gutscheine vom Handy annimmt",
+    "success": "mit Mühe",
+    "note": "Unter Händler gibt es eine Suche und den Filter „Am Handy vorzeigbar“. REWE ist aber nicht zu sehen, ich müsste suchen oder weit scrollen. Ob REWE überhaupt in der Liste steht, kann ich an den Screenshots nicht erkennen."
+   },
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "„PIN anzeigen“ steht im Detail und auch an der Kasse, das ist gut zu finden. Das Face-ID-Symbol macht klar, dass es geschützt ist."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_checkout.png",
+    "title": "Nach „Geklappt“ fehlt die Betragseingabe",
+    "detail": "An der Kasse weiß ich, wie viel abgebucht wurde (12,60 €). Auf dem Screen kann ich aber nur Geklappt oder Abgelehnt antippen und nirgends den Betrag eintragen. Ich muss zurück ins Detail und dort scrollen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Genaue Eingabe als kleiner grauer Link versteckt",
+    "detail": "Kassenbeträge sind fast nie glatt. Trotzdem sind nur Regler und die Buttons 5/10/20 € groß. „Betrag genau eintippen“ steht klein in Grau darunter und ist leicht zu übersehen. Den Regler auf Cent genau einzustellen, geht einhändig nicht.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Einlösen liegt unter der Tab-Leiste",
+    "detail": "Der Bereich „Einlösen“ steckt halb hinter der schwebenden Tab-Leiste. Ich muss scrollen, um die wichtigste Aktion zu erreichen. Mit dem Daumen oben den Stift oder zurück zu erreichen, ist auch schwer.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Beliebte Supermärkte sind nicht schnell zu finden",
+    "detail": "Die Liste ist alphabetisch: Aldi, CinemaxX, Decathlon ... Für REWE muss ich weit scrollen oder oben ins Suchfeld tippen, was einhändig schlecht erreichbar ist. Ein Eintrag direkt auf dem Gutschein nach dem Muster „Bei diesem Händler am Handy ok?“ wäre praktischer.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "PDF-Gutschein aus der Mail importieren unklar",
+    "detail": "Meine Gutscheine kommen als PDF. Auf dem Start-Screen finde ich nur das Scan-Symbol unten rechts. Ob ich damit ein PDF aus der Mail importieren kann, geht aus dem Symbol nicht hervor.",
+    "severity": "minor",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "„Abgelehnt“ ohne erklärte Folgen",
+    "detail": "Ich weiß nicht, was nach „Abgelehnt“ passiert: Wird der Gutschein markiert oder der Händler geändert?",
+    "severity": "idee",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Barcode ist groß, und die Helligkeit geht an der Kasse automatisch auf Maximum. Als Kassierer weiß ich, wie wichtig das ist.",
+   "Die Gesamtsumme und „bald fällig“ sieht man auf dem Start-Screen sofort.",
+   "Der Einlöse-Verlauf im Stil eines Kassenbons ist verständlich und sieht schön aus.",
+   "PIN anzeigen ist gut zu finden und geschützt."
+  ],
+  "quote": "Barcode zeigen geht super, aber 12,60 € eintragen fühlt sich an, als müsste ich die Funktion erst suchen."
+ },
+ {
+  "persona": "Leyla, 68, Vertriebsmitarbeiterin, Power-Userin von Apple Wallet und Stocard, Deutsch ist Zweitsprache, sammelt Rabattcodes für Online-Shops.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Gesamtguthaben prüfen",
+    "success": "leicht",
+    "note": "Die große gelbe Karte oben zeigt 136,25 € sofort. Ich weiß aber nicht, ob der Zalando-Code mit 15 % mitgezählt wird. Prozent ist doch kein Geld."
+   },
+   {
+    "task": "Abgelaufenen/aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht ganz unten im Detail, klein und rot, erst nach langem Scrollen. Auf der Liste kann ich nicht wischen, oder ich sehe es jedenfalls nicht."
+   },
+   {
+    "task": "Neuen Gutschein erfassen",
+    "success": "mit Mühe",
+    "note": "Oben auf Start gibt es keinen Plus-Knopf. Erst nach einer Weile habe ich gemerkt, dass der runde Knopf unten rechts mit dem Barcode 'Scannen' ist. Danach war der Scannen-Screen klar."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Kein sichtbarer Plus-Knopf zum Hinzufügen",
+    "detail": "Oben rechts ist nur ein Kalender-Symbol. Den Knopf zum Hinzufügen erwarte ich oben oder als '+'. Der runde Barcode-Knopf unten rechts hat keine Beschriftung, ich dachte zuerst, er zeigt meine Karte an der Kasse.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Prozent-Rabattcode in Eurosumme unklar",
+    "detail": "Zalando zeigt '15 %', aber oben steht die Summe in Euro. Wird der Code gezählt? Ich sammle viele Rabattcodes, das muss klar sein.",
+    "severity": "major",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Löschen ganz unten versteckt",
+    "detail": "'Gutschein entfernen' steht erst nach Einlösen, Kasse und Verlauf ganz unten. Für aufgebrauchte Karten will ich schnell wischen oder 'Archivieren' in der Liste.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Unterste Listenzeile unter Tab-Leiste",
+    "detail": "Die letzte Karte (30 €) ist halb unter der Tab-Leiste und schlecht lesbar, der Text schimmert durch.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Gesetzestext schwer verständlich",
+    "detail": "'gesetzliche Frist ... Ende des Jahres ... (§ 195 BGB)' ist für mich als Zweitsprachlerin schwer. Besser: 'Meist 3 Jahre gültig' und ein Knopf, der das Datum ausrechnet.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Dritter Typ-Reiter abgeschnitten",
+    "detail": "Rechts sieht man nur '%'. Ich muss raten, dass es 'Rabattcode' ist, und seitlich wischen.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Wort 'Restwert' mehrdeutig",
+    "detail": "App heißt Restwert, Beleg sagt RESTWERT, Liste sagt 'unbenutzt'. Für mich einfacher: 'Guthaben' überall gleich.",
+    "severity": "idee",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kein Wallet-Export sichtbar",
+    "detail": "Ich nutze Apple Wallet täglich. Im Formular steht Wallet ist möglich, aber ich finde keinen Knopf 'Zu Wallet hinzufügen'.",
+    "severity": "idee",
+    "kind": "fehlt"
+   }
+  ],
+  "positives": [
+   "Gesamtsumme groß und sofort sichtbar",
+   "'Bald fällig' mit Tagen in Orange ist sehr nützlich",
+   "Scannen-Screen bietet Fotos, E-Mail, Datei und Hand, gut für meine Online-Codes",
+   "Einlösen mit 5/10/20/Alles und 'Danach übrig' ist klar",
+   "Beleg-Verlauf sieht schön und verständlich aus"
+  ],
+  "quote": "Die Summe sehe ich sofort, aber wo ich eine neue Karte hinzufüge und ob meine Prozent-Codes mitzählen, musste ich raten."
+ },
+ {
+  "persona": "Stefan, 38, Pflegekraft, eher unsicher mit Apps, Rot-Grün-Sehschwäche",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Restguthaben einer Douglas-Karte online prüfen",
+    "success": "mit Mühe",
+    "note": "Im Detail steht 'Guthaben online prüfen' ganz unten, halb unter der Tab-Leiste versteckt. In der Händlerliste ist bei Douglas der Link auch von der Leiste abgeschnitten. Ich hätte fast aufgegeben."
+   },
+   {
+    "task": "App zum ersten Mal öffnen und verstehen",
+    "success": "leicht",
+    "note": "Überschrift und drei Beispielkarten sind klar. Einfach 'Los geht's' drücken."
+   },
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "'Bald fällig' auf dem Start: Zalando, noch 12 Tage. Der Kalender-Knopf oben rechts ist aber ohne Beschriftung, das hätte ich nicht gefunden."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail.png",
+    "title": "'Guthaben online prüfen' unter Tab-Leiste versteckt",
+    "detail": "Der Link sitzt direkt unter dem Barcode und wird von der schwebenden Tab-Leiste halb verdeckt. Ich muss erst scrollen und erraten, dass da was ist.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Douglas-Eintrag in Händlerliste abgeschnitten",
+    "detail": "Bei Douglas steht '17-stellige Nummer und PIN', aber der Prüf-Link verschwindet hinter der Tab-Leiste. Ich weiß nicht, ob es für Douglas überhaupt einen Link gibt.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Grün als einziges Signal für 'am Handy'",
+    "detail": "'Am Handy vorzeigbar' ist grün. Mit Rot-Grün-Schwäche unterscheide ich das schlecht von einer Warnung – zum Glück steht Text und Handy-Symbol dabei; bei 'Nur online'/Karte nötig bitte auch eindeutiges Symbol.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Knopf ohne Beschriftung",
+    "detail": "Das kleine Kalendersymbol oben rechts führt zu den Ablaufterminen. Ohne Text hätte ich es nie angetippt.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Orange 'noch 12 Tage' schwach",
+    "detail": "Dringlichkeit nur durch orange Farbe. Für mich sieht das fast wie der graue Text aus. Ein Warnsymbol wäre besser.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "'Gutschein entfernen' in Rot kaum sichtbar",
+    "detail": "Rot auf Grau erkenne ich schlecht; zudem steht es nah an Verlauf, Angst aus Versehen zu löschen.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kein schneller Weg an die Kasse",
+    "detail": "An der Kasse will ich sofort den Barcode. Das Scan-Symbol rechts unten sieht aus wie 'Barcode zeigen', ist aber Scannen – verwirrend.",
+    "severity": "major",
+    "kind": "bedienung"
+   }
+  ],
+  "positives": [
+   "Onboarding erklärt in einem Satz, worum es geht",
+   "'Bald fällig' ganz oben auf dem Start",
+   "Große, gut lesbare Beträge",
+   "Ablauftermine nach Monat sortiert"
+  ],
+  "quote": "Was verfällt, sehe ich sofort – aber den Knopf zum Guthaben-Prüfen musste ich unter der Leiste suchen."
+ },
+ {
+  "persona": "Ute, 74, Handwerkerin, sehr technikaffin, liest wegen Sehschwäche nur mit großer Schrift",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Herausfinden, ob man bei REWE den Gutschein vom Handy zeigen kann",
+    "success": "mit Mühe",
+    "note": "Unter Händler gibt es Suche und den Filter 'Am Handy vorzeigbar'. REWE steht aber nicht auf dem ersten Bildschirm, ich muss also suchen oder scrollen. Das grüne 'Am Handy vorzeigbar' ist klein und hat wenig Kontrast."
+   },
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "leicht",
+    "note": "In den Einstellungen gibt es einen Schalter für Ablauf-Erinnerungen, beschriftet mit '30 und 7 Tage vorher, um 10 Uhr'. Ich sehe aber nicht, wie ich die Tage oder die Uhrzeit ändern kann."
+   },
+   {
+    "task": "Bei Thalia den Barcode zeigen und 12,60 € als eingelöst eintragen",
+    "success": "mit Mühe",
+    "note": "Der Barcode ist gut. Auf der Karte stehen aber nur 12,40 €, also kann ich 12,60 € gar nicht abziehen. Die App müsste mir sagen, was dann passiert, zum Beispiel dass der Rest bar bezahlt wird. Außerdem sehe ich nicht, ob 'Geklappt' gleich zum Tastenfeld führt."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_keypad.png",
+    "title": "Betrag höher als Guthaben unklar",
+    "detail": "Ich soll 12,60 € abziehen, verfügbar sind aber nur 12,40 €. Nirgends steht, was dann passiert: ein Fehler, oder wird alles abgezogen und der Rest ist Zuzahlung? 'Alles' gibt es, aber ohne Erklärung.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Graue Kleinschrift kaum lesbar",
+    "detail": "'bis 13.02.2027', 'unbenutzt' und 'Rabattcode' sind hellgrau und klein. Mit meinen Augen kann ich das kaum lesen. Das Gleiche gilt für die Unterzeilen in den Einstellungen.",
+    "severity": "major",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Grünes Label mit schwachem Kontrast",
+    "detail": "Das hellgrüne 'Am Handy vorzeigbar' auf Weiß ist genau die wichtige Info, liest sich aber schlecht. Die Beschreibungen darunter sind sehr klein.",
+    "severity": "major",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeit nicht einstellbar",
+    "detail": "'30 und 7 Tage vorher, um 10 Uhr' ist fest vorgegeben. Ich finde keine Möglichkeit, die Tage oder die Uhrzeit zu ändern.",
+    "severity": "minor",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tab-Leiste verdeckt Liste",
+    "detail": "Die schwebende Leiste liegt über dem letzten Gutschein, der ist halb verdeckt. Mit großer Schrift wird das noch schlimmer.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Nach 'Geklappt' unklar, wie abgezogen wird",
+    "detail": "'Hat es geklappt?' ist gut, aber ich sehe nicht, dass ich danach den Betrag eintragen soll. Besser wäre ein Hinweis wie 'Weiter: Betrag abziehen'.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol oben rechts unklar",
+    "detail": "Das kleine Kalender-Icon hat keine Beschriftung. Dass dahinter die Ablauftermine liegen, muss ich raten.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Hinweistext unter Barcode winzig",
+    "detail": "'Code 128 · Helligkeit auf Maximum' ist sehr klein und grau. 'Code 128' sagt einem normalen Kunden auch nichts.",
+    "severity": "idee",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme ist riesig und gelb, auf einen Blick lesbar",
+   "Barcode groß, Nummer darunter groß und fett",
+   "Großes Tastenfeld zum Eintippen des Betrags",
+   "Händlerliste mit Filter 'Am Handy vorzeigbar' ist genau, was ich brauche",
+   "Die Tab-Leiste hat Beschriftungen und nicht nur Symbole"
+  ],
+  "quote": "Die großen Zahlen kann ich lesen, alles in Grau darunter nicht, und bei Thalia fehlen mir 20 Cent, ohne dass mir die App sagt, was jetzt passiert."
+ },
+ {
+  "persona": "Finn, 42, Buchhalter, verschenkt gern Gutscheine und behält den Überblick für die Familie, ist skeptisch gegenüber Apps, die Daten sammeln.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Abgelaufenen/aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht ganz unten im Detail, erst nach viel Scrollen unter dem Bon. In der Liste auf dem Start-Screen gibt es kein sichtbares Wischen oder Archiv. Einen abgelaufenen Gutschein habe ich im Screenshot gar nicht gesehen."
+   },
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "Der Button 'PIN anzeigen' steht oben im Detail. Dass er per Face ID geschützt ist, finde ich gut."
+   },
+   {
+    "task": "Gesamtes offenes Guthaben prüfen",
+    "success": "mit Mühe",
+    "note": "136,25 € stehen groß da. Aber Zalando zählt als '15 %' – wie soll das in die Summe eingehen? Als Buchhalter will ich wissen, was die Zahl eigentlich enthält."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Summe mischt Prozent-Codes und Euro",
+    "detail": "'Auf allen Karten zusammen 136,25 €' steht über 6 Gutscheinen, von denen einer ein 15-%-Rabattcode ist. Es ist nicht erklärt, ob und wie der mitgezählt wird. Ich traue der Zahl so nicht.",
+    "severity": "major",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Entfernen tief versteckt, kein Archiv",
+    "detail": "'Gutschein entfernen' ist ein kleiner roter Textlink ganz unten unter dem Verlauf. Für aufgebrauchte Karten will ich lieber 'Archivieren', damit die Historie für die Familie erhalten bleibt, und kein Löschen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Aufgebrauchte/abgelaufene Karten nicht sichtbar",
+    "detail": "Auf dem Start-Screen ist nicht zu erkennen, wo abgelaufene oder leere Gutscheine landen. Es gibt keine Rubrik und keinen Filter dafür.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Konto-Button oben weckt Datensammel-Verdacht",
+    "detail": "Das Erste in den Einstellungen ist ein großer schwarzer Button 'Anmelden oder Konto erstellen'. 'Alles liegt nur auf diesem iPhone' ist gut, steht aber klein daneben. Der Datenschutztext unten wird von der Tab-Leiste verdeckt.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tab-Leiste verdeckt letzten Listeneintrag",
+    "detail": "Die schwebende Tab-Leiste liegt über dem letzten Gutschein. Betrag und Name sind nur halb lesbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Nicht klar, für wen der Gutschein ist",
+    "detail": "Ich verwalte Gutscheine für die Familie, finde aber kein Feld für Besitzer oder Empfänger. Es gibt nur 'Aufbewahrt: Schublade'.",
+    "severity": "idee",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Schieberegler steht vorab auf 10 €",
+    "detail": "'Einlösen' ist schon auf 10,00 € vorbelegt. Mit einem Tipp bucht man versehentlich einen falschen Betrag ab, und ein Rückgängig sehe ich nicht.",
+    "severity": "minor",
+    "kind": "bedienung"
+   }
+  ],
+  "positives": [
+   "Die große Gesamtsumme auf dem Start-Screen ist sofort sichtbar",
+   "'Bald fällig' mit Tagesangabe ist sehr nützlich",
+   "PIN per Face ID geschützt",
+   "Der Einlöse-Verlauf als Bon ist nachvollziehbar wie ein Kontoauszug",
+   "'Alles liegt nur auf diesem iPhone', Konto optional"
+  ],
+  "quote": "Die Summe oben ist schön groß, aber solange ich nicht weiß, was mit dem 15-%-Code passiert, rechne ich lieber selbst nach."
+ },
+ {
+  "persona": "Irina, 81, Rentnerin, nutzt WhatsApp, Banking und Amazon und ist ungeduldig.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "App zum ersten Mal öffnen und verstehen",
+    "success": "leicht",
+    "note": "Überschrift und die drei Beispielkarten sind klar. Die Erinnerung, dass der Gutschein bald abläuft, ist genau das, was mir letztes Jahr gefehlt hat."
+   },
+   {
+    "task": "Neuen Gutschein mit Karte in der Hand erfassen",
+    "success": "mit Mühe",
+    "note": "Das kleine Barcode-Symbol unten rechts habe ich nicht als 'Hinzufügen' erkannt. Ein Plus-Knopf fehlt. Im Scannen-Tab gibt es dann fünf Wege, das ist zu viel. Das Formular hat sehr viele Felder, z. B. Barcode-Typ 'Code 128', damit kann ich nichts anfangen."
+   },
+   {
+    "task": "Restguthaben der Douglas-Karte online prüfen",
+    "success": "mit Mühe",
+    "note": "Unter Händler steht bei Douglas 'Online mit 17-stelliger Nummer und PIN', aber der Link ist hinter der Menüleiste versteckt. Ich muss scrollen und suchen. Im Gutschein selbst hätte ich einen Knopf erwartet."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Kein erkennbarer Plus-Knopf zum Hinzufügen",
+    "detail": "Der einzige Weg zum Erfassen ist das runde Barcode-Symbol unten rechts. Für mich sieht das aus wie 'Kasse' oder 'Code zeigen', nicht wie 'neuer Gutschein'. Ich will ein großes '+ Gutschein hinzufügen' sehen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Guthaben-prüfen-Link bei Douglas verdeckt",
+    "detail": "Die Douglas-Karte wird von der schwebenden Menüleiste abgeschnitten, der Link 'Guthaben online prüfen' ist nicht zu sehen. Ich muss erst scrollen, und die ersten Einträge ALDI, CinemaxX, Decathlon interessieren mich nicht.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Guthaben online prüfen fehlt im Gutschein",
+    "detail": "Wenn ich meine Douglas-Karte öffne, will ich dort direkt 'Guthaben beim Händler prüfen' drücken und nicht erst in den Händler-Tab wechseln.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_scan.png",
+    "title": "Zu viele Wege zum Erfassen",
+    "detail": "Scannen, Fotos, E-Mail, Datei, von Hand: fünf Möglichkeiten plus ein Hinweis in grauer Mini-Schrift. Ich will in 3 Sekunden loslegen. Der große schwarze Knopf ist gut, der Rest verwirrt mich.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Formular mit Fachbegriffen überladen",
+    "detail": "'Barcode Code 128', 'Aufbewahrungsort', PIN, Erhalten am, Notiz: Ich weiß nicht, was davon Pflicht ist. Außerdem ist der Speichern-Knopf unten abgeschnitten.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Graue Kleinschrift schwer lesbar",
+    "detail": "'Danach übrig: 2,40 €' und 'Betrag genau eintippen' sind hellgrau und klein. Mit meinen Augen kann ich das kaum lesen. Das gilt auch für den Hinweis zu § 195 BGB im Formular.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Einlösen per Schieberegler ist fummelig",
+    "detail": "Mit meinen Fingern treffe ich den Schieberegler nicht genau. Die Knöpfe 5 €, 10 € und Alles sind besser. Ich habe Angst, aus Versehen abzubuchen.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol oben rechts ohne Beschriftung",
+    "detail": "Ein Symbol ohne Text. Ich weiß nicht, dass es die Ablauftermine zeigt, also genau das, was mir wichtig ist.",
+    "severity": "minor",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Die große gelbe Gesamtsumme sehe ich sofort",
+   "'Bald fällig' mit orangem 'noch 12 Tage' ganz oben, genau das hätte meine 50 € gerettet",
+   "Die Einführung ist kurz und verständlich",
+   "Große Beträge und klare Händler-Logos",
+   "Der Einlöse-Verlauf sieht aus wie ein Kassenbon, das verstehe ich"
+  ],
+  "quote": "Dass mir die App sagt 'noch 12 Tage', finde ich gut. Aber wo drücke ich, um meine neue Karte reinzutun? Ich suche doch keinen Barcode-Knopf."
+ },
+ {
+  "persona": "Moritz, 47, Vater in Elternzeit, Power-User (Apple Wallet, Stocard), hat nur 1-2 Gutscheine im Jahr und bedient das Handy meist einhändig.",
+  "rating": 7,
+  "would_use": false,
+  "tasks": [
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "leicht",
+    "note": "In Einstellungen gleich sichtbar: 30 und 7 Tage vorher, 10 Uhr. Die Zeiten kann ich aber nicht ändern, der Schalter ist nur an/aus."
+   },
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "Start zeigt 'Bald fällig' mit Zalando, noch 12 Tage. Der Kalender-Button oben rechts führt zu den Ablaufterminen, ist aber ein unbeschriftetes Symbol."
+   },
+   {
+    "task": "Herausfinden, ob man bei REWE den Gutschein vom Handy zeigen kann",
+    "success": "mit Mühe",
+    "note": "Händlerliste ist alphabetisch, REWE ist nicht sichtbar. Ich muss oben suchen oder weit scrollen, einhändig ist das oben liegende Suchfeld schlecht erreichbar."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_merchants.png",
+    "title": "REWE nur über Suche ganz oben",
+    "detail": "Das Suchfeld sitzt oben, einhändig kaum erreichbar. Ohne Suche heißt es lange scrollen. Hier wäre eine Suche unten (wie in iOS-Safari) oder ein Alphabet-Index gut.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeitpunkte nicht einstellbar",
+    "detail": "'30 und 7 Tage vor dem Ablauf, um 10 Uhr' ist fest vorgegeben. Um 10 Uhr sitze ich vielleicht auf dem Spielplatz. Ich will die Uhrzeit und die Tage selbst wählen.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Button oben unbeschriftet und weit weg",
+    "detail": "Das Kalendersymbol oben rechts sieht man, weiß aber nicht, dass es zu den Ablaufterminen führt. Einhändig ist es der schwerste Punkt auf dem Display.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Unterste Liste von der Tab-Leiste verdeckt",
+    "detail": "Der letzte Gutschein (Amazon, 30 €) liegt halb unter der schwebenden Tab-Leiste und ist unleserlich.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Anmelde-Button dominiert die Einstellungen",
+    "detail": "Der große schwarze Button 'Anmelden oder Konto erstellen' steht vor allem anderen. Bei 1-2 Gutscheinen im Jahr brauche ich kein Konto, das wirkt aufdringlich.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Wallet-Integration fehlt",
+    "detail": "Ich nutze Apple Wallet täglich. Für zwei Gutscheine im Jahr installiere ich keine extra App, wenn ich den Barcode nicht in Wallet legen kann.",
+    "severity": "idee",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Filterchips abgeschnitten",
+    "detail": "Der vierte Filter rechts ist abgeschnitten, man ahnt nur, dass man wischen muss.",
+    "severity": "minor",
+    "kind": "optik"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme und 'Bald fällig' sieht man sofort auf dem Start-Screen",
+   "Ablaufdaten mit 'noch 12 Tage' in Orange sind klar",
+   "Händlerliste mit 'Am Handy vorzeigbar' in Grün beantwortet genau meine Frage",
+   "Der Scan-Button unten rechts ist mit dem Daumen gut erreichbar",
+   "Die Ablauftermine nach Monat gruppiert sind übersichtlich"
+  ],
+  "quote": "Sieht sauber aus und beantwortet meine Fragen, aber für zwei Gutscheine im Jahr bleibe ich bei Wallet, solange ich die Karten nicht dorthin schieben kann."
+ },
+ {
+  "persona": "Petra, 19, Studentin, unsicher mit Apps, Deutsch als Zweitsprache, bekommt Gutscheine meist als PDF per E-Mail.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "'PIN anzeigen' steht groß im Detail und auch an der Kasse. Das Face-ID-Symbol daneben verstehe ich nicht sofort, aber der Text ist klar."
+   },
+   {
+    "task": "Bei Thalia Barcode zeigen und 12,60 € eintragen",
+    "success": "mit Mühe",
+    "note": "Barcode zeigen ging. Danach 'Geklappt' gedrückt, aber es fragt nicht nach dem Betrag. Im Detail ist der Schieberegler auf 10 €, Knöpfe 5/10/20, keine 12,60. Ich musste den kleinen grauen Text 'Betrag genau eintippen' finden, der sieht nicht wie ein Button aus."
+   },
+   {
+    "task": "Abgelaufenen/aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' ist ganz unten im Detail, man muss weit scrollen. Auf der Startliste habe ich kein Löschen gesehen."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail_c.png",
+    "title": "Genauer Betrag nur als grauer Text",
+    "detail": "'Betrag genau eintippen' ist kleiner grauer Text unter dem gelben Button. Ich dachte, das ist nur ein Hinweis, kein Knopf. Krumme Beträge wie 12,60 € sind aber normal.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Nach 'Geklappt' fehlt Betragsfrage",
+    "detail": "Ich erwarte nach der Kasse direkt: Wie viel hast du bezahlt? Stattdessen muss ich zurück ins Detail und unten den Einlösen-Bereich suchen.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Löschen versteckt ganz unten",
+    "detail": "'Gutschein entfernen' ist nur roter Text unter dem Verlauf. Für aufgebrauchte Gutscheine sollte die App selbst vorschlagen: 'Leer – archivieren?'",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Tabbar verdeckt Einlösen-Bereich",
+    "detail": "Unten schaut 'Einlösen 10,00 €' halb unter der Tabbar hervor, abgeschnitten. Ich weiß nicht, dass ich scrollen muss.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Fachbegriffe unklar",
+    "detail": "'Code 128' sagt mir nichts. 'Abgelehnt' – wer lehnt ab? Bei Zweitsprache verwirren solche Wörter. 'Restwert' und 'Guthaben' werden abwechselnd benutzt.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Schere-Symbol bei Einlösen",
+    "detail": "Die Schere auf 'Einlösen' finde ich komisch, ich hatte Angst, etwas wird abgeschnitten/gelöscht.",
+    "severity": "idee",
+    "kind": "text"
+   },
+   {
+    "screen": "03_scan.png",
+    "title": "PDF-Import gut, aber Tipp klein",
+    "detail": "'Aus einer Datei – PDF' passt perfekt für mich. Der Hinweis mit Teilen aus Mail ist aber sehr klein und grau unten.",
+    "severity": "idee",
+    "kind": "optik"
+   }
+  ],
+  "positives": [
+   "Große Summe und Barcode sind sehr gut lesbar",
+   "'PIN anzeigen' leicht zu finden",
+   "Import aus PDF/E-Mail direkt angeboten",
+   "Einlöse-Verlauf wie ein Kassenbon, gut verständlich",
+   "'Danach übrig: 2,40 €' hilft sehr"
+  ],
+  "quote": "Der Barcode an der Kasse war einfach, aber 12,60 € eintragen hat mich zwei Minuten gekostet, weil ich den grauen Text nicht als Knopf erkannt habe."
+ },
+ {
+  "persona": "Luca, 53, Lehrer, sehr technikaffin, sammelt Rabattcodes für Online-Shops, hat eine Rot-Grün-Sehschwäche.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Neuen Gutschein erfassen (Karte in der Hand)",
+    "success": "mit Mühe",
+    "note": "Auf dem Start-Tab gibt es kein Plus. Das Scannen steckt hinter einem runden Barcode-Icon rechts unten, getrennt von der Tab-Leiste und ohne Beschriftung. Erst nach einigem Suchen gefunden. Danach ist der Scannen-Screen klar: Karte scannen, Fotos, E-Mail, Datei, von Hand."
+   },
+   {
+    "task": "Offenes Gesamtguthaben prüfen",
+    "success": "leicht",
+    "note": "Die große gelbe Kachel zeigt 136,25 € sofort. Unklar ist, ob der Zalando-Rabattcode mit 15 % darin steckt oder nicht."
+   },
+   {
+    "task": "App zum ersten Mal öffnen und verstehen",
+    "success": "leicht",
+    "note": "Überschrift und Unterzeile erklären den Zweck gut. Kein Hinweis auf Rabattcodes, obwohl das mein Hauptanwendungsfall ist."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Hinzufügen-Button ohne Beschriftung, schwer zu finden",
+    "detail": "Der wichtigste Einstieg (neuer Gutschein) ist nur ein Barcode-Symbol in einem Kreis neben der Tab-Leiste. Es gibt keinen Text und kein Plus. Ich habe zuerst nach einem Plus oben rechts gesucht, dort ist aber nur ein Kalender-Icon.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Gesamtsumme mit Prozent-Code unklar",
+    "detail": "'6 Gutscheine' und 136,25 €, aber Zalando ist '15 %'. Wird der Rabattcode mitgezählt, ignoriert oder umgerechnet? Das wird nirgends erklärt.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Rabattcode-Tab abgeschnitten",
+    "detail": "Die Typauswahl zeigt Geschenkkarte, Wertgutschein und dann nur ein halbes '%'. Dass es einen Typ für Rabattcodes gibt, sieht man erst beim Scrollen. Für mich ist das der wichtigste Typ.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Onboarding erwähnt keine Rabattcodes",
+    "detail": "Der Text spricht nur von Karte abfotografieren und Barcode an der Kasse. Online-Codes kommen nicht vor, deshalb hätte ich fast gedacht, dass die App nichts für mich ist.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Dringlichkeit nur über Farbe",
+    "detail": "'noch 12 Tage' unterscheidet sich von 'bis 13.02.2027' vor allem durch Orange gegenüber Grau. Bei mir funktioniert es noch, weil der Text anders ist. Ein Icon wäre trotzdem sicherer. Wenn Rot für abgelaufen dazukommt, kann ich das von Orange kaum unterscheiden.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Speichern-Button vom Rand verdeckt",
+    "detail": "'Änderungen speichern' ist unten abgeschnitten und liegt teils unter dem Bildschirmrand. Die Notiz zum Ort ist grau auf grau und schwer lesbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Fortschrittsbalken ohne Erklärung",
+    "detail": "Bei Douglas und Thalia steht unter dem Betrag ein kleiner schwarzer Balken. Bei anderen steht 'unbenutzt'. Es wird nicht erklärt, dass der Balken den verbrauchten Anteil zeigt.",
+    "severity": "idee",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Die gelbe Summenkachel ist riesig und sofort lesbar.",
+   "Die Farbe ist nicht das einzige Signal: Dringlichkeit steht zusätzlich als Text da ('noch 12 Tage').",
+   "Der Scannen-Screen bietet viele Wege: Foto, Mail, PDF und Eingabe von Hand.",
+   "Der Hinweis auf die gesetzliche Frist nach § 195 BGB im Formular ist hilfreich.",
+   "Die Ablaufübersicht nach Monaten gruppiert ist übersichtlich."
+  ],
+  "quote": "Die Summe sehe ich sofort, aber den Knopf zum Hinzufügen musste ich erst suchen, und meine Rabattcodes behandelt die App eher als Nebensache."
+ },
+ {
+  "persona": "Brigitte, 24, Azubi, misstraut Apps, die Daten sammeln, hat eine Sehschwäche und stellt große Schrift ein.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "Auf dem Start-Tab steht oben unter 'Bald fällig' Zalando mit 'noch 12 Tage' in Orange. Das ging sofort. Das kleine Kalender-Symbol oben rechts habe ich erst später als Weg zu den 'Ablaufterminen' erkannt."
+   },
+   {
+    "task": "Beim Händler online das Restguthaben einer Douglas-Karte prüfen",
+    "success": "mit Mühe",
+    "note": "Im Douglas-Detail gibt es keinen Link zum Guthaben prüfen. Den gibt es laut Code (MerchantsView balanceURL) nur im Tab 'Händler'. Ich musste also raus aus der Karte und den Händler noch einmal suchen."
+   },
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "mit Mühe",
+    "note": "In den Einstellungen gibt es einen Schalter 'Ablauf-Erinnerungen' mit festen Zeiten: 30 und 7 Tage vorher, um 10 Uhr. Ich kann die Tage oder die Uhrzeit nicht ändern und auch nicht pro Gutschein einstellen."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail_b.png",
+    "title": "Kein Link zum Guthaben prüfen in der Karte",
+    "detail": "Wenn ich eine Karte offen habe, erwarte ich dort einen Knopf wie 'Guthaben beim Händler prüfen'. Den gibt es aber nur im Tab Händler. Das heißt: Karte schließen, zum Händler-Tab gehen, Douglas suchen.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeiten nicht einstellbar",
+    "detail": "'30 und 7 Tage vor dem Ablauf, um 10 Uhr' ist fest vorgegeben. Um 10 Uhr bin ich in der Arbeit. Ich will die Uhrzeit wählen können und bei einzelnen Gutscheinen auch mal 1 Tag vorher.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Barcode ist unten im Detail versteckt",
+    "detail": "An der Kasse muss ich im Detail erst an Schieberegler und Einlösen vorbei nach unten scrollen, bis 'An der Kasse zeigen' kommt. Der Knopf rechts unten mit dem Barcode-Symbol hat keine Beschriftung. Für mich mit Sehschwäche ist das in der Hektik zu wenig.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Graue Hilfstexte schwer lesbar",
+    "detail": "Texte wie 'bis 13.02.2027', 'unbenutzt' und 'Danach übrig: 2,40 €' sind hellgrau und klein, der Kontrast ist schwach. Mit Sehschwäche kann ich das kaum lesen.",
+    "severity": "major",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tab-Leiste verdeckt die Liste",
+    "detail": "Die schwebende Tab-Leiste liegt über dem letzten Gutschein. Den Amazon-Betrag sieht man nur halb und durchscheinend. Mit großer Schrift wird das sicher noch schlimmer.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Konto-Aufforderung macht mich misstrauisch",
+    "detail": "Ganz oben steht ein großer schwarzer Knopf 'Anmelden oder Konto erstellen'. Das wirkt, als wollte die App meine Daten. Dass 'Alles liegt nur auf diesem iPhone' gilt, steht nur klein daneben, und der Datenschutz-Text ist unten abgeschnitten.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol ohne Beschriftung",
+    "detail": "Das Symbol oben rechts führt zu den 'Ablaufterminen'. Das erkennt man nicht, eine Beschriftung fehlt.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "'Gutschein entfernen' zu nah an Aktionen",
+    "detail": "Der rote Text-Link zum Löschen sitzt direkt unter dem Verlauf. Beim hektischen Scrollen trifft man ihn leicht aus Versehen.",
+    "severity": "idee",
+    "kind": "bedienung"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme ist riesig und gut lesbar",
+   "'Bald fällig' mit 'noch 12 Tage' in Orange: sehr klar",
+   "Die Ablauftermine sind nach Monat gruppiert und leicht zu überblicken",
+   "Der Kassenbon-Verlauf ist verständlich",
+   "Ohne Konto nutzbar, die Daten bleiben auf dem iPhone"
+  ],
+  "quote": "Was als Nächstes abläuft, sehe ich sofort. Aber an der Kasse suche ich immer noch, und das Grau kann ich einfach nicht lesen."
+ },
+ {
+  "persona": "Ali, 58, Softwareentwickler, hat 8 Geschenkkarten in der Schublade und keinen Überblick, was noch drauf ist.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Thalia-Barcode an der Kasse zeigen und 12,60 € eintragen",
+    "success": "mit Mühe",
+    "note": "Barcode auf dem Kassen-Screen ist gut. Aber es gibt 12,40 € Restwert, 12,60 € geht also gar nicht, und das sagt mir niemand vorab. Zum Abziehen gibt es drei Wege: Slider, 'Betrag genau eintippen' und 'Geklappt' im Kassen-Screen. Das hat mich verwirrt."
+   },
+   {
+    "task": "Herausfinden, ob REWE den Gutschein vom Handy akzeptiert",
+    "success": "mit Mühe",
+    "note": "Die Händlerliste mit 'Am Handy vorzeigbar' ist genau das Richtige. REWE musste ich aber erst suchen, weil die Liste alphabetisch ist und REWE weit unten steht. Im Screenshot habe ich REWE nicht gesehen."
+   },
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "'PIN anzeigen' steht direkt im Detail und auch an der Kasse. Das Face-ID-Symbol davor ist gut verständlich."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_keypad.png",
+    "title": "Betrag über Restguthaben: Verhalten unklar",
+    "detail": "Ich will 12,60 € eintragen, auf der Karte sind aber nur 12,40 €. Die App erklärt vorher nicht, ob sie das ablehnt, auf 0 kürzt oder ins Minus geht. Ich brauche einen Hinweis wie 'Nur 12,40 € verfügbar, Rest bar bezahlt?'.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Drei verschiedene Wege zum Abziehen",
+    "detail": "Es gibt den Slider mit 'Einlösen', dazu 'Betrag genau eintippen' und im Kassen-Screen 'Geklappt' mit einem eigenen Betragsfeld. Welcher Weg ist der richtige? Das irritiert.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Slider für Geldbeträge ist fummelig",
+    "detail": "Auf den Cent genau mit einem Slider einzustellen ist mit dem Daumen praktisch unmöglich. Die Vorbelegung mit 10,00 € ist willkürlich, und ein Fehlgriff zieht gleich Geld ab.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Händlersuche nicht mit eigenen Karten verknüpft",
+    "detail": "Ich muss REWE von Hand suchen. Besser wäre ein Hinweis 'vorzeigbar' direkt auf meiner Karte im Detail. Den habe ich dort nicht gefunden.",
+    "severity": "minor",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "'Hat es geklappt?' wirkt zu früh",
+    "detail": "Die Frage steht da, noch bevor ich an der Kasse war. Außerdem ist nicht klar, dass 'Geklappt' danach nach dem Betrag fragt und Geld abzieht.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Letzte Listeneinträge unter Tab-Bar verdeckt",
+    "detail": "Die Karte unter Thalia ist von der schwebenden Tab-Leiste verdeckt und kaum lesbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "'Gutschein entfernen' zu nah am Verlauf",
+    "detail": "Der rote Löschknopf sitzt direkt unter dem Verlauf, da tippt man leicht aus Versehen drauf. Ob danach noch eine Rückfrage kommt, sehe ich nicht.",
+    "severity": "idee",
+    "kind": "vertrauen"
+   }
+  ],
+  "positives": [
+   "Gesamtsumme groß und sofort sichtbar, genau was ich für meine Schublade brauche",
+   "'Bald fällig' ganz oben ist sinnvoll",
+   "Barcode groß, mit Nummer und automatisch maximaler Helligkeit",
+   "Verlauf im Kassenbon-Stil ist nachvollziehbar",
+   "Händlerliste mit Filter 'Am Handy vorzeigbar' ist sehr nützlich",
+   "Aufbewahrungsort 'Schublade' merken ist clever"
+  ],
+  "quote": "Endlich sehe ich, was in meiner Schublade steckt. Aber warum gibt es drei Wege, Geld abzuziehen, und keiner sagt mir, was bei zu wenig Guthaben passiert?"
+ },
+ {
+  "persona": "Emma, 29, selbstständige Friseurin, Power-Userin mit Apple Wallet und Stocard, ungeduldig.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Gesamtguthaben prüfen",
+    "success": "leicht",
+    "note": "136,25 € stehen riesig oben, in einer Sekunde gefunden. Allerdings ist ein 15-%-Rabattcode dabei, und ich weiß nicht, ob der in die Summe einfließt."
+   },
+   {
+    "task": "Abgelaufenen/aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "Die Liste hat kein Swipe-to-Delete. Ich muss den Gutschein öffnen und ganz nach unten scrollen, erst dort steht der rote Link „Gutschein entfernen“. Das sind zu viele Schritte."
+   },
+   {
+    "task": "Neuen Gutschein erfassen",
+    "success": "mit Mühe",
+    "note": "Auf dem Start-Tab gibt es keinen Plus-Button. Erst nach einer Weile habe ich gemerkt, dass der runde Barcode-Button unten rechts „Scannen“ bedeutet. Danach war „Karte scannen“ klar."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Kein sichtbarer Hinzufügen-Button",
+    "detail": "Oben rechts sitzt nur ein Kalender-Icon, ein + gibt es nicht. Der Scan-Button unten rechts hat kein Label, und einen Barcode verbinde ich eher mit „an der Kasse zeigen“ als mit „hinzufügen“.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Löschen ganz unten versteckt",
+    "detail": "„Gutschein entfernen“ erscheint erst nach dreimaligem Scrollen, und in der Liste gibt es kein Swipe-to-Delete. Ein Archiv für aufgebrauchte Karten sehe ich auch nirgends.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Rabattcode in der Summe unklar",
+    "detail": "Zalando zeigt 15 % zwischen Euro-Beträgen. Dazu kommt „6 Gutscheine“: Ist der Prozentcode in den 136,25 € mitgezählt?",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tab-Leiste verdeckt den letzten Listeneintrag",
+    "detail": "Der Eintrag unter Thalia ist hinter der Tab-Leiste nur halb sichtbar und verschwommen.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Formular sehr lang für Schnellerfassung",
+    "detail": "Das Formular hat viele Felder (PIN, Barcode-Typ, Aufbewahrungsort, Notiz), und „Speichern“ liegt unten am Rand. Für 3 Sekunden ist das zu viel. Die Pflichtfelder sollten markiert sein.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kein Wallet-Export sichtbar",
+    "detail": "Im Formular wird zwar Apple Wallet erwähnt, einen Button „Zu Wallet hinzufügen“ finde ich aber nicht.",
+    "severity": "idee",
+    "kind": "fehlt"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme ist riesig und sofort lesbar",
+   "„Bald fällig“ mit Resttagen ist super für den Familienüberblick",
+   "Einlösen per Schnellbeträgen und „Danach übrig“ geht schnell",
+   "Mit Scan aus Fotos, E-Mail und PDF gibt es viele Wege, eine Karte zu erfassen",
+   "Den Einlöse-Verlauf als Bon finde ich charmant"
+  ],
+  "quote": "Die Summe sehe ich sofort, aber wo ist das Plus? Ich will die Karte einfach reinhauen, nicht erst das Barcode-Symbol entschlüsseln."
+ },
+ {
+  "persona": "Rainer, 63, Lieferfahrer, mit Apps eher unsicher, bedient das Handy unterwegs meist mit einer Hand",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Restguthaben der Douglas-Karte online beim Händler prüfen",
+    "success": "mit Mühe",
+    "note": "Im Detail steht 'Guthaben online prüfen' ganz klein unter dem Barcode und ist halb von der Tab-Leiste verdeckt. In der Händlerliste ist beim Douglas-Eintrag der Link abgeschnitten, bevor man scrollt. Man muss wissen, dass man dort scrollen muss."
+   },
+   {
+    "task": "App zum ersten Mal öffnen und verstehen, wofür sie ist",
+    "success": "leicht",
+    "note": "Der Onboarding-Satz ist klar, die Beispielkarten helfen. Unklar bleibt, ob die Beispielkarten meine eigenen sind und warum da schon IKEA 50 € steht."
+   },
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "'Bald fällig' auf dem Start zeigt Zalando in 12 Tagen ganz oben, orange markiert. Das ist gut. Das kleine Kalendersymbol oben rechts für die Ablauftermine hätte ich allein nicht erkannt."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail.png",
+    "title": "'Guthaben online prüfen' versteckt und verdeckt",
+    "detail": "Der Link steht winzig unter der Barcode-Nummer und wird von der schwebenden Tab-Leiste überdeckt. Für genau das, was ich wollte, müsste das ein großer Knopf oben sein.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Icon oben rechts unverständlich",
+    "detail": "Die Ablauftermine erreicht man über ein kleines Kalendersymbol ohne Text, oben rechts. Mit einer Hand komme ich da nicht hin, und ich wusste nicht, was es tut.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Beispielkarten wirken wie meine echten",
+    "detail": "IKEA, Douglas und Thalia sind beim ersten Start schon da. Ich dachte, die App hätte meine Karten irgendwoher. Auf dem Start sind es dann 136,25 €, die gar nicht mir gehören. Es fehlt ein Hinweis 'Beispiel' und ein Knopf zum Löschen.",
+    "severity": "major",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Onboarding: IKEA 9 Tage, Start: 24 Tage",
+    "detail": "Im Onboarding steht bei IKEA 'noch 9 Tage', auf dem Start aber 'noch 24 Tage'. Dann glaube ich den Zahlen nicht mehr.",
+    "severity": "minor",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "Einlösen-Regler zu fummelig",
+    "detail": "Mit dem Daumen unterwegs treffe ich keinen genauen Betrag. 'Betrag genau eintippen' ist nur grauer Text und sieht nicht wie ein Knopf aus.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_b.png",
+    "title": "'Gutschein entfernen' zu nah am Verlauf",
+    "detail": "Der rote Löschen-Text steht direkt unter dem Verlauf. Einhändig beim Scrollen tippe ich da schnell aus Versehen drauf.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Graue Schrift zu klein und blass",
+    "detail": "'bis 13.02.2027', 'unbenutzt', 'von 50,00 €' sind hellgrau und klein. Draußen im Auto kann ich das kaum lesen.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Händlerkarten schneiden den Link ab",
+    "detail": "Beim Douglas-Eintrag verschwindet der Link unter der Tab-Leiste. Eine Suche nach 'Douglas' würde helfen, aber das muss man erst wissen.",
+    "severity": "idee",
+    "kind": "optik"
+   }
+  ],
+  "positives": [
+   "Die große gelbe Gesamtsumme sieht man sofort",
+   "'Bald fällig' ganz oben mit 'noch 12 Tage' in Orange ist genau das, was mir letztes Jahr gefehlt hat",
+   "Der Scan-Knopf unten rechts ist mit dem Daumen gut zu erreichen",
+   "Der Verlauf sieht aus wie ein Kassenbon, das verstehe ich sofort",
+   "Die Händlerliste sagt klar, ob die Karte auch auf dem Handy geht"
+  ],
+  "quote": "Dass oben steht, was bald abläuft, hätte mir letztes Jahr 50 Euro gerettet. Aber die kleinen Knöpfe oben und den winzigen Online-Link treffe ich mit einer Hand im Auto nicht."
+ },
+ {
+  "persona": "Nina, 34, Kassiererin im Supermarkt, sehr technikaffin, Deutsch als Zweitsprache, hat nur 1-2 Gutscheine im Jahr.",
+  "rating": 7,
+  "would_use": false,
+  "tasks": [
+   {
+    "task": "Herausfinden, ob man bei REWE den Gutschein vom Handy zeigen kann",
+    "success": "mit Mühe",
+    "note": "Im Tab Händler gibt es eine Suche und den Filter 'Am Handy vorzeigbar', das ist gut. REWE steht aber weiter unten in der Liste, auf dem Screenshot sehe ich es nicht. Laut Code gibt es einen Hinweis: nur den Strich-Barcode zeigen, einen QR-Code hat REWE abgelehnt. Als Kassiererin weiß ich, dass das stimmt. 'Laut Nutzerbericht' ist aber ein schweres Wort."
+   },
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "leicht",
+    "note": "In den Einstellungen steht 'Ablauf-Erinnerungen, 30 und 7 Tage vor dem Ablauf, um 10 Uhr', der Schalter ist schon an. Ich kann aber die Tage oder die Uhrzeit nicht ändern. Das Kalender-Symbol oben rechts auf dem Start-Screen habe ich zuerst probiert, weil ich dachte, dort sind die Erinnerungen."
+   },
+   {
+    "task": "Bei Thalia den Barcode zeigen und danach 12,60 € als eingelöst eintragen",
+    "success": "gescheitert",
+    "note": "Den Barcode zu zeigen ist super einfach: groß, mit Nummer, Helligkeit geht auf Maximum. Aber auf der Karte sind nur 12,40 € drauf. Wenn ich 12,60 eintippe, steht dort rot 'Mehr als das Restguthaben' und 'Abziehen' funktioniert nicht. An der Kasse zahlt man die 20 Cent einfach bar dazu. Die App sagt mir nicht, dass ich einfach 'Alles' nehmen soll."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_keypad.png",
+    "title": "Betrag über Restguthaben blockiert ohne Lösung",
+    "detail": "Ich habe für 12,60 € eingekauft, die Karte hat nur 12,40 €. Die App sagt nur 'Mehr als das Restguthaben' und der Button bleibt aus. Besser: 'Nur 12,40 € möglich, der Rest wird anders bezahlt. 12,40 € abziehen?' Das passiert an der Kasse oft.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "'Geklappt' führt nicht klar zum Betrag",
+    "detail": "Nach dem Barcode frage ich mich: Wo trage ich ein, wie viel ich bezahlt habe? Auf den Buttons 'Geklappt' und 'Abgelehnt' steht nicht, dass danach die Eingabe vom Betrag kommt. Besser z. B. 'Geklappt, Betrag eintragen'.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeit nicht einstellbar",
+    "detail": "Die Zeiten 30 und 7 Tage und 10 Uhr sind fest. Ich arbeite im Schichtdienst, um 10 Uhr sitze ich an der Kasse und sehe mein Handy nicht. Ich möchte die Uhrzeit wählen.",
+    "severity": "minor",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol oben ist unklar",
+    "detail": "Das Symbol oben rechts hat keinen Text. Ich dachte, dort sind die Erinnerungen. Für mich mit Deutsch als Zweitsprache sind Symbole ohne Wort schwer zu verstehen.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Schwere Wörter in den Händler-Hinweisen",
+    "detail": "Wörter wie 'laut Nutzerbericht', 'Offiziell auch digital', 'eGift' und '17-stellige Nummer' muss ich zweimal lesen. Die Texte sind lang und klein. Kurze Sätze wären besser, z. B. 'Handy geht. Nur Strich-Code zeigen.'",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "REWE nicht schnell sichtbar",
+    "detail": "Die Liste ist alphabetisch und lang. Ohne Suche muss ich weit scrollen. Große Supermärkte wie REWE, Edeka und Lidl sollten oben stehen, weil sie oft gebraucht werden.",
+    "severity": "idee",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Kassierer-Hinweis zum Code-Typ fehlt",
+    "detail": "'Code 128' sagt dem Kunden nichts. Als Kassiererin wünsche ich mir einen Satz für die Kasse, z. B. 'Bitte als Geschenkkarte scannen', und dass der Händler-Hinweis (nur Strich-Code bei REWE) auch hier steht.",
+    "severity": "idee",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Für 1-2 Gutscheine zu viel App",
+    "detail": "Ich habe nur ein bis zwei Gutscheine im Jahr. Fünf Tabs, Radar, Kassentests und Verlauf sind für mich zu viel. Wahrscheinlich lösche ich die App wieder nach dem Einlösen.",
+    "severity": "idee",
+    "kind": "vertrauen"
+   }
+  ],
+  "positives": [
+   "Der Barcode ist groß und klar, mit Nummer darunter und Helligkeit auf Maximum. So kann ich an jeder Kasse gut scannen.",
+   "Tab Händler mit Filter 'Am Handy vorzeigbar' beantwortet genau meine Frage.",
+   "Die Erinnerungen sind schon eingeschaltet, ohne dass ich etwas tun muss.",
+   "Die Tasten 5 €, 10 €, Alles und das große Zahlenfeld sind schnell zu bedienen.",
+   "Ohne Konto nutzbar, alles bleibt auf dem iPhone."
+  ],
+  "quote": "Den Barcode zeigen geht super, aber wenn ich 20 Cent mehr bezahlt habe, lässt mich die App einfach nicht weiter, und das passiert an der Kasse jeden Tag."
+ },
+ {
+  "persona": "Samuel, 68, Vertriebsmitarbeiter, misstraut datensammelnden Apps, bekommt Gutscheine meist als PDF per E-Mail, hat eine Rot-Grün-Schwäche.",
+  "rating": 6,
+  "would_use": false,
+  "tasks": [
+   {
+    "task": "Abgelaufenen/aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht ganz unten im Detail, erst nach langem Scrollen unter dem Verlauf. Keine Wischgeste auf der Startliste erkennbar."
+   },
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "mit Mühe",
+    "note": "Die PIN steht nur unter 'An der Kasse zeigen & testen' hinter 'PIN anzeigen'. Dass die PIN im Kassen-Screen steckt, hätte ich nicht vermutet."
+   },
+   {
+    "task": "Gesamtes offenes Guthaben prüfen",
+    "success": "leicht",
+    "note": "Die 136,25 € stehen groß im gelben Kasten. Aber der Zalando-Rabattcode mit 15 % zählt ja wohl nicht mit, das bleibt unklar."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail_c.png",
+    "title": "Löschen ganz unten versteckt",
+    "detail": "'Gutschein entfernen' ist kleiner roter Text unter dem Bon. Ich musste dreimal scrollen. Für Abgelaufene gibt es auf dem Start-Screen keinen Hinweis und keinen Aufräum-Knopf.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "PIN nur im Kassenmodus auffindbar",
+    "detail": "Ich suche die PIN im Detail, dort ist aber nichts. Sie liegt versteckt hinter 'An der Kasse zeigen & testen'. Das Wort 'testen' klingt, als würde ich etwas auslösen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Geklappt/Abgelehnt nur über Rot-Grün",
+    "detail": "Häkchen und Kreuz helfen mir zwar, aber die hellrot/hellgrünen Kästen sehe ich fast gleich. Sie sind blass und haben wenig Kontrast.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Fristen nur in Orange markiert",
+    "detail": "'noch 12 Tage' ist in Orange geschrieben, der Rest in Grau. Mit meiner Farbschwäche erkenne ich die Dringlichkeit kaum, ein Symbol fehlt.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Gesamtsumme mit Prozent-Code unklar",
+    "detail": "Es heißt '6 Gutscheine', einer davon ist aber ein 15-%-Rabattcode. Ob er in den 136,25 € steckt, wird nicht erklärt.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_scan.png",
+    "title": "PDF aus E-Mail importieren?",
+    "detail": "Meine Gutscheine kommen als PDF. Ob ich das PDF direkt übernehmen kann oder nur abfotografieren muss, ist für mich nicht erkennbar.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Datenschutz nicht klar gesagt",
+    "detail": "Ich will lesen: 'bleibt nur auf dem Gerät, keine Cloud'. Ohne diesen Satz gebe ich keine Karten-PINs ein.",
+    "severity": "major",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Tab-Leiste verdeckt letzte Karte",
+    "detail": "Die letzte Karte ist unter der schwebenden Leiste halb verdeckt und schlecht lesbar. Die Beschriftung der Tabs ist sehr klein.",
+    "severity": "minor",
+    "kind": "optik"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme ist riesig und sofort lesbar",
+   "Der Barcode ist groß, die Nummer steht darunter gut lesbar",
+   "Der Einlöse-Verlauf als Kassenbon ist verständlich",
+   "Die Schnellbeträge 5/10/20/Alles sind praktisch"
+  ],
+  "quote": "Das Geld sehe ich sofort, aber um die PIN zu finden oder alten Kram zu löschen, muss ich suchen, und ob meine Daten das Handy verlassen, sagt mir keiner."
+ },
+ {
+  "persona": "Doris, 38, Pflegekraft, durchschnittlich technikfit, Sehschwäche mit großer Schrift, sammelt Rabattcodes für Online-Shops.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "App zum ersten Mal öffnen und verstehen",
+    "success": "leicht",
+    "note": "Überschrift ist groß und klar, die Beispielkarten zeigen sofort, worum es geht. Den grauen Untertext kann ich aber kaum lesen."
+   },
+   {
+    "task": "Neuen Gutschein erfassen (Karte in der Hand)",
+    "success": "mit Mühe",
+    "note": "Auf Start gibt es kein Plus. Nur unten rechts ein kleines Symbol ohne Beschriftung, erst da finde ich 'Karte scannen'. Im Formular ist der Rabattcode-Reiter nur angeschnitten ('%'), dabei brauche ich den am häufigsten."
+   },
+   {
+    "task": "Douglas-Restguthaben online prüfen",
+    "success": "mit Mühe",
+    "note": "Im Detail steht 'Guthaben online prüfen' in ganz kleiner Schrift und halb unter der Tab-Leiste. Unter Händler hat Douglas keinen sichtbaren Link, der Eintrag verschwindet hinter der Leiste."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "02_start.png",
+    "title": "Hinzufügen-Knopf nicht erkennbar",
+    "detail": "Wo lege ich einen neuen Gutschein an? Unten rechts ist nur ein Barcode-Symbol ohne Text, kein Plus und kein 'Hinzufügen'. Ich habe zuerst auf 'Verlauf' getippt.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "'Guthaben online prüfen' versteckt unter Tab-Leiste",
+    "detail": "Der Link ist klein und wird von der schwebenden Tab-Leiste teilweise verdeckt. Mit meinen Augen übersehe ich ihn. Er sollte ein richtiger Knopf sein, weiter oben.",
+    "severity": "major",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Rabattcode-Reiter abgeschnitten",
+    "detail": "Oben stehen Geschenkkarte und Wertgutschein, der dritte Reiter ist nur ein halbes '%'. Genau den brauche ich für meine Rabattcodes, und ich wusste nicht, dass man seitlich wischen kann.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Douglas ohne Prüf-Link, letzte Karte verdeckt",
+    "detail": "Bei Aldi und Decathlon steht 'Guthaben online prüfen', bei Douglas sehe ich es nicht, weil die Tab-Leiste den Eintrag überdeckt. Ich weiß nicht, ob es ihn gibt.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "01_onboarding.png",
+    "title": "Grauer Kleintext schwer lesbar",
+    "detail": "'von 50,00 €', 'bis 31.03.2027', Hinweise unter Formularen und 'Danach übrig' sind hellgrau und klein. Bei Sehschwäche ist der Kontrast zu schwach.",
+    "severity": "major",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "03_form.png",
+    "title": "Formularbeschriftungen winzig und blass",
+    "detail": "'Wert in €', 'Restwert', 'PIN' sind sehr kleine graue Beschriftungen, der Paragraphentext unten ist noch kleiner. Der Speichern-Knopf ist am Rand abgeschnitten.",
+    "severity": "minor",
+    "kind": "barrierefreiheit"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Rabattcode-Gutschein in der Summe unklar",
+    "detail": "Zalando steht mit '15 %' unter 'Bald fällig'. Zählt das zu 136,25 € dazu? '6 Gutscheine' und die Summe passen für mich nicht zusammen, das verwirrt mich.",
+    "severity": "minor",
+    "kind": "text"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "'Gutschein entfernen' zu nah am Verlauf",
+    "detail": "Der rote Text steht direkt unter dem Beleg. Mit großen Fingern und schlechten Augen tippe ich da schnell aus Versehen drauf.",
+    "severity": "idee",
+    "kind": "vertrauen"
+   }
+  ],
+  "positives": [
+   "Die Gesamtsumme in der gelben Karte ist riesig und gut lesbar",
+   "Die Einteilung in 'Bald fällig' und 'Weitere' mit orangem 'noch 12 Tage' ist sofort klar",
+   "Die Schnellknöpfe 5 €, 10 €, 20 € und 'Alles' beim Einlösen sind praktisch",
+   "Beim Scannen gibt es viele Wege: Foto, E-Mail, Datei, von Hand",
+   "Der Einlöse-Verlauf sieht aus wie ein Kassenbon, das verstehe ich"
+  ],
+  "quote": "Die großen Beträge kann ich gut lesen, aber alles Wichtige zum Tippen ist klein, grau oder hängt unter der Leiste unten."
+ },
+ {
+  "persona": "Elias, 74, Handwerker, Power-User mit Apple Wallet und Stocard, sucht an der Kasse oft den Gutschein.",
+  "rating": 7,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "Erinnerungen vor dem Ablauf einstellen",
+    "success": "mit Mühe",
+    "note": "Unter Einstellungen gibt es nur einen Schalter mit fest 30 und 7 Tagen um 10 Uhr. Ob das funktioniert, sehe ich, aber Zeitpunkt und Tage kann ich nicht ändern."
+   },
+   {
+    "task": "Herausfinden, welcher Gutschein als Nächstes verfällt",
+    "success": "leicht",
+    "note": "Auf dem Start steht 'Bald fällig': Zalando noch 12 Tage. Der Kalender-Button oben rechts führt zu 'Ablauftermine', sehr klar."
+   },
+   {
+    "task": "Herausfinden, ob man bei REWE vom Handy zeigen kann",
+    "success": "mit Mühe",
+    "note": "REWE steht nicht im sichtbaren Teil der Händlerliste, ich muss scrollen oder suchen. Laut Code: offiziell ja, aber nur Strich-Barcode, kein QR. Diesen Hinweis sieht man erst, wenn man REWE gefunden hat."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_settings.png",
+    "title": "Erinnerungszeitpunkt nicht einstellbar",
+    "detail": "Der Text sagt fest '30 und 7 Tage vor dem Ablauf, um 10 Uhr'. Ich will 1 Tag vorher und abends eine Erinnerung. Man kann nur ein- und ausschalten.",
+    "severity": "major",
+    "kind": "fehlt"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "REWE nicht auf einen Blick",
+    "detail": "Die Liste ist alphabetisch und zeigt nur A bis D. Supermärkte wie REWE sind für mich wichtiger als CinemaxX. Ich muss in die Suche tippen.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_merchants.png",
+    "title": "Filter-Chips abgeschnitten",
+    "detail": "Der dritte Chip rechts ist angeschnitten, der vierte fehlt. Man merkt nicht sofort, dass man wischen kann.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol ohne Beschriftung",
+    "detail": "Das runde Icon oben rechts führt zu den Ablaufterminen, aber es ist nicht beschriftet. Ich musste raten.",
+    "severity": "minor",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Unterste Karte hinter Tab-Leiste",
+    "detail": "Der Amazon-Eintrag verschwindet hinter der schwebenden Tab-Leiste und dem Scan-Knopf, schwer lesbar.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_settings.png",
+    "title": "Anmelde-Button dominiert Einstellungen",
+    "detail": "Der große schwarze Button 'Anmelden oder Konto erstellen' zieht den Blick, obwohl ich die Erinnerungen suche. Wirkt wie Druck zum Konto.",
+    "severity": "idee",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kein Wallet-Export sichtbar",
+    "detail": "Ich nutze Apple Wallet täglich. Von der Startseite ist nicht erkennbar, ob ich einen Gutschein in die Wallet legen kann, um an der Kasse schneller zu sein.",
+    "severity": "idee",
+    "kind": "fehlt"
+   }
+  ],
+  "positives": [
+   "'Bald fällig' mit 'noch 12 Tage' in Orange ist sofort klar",
+   "Ablauftermine nach Monat gruppiert mit Summen, sehr übersichtlich",
+   "Händlerliste sagt klar 'Am Handy vorzeigbar' mit grünem Symbol",
+   "Große Zahlen, gut lesbar auch ohne Brille",
+   "Scan-Knopf immer unten rechts erreichbar"
+  ],
+  "quote": "Was als Nächstes abläuft, sehe ich sofort, aber die Erinnerung kann ich mir nicht so hinstellen, wie ich sie brauche."
+ },
+ {
+  "persona": "Mia, 42, Buchhalterin, unsicher mit Apps, ungeduldig, hat 8 Geschenkkarten in der Schublade.",
+  "rating": 6,
+  "would_use": true,
+  "tasks": [
+   {
+    "task": "PIN einer Geschenkkarte ansehen",
+    "success": "leicht",
+    "note": "'PIN anzeigen' steht im Detail direkt unter dem Datum und an der Kasse. Gut. Das Face-ID-Symbol daneben hat mich kurz irritiert."
+   },
+   {
+    "task": "Bei Thalia Barcode zeigen und 12,60 € eintragen",
+    "success": "mit Mühe",
+    "note": "Barcode fand ich schnell. Aber nach 'Geklappt' war nicht klar, wo ich 12,60 eintrage. Im Detail steht der Regler auf 10 €, 12,60 geht nur über das kleine graue 'Betrag genau eintippen'. Außerdem hat die Karte nur 12,40 € – 12,60 geht gar nicht, das sagt mir aber keiner vorher."
+   },
+   {
+    "task": "Abgelaufenen/aufgebrauchten Gutschein loswerden",
+    "success": "mit Mühe",
+    "note": "'Gutschein entfernen' steht ganz unten im Detail, erst nach langem Scrollen, als roter Text. Auf der Startliste kein Wischen/Löschen erkennbar."
+   }
+  ],
+  "issues": [
+   {
+    "screen": "03_detail_c.png",
+    "title": "Genauen Betrag eintippen zu versteckt",
+    "detail": "Ich weiß meinen Bonbetrag genau (12,60). Der Regler und die Knöpfe 5/10/20 helfen mir nicht, 'Betrag genau eintippen' ist kleiner grauer Text unter dem großen gelben Knopf. Das sollte der Hauptweg sein.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_checkout.png",
+    "title": "Nach 'Geklappt' fehlt Betragseingabe",
+    "detail": "An der Kasse frage ich mich 'Hat es geklappt?' – ja, und dann? Ich will dort direkt den bezahlten Betrag eingeben, nicht zurück ins Detail und runterscrollen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Entfernen ganz unten versteckt",
+    "detail": "'Gutschein entfernen' kommt erst nach Einlösen-Block und Verlauf. Für aufgebrauchte Karten sollte es direkt beim Guthaben oder in der Liste per Wischen gehen.",
+    "severity": "major",
+    "kind": "bedienung"
+   },
+   {
+    "screen": "03_detail.png",
+    "title": "Einlösen-Bereich von Tab-Leiste verdeckt",
+    "detail": "Unten schaut 'Einlösen 10,00 €' halb unter der Tab-Leiste hervor, 'Guthaben online prüfen' ist abgeschnitten. Ich sehe nicht, dass da noch was kommt.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "03_detail_c.png",
+    "title": "Einlösen-Standard 10 € irreführend",
+    "detail": "Der Regler steht schon auf 10,00 €. Wenn ich ungeduldig auf den gelben Knopf tippe, habe ich falsch abgebucht.",
+    "severity": "major",
+    "kind": "vertrauen"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Unterste Karte unter Tab-Leiste",
+    "detail": "Die letzte Karte in der Liste verschwindet hinter der Leiste und dem Scan-Knopf, Text schimmert durch und ist unleserlich.",
+    "severity": "minor",
+    "kind": "optik"
+   },
+   {
+    "screen": "02_start.png",
+    "title": "Kalender-Symbol oben unklar",
+    "detail": "Oben rechts ein Kalender-Icon ohne Beschriftung. Ich weiß nicht, was das macht.",
+    "severity": "minor",
+    "kind": "text"
+   }
+  ],
+  "positives": [
+   "Gesamtsumme 136,25 € sofort groß oben – genau was ich wissen will",
+   "'Bald fällig' mit 'noch 12 Tage' in Orange ist klar",
+   "Barcode an der Kasse groß mit Helligkeit auf Maximum",
+   "Einlöse-Verlauf wie ein Kassenbon, verständlich"
+  ],
+  "quote": "Das Guthaben sehe ich sofort, super – aber wenn ich 12,60 eintragen will, muss ich suchen, und dafür hab ich an der Kasse keine Zeit."
+ }
+]

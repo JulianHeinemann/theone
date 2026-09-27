@@ -1,0 +1,3005 @@
+[
+ {
+  "persona": "Mara Lindqvist, 34, Design-Systems-Lead (Banking-App, Berlin), 4/8-pt-Raster; Referenzen Apple Wallet, Linear, Monzo",
+  "fokus": "Abstände und Raster: Seitenränder, Sektions-/Gruppenabstände, Innenabstände, Zeilenhöhen, Token-Treue (page 16, section 24, group 12, inset 16, ticketInset 20) auf allen Screens inkl. Einstieg und Verfallsradar",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 8,
+   "abstaende_raster": 7,
+   "hierarchie": 7,
+   "konsistenz": 6,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 6,
+   "markencharakter": 8,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Das Makroraster sitzt jetzt: 16 pt Rand auf jedem Screen, Detail und Ablauftermine laufen sauber im 12/24-Takt, hell und dunkel pixelgleich. Die Mikroebene ist aber noch handgesetzt: 77 Stellen mit 3/6/10/14/18 pt im Code, und im Einstieg springt der Hauptknopf auf Seite 4 um 48 pt nach oben.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Das gelbe Ticket mit Kerben und Abrisslinie steht auf Start, Einstieg, Detail, Kasse und Hinzufügen immer an derselben Stelle: 16 pt Rand, 24 pt Radius, 20 pt Ticket-Innenabstand. Dazu kommen die Wortmarke mit Punkt und die Rounded-Heavy-Beträge. Auch als Graustufen-Screenshot erkennt man die App.",
+  "vorrunde_behoben": [
+   "Seitenrand: jede Karte auf allen gemessenen Screens (Start, Detail, Ablauftermine, Läden, Verlauf, Einstellungen, Hinzufügen, Kasse, Formular, Einstieg) sitzt exakt bei x = 16,0 bis 386,0 pt",
+   "Detail-Rhythmus 12/24 gemessen: Held → Aktionen 24,3 (dunkel), Kacheln untereinander 12,4, Aktionen → Kartennummer 24,0, Kartennummer → Aufbewahrt 12,0; Kachel-Rinne horizontal 12,0 (16–195 / 207–386)",
+   "Betrag offen (pending): Held → Banner 12, Banner → Aktionen 24,6, danach 12/24/12 – Token eingehalten",
+   "Ticket-Innenabstand 20: Start-Held-Text bei x = 37,3 (16 + 20 + Glyphen-Vorbreite), Detail-Held Marke bei x = 36,0, Scan-Ticket bei 36,6",
+   "Karten-Innenabstand 16: Listenlogos, Radarachse, Detail-Kacheln und Formularfelder beginnen alle bei x = 32,0–33,0",
+   "Verfallsradar: 16 pt Innenabstand oben, Abschnittskopf → Karte ca. 12, Karte → nächster Kopf ca. 24; auf Start und in Ablauftermine gleich gesetzt",
+   "Ablauftermine: Monatsgruppen durchgehend 30,0 / 18,0 pt (Karte → Kopf-Oberkante / Kopf-Oberkante → Karte), gemessen an 4 Gruppen – sehr gleichmäßig",
+   "Läden: Ladenkarten mit genau 12,0 pt Abstand, alle 132 pt hoch",
+   "Hinzufügen: Ticket → Liste 24,0, Liste → PDF-Karte 24,0",
+   "Tippziele: Suchfeld 44 pt (117–161), Filter-Chips 44 pt hoch mit 8,0 pt Abstand, CTA 56 pt",
+   "Dunkelmodus hat dieselbe Geometrie wie hell (D_detail, D_01_start, D_radar pixelgleich)",
+   "Kasse: Knopf unten fest (732–788), Nebenaktionen darunter; XL stapelt die Knöpfe"
+  ],
+  "vorrunde_offen": [
+   "Token-Treue im Code nur zur Hälfte: 117 Token-Verwendungen, aber 77 Abstände liegen nicht im 4-pt-Raster (14 pt ×23, 10 pt ×21, 6 pt ×14, 3 pt ×9, 18 pt ×4, 30 pt ×2, dazu 9/13/58/74) und 36 weitere Stellen schreiben 12/16/20/24 als Zahl statt als Token (z. B. HomeView .padding(.bottom, 24), TearLine .padding(.horizontal, 16))",
+   "Formular (Bearbeiten): Foto-Karte → Feld-Karte 14,0 pt (CardFormView VStack spacing 14) statt group 12",
+   "Einstellungen: Großtitel-Unterkante → erste Karte nur ca. 10 pt; bei Hinzufügen sind es 18 pt, obwohl beide Tab-Wurzeln mit Großtitel sind",
+   "Wortmarke auf Start steht bei x = 21,3, im Einstieg bei 17,3 (Toolbar-Item bringt 4 pt Eigenabstand mit). Damit fluchtet sie auf Start nicht mit Suchfeld und Held (16)",
+   "Ticket-Fuß (Abschnitt unter der Abrisslinie) hat oben 20, unten nur group 12. Gemessen bleiben 10–12 pt von Glyph-Unterkante bis Kartenrand (Start 373 → 384, Detail 335 → 347,7), das wirkt gegenüber der 20-pt-Oberkante gedrängt",
+   "Kasse: das Ticket nutzt inset 16 statt ticketInset 20 (Logo bei x = 32), während Start- und Detail-Ticket 20 nutzen. Dieselbe Ticketform hat also zwei Innenabstände",
+   "Listen-Trennlinien: Divider-Einzug 72 → Linie beginnt bei x = 88,0, Text bei 90–91 (16 + 16 + 44 + 14). Die Linie steht 2 pt links vom Text"
+  ],
+  "neue_probleme": [
+   "Einstieg: Hauptknopf springt zwischen den Seiten. Auf Seite 1–3 liegt er bei y 728–784, auf Seite 4 bei 680–736, also 48 pt höher; die Punkte wandern von 697 auf 649. Ursache: Seite 4 hat eine dritte 44-pt-Zeile (Wiederherstellen), Seite 1–2 reservieren nur eine Platzhalterzeile",
+   "Einstieg XL: der Fließtext läuft unter die Seitenpunkte, die dritte Zeile ist angeschnitten und von den Punkten überdeckt (XL_00_onboarding1, y ≈ 690–702). Es gibt keinen Abstand und keine Blende zwischen Scrollbereich und Punkten",
+   "Einstieg XL: die hintere Karte des Tickets endet fast bündig über der Überschrift (≈ 0–8 pt Luft statt 24)",
+   "Ziffernblock-Screen (Einkauf eintragen): der Inhalt beginnt bei x = 44–45 statt 16. Der VStack im ScrollView hat kein frame(maxWidth: .infinity, alignment: .leading) und wird deshalb zentriert. Die linke Kante hängt so von der breitesten Zeile ab und springt, sobald ‚Doch Einkauf abziehen‘ erscheint oder der Betrag wächst; auch in XL bei 43",
+   "Verfallsradar XL: die Jahreslabels 2029 und 2030 stoßen zusammen (272–316,7 und 321,3–366, also 4,6 pt Luft; sichtbar als ‚20292030‘), weil sie fest 64 pt breit sind und die Kachelabstände nicht mit der Schrift wachsen",
+   "Einstellungen: in einer Karte stehen zwei Textspalten – ‚Nur auf diesem iPhone‘ beginnt bei x = 95, ‚iCloud-Sync‘ bei x = 73 (22 pt Versatz)",
+   "Einstellungen: Abschnittsköpfe und Fußtexte sind auf x = 32–33 eingerückt, auf Start, Ablauftermine und Läden stehen die Köpfe bei 16,7. Es gibt also zwei Kopf-Systeme",
+   "Tab-Wurzeln haben unterschiedliche Kopfhöhen: Läden-Titel bei y = 71, Verlauf, Einstellungen und Hinzufügen bei 127–128. Beim Tabwechsel springt der Titel um 56 pt",
+   "Start gescrollt: zwischen Wortmarke und Suchfeld scheint der Abschnittskopf ‚Läuft bald ab‘ als Geisterschrift durch (S_start_2_ende). Der feste Kopf hat keine deckende Fläche",
+   "Suchfeld → erster Inhalt: auf Start 19 pt (161 → 180, wegen der Zusatzpolsterung .padding(.top, 4)), auf Läden 15 pt (161 → 176). Zwei Tabs, zwei Abstände",
+   "Detail: die Kacheln der ersten Reihe sind 81 pt hoch, ‚Guthaben online prüfen‘ darunter nur 76,6 pt, bei gleicher Struktur (Icon + Label)"
+  ],
+  "scroll_befund": "Start gescrollt: Wortmarke und Suchfeld bleiben stehen, darunter laufen die Karten sauber weg. Oben scheint der Radar, zwischen Wortmarke und Suchfeld der Abschnittskopf halbtransparent durch, das wirkt unruhig. Detail-Ende: Einlöse-Verlauf und ‚Gutschein entfernen‘ halten 24 pt, der feste Kasse-Knopf (780–836) überdeckt nichts Wichtiges, 4 pt über der Home-Indicator-Zone. Läden Mitte: 12-pt-Takt bleibt beim Scrollen erhalten, die Karten laufen unter der Tab-Leiste mit Blende weg. Ablauftermine: der Monatsrhythmus 30/18 ist über die ganze Länge konstant.",
+  "messungen": [
+   {
+    "was": "Seitenrand links/rechts (Karten)",
+    "screen": "alle L/D",
+    "wert": "16,0 / 16,0 pt",
+    "soll/erwartung": "page 16",
+    "ok": true
+   },
+   {
+    "was": "Held → Aktionskacheln",
+    "screen": "D_detail",
+    "wert": "24,3 pt",
+    "soll/erwartung": "section 24",
+    "ok": true
+   },
+   {
+    "was": "Kachel → Kachel vertikal",
+    "screen": "L_detail",
+    "wert": "12,4 pt",
+    "soll/erwartung": "group 12",
+    "ok": true
+   },
+   {
+    "was": "Kachel-Rinne horizontal",
+    "screen": "L_detail",
+    "wert": "12,0 pt",
+    "soll/erwartung": "group 12",
+    "ok": true
+   },
+   {
+    "was": "Kartennummer → Aufbewahrt",
+    "screen": "L_detail",
+    "wert": "12,0 pt",
+    "soll/erwartung": "group 12",
+    "ok": true
+   },
+   {
+    "was": "Kachelhöhe Reihe 1 vs. Reihe 2",
+    "screen": "L_detail",
+    "wert": "81,0 vs. 76,6 pt",
+    "soll/erwartung": "gleich",
+    "ok": false
+   },
+   {
+    "was": "Ticket-Innenabstand links",
+    "screen": "L_01_start / L_detail",
+    "wert": "Text bei 37,3 / Marke bei 36,0 pt → 20",
+    "soll/erwartung": "ticketInset 20",
+    "ok": true
+   },
+   {
+    "was": "Ticket-Innenabstand Kasse",
+    "screen": "L_checkout",
+    "wert": "Logo bei 32 pt → 16",
+    "soll/erwartung": "ticketInset 20 wie andere Tickets",
+    "ok": false
+   },
+   {
+    "was": "Ticket-Fuß unten (Glyph → Kante)",
+    "screen": "L_01_start / L_detail",
+    "wert": "≈ 11 / 12,7 pt",
+    "soll/erwartung": "optisch ≈ Oberkante (20) oder 16",
+    "ok": false
+   },
+   {
+    "was": "Karten-Innenabstand (Listen, Radar)",
+    "screen": "L_01_start / L_radar",
+    "wert": "32,0 pt → 16",
+    "soll/erwartung": "inset 16",
+    "ok": true
+   },
+   {
+    "was": "Radar Innenabstand oben",
+    "screen": "L_01_start",
+    "wert": "16 pt (440 → 456)",
+    "soll/erwartung": "inset 16",
+    "ok": true
+   },
+   {
+    "was": "Monatsgruppen Karte → Kopf / Kopf → Karte",
+    "screen": "L_radar",
+    "wert": "30,0 / 18,0 pt (4 von 4 gleich)",
+    "soll/erwartung": "24 + Versalhöhe / 12 + Unterlänge",
+    "ok": true
+   },
+   {
+    "was": "Ladenkarten-Abstand",
+    "screen": "L_merchants",
+    "wert": "12,0 pt (3×)",
+    "soll/erwartung": "group 12",
+    "ok": true
+   },
+   {
+    "was": "Hinzufügen Abschnitte",
+    "screen": "L_scan",
+    "wert": "24,0 / 24,0 pt",
+    "soll/erwartung": "section 24",
+    "ok": true
+   },
+   {
+    "was": "Foto-Karte → Feld-Karte",
+    "screen": "L_form",
+    "wert": "14,0 pt",
+    "soll/erwartung": "group 12",
+    "ok": false
+   },
+   {
+    "was": "Großtitel → erste Karte",
+    "screen": "L_settings vs. L_scan",
+    "wert": "≈ 10 vs. 18 pt",
+    "soll/erwartung": "gleich, z. B. 16",
+    "ok": false
+   },
+   {
+    "was": "Suchfeld → erster Inhalt",
+    "screen": "L_01_start vs. L_merchants",
+    "wert": "19 vs. 15 pt",
+    "soll/erwartung": "gleich 16",
+    "ok": false
+   },
+   {
+    "was": "Wortmarke linke Kante",
+    "screen": "L_01_start vs. L_00_onboarding1",
+    "wert": "21,3 vs. 17,3 pt",
+    "soll/erwartung": "16 + Glyphen-Vorbreite (≈ 17)",
+    "ok": false
+   },
+   {
+    "was": "Inhaltskante Ziffernblock-Screen",
+    "screen": "L_keypad / XL_keypad",
+    "wert": "44–45 / 43 pt",
+    "soll/erwartung": "page 16",
+    "ok": false
+   },
+   {
+    "was": "Einstieg CTA-Position S1–3 vs. S4",
+    "screen": "L_00_onboarding1–4",
+    "wert": "728 vs. 680 pt (Δ 48)",
+    "soll/erwartung": "identisch",
+    "ok": false
+   },
+   {
+    "was": "Einstieg Text → Punkte → CTA",
+    "screen": "L_00_onboarding1",
+    "wert": "25 / 24 pt",
+    "soll/erwartung": "24 / 24",
+    "ok": true
+   },
+   {
+    "was": "Einstieg XL Text vs. Punkte",
+    "screen": "XL_00_onboarding1",
+    "wert": "Überlappung (Text 654–702, Punkte 690–702)",
+    "soll/erwartung": "≥ 24 pt Abstand",
+    "ok": false
+   },
+   {
+    "was": "Radar-Jahreslabels Luft 2029/2030",
+    "screen": "L_radar / XL_radar",
+    "wert": "27,4 / 4,6 pt",
+    "soll/erwartung": "≥ 8 pt",
+    "ok": false
+   },
+   {
+    "was": "Divider-Einzug vs. Textkante",
+    "screen": "L_01_start",
+    "wert": "Linie 88,0 / Text 90–91 pt",
+    "soll/erwartung": "bündig (90)",
+    "ok": false
+   },
+   {
+    "was": "Textspalte in Einstellungen-Karte",
+    "screen": "L_settings",
+    "wert": "95 vs. 73 pt",
+    "soll/erwartung": "eine Spalte",
+    "ok": false
+   },
+   {
+    "was": "Abschnittskopf-Einzug",
+    "screen": "L_settings vs. L_01_start",
+    "wert": "33,0 vs. 16,7 pt",
+    "soll/erwartung": "ein System",
+    "ok": false
+   },
+   {
+    "was": "Tippziele Suche / Chips / CTA",
+    "screen": "L_01_start / L_history / L_detail",
+    "wert": "44 / 44 (8 Abstand) / 56 pt",
+    "soll/erwartung": "≥ 44",
+    "ok": true
+   },
+   {
+    "was": "Abstände im Code außerhalb 4-pt-Raster",
+    "screen": "Code",
+    "wert": "77 Stellen (14×23, 10×21, 6×14, 3×9 …)",
+    "soll/erwartung": "0 (Ausnahme Haarlinien 1–2)",
+    "ok": false
+   },
+   {
+    "was": "Hell/Dunkel Geometrie",
+    "screen": "D_detail / D_01_start / D_radar",
+    "wert": "identisch zu L",
+    "soll/erwartung": "identisch",
+    "ok": true
+   }
+  ],
+  "issues": [
+   {
+    "screen": "L_00_onboarding1–4",
+    "element": "Aktionsbereich + Punkte",
+    "problem": "Auf Seite 4 springt der CTA 48 pt nach oben, die Punkte wandern mit, weil Seite 4 drei Zeilen hat und Seite 1–2 nur eine Platzhalterzeile reservieren.",
+    "schwere": "hoch",
+    "vorschlag": "Aktionsbereich mit fester Höhe setzen: CTA 56 + 4 + 44 + 4 + 44 = 152 pt, frame(height: 152, alignment: .top). Alternativ auf allen Seiten zwei hidden-Platzhalter. So bleibt der CTA bei y = 680 auf jeder Seite."
+   },
+   {
+    "screen": "XL_00_onboarding1",
+    "element": "Fließtext / Seitenpunkte",
+    "problem": "Der Text läuft unter die Punkte und ist angeschnitten.",
+    "schwere": "hoch",
+    "vorschlag": "Punkte außerhalb des ScrollViews mit .padding(.top, 24) setzen und dem Scrollinhalt .contentMargins(.bottom, 24) plus .scrollEdgeEffectStyle(.soft, for: .bottom) geben. Ab accessibility3 die Bühne auf 60 % skalieren."
+   },
+   {
+    "screen": "L_keypad / XL_keypad",
+    "element": "Kopfblock (Stand, Betrag, Kurzwege)",
+    "problem": "Der Inhalt ist zentriert statt linksbündig (x = 44 statt 16) und springt mit der Zeilenbreite.",
+    "schwere": "hoch",
+    "vorschlag": "Im CheckoutView-Keypad am äußeren VStack .frame(maxWidth: .infinity, alignment: .leading) ergänzen. Dann liegt die Kante fest bei 16 wie Navigationstitel und Karten."
+   },
+   {
+    "screen": "XL_radar / XL_01_start",
+    "element": "Jahreslabels der Radarachse",
+    "problem": "‚2029‘ und ‚2030‘ kollidieren (4,6 pt Luft).",
+    "schwere": "mittel",
+    "vorschlag": "Labels ausdünnen, sobald der Abstand zweier Striche < Labelbreite + 8 pt ist (jedes zweite Jahr zeigen), oder ab accessibility1 zweistellig ‚’29‘. Dazu .frame(width: 64) durch die gemessene Breite ersetzen."
+   },
+   {
+    "screen": "L_settings",
+    "element": "Textspalte der Datenschutz-Karte",
+    "problem": "Zeile 1 beginnt bei x = 95 (44er-Kreis-Icon), Zeile 2 bei 73 (24er-Icon). In einer Karte stehen zwei Textkanten.",
+    "schwere": "mittel",
+    "vorschlag": "Einheitliche Icon-Spalte von 44 pt für alle Zeilen (Glyph zentriert), damit der Text überall bei 16 + 16 + 44 + 12 = 88 steht. Oder die Info-Zeile als eigene Karte ohne Icon-Kreis."
+   },
+   {
+    "screen": "L_settings vs. L_01_start / L_merchants",
+    "element": "Abschnittsköpfe und Fußnoten",
+    "problem": "Die Einstellungen rücken die Köpfe auf 32 ein (List-Stil), alle anderen Screens setzen sie bei 16.",
+    "schwere": "mittel",
+    "vorschlag": "Einen SectionHeader-Stil für alle Screens festlegen: x = page 16, 15 semibold, 12 pt bis zur Karte, 24 pt davor. In den Einstellungen die Fußnoten ebenfalls auf 16 (oder bewusst auf inset 32, dann aber überall)."
+   },
+   {
+    "screen": "L_merchants vs. L_history / L_settings / L_scan",
+    "element": "Großtitel der Tab-Wurzeln",
+    "problem": "‚Läden‘ steht bei y = 71, die anderen Tab-Titel bei 127. Beim Tabwechsel springt der Titel um 56 pt.",
+    "schwere": "mittel",
+    "vorschlag": "Alle Tab-Wurzeln auf dasselbe Kopfmuster bringen: entweder überall fester Kopf (Titel bei y ≈ 71) oder überall System-Großtitel. Titel → erste Komponente einheitlich 16 pt."
+   },
+   {
+    "screen": "L_form",
+    "element": "Abstand Foto-Karte → Feld-Karte",
+    "problem": "14 pt, weder group noch section.",
+    "schwere": "niedrig",
+    "vorschlag": "CardFormView.swift:58 VStack(spacing: Layout.group) bzw. Layout.section, wenn es zwei Abschnitte sind."
+   },
+   {
+    "screen": "L_settings",
+    "element": "Großtitel → erste Karte",
+    "problem": "≈ 10 pt statt 16–18 wie bei Hinzufügen, die Karte klebt am Titel.",
+    "schwere": "niedrig",
+    "vorschlag": "Oberen Content-Abstand an ‚Hinzufügen‘ angleichen: .padding(.top, Layout.inset) bzw. contentMargins(.top, 16)."
+   },
+   {
+    "screen": "L_01_start",
+    "element": "Wortmarke im Toolbar-Item",
+    "problem": "Die Wortmarke steht bei x = 21,3 und fluchtet nicht mit Suchfeld und Held (16); im Einstieg bei 17,3.",
+    "schwere": "niedrig",
+    "vorschlag": "Die Wortmarke aus der Toolbar nehmen und als eigenen Kopf mit .padding(.horizontal, Layout.page) setzen (wie im Einstieg), oder mit .padding(.leading, -4) kompensieren. Dieselbe y-Position wie im Einstieg (82 → 74 angleichen)."
+   },
+   {
+    "screen": "L_01_start / L_merchants",
+    "element": "Suchfeld → erster Inhalt",
+    "problem": "19 pt bzw. 15 pt.",
+    "schwere": "niedrig",
+    "vorschlag": ".padding(.top, 4) in HomeView entfernen und auf beiden Screens 16 pt (Layout.inset) setzen."
+   },
+   {
+    "screen": "L_checkout",
+    "element": "Ticket-Innenabstand",
+    "problem": "Das Kassen-Ticket nutzt inset 16 statt ticketInset 20.",
+    "schwere": "niedrig",
+    "vorschlag": "CheckoutView.swift:161/212 horizontal Layout.ticketInset, damit alle Tickets 20 pt atmen."
+   },
+   {
+    "screen": "L_01_start / L_detail / L_00_onboarding1",
+    "element": "Ticket-Fuß unter der Abrisslinie",
+    "problem": "Oben 20 pt, unten 12 pt. Gemessen bleiben nur 11–12,7 pt bis zur Kante, der Abriss wirkt gedrängt.",
+    "schwere": "niedrig",
+    "vorschlag": "Fuß vertikal 16 (Layout.inset) statt group 12, oder oben 12 und unten 16, damit die Unterkante optisch der Oberkante entspricht."
+   },
+   {
+    "screen": "L_01_start / L_radar",
+    "element": "Listen-Trennlinie",
+    "problem": "Der Divider-Einzug von 72 bleibt 2 pt vor der Textkante (88 vs. 90).",
+    "schwere": "niedrig",
+    "vorschlag": "Divider().padding(.leading, Layout.inset + 44 + 14) = 74, oder CardRow-Spacing auf 12 und Einzug 72 (mit 4-pt-Raster: Logo 44 + 12 = 56 + 16 = 72)."
+   },
+   {
+    "screen": "Code (global)",
+    "element": "Abstands-Literale",
+    "problem": "77 Werte außerhalb des 4-pt-Rasters (14/10/6/3/18/30), dazu 36 Token-Werte als Zahl hartkodiert.",
+    "schwere": "mittel",
+    "vorschlag": "Layout um xs 4 / s 8 ergänzen und 14→12 oder 16, 10→8 oder 12, 6→4 oder 8, 3→4, 18→16 oder 20, 30→32 migrieren; einen SwiftLint-Custom-Rule gegen numerische .padding/spacing ≠ 0/1/2."
+   },
+   {
+    "screen": "S_start_2_ende",
+    "element": "Fester Kopf beim Scrollen",
+    "problem": "Zwischen Wortmarke und Suchfeld scheint Inhalt als Geisterschrift durch.",
+    "schwere": "niedrig",
+    "vorschlag": "Kopfbereich mit Color.page (Deckkraft 1,0) bis unter das Suchfeld hinterlegen, erst darunter 16 pt weiche Blende."
+   },
+   {
+    "screen": "L_00_onboarding*",
+    "element": "Seitenpunkte",
+    "problem": "Die Punkte sind 7 pt hoch mit 6 pt Abstand, beides außerhalb des Rasters.",
+    "schwere": "niedrig",
+    "vorschlag": "Höhe 8, aktiver Punkt 24 × 8, Abstand 8."
+   }
+  ],
+  "top3": [
+   "Einstieg: den Aktionsbereich auf eine feste Höhe von 152 pt setzen, damit der Haupt-CTA auf allen 4 Seiten bei derselben y-Position bleibt (heute Δ 48 pt), und in XL den Text von den Punkten trennen (Überlappung)",
+   "Ziffernblock-Screen: VStack mit frame(maxWidth: .infinity, alignment: .leading), damit die Inhaltskante bei 16 statt 44 pt liegt und nicht mehr mit der Zeilenbreite wandert",
+   "Mikroraster konsolidieren: 77 Literale außerhalb des 4-pt-Rasters auf Tokens (4/8/12/16/20/24) migrieren und ein System für Abschnittsköpfe und Tab-Köpfe festlegen (Einstellungen 32 vs. sonst 16; Läden-Titel 56 pt höher als andere Tabs)"
+  ],
+  "lob": [
+   "Makroraster fehlerfrei: 16 pt Rand auf jedem Screen, auf den halben Punkt genau gemessen",
+   "Detail und ‚Betrag offen‘ laufen jetzt lehrbuchhaft 12/24/12/24; das Kachelraster ohne Lücke mit 12 pt Rinne",
+   "Ablauftermine: vier Monatsgruppen mit identischem 30/18-Rhythmus, so ruhig wie Apple Wallet",
+   "Ticket-Innenabstand 20 auf Start, Detail, Einstieg und Hinzufügen konsequent umgesetzt, das Ticket wirkt dadurch großzügiger als die 16-pt-Karten",
+   "Hell und dunkel sind geometrisch pixelgleich",
+   "Die Radar-Karte hält die Karten-Tokens (16 Innenabstand, 24 Radius) und fügt sich in den Start-Rhythmus ein"
+  ]
+ },
+ {
+  "persona": "Kofi Mensah, 41, Farbspezialist und Brand-Designer, Hamburg (Referenzen: Revolut, Monocle, Klarna) – simuliert",
+  "fokus": "Farbe und Kontrast: Farbregel Gelb+Tinte = App / Ladenfarbe = Karte, WCAG-Kontraste aller Textfarben hell/dunkel, Farbdichte pro Screen, Farben außerhalb der Tokens, Verfallsradar-Farben",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 7,
+   "abstaende_raster": 7,
+   "hierarchie": 8,
+   "konsistenz": 6,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 6,
+   "markencharakter": 8,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Das Markenpaar sitzt jetzt: gelbes Ticket, Tinte, warmes Papier – Start und Einstieg lesen sich sofort als eine Marke, nicht als iOS-Vorlage. Sobald man aber in Formulare, Kasse oder die Ladentabelle schaut, tauchen kalte Systemgraus und ein halbes Dutzend Ladenfarben auf, die an ihrer eigenen Schrift scheitern.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Gelb kommt nur als Summen-Ticket, Wortmarken-Punkt, Heute-Fähnchen, Stempel und App-Symbol vor (gemessen #FFD84D hell / #F5CE3E dunkel, exakt Token); alle Hauptaktionen sind Tinte (#111111 bzw. #F2F0EA). Die Farbregel ist im Code dokumentiert und in den Screens weitgehend eingehalten – das ist wiedererkennbar wie Klarnas Rosa.",
+  "vorrunde_behoben": [
+   "Stempel ‚Aufgebraucht‘: onBrand #111111 auf brandYellow, 13,65:1 hell / 12,39:1 dunkel – im Dunkeln nicht mehr unlesbar",
+   "Schatten-Token shade: im Dunkeln Schwarz 45 %, kein grauer Schimmer mehr um Karten (D_01_start, D_detail geprüft)",
+   "Schalter grün (toggleOn): gemessen #34A76E im Dunkeln (D_settings), weißer Knopf bleibt sichtbar",
+   "Fast-Schwarz-Ladenfarben ersetzt: Douglas/Stadtgutschein gemessen #51515A (Token 52525B), kein Schwarz mehr in Kacheln",
+   "Text auf Karten voll deckend: Thalia-Karte 6,0:1 Weiß auf #1E6E6B, ‚gültig bis‘ nicht mehr halbtransparent",
+   "Hauptknopf überall Tinte, Gelb nie Aktionsfarbe (primary/accent identisch)",
+   "muted #5C5C63 jetzt ≥5,6:1 auf allen hellen Flächen, 6,2–7,9:1 im Dunkeln"
+  ],
+  "vorrunde_offen": [
+   "Farben außerhalb der Tokens: System-‚.bordered‘-Knöpfe rendern kaltes #D4D4D4 (L_checkout ‚PIN anzeigen‘, L_form ‚Foto machen/Aus Fotos‘) und #53524F dunkel; DatePicker-Kapsel #EFEFF0 und Segmented Control #EEEEEF sind blaugrau auf warmem Papier #F6F4EF",
+   "soon (#B35A00) auf page nur 4,36:1 und auf fill 4,06:1 – unter AA für 13–15-pt-Text (‚noch 24 Tage‘ steht allerdings auf surface: 4,80:1 ok)",
+   "good auf goodSoft 4,43:1 hell (knapp unter AA) – Status-Pill ‚gültig‘",
+   "keyBlue #2451FF ist als Token definiert, wird nirgends benutzt – toter Token, lädt zum Wildwuchs ein",
+   "Onboarding-Seite 3 nutzt Color(hex: 0x111111) hart codiert statt onBrand/ink-Token (OnboardingView.swift:329)"
+  ],
+  "neue_probleme": [
+   "Ladentabelle: mehrere Marken scheitern an ihrer eigenen Schrift – Netflix Rot #E50914 auf Schiefer #52525B nur 1,61:1, Lieferando Weiß auf #FF8000 2,52:1, Primark 2,78:1, Zalando 2,89:1, Saturn Orange auf Schiefer 3,05:1, Müller 3,12:1, Netto Gelb auf Rot 3,87:1, Deichmann 4,34:1. Auf der Detailkarte (BalanceCard) steht damit 13-pt-Text ‚gültig bis …‘ und ‚von 25,00 €‘ unter 3:1",
+   "Schiefer #52525B (Ersatz für Schwarz) ist im Dunkeln fast unsichtbar: 2,40:1 gegen page #141311, 2,18:1 gegen surface – unter 3:1 für Nicht-Text; Amazon #232F3E (1,24:1), Eventim (1,18:1), Aldi (1,07:1) verschwinden im Dunkeln ganz, gehalten nur von 1-pt-Kante ink 12 %",
+   "Detail-Aktionskacheln färben Icons hell in Ladenfarbe (Thalia #1E6E6B gemessen), dunkel dagegen ink2 (#CFCDC6) – bewusst, aber inkonsistent; bei Zalando/Lieferando/Primark läge das Icon mit 2,5–2,9:1 unter der 3:1-Grenze für Symbole. Außerdem wandert Ladenfarbe damit aus der Karte in die App-Oberfläche – widerspricht der eigenen Regel ‚Ladenfarbe = Karte‘",
+   "Verfallsradar XL: Jahreslabels kollidieren (‚20292030‘ ohne Abstand, XL_radar), da die Wurzelskala ferne Jahre zusammenschiebt und die Labelbreite fix 64 pt ist",
+   "Heute-Fähnchen: Gelb gegen weiße Radarfläche nur 1,38:1 – lebt allein von der 15-%-Tintenkante; im Hellen wirkt es blass neben dem roten Ring",
+   "Bon (Verlauf): paper #FBF9F4 gegen page #F6F4EF nur 1,04:1 – der Bon ist nur über Zacken und Schatten erkennbar, die Fläche selbst verschwindet",
+   "Scan-Kachel ‚Karte scannen‘ nutzt Tinte-Ticket mit Kerben – laut TicketShape-Kommentar nur für Summe/Detail/Kasse/Stempel/Leerzustand vorgesehen; verwässert die Signaturform"
+  ],
+  "scroll_befund": "S_start_2_ende: Beim Scrollen läuft der Radar hinter Wortmarke und Statusleiste durch und bleibt als Geisterbild (Kacheln Z/IKEA/T, Jahreszahlen) über ‚Restwert‘ sichtbar – der weiche Scroll-Rand reicht nicht, die bunten Ladenkacheln stechen durch. Die Zalando-Zeile wird direkt unter dem fixierten Suchfeld abgeschnitten, ok. Farblich verdichtet sich ‚Weitere‘ auf 4 gedeckte Kacheln (Schiefer ×2, Teal, Navy) – ruhig und angenehm. Detail-Ende (L_detail): Bon-Zacken lugen unter dem fixierten Tinte-Knopf hervor, wirkt unbeabsichtigt.",
+  "messungen": [
+   {
+    "was": "Markengelb Summenkarte (Pixel)",
+    "screen": "L_01_start / D_01_start",
+    "wert": "#FED74D / #F5CE3E",
+    "soll/erwartung": "#FFD84D / #F5CE3E",
+    "ok": true
+   },
+   {
+    "was": "Tinte auf Gelb",
+    "screen": "L_01_start / D_01_start",
+    "wert": "13,65:1 / 12,39:1",
+    "soll/erwartung": "≥ 7:1",
+    "ok": true
+   },
+   {
+    "was": "‚Nur Beispiele‘ ink 75 % auf Gelb",
+    "screen": "L_01_start",
+    "wert": "7,12:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "ink auf page/surface",
+    "screen": "alle hell / dunkel",
+    "wert": "17,2 / 18,9 : 1 hell; 16,3 / 14,8 : 1 dunkel",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "muted auf page/surface/fill",
+    "screen": "alle hell",
+    "wert": "6,03 / 6,63 / 5,62 : 1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "muted auf page/surface",
+    "screen": "alle dunkel",
+    "wert": "7,85 / 7,12 : 1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "soon #B35A00 auf page / fill",
+    "screen": "hell",
+    "wert": "4,36 / 4,06 : 1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": false
+   },
+   {
+    "was": "soon auf surface (‚noch 24 Tage‘)",
+    "screen": "L_01_start",
+    "wert": "4,80:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "warn-Pill Text auf Tönung (Pixel #F8E4E4 / #392825)",
+    "screen": "L_01_start / D_01_start",
+    "wert": "4,79 / 5,50 : 1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "good auf goodSoft",
+    "screen": "hell",
+    "wert": "4,43:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": false
+   },
+   {
+    "was": "Roter Ring (warn) gegen Radarfläche",
+    "screen": "L_radar / D_radar",
+    "wert": "5,85 / 6,63 : 1 (Pixel #C4221A hell)",
+    "soll/erwartung": "≥ 3:1",
+    "ok": true
+   },
+   {
+    "was": "Heute-Fähnchen Gelb gegen Radarfläche",
+    "screen": "L_radar",
+    "wert": "1,38:1 (nur Tintenkante 15 %)",
+    "soll/erwartung": "≥ 3:1 für Markierung",
+    "ok": false
+   },
+   {
+    "was": "Heute-Text Tinte auf Gelb",
+    "screen": "L_radar",
+    "wert": "13,65:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Schiefer-Kachel #52525B gegen Fläche",
+    "screen": "D_01_start",
+    "wert": "2,40:1 page / 2,18:1 surface",
+    "soll/erwartung": "≥ 3:1 Nicht-Text",
+    "ok": false
+   },
+   {
+    "was": "Amazon #232F3E gegen dunkle surface",
+    "screen": "D_01_start Radar",
+    "wert": "1,24:1",
+    "soll/erwartung": "≥ 3:1",
+    "ok": false
+   },
+   {
+    "was": "Netflix Rot auf Schiefer",
+    "screen": "Ladentabelle (Code)",
+    "wert": "1,61:1",
+    "soll/erwartung": "≥ 4,5:1 (13-pt-Text auf Karte)",
+    "ok": false
+   },
+   {
+    "was": "Zalando / Lieferando / Primark Weiß auf Ladenfarbe",
+    "screen": "Detailkarte (Code)",
+    "wert": "2,89 / 2,52 / 2,78 : 1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": false
+   },
+   {
+    "was": "Eigene Fallback-Palette (8 Töne) Weiß darauf",
+    "screen": "Code",
+    "wert": "5,10–6,58 : 1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Thalia-Karte Weiß auf #1E6E6B (Pixel)",
+    "screen": "L_detail",
+    "wert": "6,00:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Toggle an vs. weißer Knopf",
+    "screen": "D_settings",
+    "wert": "3,04:1 (#34A76E)",
+    "soll/erwartung": "≥ 3:1",
+    "ok": true
+   },
+   {
+    "was": "Toggle aus Spur gegen surface",
+    "screen": "D_settings",
+    "wert": "2,45:1 (#5A5A5E)",
+    "soll/erwartung": "≥ 3:1 (System)",
+    "ok": false
+   },
+   {
+    "was": "PIN-Knopf Fläche (Pixel)",
+    "screen": "L_checkout / D_checkout",
+    "wert": "#D4D4D4 / #53524F",
+    "soll/erwartung": "Token fill #EFECE5 / #2A2926",
+    "ok": false
+   },
+   {
+    "was": "Formular-Knöpfe, DatePicker, Segment (Pixel)",
+    "screen": "L_form",
+    "wert": "#D4D4D4, #EFEFF0, #EEEEEF (kaltgrau)",
+    "soll/erwartung": "warme Token fill/line",
+    "ok": false
+   },
+   {
+    "was": "Bon-Papier gegen Seite",
+    "screen": "L_history",
+    "wert": "1,04:1 (#FAF8F3 auf #F1EFEA gemessen)",
+    "soll/erwartung": "sichtbar abgesetzt, ≥ 1,15:1 oder surface",
+    "ok": false
+   },
+   {
+    "was": "Deaktivierter Knopf Text/Fläche",
+    "screen": "L_keypad",
+    "wert": "5,04:1; Fläche #E4E0D7 vs page 1,20:1",
+    "soll/erwartung": "Text ≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Inaktive Zeile: muted bei 50 % Deckkraft",
+    "screen": "CardRow (Code)",
+    "wert": "2,21:1 hell / 2,78:1 dunkel",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": false
+   },
+   {
+    "was": "Detail-Aktionsicon Ladenfarbe",
+    "screen": "L_detail / D_detail",
+    "wert": "#1E6E6B hell / #CFCDC6 dunkel",
+    "soll/erwartung": "ein Token in beiden Modi",
+    "ok": false
+   },
+   {
+    "was": "Farbdichte Start hell (sichtbare bunte Farbfamilien)",
+    "screen": "L_01_start",
+    "wert": "Gelb + Orange + Rot + Blau + Teal + Navy + Schiefer = 7",
+    "soll/erwartung": "≤ 5 pro Screen",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "Detail / Radar / Liste (alle)",
+    "element": "MerchantBrand-Tabelle",
+    "problem": "8 Läden unter 4,5:1, 4 davon unter 3:1 (Netflix 1,61, Lieferando 2,52, Primark 2,78, Zalando 2,89). Auf der Detailkarte steht 13-pt-Text in dieser Kombination.",
+    "schwere": "hoch",
+    "vorschlag": "Im Init automatisch prüfen: bei Kontrast < 4,5 Vordergrund auf #111111 oder #FFFFFF wechseln, je nachdem was höher ist (Zalando #FF6900 → Tinte 6,5:1; Lieferando → Tinte 7,5:1; Primark → Tinte 6,8:1). Netflix: Kachel #E50914 mit Weiß (4,8:1) statt Rot auf Schiefer. Unit-Test über alle Einträge mit Mindestwert 4,5."
+   },
+   {
+    "screen": "D_01_start, D_radar, D_merchants",
+    "element": "Dunkle Ladenkacheln im Dunkelmodus",
+    "problem": "Schiefer #52525B 2,18:1, Amazon 1,24:1, Aldi 1,07:1 gegen surface – Kachelform lebt nur von 1-pt-Kante ink 12 %.",
+    "schwere": "mittel",
+    "vorschlag": "Kantenlinie im Dunkeln auf ink 28 % und 1,5 pt anheben, oder Kachel-Hintergrund bei Luminanz < 0,05 im Dunkeln um 12 % aufhellen (Schiefer → #6A6A73 = 3,15:1)."
+   },
+   {
+    "screen": "L_checkout, D_checkout, L_form",
+    "element": ".bordered-Knöpfe, DatePicker, Segmented Picker",
+    "problem": "Kalte Systemgraus #D4D4D4 / #EFEFF0 / #53524F außerhalb der Tokens; auf warmem Papier wirken sie wie Fremdkörper.",
+    "schwere": "mittel",
+    "vorschlag": "Eigener QuietCapsule-Stil: Hintergrund Color.fill (#EFECE5 / #2A2926), Text ink, Radius Capsule, minHeight 44. DatePicker in Kapsel mit .background(Color.fill); Segment durch FilterChip-Reihe ersetzen."
+   },
+   {
+    "screen": "XL_radar",
+    "element": "Jahresbeschriftung Achse",
+    "problem": "‚2029‘ und ‚2030‘ laufen zusammen, weil die Wurzelskala ferne Jahre auf < 64 pt staucht.",
+    "schwere": "mittel",
+    "vorschlag": "Labels mit Kollisionsprüfung setzen: Mindestabstand = gemessene Labelbreite + 8 pt, sonst jedes zweite Label weglassen oder auf ‚’30‘ kürzen."
+   },
+   {
+    "screen": "L_detail, L_pending",
+    "element": "ActionTile-Icons",
+    "problem": "Ladenfarbe verlässt die Karte und färbt App-Bedienelemente (nur im Hellen); bei hellen Orange-Läden < 3:1.",
+    "schwere": "mittel",
+    "vorschlag": "Icons in beiden Modi Color.ink2 (11,3:1 / 10,6:1). Ladenfarbe bleibt exklusiv Karte und Kachel – so wie die eigene Regel es sagt."
+   },
+   {
+    "screen": "Liste (CardRow)",
+    "element": "Inaktive Gutscheine opacity 0.5",
+    "problem": "Nebentext fällt auf 2,21:1 (hell) – unter AA.",
+    "schwere": "mittel",
+    "vorschlag": "Statt Deckkraft: Kachel entsättigen (.grayscale(1)), Texte bleiben ink2/muted voll deckend; Betrag durchgestrichen."
+   },
+   {
+    "screen": "Theme (soon)",
+    "element": "Token soon #B35A00",
+    "problem": "4,36:1 auf page, 4,06:1 auf fill – knapp durchgefallen.",
+    "schwere": "niedrig",
+    "vorschlag": "soon hell auf #A04F00 (5,29:1 page, 4,93:1 fill); dunkel bleibt #FFB340."
+   },
+   {
+    "screen": "Theme (goodSoft)",
+    "element": "Status-Pill ‚gültig‘",
+    "problem": "good auf goodSoft 4,43:1.",
+    "schwere": "niedrig",
+    "vorschlag": "goodSoft hell auf #E3F4E9 oder good auf #1A6B43 (5,43:1)."
+   },
+   {
+    "screen": "L_radar, L_01_start",
+    "element": "Heute-Fähnchen",
+    "problem": "Gelb gegen Weiß 1,38:1; Kante 15 % zu zart, Fähnchen wirkt im Hellen blass neben dem roten Ring.",
+    "schwere": "niedrig",
+    "vorschlag": "Kante auf onBrand 35 %, 1 pt, oder Radarfläche im Hellen auf paper #FBF9F4 statt surface, dann tritt Gelb besser hervor; gestrichelte Linie ink 50 % → 70 %."
+   },
+   {
+    "screen": "L_history",
+    "element": "Bon-Papier",
+    "problem": "paper vs. page 1,04:1 – Fläche verschwindet.",
+    "schwere": "niedrig",
+    "vorschlag": "Bon auf Color.surface #FFFFFF (1,10:1) und Schatten beibehalten, oder page im Verlauf auf fill #EFECE5 setzen."
+   },
+   {
+    "screen": "Theme",
+    "element": "keyBlue #2451FF, Color(hex: 0x111111) im Onboarding",
+    "problem": "Toter Token und hart codierte Tinte.",
+    "schwere": "niedrig",
+    "vorschlag": "keyBlue löschen; OnboardingView.swift:329 auf Color.onBrand umstellen."
+   },
+   {
+    "screen": "L_scan",
+    "element": "‚Karte scannen‘ als Tinte-Ticket",
+    "problem": "Signaturform außerhalb der erlaubten Orte; zweites großes Ticket neben dem gelben schwächt die Marke.",
+    "schwere": "niedrig",
+    "vorschlag": "Scan-Kachel als normale cardSurface in ink mit Radius 24 ohne Kerben, oder Kerben behalten und TicketShape-Regel im Kommentar erweitern – aber bewusst entscheiden."
+   }
+  ],
+  "top3": [
+   "Ladenfarben automatisch auf ≥ 4,5:1 Vordergrund absichern – Netflix 1,61:1, Lieferando 2,52:1, Primark 2,78:1, Zalando 2,89:1 sind auf der Detailkarte echte Lesefehler",
+   "System-Graus (#D4D4D4, #EFEFF0, #53524F) durch warme Tokens fill/line ersetzen – Kasse und Formular fallen sonst aus der Papierwelt",
+   "Dunkelmodus: dunkle Ladenkacheln (Schiefer 2,18:1, Amazon 1,24:1) brauchen eine kräftigere Kante; plus Radar-Jahreslabels in XL entzerren"
+  ],
+  "lob": [
+   "Farbregel wirklich gelebt: Gelb nur für App-Momente, jede Hauptaktion Tinte – kein einziger gelber Knopf gefunden",
+   "Tokens mit hell/dunkel-Paaren sauber benannt und kommentiert; alle Kern-Textfarben ≥ 5,6:1 hell und ≥ 6,2:1 dunkel",
+   "Summen-Ticket Tinte auf Gelb in beiden Modi identisch – im Dunkeln leuchtet es wie ein echtes Ticket, sehr Monocle",
+   "Verfallsradar: roter Ring als zweite Kante statt ganzer roter Kachel – Ladenfarbe bleibt erhalten, Dringlichkeit trotzdem klar (5,85:1)",
+   "Eigene Fallback-Palette durchgehend 5,1–6,6:1 mit Weiß – gut gedeckte Töne ohne Schwarz und Gelb",
+   "Barcode im Dunkeln auf weißem Feld – scanbar, und das Einzige, was bewusst gegen den Modus arbeitet"
+  ]
+ },
+ {
+  "persona": "Sophie Aubert, 29, Type- und Editorial-Designerin, Leipzig (simuliert). Referenzen: Things 3, Robinhood, Arc",
+  "fokus": "Typografie: Betragsschrift, Größenstufen, Wortmarke, Kartennummer, Onboarding-Überschriften, Radar-Beschriftung, Umbrüche bei XL",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 8,
+   "abstaende_raster": 7,
+   "hierarchie": 7,
+   "konsistenz": 6,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 6,
+   "markencharakter": 8,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Das Preisschild-Motiv trägt jetzt: 136,²⁵ € auf dem gelben Ticket ist eine echte Signatur, das Komma sitzt, die Cent schließen oben bündig ab. Sobald man aber die Schrift hochdreht oder die Nebenschauplätze anschaut (Radar-Achse, Kartennummer, Ziffernblock, Bon), zerfällt das System in viele Einzelentscheidungen.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Wortmarke Rounded Heavy + gelber Punkt, Ticket mit Kerben und Abrisslinie, Beträge als Preisschild mit hochgestellten Cent – auf Start, Detail, Onboarding und Bon wiedererkennbar. Schwächer: große Navigationstitel (Läden, Verlauf, Einstellungen) sind SF Pro Bold statt Rounded, der Ziffernblock-Betrag hat keine Preisschild-Grammatik.",
+  "vorrunde_behoben": [
+   "Komma auf der Grundlinie: Komma beginnt 9 pt über der Grundlinie und reicht 9,7 pt darunter (L_01_start) – echte Komma-Form, nicht mehr schwebend",
+   "Cent oben bündig (hell, Standardgröße): Oberkante Cent 233,3–233,7 pt vs. Euro-Ziffern 233,7–234,0 pt, Abweichung ≤0,4 pt; Detail 219,0 vs 219,0–219,3 pt",
+   "Cent-Verhältnis stimmig: Ziffernhöhe Cent 19,3 pt / Euro 44 pt = 0,44 (Code 0,46)",
+   "Proportionale Ziffern für große Einzelbeträge (Font.display), tabellarische nur in Listen (Font.amount) – richtige Trennung",
+   "9 Textstufen im Code tatsächlich eingehalten: .scaled nutzt nur 12/13/15/16/17/20/22/28/34",
+   "Ein FilterChip für Läden- und Verlauf-Filter (gleiche Höhe, gleiche Schrift 15 semibold)",
+   "Stempel/Heute-Fähnchen: Tinte auf Gelb, im Dunkeln lesbar",
+   "Kontraste Text: muted auf Weiß 6,63:1, auf Papier 6,03:1, dunkel 7,12:1; „Noch drauf“ (Tinte 75 %) auf Gelb 7,13:1"
+  ],
+  "vorrunde_offen": [
+   "„Loch hinter der 1“ nur halb behoben: im Summenbetrag 1→3 Abstand 8,0 pt, 3→6 nur 4,0 pt; im Detail 1→2 7,0 pt. Proportional reicht bei SF Rounded nicht, die 1 braucht Unterschneidung",
+   "Größenstufen nur für Fließtext gezählt: Beträge bringen zusätzlich 64/60/48/40/36/30/20/19/16 pt, dazu 4 feste Größen ohne Dynamic Type (Ziffernblock 28/22, Vollbildnummer 26, Scan-Button 17). Real sind es ~20 Größen",
+   "Wortmarke ‚überall dieselbe‘ stimmt nicht: 28 pt auf Start und Onboarding, 22 pt im Bon; auf Start steht sie bei x=21,7 pt (Seitenrand 20 pt), im Onboarding bei 17,7 pt (16 pt) – 4 pt Versatz zur Suchleiste darunter",
+   "Kartennummer in drei Varianten: Detail 17 semibold mono, Kasse 20 bold mono (Code-Kommentar behauptet ‚dieselbe wie im Detail‘), Vollbild 26 bold mono +2 Laufweite ohne Dynamic Type; im Formular ungegliedert und proportional ‚6300981274561234‘",
+   "Große Titel der Tabs (Läden/Verlauf/Einstellungen) in SF Pro Bold, Wortmarke und Onboarding-Headlines in SF Rounded Heavy – zwei Stimmen für Überschriften"
+  ],
+  "neue_probleme": [
+   "Radar XL: Jahreslabels kollidieren – ‚2029‘ und ‚2030‘ laufen ineinander (‚20292030‘), auf Start zusätzlich von der Tab-Leiste angeschnitten (XL_01_start, XL_radar). Ursache: Label .fixedSize() in fester 64-pt-Box, keine Kollisionsprüfung, gestauchte Achse schiebt späte Jahre zusammen",
+   "Radar: Kacheln verdecken einander (IKEA hinter Zalando, Douglas hinter Stadtgutschein) – Markenzeichen nur halb lesbar, IKEA-Schriftzug beschnitten",
+   "Onboarding XL: Fließtext wird mitten in der Zeile vom Seitenindikator abgeschnitten (‚Karten, Codes, Stadt…‘ halb sichtbar hinter den Punkten), kein Verlauf/Scroll-Hinweis",
+   "Wortmarke bei XL uneinheitlich: Start 135 pt breit / Punkt 9 pt, Onboarding 156 pt breit / Punkt 12 pt",
+   "Summenbetrag schrumpft bei XL (Ziffernhöhe 44 pt → 37 pt) während ‚Noch drauf‘ und Fließtext wachsen – Hierarchie kippt; XL-Cent 1,5 pt tiefer als Euro-Oberkante",
+   "Ziffernblock-Betrag ‚0 €‘: € auf der Grundlinie in 30 pt statt Preisschild-Grammatik; getippte Cent werden voll groß dargestellt – bricht mit AmountText",
+   "Ziffernblock XL: Chip ‚Alles (12,40 €)‘ bricht zweizeilig um, Klammer/Descender ragt unten aus der Kapsel",
+   "Bon: Kopfdatum ‚27.9.2026, 15:51‘ ungepolstert, Posten ‚DI. 15.09.2026‘ gepolstert – zwei Datumsformate auf einem Beleg",
+   "In-Karten-Zeile: Betrag 20 pt, Rabatt 19 pt (CardRow Z.106/118) – zwei fast gleiche Stufen direkt untereinander"
+  ],
+  "scroll_befund": "Start gescrollt (S_start_2_ende): Suchfeld und Wortmarke bleiben fest, die Liste gleitet darunter; Zeileninhalt (‚Zalando‘, ‚15 %‘) wird hart unter der Suchpille angeschnitten und das Radar schimmert hinter der Statusleiste durch – Scroll-Edge-Effekt zu schwach. Detail: fixierter Kassen-Knopf mit Zackenkante darüber funktioniert, bei XL schneidet er aber die dritte Kachel mitten im Symbol. Kasse XL: ‚PIN anzeigen‘ wird von der festen Knopfleiste halbiert. Läden XL: Filter-Chip-Reihe läuft rechts aus (ok, scrollbar), Beschreibungen mit ‚…‘ gekürzt.",
+  "messungen": [
+   {
+    "was": "Cent-Oberkante vs. Euro-Oberkante",
+    "screen": "L_01_start",
+    "wert": "233,3–233,7 pt vs 233,7–234,0 pt (Δ ≤0,4 pt)",
+    "soll/erwartung": "bündig ±0,5 pt",
+    "ok": true
+   },
+   {
+    "was": "Cent-Oberkante vs. Euro-Oberkante",
+    "screen": "XL_01_start",
+    "wert": "282,7–283,0 vs 281,3–281,7 pt (Δ 1,5 pt)",
+    "soll/erwartung": "bündig ±0,5 pt",
+    "ok": false
+   },
+   {
+    "was": "Komma relativ zur Grundlinie",
+    "screen": "L_01_start",
+    "wert": "Grundlinie 277,7 pt; Komma 268,7–287,3 pt",
+    "soll/erwartung": "Komma sitzt auf der Grundlinie, Unterlänge darunter",
+    "ok": true
+   },
+   {
+    "was": "Abstand Komma → Cent",
+    "screen": "L_01_start",
+    "wert": "5,0 pt",
+    "soll/erwartung": "3–5 pt",
+    "ok": true
+   },
+   {
+    "was": "Ziffernabstand 1→3 vs 3→6",
+    "screen": "L_01_start",
+    "wert": "8,0 pt vs 4,0 pt",
+    "soll/erwartung": "gleichmäßig ±1 pt",
+    "ok": false
+   },
+   {
+    "was": "Ziffernabstand 1→2",
+    "screen": "L_detail",
+    "wert": "7,0 pt (Referenz 4→0 bei Cent 2,0 pt)",
+    "soll/erwartung": "≈3–4 pt",
+    "ok": false
+   },
+   {
+    "was": "Verhältnis Cent-/Euro-Ziffernhöhe",
+    "screen": "L_01_start",
+    "wert": "19,3 / 44,0 = 0,44",
+    "soll/erwartung": "0,42–0,50",
+    "ok": true
+   },
+   {
+    "was": "Abstand Cent → €",
+    "screen": "L_01_start",
+    "wert": "8,0 pt (volles Leerzeichen)",
+    "soll/erwartung": "≤4 pt (schmales Leerzeichen U+202F)",
+    "ok": false
+   },
+   {
+    "was": "Textgrößen-Stufen .scaled im Code",
+    "screen": "Code",
+    "wert": "9 (12,13,15,16,17,20,22,28,34)",
+    "soll/erwartung": "9",
+    "ok": true
+   },
+   {
+    "was": "Zusätzliche Betrags-/Fixgrößen im Code",
+    "screen": "Code",
+    "wert": "Betrag 64/60/48/40/36/30/20/19/16, fix 28/26/22/17",
+    "soll/erwartung": "max. 4 Betragsstufen (z. B. 64/48/20/16)",
+    "ok": false
+   },
+   {
+    "was": "Wortmarke x-Position (Glyphe R)",
+    "screen": "L_01_start vs L_00_onboarding1",
+    "wert": "21,7 pt vs 17,7 pt",
+    "soll/erwartung": "gleich, auf 16-pt-Rand (+Seitenfleisch ≈17,7)",
+    "ok": false
+   },
+   {
+    "was": "Wortmarke Punktdurchmesser",
+    "screen": "Start / Onboarding / Bon",
+    "wert": "9,7 / 10,0 / 7,7 pt",
+    "soll/erwartung": "proportional 0,36×Größe: 10,1 / 10,1 / 7,9",
+    "ok": true
+   },
+   {
+    "was": "Wortmarke Breite XL",
+    "screen": "XL_01_start vs XL_00_onboarding1",
+    "wert": "135 pt vs 156 pt",
+    "soll/erwartung": "gleich",
+    "ok": false
+   },
+   {
+    "was": "Summenbetrag Ziffernhöhe L → XL",
+    "screen": "L/XL_01_start",
+    "wert": "44,0 → 37,3 pt",
+    "soll/erwartung": "gleich oder größer",
+    "ok": false
+   },
+   {
+    "was": "Radar-Jahreslabels Abstand 2029/2030",
+    "screen": "XL_radar",
+    "wert": "überlappend (0 pt Lücke)",
+    "soll/erwartung": "≥8 pt oder Label weglassen",
+    "ok": false
+   },
+   {
+    "was": "Kontrast Radar-Labels (muted auf Weiß)",
+    "screen": "L_01_start",
+    "wert": "6,63:1",
+    "soll/erwartung": "≥4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast ‚Noch drauf‘ Tinte 75 % auf Gelb",
+    "screen": "L_01_start",
+    "wert": "7,13:1",
+    "soll/erwartung": "≥4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Ziffernblock-Platzhalter ‚0‘",
+    "screen": "L_keypad",
+    "wert": "6,03:1",
+    "soll/erwartung": "≥3:1 (groß)",
+    "ok": true
+   },
+   {
+    "was": "Kartennummer Schnitt/Größe",
+    "screen": "L_detail / L_checkout / Vollbild(Code)",
+    "wert": "17 semibold / 20 bold / 26 bold +2",
+    "soll/erwartung": "eine Stufe, ein Gewicht",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "XL_radar, XL_01_start",
+    "element": "Radar-Jahreslabels",
+    "problem": "‚2029‘ und ‚2030‘ laufen ineinander, auf Start zusätzlich von der Tab-Leiste angeschnitten.",
+    "schwere": "hoch",
+    "vorschlag": "Labels messen und kollidierende überspringen (Mindestlücke 8 pt); bei isAccessibilitySize Labels auf ‚’29‘ kürzen oder nur jedes zweite Jahr zeigen; Labelgröße bei 17 pt deckeln (.dynamicTypeSize(...xxLarge)); Radar-Karte unten +24 pt Luft über der Tab-Leiste."
+   },
+   {
+    "screen": "L_01_start, L_radar",
+    "element": "Radar-Kacheln",
+    "problem": "Kacheln verdecken sich zu ~50 % (IKEA hinter Zalando, Douglas hinter Stadtgutschein), Marken sind nur halb lesbar.",
+    "schwere": "mittel",
+    "vorschlag": "Spurversatz = Kachelhöhe + 4 pt statt Überlappung, oder Kacheln in einer Spur als Stapel mit ‚+1‘-Zähler (12 pt heavy rounded) zusammenfassen."
+   },
+   {
+    "screen": "XL_00_onboarding1",
+    "element": "Fließtext unter Headline",
+    "problem": "Letzte Zeile wird mitten durch den Seitenindikator abgeschnitten.",
+    "schwere": "hoch",
+    "vorschlag": "Bühne (Ticket) bei isAccessibilitySize auf 60 % skalieren oder ausblenden; ScrollView unten mit 24-pt-Verlauf ausblenden; Indikator in eigene Zeile mit 12 pt Abstand zum Text."
+   },
+   {
+    "screen": "L_01_start, L_detail",
+    "element": "AmountText Euro-Ziffern",
+    "problem": "Nach der ‚1‘ klafft eine Lücke (8 pt statt 4 pt).",
+    "schwere": "mittel",
+    "vorschlag": "Führende ‚1‘ separat mit .kerning(-size*0.08) setzen oder Paar-Unterschneidung für ‚1x‘ (≈ -0,08 em); Grundlaufweite -0,02 em beibehalten."
+   },
+   {
+    "screen": "L_01_start",
+    "element": "Cent-Block",
+    "problem": "Volles Leerzeichen zwischen Cent und € (8 pt) reißt den Hochsatz auseinander.",
+    "schwere": "niedrig",
+    "vorschlag": "U+202F (schmales geschütztes Leerzeichen) statt Leerzeichen, ergibt ≈3,5 pt."
+   },
+   {
+    "screen": "XL_01_start",
+    "element": "Summenbetrag",
+    "problem": "Bei XL wird der Betrag kleiner (36 statt 60), Etikett darüber größer – der wichtigste Wert verliert.",
+    "schwere": "mittel",
+    "vorschlag": "Bei XL display(52) mit minimumScaleFactor 0,6 statt harter 36; Cent-baselineOffset aus gemessener Versalhöhe (capHeight - centCap) statt 0,40×size berechnen."
+   },
+   {
+    "screen": "L_01_start",
+    "element": "Wortmarke in Toolbar",
+    "problem": "Steht 4 pt weiter rechts als Suchfeld, Titel und Onboarding (Toolbar-Innenabstand).",
+    "schwere": "mittel",
+    "vorschlag": "Wortmarke aus der Toolbar in den festen Kopf (safeAreaInset top) mit .padding(.horizontal, Layout.page) setzen, oder .padding(.leading, -4) kompensieren."
+   },
+   {
+    "screen": "L_merchants, L_history, L_settings",
+    "element": "Große Titel",
+    "problem": "SF Pro Bold statt SF Rounded Heavy wie Wortmarke und Onboarding-Headlines; zwei Überschriften-Stimmen.",
+    "schwere": "mittel",
+    "vorschlag": "Eigenen Titel ‚Text(…).font(.scaled(34, weight: .heavy, design: .rounded)).kerning(-0.6)‘ statt navigationTitle(.large) – gleiche Linie wie Onboarding."
+   },
+   {
+    "screen": "L_detail, L_checkout, L_form",
+    "element": "Kartennummer",
+    "problem": "Drei Schnitte/Größen (17 semibold, 20 bold, 26 bold +2) und im Formular ungegliedert proportional.",
+    "schwere": "mittel",
+    "vorschlag": "Ein Token Font.cardNumber = .scaled(20, weight: .semibold, design: .monospaced) mit .kerning(0.5) überall; Vollbild = derselbe Token ×1,4 aber skalierend; Formular-Feld mit Vierergruppen formatieren."
+   },
+   {
+    "screen": "L_keypad",
+    "element": "Eingabebetrag ‚0 €‘",
+    "problem": "Keine Preisschild-Grammatik: € auf der Grundlinie, Cent würden voll groß erscheinen.",
+    "schwere": "mittel",
+    "vorschlag": "AmountText auch für die Eingabe verwenden (size 64), Platzhalter ‚0,00‘ in muted; so sieht der Nutzer schon beim Tippen das Preisschild."
+   },
+   {
+    "screen": "XL_keypad",
+    "element": "Chip ‚Alles (12,40 €)‘",
+    "problem": "Bricht zweizeilig um, Klammer ragt aus der Kapsel.",
+    "schwere": "niedrig",
+    "vorschlag": "Bei isAccessibilitySize Chips untereinander in voller Breite, lineLimit(1) + minHeight 44, Kapsel wächst mit (padding vertical 10)."
+   },
+   {
+    "screen": "L_history",
+    "element": "Bon-Kopfdatum",
+    "problem": "‚27.9.2026, 15:51‘ ungepolstert vs. ‚15.09.2026‘ bei Posten.",
+    "schwere": "niedrig",
+    "vorschlag": "Einheitlich dd.MM.yyyy, HH:mm (‚27.09.2026 · 15:51‘)."
+   },
+   {
+    "screen": "L_01_start",
+    "element": "CardRow Beträge",
+    "problem": "Betrag 20 pt und Rabatt 19 pt – unbegründete Nachbarstufe.",
+    "schwere": "niedrig",
+    "vorschlag": "Beide amount(20); XL beide 16."
+   },
+   {
+    "screen": "XL_checkout",
+    "element": "Feste Knopfleiste",
+    "problem": "Schneidet ‚PIN anzeigen‘ mittig; Knopftext bricht ‚Bezahlt – Betrag / eintragen‘ unschön.",
+    "schwere": "mittel",
+    "vorschlag": "Bei XL Knopftext kürzen auf ‚Bezahlt‘, 24-pt-Verlauf über der Leiste; ScrollView contentMargins bottom = Leistenhöhe."
+   }
+  ],
+  "top3": [
+   "Radar-Achse bei XL reparieren: Jahreslabels kollidieren (‚20292030‘) und Kacheln verdecken sich – das neue Vorzeige-Element wirkt hier kaputt.",
+   "Betragsschrift fertig schleifen: Lücke nach der ‚1‘ (8 vs 4 pt) unterschneiden, schmales Leerzeichen vor €, dieselbe Grammatik auch im Ziffernblock; XL-Summe nicht schrumpfen lassen.",
+   "Ein Typo-Vokabular statt vieler Einzelgrößen: Betragsstufen auf 4 reduzieren, Kartennummer als ein Token, Tab-Titel in Rounded Heavy, Wortmarke überall auf demselben 16-pt-Rand."
+  ],
+  "lob": [
+   "Das Preisschild 136,²⁵ € ist eine echte, eigenständige Signatur – Cent oben auf 0,4 pt bündig, Komma sitzt korrekt auf der Grundlinie.",
+   "Kluge Trennung proportional (Einzelbetrag) vs. tabellarisch (Listen) – Listenspalten fluchten rechts sauber.",
+   "Onboarding-Headlines in Rounded Heavy mit -0,6 Laufweite sind dicht und selbstbewusst, der Bon im Verlauf in Mono ist ein schöner Editorial-Moment mit Charakter.",
+   "Textstufen wirklich auf 9 begrenzt und alle Farben mit ≥6:1 Kontrast."
+  ]
+ },
+ {
+  "persona": "Jonas Weber, 38, Creative Director Branding-Agentur München (Referenzen: Headspace, Duolingo, Wise) – simulierte Persona",
+  "fokus": "Markencharakter: Konsistenz der Ticket-Signatur über alle Screens, Markenstärke des neuen Einstiegs, Verfallsradar als Teil der Ticket-Welt, Stimme der Texte",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 7,
+   "abstaende_raster": 7,
+   "hierarchie": 7,
+   "konsistenz": 6,
+   "komponenten": 7,
+   "ikonografie": 6,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 6,
+   "markencharakter": 7,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Die erste Einstiegsseite ist ein echter Markenmoment: Wortmarke mit gelbem Punkt, gelbes Ticket mit Kerben und der Satz „Kein Gutschein verfällt mehr.“ – das hat Haltung. Ab Seite 2 und im Verfallsradar fällt die App aber wieder in generische weiße iOS-Karten zurück, die Signatur ist also stärker als zuvor, aber immer noch nicht durchgehend.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Wortmarke mit gelbem Punkt (#FFD84D, gemessen 255/216/77, Ø 9,5 pt) sitzt identisch auf Einstieg, Start und dem Verlaufs-Bon; Ticket mit Kerben und Abrisslinie trägt Einstieg S.1, Start-Hero, Detail, Kasse und Scan-Kachel; der Kassenbon im Verlauf und im Einlöse-Verlauf ist eine kluge Schwester-Metapher. Ohne Logo würde ich Start, Detail und Kasse als Restwert wiedererkennen, Läden, Einstellungen, Formular und Radar dagegen nicht.",
+  "vorrunde_behoben": [
+   "Kasse: echte Ticket-Hälfte mit Kerben und Abrisslinie (L/D_checkout, L_paperCheckout), Knöpfe unten, XL-Knöpfe untereinander (XL_checkout)",
+   "Stempel/Schalter: Schalter grün (Einstellungen: Ablauf-Erinnerungen, Face ID), passt auf hell und dunkel",
+   "Betragsschrift: Komma auf der Grundlinie, Cent oben bündig – auf Start, Einstieg S.1 und allen Detail-Tickets einheitlich",
+   "„An der Kasse zeigen“ unten fixiert (L_detail, S_detail_ende, D_paper)",
+   "Suchfeld + Wortmarke oben fest beim Scrollen (S_start_1, S_start_2_ende), Titel + Suche fest in Läden (S_laeden_mitte)",
+   "Ein FilterChip-Stil für Verlauf, Läden, Kassentest",
+   "Text auf Laden-Karten voll deckend; Ladenfarbe prägt das Detail-Ticket (Thalia Petrol, Café Blau) – Ladenfarbe = Kartenfarbe funktioniert",
+   "Papierhintergrund exakt #F6F4EF (gemessen 246/244/239)",
+   "Einstieg respektiert Reduce Motion und hat leichte Haptik (Code: OnboardingView.swift, reduceMotion + sensoryFeedback)"
+  ],
+  "vorrunde_offen": [
+   "Signatur-Abdeckung: Läden, Einstellungen, Formular („Bearbeiten“) und Ziffernblock tragen weiterhin keinerlei Ticket-, Gelb- oder Wortmarken-Element – reine iOS-Listen",
+   "Ladenfarben ohne Fast-Schwarz nur halb: Amazon-Kachel #232F3E (Luminanz 0,027) liest sich in Radar und Läden als Schwarz/Tinte",
+   "Fallback-Grau #51515A/#52525B für Douglas UND Stadtgutschein identisch – zwei Läden sind im Radar nicht unterscheidbar",
+   "Ziffernblock: großer Betrag „0 €“ grau, ohne hochgestellte Cent – bricht die Betragssignatur",
+   "Drei Sprachen für dasselbe Thema: „Verfallsradar“, „Ablauftermine“, „Läuft bald ab“, „Ablauf-Erinnerungen“, „verfällt“ – kein fester Markenbegriff"
+  ],
+  "neue_probleme": [
+   "XL: Einstieg S.1 – Fließtext wird vom Seitenindikator überdeckt und abgeschnitten („– Karten, Codes, Stadtgutscheine“ unlesbar unter den Punkten), trotz ‚scrollbarer Seiten‘",
+   "XL: Verfallsradar – Jahreslabels kollidieren („20292030“ ohne Abstand), in XL_01_start zusätzlich unter der Tab-Leiste",
+   "Verfallsradar ist ein weißes Rechteck (rect cornerRadius) ohne Kerben/Abrisslinie – visuell ein generisches Chart-Widget, kein Ticket",
+   "Radar: IKEA-Kachel wird von Zalando (roter Ring) zu ~50 % verdeckt, das Logo ist angeschnitten; Stapelung wirkt wie Überlappungsfehler statt wie Stapel",
+   "Wortmarke springt beim Übergang Einstieg → Start: x 17,7 pt → 21,7 pt (+4 pt), Oberkante 82,3 pt → 74,3 pt (−8 pt)",
+   "Einstieg: Anker nicht stabil – Headline-Oberkante 499–565 pt über die 4 Seiten, Pager+CTA auf S.4 ca. 36 pt höher als auf S.1–3",
+   "Einstieg S.2–S.4 verwenden weiße Standard-Karten statt Tickets; nur S.1 zeigt die Signatur",
+   "Einstieg S.4: Aktion doppelt – Kacheln ‚Karte scannen/Code eintippen‘ UND Button ‚Gutschein hinzufügen‘",
+   "Typografie der Texte: gerade Apostrophe „Los geht's“, „bevor's“ statt typografischem ’"
+  ],
+  "scroll_befund": "Start: Wortmarke und Suche bleiben beim Scrollen fest, Inhalte laufen sauber mit Blur darunter (S_start_1); am Ende minimiert sich die Tab-Leiste auf das Haus-Symbol (S_start_2_ende), „Alle Ablauftermine“ bleibt erreichbar. Detail-Ende (S_detail_ende): Einlöse-Verlauf als Kassenbon mit Zackenkante – bester Markenmoment unterhalb der Falz; Ticket-Kopf verschwindet halbtransparent hinter der Statusleiste, leicht unruhig. Läden-Mitte (S_laeden_mitte): Titel+Suche fest, Liste läuft darunter, keine Sprünge.",
+  "messungen": [
+   {
+    "was": "Wortmarken-Punkt Farbe",
+    "screen": "L_01_start / L_00_onboarding1",
+    "wert": "#FFD84D (255,216,77), Ø 9,3–9,7 pt",
+    "soll/erwartung": "#FFD84D identisch",
+    "ok": true
+   },
+   {
+    "was": "Papierhintergrund",
+    "screen": "L_01_start",
+    "wert": "#F6F4EF",
+    "soll/erwartung": "#F6F4EF",
+    "ok": true
+   },
+   {
+    "was": "Wortmarke linke Kante",
+    "screen": "L_00_onboarding1 vs L_01_start",
+    "wert": "17,7 pt vs 21,7 pt",
+    "soll/erwartung": "identisch, damit der Übergang ruhig bleibt",
+    "ok": false
+   },
+   {
+    "was": "Wortmarke Oberkante",
+    "screen": "L_00_onboarding1 vs L_01_start",
+    "wert": "82,3 pt vs 74,3 pt",
+    "soll/erwartung": "identisch",
+    "ok": false
+   },
+   {
+    "was": "Headline-Oberkante über 4 Einstiegsseiten",
+    "screen": "L_00_onboarding1–4",
+    "wert": "524 / 565 / 546 / 499 pt",
+    "soll/erwartung": "feste Grundlinie (Abweichung ≤ 4 pt)",
+    "ok": false
+   },
+   {
+    "was": "Kontrast „noch 24 Tage“ Orange #B76410 auf Weiß",
+    "screen": "L_01_start / L_radar",
+    "wert": "4,19:1",
+    "soll/erwartung": "≥ 4,5:1 (Text ~15 pt semibold)",
+    "ok": false
+   },
+   {
+    "was": "Kontrast „noch 12 Tage“ Rot auf Rosa",
+    "screen": "L_01_start",
+    "wert": "4,79:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast „Nur Beispiele…“ auf Gelb",
+    "screen": "L_01_start",
+    "wert": "7,10:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Radar-Jahreslabel",
+    "screen": "L_01_start",
+    "wert": "6,63:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast inaktive Pager-Punkte",
+    "screen": "L_00_onboarding1",
+    "wert": "1,54:1",
+    "soll/erwartung": "≥ 3:1 (Nicht-Text-Element)",
+    "ok": false
+   },
+   {
+    "was": "Kontrast „Überspringen“ / Fließtext Einstieg",
+    "screen": "L_00_onboarding1",
+    "wert": "10,28:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Amazon-Kachelfarbe",
+    "screen": "L_radar / L_merchants",
+    "wert": "#232F3E, Luminanz 0,027",
+    "soll/erwartung": "keine fast-schwarze Ladenfarbe (Tinte #111111 bleibt der Marke vorbehalten)",
+    "ok": false
+   },
+   {
+    "was": "Douglas vs. Stadtgutschein Kachelfarbe",
+    "screen": "L_radar",
+    "wert": "#51515A vs #52525B",
+    "soll/erwartung": "unterscheidbare Farben",
+    "ok": false
+   },
+   {
+    "was": "Radar Jahreslabels XL",
+    "screen": "XL_radar",
+    "wert": "„2029“ und „2030“ berühren sich (0 pt Abstand)",
+    "soll/erwartung": "≥ 8 pt Abstand oder Label ausdünnen",
+    "ok": false
+   },
+   {
+    "was": "XL Einstieg Fließtext",
+    "screen": "XL_00_onboarding1",
+    "wert": "4. Zeile vom Pager überdeckt",
+    "soll/erwartung": "vollständig lesbar/scrollbar",
+    "ok": false
+   },
+   {
+    "was": "Radar-Container Form",
+    "screen": "L_radar (Code ExpiryRadar.swift Z.229)",
+    "wert": ".rect(cornerRadius: Layout.cardRadius)",
+    "soll/erwartung": "TicketShape mit Kerben wie Start-Hero",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "XL_00_onboarding1",
+    "element": "Fließtext + Pager",
+    "problem": "Letzte Textzeile liegt unter den Pager-Punkten und ist unlesbar – ausgerechnet im ersten Markenmoment.",
+    "schwere": "hoch",
+    "vorschlag": "Text-Block in ScrollView mit .scrollBounceBehavior(.basedOnSize), Pager + CTA in .safeAreaInset(edge: .bottom) mit 16 pt Abstand; ab .accessibility1 Hero-Ticket auf 70 % skalieren oder ausblenden."
+   },
+   {
+    "screen": "XL_radar, XL_01_start",
+    "element": "Jahreslabels Verfallsradar",
+    "problem": "„20292030“ kollidieren; Achse skaliert nicht mit der Schrift.",
+    "schwere": "hoch",
+    "vorschlag": "Labels mit Mindestabstand 8 pt layouten, bei Kollision jedes zweite weglassen oder auf „’29“ kürzen; ab XL Radar-Höhe +40 % und Labels unter die Kachel-Reihe versetzen."
+   },
+   {
+    "screen": "L_radar, L_01_start",
+    "element": "Verfallsradar-Container",
+    "problem": "Weißes Standard-Rechteck – Fremdkörper neben dem Ticket-Hero direkt darüber. Die Idee (Zeitachse, gelbes „Heute“) ist markenstark, die Hülle nicht.",
+    "schwere": "mittel",
+    "vorschlag": "TicketShape(radius: cardRadius, notchRadius: 9) mit Abrisslinie über der Achse; unter der Linie eine Fußzeile „3 Gutscheine in den nächsten 6 Monaten · 70,00 €“ – so wird das Radar zum Ticket-Abschnitt."
+   },
+   {
+    "screen": "L_radar",
+    "element": "Kachelstapel IKEA/Zalando",
+    "problem": "IKEA zu ~50 % verdeckt, Logo angeschnitten; wirkt wie Überlappungsfehler.",
+    "schwere": "mittel",
+    "vorschlag": "Stapel mit 6 pt vertikalem Versatz statt Überdeckung, oder bei > 1 Karte im selben Monat eine Kachel + Zähler-Badge „+1“ in Tinte auf Gelb."
+   },
+   {
+    "screen": "L_00_onboarding1 → L_01_start",
+    "element": "Wortmarke",
+    "problem": "Springt um 4 pt nach rechts und 8 pt nach oben – beim Übergang sichtbar, zerstört die Kontinuität, die der Einstieg aufbaut.",
+    "schwere": "mittel",
+    "vorschlag": "Einstieg-Header auf Layout.ticketInset 20 pt links und dieselbe Top-Position wie Start setzen, idealerweise matchedGeometryEffect für Wortmarke + Hero-Ticket, damit das Ticket vom Einstieg auf den Start ‚landet‘."
+   },
+   {
+    "screen": "L_00_onboarding2–4",
+    "element": "Hero-Visuals",
+    "problem": "Nur S.1 nutzt die Ticket-Form; S.2–S.4 sind weiße Listenkarten, die man aus jeder Finanz-App kennt.",
+    "schwere": "mittel",
+    "vorschlag": "S.2: drei gefächerte Mini-Tickets in Ladenfarbe (Zalando, IKEA, Stadtgutschein) mit Kerben; S.3: Mitteilung behalten, Zalando-Karte als Ticket mit rotem Ring wie im Radar; S.4: Scan-Kachel als schwarzes Ticket wie in L_scan."
+   },
+   {
+    "screen": "L_00_onboarding1–4",
+    "element": "Layout-Anker",
+    "problem": "Headline springt zwischen 499 und 565 pt, Pager/CTA auf S.4 ca. 36 pt höher – beim Wischen wackelt die ganze Seite.",
+    "schwere": "mittel",
+    "vorschlag": "Hero-Bereich feste Höhe 300 pt, Headline-Oberkante fix, Zusatzlinks auf S.4 unter den CTA statt darüber schieben den CTA nicht."
+   },
+   {
+    "screen": "L_settings, L_merchants, L_form, L_keypad",
+    "element": "Signatur",
+    "problem": "Keine Marken-Elemente; hier fühlt sich Restwert wie eine Standard-Einstellungs-App an.",
+    "schwere": "mittel",
+    "vorschlag": "Einstellungen: Kopf-Karte „Nur auf diesem iPhone“ als kleines Ticket mit Abrisslinie und Wortmarke im Fuß (Version); Läden: Laden-Kachel mit 2 pt Kerben-Andeutung ist nicht nötig, aber Kopf mit Zählerticket „12 Läden · 5 mit Guthaben“; Ziffernblock: Betrag in SF Pro Rounded Heavy mit hochgestellten Cent „0,⁰⁰ €“ in Tinte statt grau."
+   },
+   {
+    "screen": "L_radar, L_merchants",
+    "element": "Ladenfarben",
+    "problem": "Amazon #232F3E liest sich als Schwarz; Douglas und Stadtgutschein teilen dasselbe Grau.",
+    "schwere": "niedrig",
+    "vorschlag": "Amazon auf eine aufgehellte Marine #37475A (Orange-Logo bleibt) setzen; Fallback-Farben aus einer Palette von 8 gedeckten Tönen per Hash des Ladennamens statt einem Grau."
+   },
+   {
+    "screen": "global",
+    "element": "Begriffe/Stimme",
+    "problem": "„Verfallsradar“, „Ablauftermine“, „Läuft bald ab“, „Ablauf-Erinnerungen“ – vier Namen für eine Sache.",
+    "schwere": "niedrig",
+    "vorschlag": "Einen Markenbegriff setzen: „Verfallsradar“ als Name des Features, Navigationstitel ebenfalls „Verfallsradar“, Abschnitt „Läuft bald ab“ als Unterzeile behalten, Einstellung „Erinnerungen vorm Verfall“."
+   },
+   {
+    "screen": "L_01_start, L_radar",
+    "element": "„noch 24 Tage“ Orange",
+    "problem": "Kontrast 4,19:1 auf Weiß.",
+    "schwere": "niedrig",
+    "vorschlag": "Orange auf #A35400 abdunkeln (≈ 5,0:1), im Dunkelmodus unverändert lassen."
+   },
+   {
+    "screen": "L_00_onboarding1/3",
+    "element": "Apostrophe",
+    "problem": "Gerade Apostrophe in „Los geht's“, „bevor's“ – wirkt unfertig für eine Marke, die auf Typografie setzt.",
+    "schwere": "niedrig",
+    "vorschlag": "Typografisches ’ (U+2019) verwenden: „Los geht’s“, „bevor’s“."
+   },
+   {
+    "screen": "L_00_onboarding4",
+    "element": "Doppelte Aktion",
+    "problem": "Zwei Kacheln + ein CTA mit demselben Ziel verwässern die letzte, wichtigste Aufforderung.",
+    "schwere": "niedrig",
+    "vorschlag": "Kacheln als Hero behalten und direkt antippbar machen, CTA durch „Erstmal umschauen“ als einzigen Sekundär-Button ersetzen – oder Kacheln rein illustrativ ohne Chevron."
+   }
+  ],
+  "top3": [
+   "XL-Brüche im neuen Material beheben: Einstieg S.1 Text vom Pager verdeckt, Radar-Jahreslabels kollidieren („20292030“).",
+   "Verfallsradar in die Ticket-Welt holen: TicketShape mit Kerben + Abrisslinie und eine Summen-Fußzeile, Kachelstapel ohne Verdeckung.",
+   "Einstieg als durchgehende Ticket-Geschichte: S.2–S.4 mit Tickets statt weißer Listen, feste Anker, Wortmarke exakt auf Start-Position und das Ticket per matchedGeometryEffect auf den Start ‚landen‘ lassen."
+  ],
+  "lob": [
+   "Einstieg S.1 ist markenstark: Wortmarke, gelbes Ticket mit Hochzähl-Animation und die klare Zusage „Kein Gutschein verfällt mehr.“ – das ist Headspace-Niveau an Haltung.",
+   "Das gelbe „Heute“-Pill im Radar ist eine perfekte Übersetzung des Markengelbs in Funktion; roter Ring bis 14 Tage liest sich sofort.",
+   "Kassenbon im Verlauf und Einlöse-Verlauf (Monospace, Zackenkante, Wortmarke oben) ist die beste Erweiterung der Ticket-Welt – Ticket für Wert, Bon für Vergangenheit.",
+   "Stimme sitzt: „Noch drauf“, „2 bald weg“, „Ohne Spam, versprochen“, „Nichts geht an uns“, „Kasse wollte Plastikkarte“ – knapp, warm, ehrlich, per du, ohne Duolingo-Albernheit.",
+   "Ladenfarbe = Ticketfarbe auf dem Detail funktioniert hell wie dunkel; im Dunkelmodus invertieren Hero-Ticket und Scan-Ticket sauber.",
+   "Reduce Motion und leichte Haptik im Einstieg sind im Code berücksichtigt."
+  ]
+ },
+ {
+  "persona": "Emre Yıldız, 31, iOS-Engineer & Motion-Designer (simuliert) – Referenzen Apple Music, Flighty, Ivory",
+  "fokus": "Scrollen, Navigations-Chrome (Liquid Glass), Animationen, Performance aus dem Code (Onboarding, Kasse/Abreißen, Verfallsradar, Store-Speichern, HomeView-body)",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 8,
+   "abstaende_raster": 7,
+   "hierarchie": 7,
+   "konsistenz": 7,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 6,
+   "markencharakter": 8,
+   "premium_gefuehl": 6
+  },
+  "first_impression": "Das Chrome sitzt jetzt richtig im iOS-26-Idiom: feste Wortmarke + Suchfeld, schwebende Glas-Tab-Leiste mit onScrollDown-Minimierung, Zoom-Übergang in die Karte. Aber die Bewegung ist handwerklich noch nicht auf Flighty-Niveau: Reduce Motion wird im Einstieg nur halb respektiert, das Abreißen an der Kasse schnappt beim Verlassen zurück und lässt sich doppelt auslösen, und die Scroll-Kante im Detail reicht nicht bis unter die Glasknöpfe.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Gelbes Summen-Ticket mit Kerben und Abrisslinie, Wortmarke mit gelbem Punkt fest im Kopf, Ladenfarben als Ticketfarbe im Detail, Abriss als Interaktion an der Kasse – die Metapher trägt jetzt auch in der Bewegung (Onboarding-Ticket fällt, Abrisslinie zeichnet sich, Kasse reißt ab). Das ist eigenständig.",
+  "vorrunde_behoben": [
+   "Suchfeld + Wortmarke stehen oben fest (HomeView: .searchable(.navigationBarDrawer(.always)) + Wordmark als topBarLeading) – in S_start_1/2 nachweislich fix bei 117–161 pt, Inhalt läuft darunter durch",
+   "Läden: Titel + Suche fest (S_laeden_mitte), Suchpille identisch 117–161 pt wie auf Start",
+   "Tab-Leiste: iOS-26-Glas mit .tabBarMinimizeBehavior(.onScrollDown) – S_start_1 minimiert (48-pt-Kreis), S_start_2 ausgeklappt (62 pt hoch); Plus als separates role:.search-Tab",
+   "Kasse: Knöpfe unten per safeAreaInset, echte TicketHalf-Hälften, XL untereinander (ViewThatFits) – bestätigt in L/XL_checkout",
+   "Detail: 'An der Kasse zeigen' unten fixiert (safeAreaInset, opaker Page-Hintergrund) – S_detail_ende zeigt es auch am Scroll-Ende",
+   "Speichern: JSON-Encoding + atomic write laufen jetzt auf serieller Queue (Store.io), Snapshot ist ein Werttyp → kein Data-Race; flush() beim Wechsel in den Hintergrund",
+   "Abriss-Animation respektiert Reduce Motion (tearOff: guard !reduceMotion → commit sofort)"
+  ],
+  "vorrunde_offen": [
+   "Scroll-Kante: .scrollEdgeEffectStyle(.soft) ist global gesetzt, aber auf dem Detail (Nav-Bar leer, nur zwei Glasknöpfe) ist die Kantenzone zu kurz: 'gültig bis 31.12… / noch 82x Tage' der Ladenfarbe steht lesbar hinter Uhr und Dynamic Island, und das Icon von 'Einkauf eintragen' schimmert als Fleck unter dem Zurück-Knopf durch (Knopf 62–106 pt, Kachel ab 71 pt → 35 pt Überlappung)",
+   "Unterer Abschluss Start: bei minimierter Tab-Leiste (S_start_1) 142 pt leeres Papier unter 'Alle Ablauftermine' (732→874 pt); ausgeklappt 59 pt bis zur Leiste – ok, aber am Scroll-Ende sollte die Leiste nicht minimiert bleiben",
+   "Harte Schnittkanten an opaken safeAreaInset-Leisten (Kasse XL, Detail): Inhalt verschwindet ohne Verlauf hinter Color.page – im Glas-Idiom erwartet man eine weiche untere Kante (.scrollEdgeEffectStyle(.soft, for: .bottom) / safeAreaBar)"
+  ],
+  "neue_probleme": [
+   "Onboarding + Reduce Motion: Stepper setzt step sofort auf Endwert, aber die .animation(.spring…, value: step)-Modifier sind NICHT an reduceMotion gebunden → Ticket fällt trotzdem mit Rotation aus -60 pt, Listenzeilen gleiten 60 pt von rechts, Mitteilung fällt aus -120 pt mit bounce 0.35 – nur eben alle gleichzeitig. Reduce Motion wird also nicht eingehalten.",
+   "Onboarding-Haptik: .sensoryFeedback(trigger: step == 1) bzw. (step == 3) feuert bei JEDEM Wechsel des Bool, also auch true→false. RemindPage vibriert zweimal (Schritt 1 und 350 ms später Schritt 2); WelcomePage vibriert beim Zurückwischen (Reset step 3→0).",
+   "Onboarding-Zähler: 24× withAnimation(.snappy(0.1)) im 30-ms-Takt auf AmountText mit .contentTransition(.numericText) → 24 überlappende Numeric-Text-Transitions, Ziffern verschmieren/zucken statt sauber zu rollen; zusätzlich onGeometryChange→tearY-Rückkopplung und ViewThatFits, das beide Varianten pro Frame misst.",
+   "Onboarding-Layoutsprung: Seite 4 hat drei Aktionszeilen statt zwei → TabView wird ~47 pt kürzer, Punkte springen von y≈697 auf y≈650 pt, Titel/Stage rutschen beim Wischen auf die letzte Seite hoch.",
+   "Onboarding XL: in der ScrollView-Variante läuft der Fließtext unter die Seitenpunkte ('…einlösen kannst – Karten, Codes, Stadt…' wird von den Dots überdeckt), keine untere Kante/kein Abstand.",
+   "Kasse – Abreißen schnappt zurück: tearOff ruft commit() (dismiss() bzw. Pfad-Tausch) und setzt DIREKT danach torn = false ohne Animation → während der Pop-/Push-Transition steht die untere Ticket-Hälfte plötzlich wieder da. Genau der Moment, der Premium verkaufen soll.",
+   "Kasse – Doppelauslösung: tearOff hat keinen Guard gegen erneutes Tippen. Zweimal schnell auf 'Bezahlt' innerhalb 460 ms → zweites commit sieht path.last == .pay (nicht .checkout) und hängt ein ZWEITES .pay an → Ziffernblock doppelt auf dem Stack.",
+   "Kasse – Helligkeit flackert bei Face ID: 'PIN anzeigen' ruft LAContext.evaluatePolicy → scenePhase wird .inactive → restoreScreen() dimmt auf alte Helligkeit, danach .active → wieder 1. Barcode-Screen flackert mitten an der Kasse. Außerdem Sprung auf 1.0 ohne Rampe (Wallet blendet weich).",
+   "Verfallsradar XL: Jahresbeschriftungen kollidieren – '2029' und '2030' verschmelzen (Lücke < 4 pt, gemessen), in L noch 23,7 pt Luft. Ursache: Wurzelskala staucht ferne Jahre, Labels haben feste 64-pt-Rahmen ohne Kollisionsvermeidung.",
+   "Verfallsradar: Tippziele überlappen – Spurabstand laneStep = tile·0,7 = 22,4 pt (gemessen 22 pt IKEA über Z), aber jeder Marker ist ein 44×44-Button → die obere Kachel ist zur Hälfte von der unteren verdeckt.",
+   "Barcode wird in jedem body neu gerendert: BarcodeView.body ruft BarcodeRenderer.render → CIContext.createCGImage (Code128/QR/PDF417) auf dem Main-Thread bei jeder Invalidierung (showPin-Animation, Store-Änderung, Rückkehr vom Vollbild).",
+   "Detail/Kasse: UIImage(data:) im body (CardDetailView:370, CheckoutView:166) – JPEG-Decode (900 px) auf Main bei jeder Auswertung, auch während des Zoom-Übergangs → Ruckler beim Öffnen von Papiergutscheinen.",
+   "Store.save() ist nur halb im Hintergrund: publishPins() (Schlüsselbund-Lesezugriff SecItemCopyMatching pro Karte), WidgetBridge.update (JSON-Encode + atomic write + WidgetCenter.reloadAllTimelines) und keepBrokenCopy laufen weiter synchron auf Main – bei jedem Speichern. reloadAllTimelines bei jeder Änderung frisst außerdem das Widget-Budget.",
+   "Store.save() startet jedes Mal einen neuen Task { await scheduleReminders() } – parallele Läufe verschränken sich (remove pending ↔ add), Ergebnis hängt vom Timing ab; kein Coalescing/Debounce. Jeder Save kodiert zudem alle Fotos (Data in GiftCard) komplett neu.",
+   "Kaltstart: Store.init → load() liest und dekodiert die komplette JSON inkl. Fotos synchron auf Main vor dem ersten Frame."
+  ],
+  "scroll_befund": "Start (S_start_1/2): Wortmarke + Suchpille fest (Pille 117–161 pt, 44 pt hoch), weiche Kante blendet Radar/Überschriften darüber auf ~1,1:1 aus – gut. Direkt unter der Pille stehen Zeilen aber kaum gedimmt (Zalando-Zeile bei 162–186 pt noch 5,8:1) und wirken wie von der Pille abgeschnitten; Mail/Music lösen das mit einer höheren Kantenzone. Tab-Leiste minimiert beim Runterscrollen korrekt (48-pt-Kreis + 48-pt-Plus), ausgeklappt 62 pt. Am Scroll-Ende bleibt sie minimiert und lässt 142 pt leeres Papier stehen. Detail (S_detail_ende): Kopf-Ticket in Ladenfarbe bleibt als getönter Streifen samt lesbarem Text hinter Uhr/Dynamic Island stehen; zwei Glasknöpfe liegen ohne ausreichende Kantenzone über dem Inhalt (Kachel-Icon scheint unter dem Zurück-Knopf durch). Unten harte Kante an der opaken 'An der Kasse zeigen'-Leiste (Bon-Zackenrand wird mittendrin abgeschnitten, sichtbar in L_detail). Läden (S_laeden_mitte): großer Titel + feste Suche, Inhalt dahinter sauber ausgeblendet (~1,14:1) – bestes Scroll-Verhalten der App; unten minimierte Leiste über teilweise gedimmtem Inhalt, korrekt.",
+  "messungen": [
+   {
+    "was": "Suchpille Start fest (Oberkante/Unterkante)",
+    "screen": "S_start_1 vs L_01_start",
+    "wert": "117–161 pt in beiden",
+    "soll/erwartung": "identische Position gescrollt/ungescrollt",
+    "ok": true
+   },
+   {
+    "was": "Suchpille Läden",
+    "screen": "S_laeden_mitte",
+    "wert": "117–161 pt",
+    "soll/erwartung": "gleich wie Start",
+    "ok": true
+   },
+   {
+    "was": "Tab-Leiste ausgeklappt Höhe",
+    "screen": "S_start_2_ende",
+    "wert": "62 pt (791–853 pt)",
+    "soll/erwartung": "iOS-26-Standard ~62 pt",
+    "ok": true
+   },
+   {
+    "was": "Tab-Leiste minimiert",
+    "screen": "S_start_1",
+    "wert": "48 pt Kreis (798–846 pt), Plus 48 pt",
+    "soll/erwartung": "≥44 pt Tippziel",
+    "ok": true
+   },
+   {
+    "was": "Leerraum unter letztem Element bei minimierter Leiste",
+    "screen": "S_start_1",
+    "wert": "142 pt (732→874 pt)",
+    "soll/erwartung": "am Scroll-Ende Leiste ausklappen oder ≤ 60 pt",
+    "ok": false
+   },
+   {
+    "was": "Abstand letztes Element → Tab-Leiste ausgeklappt",
+    "screen": "S_start_2_ende",
+    "wert": "59 pt",
+    "soll/erwartung": "24–60 pt",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Inhalt direkt unter Suchpille",
+    "screen": "S_start_1",
+    "wert": "5,8:1 (Zalando-Zeile 162–186 pt)",
+    "soll/erwartung": "weiche Kante sollte bis ~16 pt unter die Pille reichen (<2:1)",
+    "ok": false
+   },
+   {
+    "was": "Kontrast Geisterinhalt hinter Wortmarke/Statusleiste",
+    "screen": "S_start_1 / S_laeden_mitte",
+    "wert": "1,08:1 bzw. 1,14:1",
+    "soll/erwartung": "< 1,5:1",
+    "ok": true
+   },
+   {
+    "was": "Ladenfarbe unter Statusleiste (Detail)",
+    "screen": "S_detail_ende",
+    "wert": "Streifen #D2DDD7 bleibt stehen, Text 'gültig bis 31.12' / 'noch 82x Tage' lesbar hinter Uhr",
+    "soll/erwartung": "vollständig ausgeblendet/geblurrt",
+    "ok": false
+   },
+   {
+    "was": "Überlappung Zurück-Knopf über Aktionskachel",
+    "screen": "S_detail_ende",
+    "wert": "Knopf 62–106 pt, Kachel ab 71 pt → 35 pt Überlappung, Icon scheint durch",
+    "soll/erwartung": "Kantenzone deckt Knopfbereich ab",
+    "ok": false
+   },
+   {
+    "was": "Radar-Jahreslabel-Abstand 2029↔2030",
+    "screen": "L_01_start",
+    "wert": "23,7 pt",
+    "soll/erwartung": "≥ 8 pt",
+    "ok": true
+   },
+   {
+    "was": "Radar-Jahreslabel-Abstand 2029↔2030",
+    "screen": "XL_radar",
+    "wert": "< 4 pt (verschmolzen '20292030')",
+    "soll/erwartung": "≥ 8 pt oder Label ausblenden",
+    "ok": false
+   },
+   {
+    "was": "Radar Spurabstand vs. Tippziel",
+    "screen": "L_01_start + Code",
+    "wert": "22,4 pt Spur, 44-pt-Buttons",
+    "soll/erwartung": "Tippziele nicht überlappend",
+    "ok": false
+   },
+   {
+    "was": "Onboarding Punkte-Position Seite 1 vs 4",
+    "screen": "L_00_onboarding1/4",
+    "wert": "≈697 pt vs ≈650 pt (47 pt Sprung)",
+    "soll/erwartung": "0 pt – fester Aktionsbereich",
+    "ok": false
+   },
+   {
+    "was": "Reduce Motion Onboarding",
+    "screen": "OnboardingView.swift (Code)",
+    "wert": "Springs laufen weiter (Ticket -60 pt, Zeilen +60 pt, Mitteilung -120 pt)",
+    "soll/erwartung": "keine Bewegung, nur Einblenden",
+    "ok": false
+   },
+   {
+    "was": "Abriss-Dauer",
+    "screen": "CheckoutView.swift (Code)",
+    "wert": "easeIn 0,42 s, commit nach 0,46 s",
+    "soll/erwartung": "0,3–0,5 s",
+    "ok": true
+   },
+   {
+    "was": "Abriss Wiederholungsschutz",
+    "screen": "CheckoutView.swift (Code)",
+    "wert": "kein Guard → doppeltes .pay möglich",
+    "soll/erwartung": "guard !torn",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "Onboarding (Code)",
+    "element": "Reduce Motion",
+    "problem": "Nur der Stepper kennt reduceMotion; die .animation(.spring…, value: step)-Modifier und offset/rotation-Startwerte laufen trotzdem.",
+    "schwere": "hoch",
+    "vorschlag": "In jeder Seite `let anim: Animation? = reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.3)` und offset/rotation bei reduceMotion fest auf 0 setzen; höchstens `.opacity` mit `.easeOut(duration: 0.2)` überblenden."
+   },
+   {
+    "screen": "Checkout (Code)",
+    "element": "tearOff",
+    "problem": "torn = false direkt nach commit() lässt die Hälfte während der Navigations-Transition zurückschnappen; kein Schutz gegen Doppeltippen.",
+    "schwere": "hoch",
+    "vorschlag": "`guard !torn else { return }` am Anfang; torn nach commit NICHT zurücksetzen (View verschwindet ohnehin) oder erst in .onDisappear; Knopf während torn `.disabled(true)`."
+   },
+   {
+    "screen": "Checkout (Code)",
+    "element": "Helligkeit + scenePhase",
+    "problem": "Face-ID-Dialog setzt scenePhase .inactive → Helligkeit fällt ab und springt zurück; Wechsel ohne Rampe.",
+    "schwere": "mittel",
+    "vorschlag": "restoreScreen() nur bei `.background`, nicht `.inactive`; Helligkeit über 0,25 s in 10 Schritten rampen (CADisplayLink/Task)."
+   },
+   {
+    "screen": "S_detail_ende",
+    "element": "Scroll-Kante oben",
+    "problem": "Ladenfarbe + Text bleiben hinter Statusleiste lesbar, Kachel-Icon scheint unter Glasknopf durch.",
+    "schwere": "mittel",
+    "vorschlag": "Knöpfe als echte ToolbarItems (topBarLeading/Trailing) statt Overlay, damit die System-Kantenzone ~100 pt hoch wird; alternativ `.scrollEdgeEffectStyle(.hard, for: .top)` auf dem Detail oder `.safeAreaBar(edge: .top)` mit 56 pt Höhe."
+   },
+   {
+    "screen": "L_detail / XL_checkout",
+    "element": "Untere Aktionsleiste",
+    "problem": "Opake Color.page-Fläche schneidet Inhalt hart ab (Bon-Zacken, PIN-Knopf halbiert).",
+    "schwere": "mittel",
+    "vorschlag": "`.safeAreaBar(edge: .bottom)` statt safeAreaInset + Hintergrund, plus `.scrollEdgeEffectStyle(.soft, for: .bottom)`; sonst 24-pt-Verlauf page→transparent über der Leiste."
+   },
+   {
+    "screen": "XL_radar / XL_01_start",
+    "element": "Radar-Jahreslabels",
+    "problem": "'2029' und '2030' kollidieren (<4 pt) wegen Wurzelskala.",
+    "schwere": "mittel",
+    "vorschlag": "Beim Platzieren Labelbreiten messen und Label überspringen, wenn Abstand < Breite + 8 pt; bei XL zweistellig ('’29') oder nur jedes zweite Jahr."
+   },
+   {
+    "screen": "L_01_start (Radar)",
+    "element": "Marker-Tippziele",
+    "problem": "44-pt-Buttons bei 22,4 pt Spurabstand überlappen; obere Kachel schwer treffbar.",
+    "schwere": "mittel",
+    "vorschlag": "Tippfläche auf sichtbare Kachel + 6 pt begrenzen und gestapelte Kacheln per Tap aufklappen (Popover mit Liste), oder laneStep = tile + 4 pt."
+   },
+   {
+    "screen": "Onboarding (Code)",
+    "element": "sensoryFeedback-Trigger",
+    "problem": "Bool-Trigger feuert bei true→false erneut (doppelte Haptik, Haptik beim Zurückwischen).",
+    "schwere": "mittel",
+    "vorschlag": "`.sensoryFeedback(.impact(weight: .light), trigger: step) { _, new in new == 3 }` (Condition-Variante)."
+   },
+   {
+    "screen": "Onboarding (Code)",
+    "element": "Betragszähler",
+    "problem": "24 überlappende numericText-Transitions à 30 ms.",
+    "schwere": "niedrig",
+    "vorschlag": "Einmal `withAnimation(.snappy(duration: 0.8)) { amount = total }` und numericText rollen lassen, oder TimelineView ohne contentTransition."
+   },
+   {
+    "screen": "L_00_onboarding4",
+    "element": "Aktionsbereich",
+    "problem": "Dritte Zeile auf Seite 4 verschiebt Punkte und Inhalt um 47 pt.",
+    "schwere": "niedrig",
+    "vorschlag": "Aktionsbereich mit fester Höhe für 3 Zeilen (2× hidden Platzhalter auf Seiten 1–3) oder 'Wiederherstellen' in die Kopfzeile."
+   },
+   {
+    "screen": "XL_00_onboarding1",
+    "element": "Scrollbarer Text",
+    "problem": "Fließtext läuft unter die Seitenpunkte, abgeschnitten ohne Kante.",
+    "schwere": "mittel",
+    "vorschlag": "`.contentMargins(.bottom, 24)` + `.scrollEdgeEffectStyle(.soft, for: .bottom)` auf der ScrollView-Variante; Punkte mit 12 pt Abstand darunter."
+   },
+   {
+    "screen": "Detail/Kasse (Code)",
+    "element": "Barcode & Foto im body",
+    "problem": "CIContext.createCGImage und UIImage(data:) bei jeder body-Auswertung auf Main.",
+    "schwere": "mittel",
+    "vorschlag": "Ergebnis per @State/.task(id: number+format) einmal rendern bzw. NSCache<NSString, UIImage> im BarcodeRenderer; Foto via `UIImage.preparingThumbnail(of:)` im Task dekodieren."
+   },
+   {
+    "screen": "Store (Code)",
+    "element": "save()",
+    "problem": "Keychain (publishPins), Widget-Encode/-Write/reloadAllTimelines laufen synchron auf Main; scheduleReminders-Tasks überlappen; jedes Speichern kodiert alle Fotos.",
+    "schwere": "mittel",
+    "vorschlag": "Saves 300 ms debouncen (ein laufender Task, der neu gestartet wird), publishPins nur für geänderte IDs, Widget-Update in denselben io-Block, reloadAllTimelines nur wenn Widget-Snapshot sich ändert; Fotos als eigene Dateien statt in der JSON."
+   },
+   {
+    "screen": "HomeView (Code)",
+    "element": "body-Berechnungen",
+    "problem": "matches() ruft pro Karte activeFilter → offeredFilters → owners (Set + sort über alle Karten); sorted/rest/done werden pro body 4–6× neu sortiert/gefiltert, store.activeCards sortiert bei jedem Zugriff (3×). O(n²) pro Tastendruck in der Suche.",
+    "schwere": "niedrig",
+    "vorschlag": "Am body-Anfang einmal `let f = activeFilter; let q = trimmedQuery; let all = store.cards(sortedBy: order).filter{…}` berechnen und rest/done/dueSoon daraus ableiten; ab ~100 Karten LazyVStack."
+   }
+  ],
+  "top3": [
+   "Kasse: Abreißen gegen Doppeltippen sichern und nicht nach commit zurückschnappen lassen (guard !torn, kein torn=false) – sonst doppelter Ziffernblock und sichtbarer Glitch im Signature-Moment.",
+   "Reduce Motion im Onboarding wirklich einhalten (Springs/Offsets an reduceMotion binden) und die doppelten Haptiken per Condition-Trigger beheben.",
+   "Scroll-Kanten konsistent machen: Detail-Knöpfe als echte Toolbar-Items für eine volle Kantenzone oben, unten safeAreaBar + weiche Kante statt harter Color.page-Leiste; Tab-Leiste am Scroll-Ende nicht minimiert lassen."
+  ],
+  "lob": [
+   "Läden-Screen: großer Titel + feste Suche + sauberes Ausblenden (1,14:1) – das ist echtes iOS-26-Chrome.",
+   "Zoom-Übergang Liste→Detail (matchedTransitionSource + .navigationTransition(.zoom)) und Tab-Minimierung onScrollDown sind korrekt eingesetzt.",
+   "Speichern auf serieller Queue mit Werttyp-Snapshot ist thread-sicher, Reihenfolge garantiert, flush beim Backgrounding – sauberer Schritt.",
+   "Abriss-Timing (easeIn 0,42 s, 9° um topLeading, Haptik .medium) hat genau die richtige Physik; Onboarding-Choreografie (Ticket fällt, Linie zeichnet sich von links, Abschnitt blendet nach) ist markentreu.",
+   "Verfallsradar skaliert sinnvoll (Monat/Quartal/Jahr, Wurzelskala, ScaledMetric mit Deckel 46 pt) und landet gestaffelt mit 80-ms-Versatz."
+  ]
+ },
+ {
+  "persona": "Aiko Tanaka, 27, Product Designerin, nur Dunkelmodus, empfindlich für matschige Farben (Referenzen: Halide, Apollo, Craft)",
+  "fokus": "Dunkelmodus: jeder D_-Screen gegen L_ – Schatten, Schalter, Ladenkacheln, Radar, Flächenhierarchie, Grautemperatur",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 8,
+   "farbe": 7,
+   "abstaende_raster": 7,
+   "hierarchie": 7,
+   "konsistenz": 7,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 7,
+   "markencharakter": 7,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Der Dunkelmodus ist jetzt ein eigenes, warmes Tintenschwarz (#141311) mit gelbem Ticket – das wirkt eher nach Craft als nach umgefärbtem Systemgrau. Aber der Schatten-Token ist auf Tickets ohne compositingGroup gesetzt, und im Einstieg legt sich deshalb ein senfbrauner Hof um die große Zahl – genau die Matschfarbe, die ich nicht sehen will.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Gelbes Ticket mit Kerben und Abrisslinie bleibt im Dunkeln unverändert gelb (#F5CE3E) mit Tinte darauf, Wortmarke + gelber Punkt auf Start, Onboarding und Bon. Im Dunkeln wird der Hauptknopf allerdings Papierweiß (#F2F0EA) statt Tinte – das trägt die Marke, das Scan-Ticket kippt aber zur hellen Fläche.",
+  "vorrunde_behoben": [
+   "Schatten dunkel = echtes Schwarz: Kasse-Ticket-Schatten unten #0E0E0C → #131210 auf Seite #141311, kein grauer Schimmer mehr",
+   "Schalter grün: toggleOn gemessen hell #1F7A4D, dunkel #34A76E, weißer Knopf klar erkennbar (Spur/Fläche 5,5:1)",
+   "Flächen warm: page #141311, surface #1E1D1B, fill #2A2926, line #34322E – alle leicht warm, keine #1C1C1E-Systemflächen mehr",
+   "Ladenfarbe nie Schwarz: Douglas/Stadtgutschein #52525B statt Fast-Schwarz, in der Läden-Liste klar sichtbar",
+   "Ladenkacheln in der Liste mit heller Innenkante (#38424D um Amazon #232F3E) – dunkle Marken verschwinden dort nicht",
+   "Status-Farben für Dunkel eigens angehoben: soon #FFB340 9,4:1, good #4CC38A 7,6:1, bad #FF7A70 6,6:1 auf surface",
+   "Barcode im Dunkeln auf reinem Weiß (#FFFFFF) mit 23,7 pt Ruhezone – scanbar"
+  ],
+  "vorrunde_offen": [
+   "Grautemperatur gemischt: muted #A8A8AE ist kühl (B>R), ink2 #CFCDC6 und Flächen warm; Schalter-Aus-Spur #5A5A5E und Segment-Auswahl #6A696E sind System-Kaltgrau",
+   "Flächenhierarchie flach: surface/page nur 1,10:1, fill/surface 1,16:1 – Karten ohne sichtbaren Schatten (Start-Ticket/Radar-Karte haben keinen messbaren Schatten) heben sich kaum ab",
+   "Segmented Control im Formular bleibt Systemkomponente (kaltes Grau), passt nicht zu FilterChip",
+   "Warn-Pill dunkel (#884943 gemessen aus 12 % Rot) wirkt rostbraun, hell dagegen rosa – nicht dieselbe Anmutung"
+  ],
+  "neue_probleme": [
+   "Onboarding dunkel: Schatten auf ganzem Ticket ohne compositingGroup → jeder Text wirft 45 % Schwarz-Schatten aufs Gelb; um „136,“ fällt Gelb von #F5CE3E auf #D6B436 (Senf), sichtbarer brauner Hof. Hell nur #F9D34B (kaum sichtbar)",
+   "Detail-Ticket (MerchantMark.swift ~Z.204) gleiches Muster: Teal um den Betrag #1E6E6B → #1B6663, dunkle Wolken um Text und Logo",
+   "Radar dunkel: Kacheln bekommen 2 pt Ring in surface-Farbe + schwarzen Schatten; Amazon #212C3A auf Karte #1E1D1B = 1,1:1, nur das orange „a“ ist sichtbar – die helle Innenkante aus der Liste fehlt hier (inkonsistent)",
+   "Ticket-Kontur Color.ink.opacity(0.08): im Dunkeln ist ink hell → heller Haarstrich um farbige Tickets statt dunkler Kante",
+   "Scan-Hero invertiert im Dunkeln zur größten hellen Fläche des Screens (#F2F0EA, ~148 pt hoch) – blendet, wirkt wie ein Lichtkasten",
+   "Barcode-Weißfläche an der Kasse dunkel mit eckigen Kanten (kein Radius) in einem Ticket mit Radius – harter Bruch"
+  ],
+  "scroll_befund": "S_detail_ende (hell): Inhalt läuft unter die Statusleiste, „gültig bis 31.12…“/„noch 826 Tage“ überlagern Uhrzeit und Status-Icons bei weicher Kante – unruhig. Unten endet der scrollende Inhalt hart ohne Verlauf über dem fixierten „An der Kasse zeigen“: im Dunkeln bleibt ein 10 pt Zickzack-Streifen (#1F1E1A) wie abgeschnitten stehen. Dunkle Scroll-Screenshots fehlen im Material, daher für D nur aus D_detail/D_pending ableitbar.",
+  "messungen": [
+   {
+    "was": "Seite/Fläche/Füllung dunkel",
+    "screen": "D_01_start",
+    "wert": "#141311 / #1E1D1B / #2A2926",
+    "soll/erwartung": "warmes Tintenschwarz, 3 Stufen",
+    "ok": true
+   },
+   {
+    "was": "Kontrast surface/page",
+    "screen": "D_01_start",
+    "wert": "1,10:1",
+    "soll/erwartung": "≥1,2:1 oder Kante/Schatten",
+    "ok": false
+   },
+   {
+    "was": "Schalter an",
+    "screen": "D_settings",
+    "wert": "#34A76E (hell #1F7A4D)",
+    "soll/erwartung": "grün, Knopf sichtbar",
+    "ok": true
+   },
+   {
+    "was": "Schalter aus Spur",
+    "screen": "D_settings",
+    "wert": "#5A5A5E, 2,45:1 auf surface, kalt",
+    "soll/erwartung": "warmes Grau z. B. #4A4844",
+    "ok": false
+   },
+   {
+    "was": "Schatten unter Kasse-Ticket",
+    "screen": "D_checkout",
+    "wert": "#0E0E0C → #131210",
+    "soll/erwartung": "schwarz, nicht grau",
+    "ok": true
+   },
+   {
+    "was": "Gelb neben Betragsziffern",
+    "screen": "D_00_onboarding1",
+    "wert": "#D6B436 statt #F5CE3E (−13 % Helligkeit)",
+    "soll/erwartung": "reines Gelb, kein Senf",
+    "ok": false
+   },
+   {
+    "was": "Teal neben Betragsziffern",
+    "screen": "D_detail",
+    "wert": "#1B6663 statt #1E6E6B",
+    "soll/erwartung": "ungestörte Ladenfarbe",
+    "ok": false
+   },
+   {
+    "was": "Amazon-Kachel im Radar",
+    "screen": "D_01_start",
+    "wert": "#212C3A auf #1E1D1B = 1,1:1, Ring #1E1D1B",
+    "soll/erwartung": "Kante ≥3:1 wie in Liste (#38424D)",
+    "ok": false
+   },
+   {
+    "was": "Amazon-Kachel in Läden",
+    "screen": "D_merchants",
+    "wert": "Innenkante #38424D/#3C4653",
+    "soll/erwartung": "sichtbare Kontur",
+    "ok": true
+   },
+   {
+    "was": "muted auf surface",
+    "screen": "D_merchants",
+    "wert": "#A8A8AE 7,1:1",
+    "soll/erwartung": "≥4,5:1",
+    "ok": true
+   },
+   {
+    "was": "soon auf surface",
+    "screen": "D_01_start",
+    "wert": "#FFB340 9,4:1",
+    "soll/erwartung": "≥4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Hauptknopf dunkel",
+    "screen": "D_detail",
+    "wert": "#F2F0EA mit #111111, 16,6:1",
+    "soll/erwartung": "≥4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Tinte auf Gelb dunkel",
+    "screen": "D_01_start",
+    "wert": "#111111 auf #F5CE3E 12,4:1",
+    "soll/erwartung": "≥7:1",
+    "ok": true
+   },
+   {
+    "was": "Barcode-Weißfläche",
+    "screen": "D_checkout",
+    "wert": "x 32–370 pt, Ruhezone 23,7 pt, Ecken 0 pt Radius",
+    "soll/erwartung": "Ruhezone ≥10× Modul, Radius ~8 pt",
+    "ok": false
+   },
+   {
+    "was": "Scan-Hero dunkel",
+    "screen": "D_scan",
+    "wert": "#F2F0EA (hell #111111)",
+    "soll/erwartung": "dunkles Ticket #2A2926 oder Gelb",
+    "ok": false
+   },
+   {
+    "was": "Tab-Auswahl",
+    "screen": "D_01_start",
+    "wert": "#43423F auf #22211E",
+    "soll/erwartung": "klar unterscheidbar",
+    "ok": true
+   }
+  ],
+  "issues": [
+   {
+    "screen": "D_00_onboarding1 (+ alle Onboarding-Tickets, D_detail, D_pending, D_paper)",
+    "element": "Ticket-Schatten",
+    "problem": ".shadow(Color.shade) sitzt auf dem ganzen Ticket ohne .compositingGroup(); im Dunkeln (Schwarz 45 %) schattiert jeder Glyph auf die Fläche → Senf-Hof um „136,“ (#D6B436), dunkle Wolken auf Teal",
+    "schwere": "hoch",
+    "vorschlag": ".compositingGroup() vor .shadow in OnboardingView (Z. 206/264/307/345/372/423) und MerchantMark (Z. 204), wie in CheckoutView Z. 220; oder Schatten nur auf die Hintergrundform: .background(shape.fill(..).shadow(...))"
+   },
+   {
+    "screen": "D_01_start / D_radar",
+    "element": "Radar-Kacheln",
+    "problem": "2 pt Ring in surface-Farbe verschluckt dunkle Marken (Amazon 1,1:1); Kachelstapel D/€ nur über schwarzen Schatten getrennt",
+    "schwere": "mittel",
+    "vorschlag": "Im Dunkeln dieselbe Innenkante wie in der Liste: strokeBorder(.white.opacity(0.18), 1 pt) innen + Außenring Color.page statt surface; Schatten radius 4 → 2"
+   },
+   {
+    "screen": "D_detail, D_paper",
+    "element": "Ticket-Kontur",
+    "problem": "Color.ink.opacity(0.08) ist im Dunkeln ein heller Strich (ink = #F2F0EA)",
+    "schwere": "niedrig",
+    "vorschlag": "Kontur Color(light: 0x111111 @8 %, dark: 0x000000 @30 %) oder white 6 % nur innen"
+   },
+   {
+    "screen": "D_settings, D_form",
+    "element": "Schalter-Aus-Spur, Segmented Control",
+    "problem": "Systemgrau #5A5A5E / #6A696E ist kalt neben warmen Flächen",
+    "schwere": "mittel",
+    "vorschlag": "Eigenen Token toggleOff (dark #3A3834, light #D9D5CC); Segment durch FilterChip-Gruppe ersetzen, Auswahl ink/onInk"
+   },
+   {
+    "screen": "global dunkel",
+    "element": "muted",
+    "problem": "#A8A8AE kühl, ink2 #CFCDC6 warm – zwei Temperaturen in einer Zeile (z. B. Kartenzeilen)",
+    "schwere": "niedrig",
+    "vorschlag": "muted dark → #ABA8A0 (Kontrast bleibt ~7:1 auf #1E1D1B); hell #5C5C63 → #5F5C55"
+   },
+   {
+    "screen": "D_01_start, D_radar",
+    "element": "Flächenhierarchie",
+    "problem": "Karte zu Seite 1,10:1 und schwarzer Schatten auf fast Schwarz unsichtbar – Karten schwimmen",
+    "schwere": "mittel",
+    "vorschlag": "surface dark #211F1C, dazu 0,5 pt Innenkante white 5 % (Apollo/Craft-Prinzip) statt Schatten"
+   },
+   {
+    "screen": "D_scan",
+    "element": "Karte-scannen-Ticket",
+    "problem": "Invertiert zu hellster Fläche (#F2F0EA), blendet im Dunkeln",
+    "schwere": "mittel",
+    "vorschlag": "Im Dunkeln Gelb #F5CE3E mit Tinte (ist die Hauptaktion) oder fill #2A2926 mit ink-Text; nie Papierweiß als 148-pt-Block"
+   },
+   {
+    "screen": "D_checkout",
+    "element": "Barcode-Weißfläche",
+    "problem": "Eckige Weißfläche im runden Ticket",
+    "schwere": "niedrig",
+    "vorschlag": "RoundedRectangle 12 pt continuous, 16 pt Innenabstand beibehalten"
+   },
+   {
+    "screen": "D_detail / S_detail_ende",
+    "element": "Scroll-Ende über fixiertem Knopf",
+    "problem": "Harte Schnittkante, Zickzack-Rest bleibt stehen",
+    "schwere": "niedrig",
+    "vorschlag": "safeAreaInset mit 24 pt Verlauf von page 0 %→100 % hinter dem Knopf"
+   },
+   {
+    "screen": "D_01_start",
+    "element": "Warn-Pill",
+    "problem": "12 % Rot auf Dunkel ergibt rostbraun #884943 – matschig",
+    "schwere": "niedrig",
+    "vorschlag": "warnSoft dark als feste Farbe #3D1714 (badSoft) statt Opacity"
+   }
+  ],
+  "top3": [
+   "compositingGroup vor jeden Ticket-Schatten – im Dunkeln entsteht sonst Senf um die Beträge (#F5CE3E → #D6B436)",
+   "Radar-Kacheln im Dunkeln mit heller Innenkante wie in der Läden-Liste; Amazon ist sonst 1,1:1 unsichtbar",
+   "Kalte Systemgraus (Schalter-Aus #5A5A5E, Segment #6A696E, muted #A8A8AE) auf warme Tokens umstellen und Kartenkante statt unsichtbarem Schatten"
+  ],
+  "lob": [
+   "Warmes Tintenschwarz #141311 mit 3 Flächenstufen – kein Systemgrau mehr",
+   "Schalter grün #34A76E: Knopf sichtbar, klar besser als die Vorrunde",
+   "Schatten im Dunkeln wirklich schwarz (Kasse #0E0E0C) statt grau",
+   "Gelbes Summen-Ticket bleibt im Dunkeln gelb und leuchtend, Tinte 12,4:1",
+   "Bon (Verlauf) im Dunkeln als dunkles Papier #24221E mit Zickzack – sehr schön, wie Halide-Details",
+   "Status-Farben für Dunkel bewusst angehoben, alle ≥6,6:1"
+  ]
+ },
+ {
+  "persona": "Helga Brandt, 58, Accessibility-Auditorin (BITV/WCAG), selbst sehbehindert, nutzt große Schrift und VoiceOver",
+  "fokus": "Barrierefreiheit: alle XL_-Screens (Onboarding, Start, Radar, Detail, Kasse, Ziffernblock, Formular, Läden) auf Abschneidungen, Umbrüche, Überlappungen, Tippziele und Kontraste; Code: Labels, Überschriften-Traits, Reduce Motion",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 7,
+   "abstaende_raster": 7,
+   "hierarchie": 8,
+   "konsistenz": 7,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 6,
+   "markencharakter": 7,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Bei großer Schrift ist die App spürbar erwachsener geworden: Die Kasse stapelt die Knöpfe sauber, Detail und Formular wachsen ohne Abschneiden mit, und die Farbtokens halten durchweg AA. Die neuen Bausteine, also der Einstieg und das Verfallsradar, bringen aber genau die Fehler zurück, die in der Vorrunde behoben wurden: abgeschnittener Text, kollidierende Beschriftungen und Tippziele, die sich überlappen.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Auch bei XL bleiben das gelbe Ticket mit Kerben und Abrisslinie, die Wortmarke mit Punkt und die Betragsschrift mit hochgestellten Cent erhalten. Die Marke überlebt große Schrift, was selten ist.",
+  "vorrunde_behoben": [
+   "Kasse XL: „Bezahlt – Betrag eintragen“, „Nicht angenommen“ und „Später eintragen“ stehen untereinander und sind ohne Scrollen sichtbar (XL_checkout).",
+   "Stempel-Animation respektiert Reduce Motion (CardDetailView.swift:472–476), die Kasse ebenfalls (CheckoutView.swift:227). Radar-Kacheln fallen bei Reduce Motion nicht (ExpiryRadar.swift:86–87), die Onboarding-Stepper springen sofort ans Ende.",
+   "Ziffernblock: Eine Ablehnung bei 0 € wird jetzt angesagt (AccessibilityNotification.Announcement), die Anzeige hat accessibilityLabel „Betrag“ und accessibilityValue.",
+   "Überschriften-Traits gibt es jetzt auch für die Home-Abschnitte (HomeView:133/215), Läden (MerchantsView:91), Verfallsradar und Onboarding-Titel.",
+   "FilterChip ist einheitlich: minHeight 44, .isSelected-Trait, Tinte/Fläche. Gemessen: „Alle“-Chip 44 pt hoch (XL_merchants).",
+   "Kontraste der Tokens: muted/page 6,03:1, ink2/page 10,28:1, soon/surface 4,80:1, disabledText/disabledFill 5,04:1, dunkel muted/page 7,85:1, weiß auf Thalia-Petrol 5,93:1, alles ≥ 4,5:1.",
+   "Detail XL: „An der Kasse zeigen“ ist unten fixiert und 57 pt hoch, der Betrag ist nicht abgeschnitten."
+  ],
+  "vorrunde_offen": [
+   "Ziffernblock: Die Ziffern wachsen nicht mit (Text .system(size: 28), ⌫ .system(size: 22), CheckoutView.swift:396–399). Gemessen hat die Ziffer 20 pt Versalhöhe, bei XL genauso wie bei L. Es ist der einzige Bedienteil ohne Dynamic Type.",
+   "Ziffernblock-Ansage: Nach jeder Taste sagt VoiceOver nur „5“ bzw. „Löschen“, der neue Gesamtbetrag („5,40 €“) wird nicht angesagt.",
+   "Monatsköpfe in Ablauftermine („Oktober 2026“, RadarView.swift:33) haben weiterhin kein .isHeader, dadurch fehlt die Rotor-Navigation über Monate.",
+   "Läden XL: Die Einlöse-Hinweise sind weiter abgeschnitten („Code im Amazon-Konto einlösen. Keine…“, „ausgedruckt. Online…“). Gerade diese Information fehlt dann.",
+   "PIN-Pille bzw. Foto-Pillen: Die graue Fläche #D4D4D4 hebt sich von Weiß nur mit 1,48:1 ab (WCAG 1.4.11 verlangt 3:1 für die Knopfkante)."
+  ],
+  "neue_probleme": [
+   "Onboarding XL (XL_00_onboarding1): Der Fließtext wird mitten in der Zeile horizontal abgeschnitten („– Karten, Codes, Stadtgutscheine“ ist nur zur Hälfte zu sehen), und die Seitenpunkte liegen direkt auf der Schnittkante (0 pt Abstand, Text bis y=2085 px, Punkte ab 2086 px). Die ScrollView hat .scrollIndicators(.hidden), deshalb gibt es keinen Hinweis, dass man scrollen kann.",
+   "Verfallsradar XL: Die Jahresbeschriftungen „2029“ und „2030“ kollidieren („20292030“). Gemessen 0 pt Lücke: Die Glyphen „9“ und „2“ verschmelzen zu einem Pixelband (x 917–981 px), weil die Labels .fixedSize mit festem 64-pt-Rahmen haben und keine Kollisionsprüfung stattfindet.",
+   "Verfallsradar: Die Tippziele überlappen sich. Jede Kachel ist ein 44×44-Button, die Spuren liegen aber nur laneStep = 0,7 × 46 = 32 pt übereinander und rücken horizontal ab 0,8 × 46 = 37 pt zusammen. IKEA/Zalando und Douglas/€ überdecken sich sichtbar, die effektive Trefferfläche liegt bei ca. 32 × 37 pt.",
+   "Verfallsradar VoiceOver: Das Kachel-Label nennt nur Laden und Tage („IKEA, läuft in 24 Tagen ab“), aber keinen Betrag und kein Datum. Die Achsenbeschriftungen und „Heute“ sind accessibilityHidden, deshalb fehlt jede zeitliche Einordnung außer den Tagen.",
+   "Start XL: Die Radar-Achsenbeschriftungen liegen hinter der Tab-Leiste, und die Überschrift „Läuft bald ab“ schimmert unter der Glas-Leiste durch (XL_01_start).",
+   "Kasse XL: Die Pille „PIN anzeigen“ wird vom fixierten unteren Bereich hart abgeschnitten (graue Fläche endet bei y=1919 px ohne Rundung), es gibt keinen Verlauf und keinen Scroll-Hinweis.",
+   "Ziffernblock XL: Die Pille „Alles (12,40 €)“ bricht zweizeilig um, und die Klammern stoßen an den unteren Kapselrand (0 pt vertikale Innenpolsterung, nur minHeight 44). „Neuen Stand eintragen“ hat als reiner Text keine Knopf-Kante.",
+   "Onboarding: Seitenwechsel per withAnimation(.smooth) und die Punkte-Feder (bounce 0.3) sind nicht an Reduce Motion gekoppelt. Das ist gering, aber inkonsequent zu den sonst sauberen Steppern."
+  ],
+  "scroll_befund": "Bei XL werden fast alle Screens scrollbar, und das funktioniert grundsätzlich. Kritisch sind die Übergänge an fixierten Elementen: Im Onboarding wird Text an der Seitenpunkt-Zeile mitten im Glyph abgeschnitten, und die Scrollbalken sind versteckt. In der Kasse wird die PIN-Pille flach abgeschnitten, auf dem Start liegen die Radar-Jahreszahlen und die nächste Überschrift unter der Tab-Leiste. Im Detail ragt die dritte Aktionskachel sauber unter den fixierten Knopf, das ist akzeptabel. Ein weicher Auslauf (Fade 16–24 pt) oder ein sichtbarer Scrollbalken fehlt überall. Die S_-Screens habe ich für diesen Befund nicht separat bewertet, er stützt sich auf die XL-Aufnahmen.",
+  "messungen": [
+   {
+    "was": "Abstand Fließtext-Schnittkante zu Seitenpunkten",
+    "screen": "XL_00_onboarding1",
+    "wert": "0 pt (Text bis 695 pt, Punkte ab 695 pt), Zeile halb abgeschnitten",
+    "soll/erwartung": "≥ 12 pt, keine angeschnittenen Zeilen",
+    "ok": false
+   },
+   {
+    "was": "Lücke Achsenlabel 2029 ↔ 2030",
+    "screen": "XL_radar",
+    "wert": "0 pt (Glyphen verschmolzen)",
+    "soll/erwartung": "≥ 8 pt oder Label weglassen",
+    "ok": false
+   },
+   {
+    "was": "Vertikaler Spurabstand Radar-Kacheln (Code)",
+    "screen": "XL_radar / ExpiryRadar.swift",
+    "wert": "32,2 pt (Kachel 46 pt, Hit 44 pt)",
+    "soll/erwartung": "≥ 44 pt, keine überlappenden Tippziele",
+    "ok": false
+   },
+   {
+    "was": "Radar-Kachel sichtbare Breite",
+    "screen": "XL_radar",
+    "wert": "≈ 41 pt (Thalia)",
+    "soll/erwartung": "≥ 44 pt",
+    "ok": false
+   },
+   {
+    "was": "Ziffernblock Versalhöhe Ziffer",
+    "screen": "XL_keypad vs L_keypad",
+    "wert": "20 pt bei XL = 20 pt bei L",
+    "soll/erwartung": "wächst mit Dynamic Type (≈ 30 pt bei AX3)",
+    "ok": false
+   },
+   {
+    "was": "Ziffernblock Zeilenraster",
+    "screen": "XL_keypad",
+    "wert": "62 pt pro Taste",
+    "soll/erwartung": "≥ 44 pt",
+    "ok": true
+   },
+   {
+    "was": "Tastenfläche vs. Blatt",
+    "screen": "XL_keypad",
+    "wert": "#F0EEE9 auf #FFFFFF ≈ 1,1:1",
+    "soll/erwartung": "Kante ≥ 3:1 oder bewusst ohne Kante",
+    "ok": false
+   },
+   {
+    "was": "Abziehen (deaktiviert) Text/Fläche",
+    "screen": "XL_keypad",
+    "wert": "5,04:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "„Alles“-Pille Höhe / Inhalt",
+    "screen": "XL_keypad",
+    "wert": "Kapsel ≈ 63 pt, 2 Zeilen Text, Klammern berühren den Rand",
+    "soll/erwartung": "≥ 44 pt und ≥ 8 pt Innenabstand",
+    "ok": false
+   },
+   {
+    "was": "FilterChip „Alle“ Höhe",
+    "screen": "XL_merchants",
+    "wert": "44 pt",
+    "soll/erwartung": "≥ 44 pt",
+    "ok": true
+   },
+   {
+    "was": "„An der Kasse zeigen“ Höhe",
+    "screen": "XL_detail",
+    "wert": "57,3 pt",
+    "soll/erwartung": "≥ 44 pt",
+    "ok": true
+   },
+   {
+    "was": "Foto-Pillen Höhe",
+    "screen": "XL_form",
+    "wert": "55 pt",
+    "soll/erwartung": "≥ 44 pt",
+    "ok": true
+   },
+   {
+    "was": "Foto-/PIN-Pille Fläche vs. Karte",
+    "screen": "XL_form, XL_checkout",
+    "wert": "#D4D4D4 auf Weiß 1,48:1",
+    "soll/erwartung": "≥ 3:1 (1.4.11)",
+    "ok": false
+   },
+   {
+    "was": "Tab-Leiste Beschriftung",
+    "screen": "XL_01_start vs L_01_start",
+    "wert": "7 pt Glyphhöhe, bei XL identisch",
+    "soll/erwartung": "Systemverhalten, Large Content Viewer per Long-Press (nativer Tab, ok)",
+    "ok": true
+   },
+   {
+    "was": "Kontrast muted auf page (hell)",
+    "screen": "alle",
+    "wert": "6,03:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast soon (Orange) auf surface",
+    "screen": "XL_radar „noch 24 Tage“",
+    "wert": "4,80:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast warn auf warnSoft-Pille",
+    "screen": "XL_radar „noch 12 Tage“",
+    "wert": "≈ 4,76:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast weiß auf Thalia-Petrol",
+    "screen": "XL_detail",
+    "wert": "5,93:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Gelb vs. Papier (Nicht-Text)",
+    "screen": "Onboarding/Start Ticket",
+    "wert": "1,26:1",
+    "soll/erwartung": "Ticket braucht Schatten/Kante, da Info-Träger (1.4.11)",
+    "ok": false
+   },
+   {
+    "was": "Kartenfläche vs. Papier",
+    "screen": "alle",
+    "wert": "1,10:1",
+    "soll/erwartung": "dekorativ, ok wenn Inhalt eindeutig",
+    "ok": true
+   }
+  ],
+  "issues": [
+   {
+    "screen": "XL_00_onboarding1",
+    "element": "PageFrame ScrollView + dots",
+    "problem": "Der Fließtext wird mitten in der Zeile abgeschnitten, und die Seitenpunkte liegen auf der Schnittkante. Der Scrollbalken ist versteckt, deshalb ist nicht erkennbar, dass es weitergeht. Das verletzt 1.4.10/1.4.4 praktisch.",
+    "schwere": "hoch",
+    "vorschlag": "Bei XL (dynamicTypeSize >= .accessibility1) .scrollIndicators(.visible) setzen, unten einen Fade von 24 pt per .mask(LinearGradient) einbauen, zwischen ScrollView und Punkten Layout.group (12 pt) Abstand lassen, oder die Bühne bei AX-Größen auf 60 % Höhe verkleinern bzw. ausblenden."
+   },
+   {
+    "screen": "XL_radar / XL_01_start",
+    "element": "ExpiryRadar Achsenbeschriftung",
+    "problem": "Die Jahreszahlen 2029 und 2030 stehen ohne Lücke nebeneinander. Die gestauchte Zeitachse schiebt die fernen Jahre zusammen.",
+    "schwere": "mittel",
+    "vorschlag": "Labels mit Kollisionsprüfung setzen: ein Label nur zeichnen, wenn x − lastLabelX ≥ Textbreite + 8 pt. Sonst „’30“ verwenden oder nur jedes zweite Jahr beschriften. Den festen 64-pt-Rahmen durch gemessene Breite ersetzen."
+   },
+   {
+    "screen": "XL_radar",
+    "element": "Radar-Kacheln (Buttons)",
+    "problem": "Die 44-pt-Trefferflächen überlappen sich, weil die Spuren nur 32 pt versetzt sind und horizontal ab 37 pt gestapelt wird. Wer zittert oder schlecht sieht, trifft die falsche Karte.",
+    "schwere": "mittel",
+    "vorschlag": "laneStep = max(tile * 0.7, 44) und das Stapelkriterium x − lastX ≥ 44 statt tile × 0.8 verwenden. Alternativ bei AX-Größen das Radar durch die Monatsliste ersetzen und nur als Übersicht zeigen (accessibilityHidden-Kacheln, ein Sammellabel)."
+   },
+   {
+    "screen": "ExpiryRadar.swift:180",
+    "element": "Kachel-accessibilityLabel",
+    "problem": "Das Label nennt nur Laden und Tage, weder Betrag noch Datum. Blinde Nutzer bekommen weniger Information als Sehende, die über die Achse das Jahr sehen.",
+    "schwere": "mittel",
+    "vorschlag": "Label: „IKEA, 50,00 €, läuft am 21. Oktober 2026 ab, in 24 Tagen“. Dazu .accessibilityHint(„Öffnet den Gutschein“) und dem Container ein Sammellabel „5 Gutscheine, der nächste läuft in 12 Tagen ab“."
+   },
+   {
+    "screen": "XL_keypad",
+    "element": "Ziffernblock-Tasten",
+    "problem": "Die Ziffern haben feste 28 pt, ⌫ 22 pt, und wachsen bei großer Schrift nicht mit. Die Tasten haben dazu praktisch keine sichtbare Kante (1,1:1).",
+    "schwere": "mittel",
+    "vorschlag": "Text(key).font(.scaled(28, weight: .medium, design: .rounded)) mit Deckel .dynamicTypeSize(...accessibility2), dazu @ScaledMetric für minHeight 56 und eine Tastenfläche mit Kontur Color.line in 1 pt oder Fläche #E6E2D9 (Kante ≥ 3:1 gegen Weiß ist mit Linie #8A8A90 erreichbar)."
+   },
+   {
+    "screen": "XL_keypad / CheckoutView.swift:405",
+    "element": "VoiceOver-Ansage Betrag",
+    "problem": "Nach jeder Ziffer wird nur die Taste angesagt, nicht der neue Betrag. Man muss zur Anzeige zurückwischen.",
+    "schwere": "mittel",
+    "vorschlag": "In press(key) nach der Änderung AccessibilityNotification.Announcement(\"\\(value.euro)\").post() senden, oder .accessibilityValue(value.euro) zusätzlich auf jede Taste legen."
+   },
+   {
+    "screen": "XL_checkout",
+    "element": "PIN anzeigen / fixierter Bereich",
+    "problem": "Die PIN-Pille ist unten flach abgeschnitten. Man sieht nicht, dass die Karte weiterscrollt.",
+    "schwere": "mittel",
+    "vorschlag": "Über dem fixierten Bereich einen Verlauf von page.opacity(0) nach page über 24 pt legen und unter dem Scrollinhalt 16 pt Luft lassen, oder bei AX-Größen „PIN anzeigen“ in die Knopfgruppe unten verschieben."
+   },
+   {
+    "screen": "XL_keypad",
+    "element": "„Alles (12,40 €)“ und „Neuen Stand eintragen“",
+    "problem": "Die Pille bricht zweizeilig um und hat keine vertikale Polsterung, die Klammern stoßen an den Rand. Der Nachbarknopf ist nur Text ohne Knopfform.",
+    "schwere": "niedrig",
+    "vorschlag": ".padding(.vertical, 8) vor .frame(minHeight: 44) ergänzen. Bei AX-Größen beide untereinander in ein VStack (ViewThatFits), „Neuen Stand eintragen“ als FilterChip-artige Kapsel mit surface-Fläche."
+   },
+   {
+    "screen": "XL_merchants",
+    "element": "Einlöse-Hinweis in Ladenzeile",
+    "problem": "Der Text ist mit „…“ abgeschnitten, gerade die Handlungsinformation fehlt (1.4.4).",
+    "schwere": "mittel",
+    "vorschlag": "Bei dynamicTypeSize.isAccessibilitySize lineLimit(nil) setzen, sonst lineLimit(2) mit „Mehr“ oder den vollen Text als accessibilityLabel."
+   },
+   {
+    "screen": "RadarView.swift:33",
+    "element": "Monatskopf „Oktober 2026“",
+    "problem": "Er hat keinen .isHeader-Trait, obwohl er die Liste gliedert. Die Summe „50,00 € Guthaben“ bricht bei XL rechts auf zwei Zeilen.",
+    "schwere": "niedrig",
+    "vorschlag": ".accessibilityAddTraits(.isHeader) ergänzen und bei AX-Größen den HStack zu einem VStack(alignment: .leading) machen (ViewThatFits)."
+   },
+   {
+    "screen": "XL_form, XL_checkout",
+    "element": "Graue Pillen (Foto machen, Aus Fotos, PIN anzeigen)",
+    "problem": "Die Fläche #D4D4D4 hebt sich von Weiß nur mit 1,48:1 ab, die Knopfgrenze ist für schlecht Sehende kaum zu finden.",
+    "schwere": "niedrig",
+    "vorschlag": "Fläche Color.fill #EFECE5 mit 1-pt-Kontur #8A8A90 (≈ 3,4:1 auf Weiß) verwenden, oder tintefarbene Kontur in 1,5 pt."
+   },
+   {
+    "screen": "OnboardingView.swift:27/46/67",
+    "element": "Seitenwechsel-Animation",
+    "problem": "withAnimation(.smooth) beim Überspringen/Weiter und der Feder-Bounce der Punkte laufen auch bei Reduce Motion.",
+    "schwere": "niedrig",
+    "vorschlag": "withAnimation(reduceMotion ? nil : .smooth) sowie .animation(reduceMotion ? nil : .spring(...), value: page)."
+   }
+  ],
+  "top3": [
+   "Onboarding XL: abgeschnittene Textzeile unter den Seitenpunkten beheben (12 pt Abstand, Fade 24 pt, sichtbarer Scrollbalken). Das ist der allererste Eindruck für Nutzer mit großer Schrift.",
+   "Verfallsradar barrierefrei machen: Label-Kollisionsprüfung (2029/2030), Trefferflächen ohne Überlappung (Spurabstand ≥ 44 pt) und VoiceOver-Labels mit Betrag und Datum.",
+   "Ziffernblock: Ziffern mit Dynamic Type skalieren (.scaled(28), gedeckelt bei accessibility2), sichtbare Tastenkante und Ansage des Gesamtbetrags nach jeder Taste."
+  ],
+  "lob": [
+   "Die Kasse bei XL ist jetzt vorbildlich: drei Aktionen untereinander, alle ohne Scrollen erreichbar, primärer Knopf zweizeilig mit genug Luft.",
+   "Reduce Motion ist in Stempel, Kasse, Radar und Onboarding-Steppern konsequent umgesetzt. Die Animation springt sauber an ihren Endzustand, statt nur schneller zu laufen.",
+   "Alle Text-Farbtokens liegen hell und dunkel über 4,5:1 (muted 6,03:1, Orange 4,80:1, dunkles muted 7,85:1). Die Ladenfarbe mit weißem Text erreicht 5,93:1.",
+   "Die Markenzeichen (Ticketkerben, Wortmarke, hochgestellte Cent) überleben XL, ohne zu zerbrechen. Der Betrag bleibt einzeilig und lesbar.",
+   "Das geschätzte Ablaufdatum wird als Text markiert („Gültig bis · geschätzt“), nicht nur über Farbe. Das ist gut für 1.4.1."
+  ]
+ },
+ {
+  "persona": "Lukas Hoffmann, 45, Principal UX Designer (Komponenten-Kit, großer deutscher Händler) – simulierte Persona",
+  "fokus": "Konsistenz der Komponenten: Radien, Schriftgrößen, Padding, Button-Stile, Auswahl-Controls, Icon-Behälter, Mehrfachlösungen (inkl. Onboarding und Radar)",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 8,
+   "abstaende_raster": 6,
+   "hierarchie": 7,
+   "konsistenz": 6,
+   "komponenten": 6,
+   "ikonografie": 6,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 7,
+   "markencharakter": 8,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Die Tokens greifen jetzt spürbar: drei Radien, ein FilterChip, eine Primärtaste – Start, Radar und Detail wirken wie aus einem Guss. Unter der Oberfläche lebt aber noch ein zweites, ungetoktes Design-System aus Literalen (Pills, Icon-Kacheln, Stempel, Sekundärknöpfe), und das neue Onboarding baut die Listenzeile nach, statt CardRow zu nutzen.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Gelbe Ticket-Summenkarte mit Kerben und Abrisslinie, Rounded-Heavy-Beträge mit hochgestellten Cent, Wortmarke mit gelbem Punkt und das gelbe ‚Heute‘-Fähnchen im Radar ziehen sich durch Start, Detail, Kasse, Bon und Einstieg.",
+  "vorrunde_behoben": [
+   "Radien: 48 von 55 cornerRadius-Aufrufen laufen über Layout.cardRadius/buttonRadius/controlRadius (27/14/7); nur 2 echte Literale übrig (OnboardingView.swift:329 = 10, MerchantMark.swift:139 = 32*0.24)",
+   "Ein FilterChip für alle Filter: Start, Läden, Verlauf (Zeitraum) und Kassentests nutzen dieselbe Komponente (44 pt, Kapsel, Tinte = aktiv) – im Screenshot Verlauf/Läden identisch",
+   "Schriftstufen: .scaled() nutzt genau 9 Größen (12/13/15/16/17/20/22/28/34), dominiert von 15 (71×) und 13 (53×)",
+   "Primärknopf: FilledButtonStyle 56 pt, Radius 16, Tinte – überall gleich (13× .primary, .accent ist nur noch Alias)",
+   "Schalter grün (toggleOn) in Einstellungen und Detail bestätigt",
+   "Schatten zentral über Color.shade (dunkel: Schwarz) – alle 16 .shadow-Aufrufe nutzen shade",
+   "Detail: ‚An der Kasse zeigen‘ unten fixiert; Kasse mit echten TicketHalf-Hälften"
+  ],
+  "vorrunde_offen": [
+   "Padding-Literale weiterhin zahlreich: 25 verschiedene Zahlenwerte in .padding(), davon off-grid 3/6/9/10/13/14/18/30/36/58/74; spacing-Literale: 14 kommt 19× vor (nicht im 4/8/12/16-Raster, kein Token)",
+   "Karten-Innenabstand uneinheitlich: Layout.inset 16 als Token, aber CardDetailView.swift:251/292 (pendingBanner, reminderRow) 14, Toast in RestwertApp.swift:299 16/14, ScanView 14/13",
+   "Status-Pill hat 4 Implementierungen: Chip (10/4, 12 bold), CardRow-Frist-Pill (8/3, 13 semibold), BalanceCard-Badge (9/4, 12 semibold, weiß), Radar ‚Heute‘ (8/3, 12 heavy rounded) – plus Kopie im Onboarding",
+   "Sekundärknöpfe: 6 Lösungen – .quiet (gefüllt surface), .glass (Detail ‚Archivieren‘, Kamera), .bordered (Formular ‚Foto machen/Aus Fotos‘, Kasse ‚PIN anzeigen‘ in System-Grau), Text-Links mit ink2/medium (Onboarding quiet()), Text-Link destruktiv (Detail ‚Gutschein entfernen‘), KeyStyle (Ziffernblock)",
+   "Seitentitel sitzen verschieden: ‚Läden‘ Ink-Oberkante bei ~71 pt (eigene fixe Kopfzeile), ‚Verlauf‘/‚Einstellungen‘ bei ~127 pt (Large Title) – 56 pt Sprung beim Tabwechsel",
+   "Abschnittsköpfe zweierlei: Start/Radar/Läden 15 semibold ink2 an der Seitenkante, Einstellungen ‚Sicherheit & Erinnerungen‘ größer, grau, um 12 pt eingerückt (System-Section-Stil)"
+  ],
+  "neue_probleme": [
+   "Ablauftermine (RadarView.swift:47–58): Zeilen ohne ‚…‘-Menü und ohne contextMenu – auf Start hat dieselbe CardRow beides. Folge: Beträge enden auf Start bei x≈366 pt, in Ablauftermine bei ≈380 pt (14 pt Versatz derselben Komponente), und Kasse/Bearbeiten/Archivieren fehlen dort",
+   "Onboarding Seite 2/3 baut CardRow von Hand nach (OnboardingView.swift:286–305, 350–372): Trennlinie leading 74 statt 72, Rabattzeile ohne tag-Symbol, Karten mit Schatten, während echte Listen auf Start keinen Schatten haben",
+   "Onboarding Seite 4: Scan-Option mit gelber 56-pt-Kachel (buttonRadius) – Theme.swift sagt ‚Gelb ist Marke, keine Aktionsfarbe‘; zudem ein fünfter Icon-Behälter-Typ",
+   "Onboarding Mitteilungs-Icon: RoundedRectangle(cornerRadius: 10) + Color(hex: 0x111111) als Literale statt controlRadius/onBrand",
+   "XL-Radar: Jahresbeschriftungen kollidieren (‚20292030‘ ohne Abstand), weil Label-Frame fix 64 pt breit ist, die Schrift aber wächst",
+   "XL-Ablauftermine: Monatssumme ‚50,00 € Guthaben‘ bricht zweizeilig um, während der Monatstitel einzeilig bleibt – Kopfzeile kippt nicht auf VStack wie CardRow",
+   "Zwei Stempel-Komponenten mit verschiedener Geometrie: UsedUpStamp (22 heavy, Rahmen 3, −8°, Gelb) und EINGELÖST (28 black, Rahmen 4, −14°, Rot, Padding 18/10)"
+  ],
+  "scroll_befund": "Nur statisch geprüft: Start (Suchfeld+Wortmarke fest) und Läden (Titel+Suche fest) bleiben oben stehen; die weiche Scroll-Kante über pageBackground() ist einheitlich. In Einstellungen und Läden laufen Karten sichtbar unter die schwebende Tab-Leiste, Inhalt ist darunter durchscheinend lesbar (‚verdecken‘, ‚Thalia‘) – bewusst, aber unruhig. Scroll-Performance nur aus Code (Speichern in serieller Queue), nicht messbar.",
+  "messungen": [
+   {
+    "was": "cornerRadius über Tokens",
+    "screen": "Code gesamt",
+    "wert": "48 von 55 (27 card / 14 button / 7 control), 2 harte Literale",
+    "soll/erwartung": "100 % Token",
+    "ok": false
+   },
+   {
+    "was": "Anzahl Schriftgrößen .scaled",
+    "screen": "Code gesamt",
+    "wert": "9 (12,13,15,16,17,20,22,28,34)",
+    "soll/erwartung": "≤ 9 Stufen",
+    "ok": true
+   },
+   {
+    "was": "Betragsgrößen amount/display/AmountText",
+    "screen": "Code gesamt",
+    "wert": "8 (16,19,20,30,40,48,56,60,64)",
+    "soll/erwartung": "3–4 Betragsstufen",
+    "ok": false
+   },
+   {
+    "was": "Nicht skalierende .system(size:)",
+    "screen": "Kasse/Formular/MerchantMark",
+    "wert": "5 Stellen (22,26 mono,28,17,17)",
+    "soll/erwartung": "0 oder begründet",
+    "ok": false
+   },
+   {
+    "was": "Verschiedene Padding-Zahlen",
+    "screen": "Code gesamt",
+    "wert": "25 Werte, 11 off-grid",
+    "soll/erwartung": "Raster 4/8/12/16/20/24/32",
+    "ok": false
+   },
+   {
+    "was": "Token-Nutzung Padding",
+    "screen": "Code gesamt",
+    "wert": "94 Token vs. ~110 Literale",
+    "soll/erwartung": "Token-Mehrheit",
+    "ok": false
+   },
+   {
+    "was": "Button-Stile",
+    "screen": "Code gesamt",
+    "wert": "plain 27, primary 13, quiet 4, glass 4, bordered 3, accent 3 (Alias), KeyStyle 1",
+    "soll/erwartung": "primary/secondary/tertiary/destructive",
+    "ok": false
+   },
+   {
+    "was": "Auswahl-Controls",
+    "screen": "Start/Läden/Verlauf/Formular/Einstellungen",
+    "wert": "FilterChip (4 Orte), Segmented Picker (Formular 2×), Menü-Picker (Sortierung, Einstellungen, Barcode-Typ)",
+    "soll/erwartung": "FilterChip für Filter, Segment für Art",
+    "ok": false
+   },
+   {
+    "was": "Icon-Behälter",
+    "screen": "Detail/Verlauf/Einstellungen/Onboarding",
+    "wert": "44 r10 fill (Detail, Kassentests), 48 Kreis (Einstellungen), 56 r16 gelb/fill (Onboarding), 40 r10 schwarz (Onboarding), MerchantMark 44 r=0,24·size, Einstellungszeilen ohne Behälter",
+    "soll/erwartung": "1 Größe, 1 Form",
+    "ok": false
+   },
+   {
+    "was": "Beträge rechte Kante CardRow",
+    "screen": "L_01_start vs L_radar",
+    "wert": "366 pt vs 380 pt",
+    "soll/erwartung": "identisch",
+    "ok": false
+   },
+   {
+    "was": "Titel-Oberkante Tabs",
+    "screen": "L_merchants vs L_history/L_settings",
+    "wert": "~71 pt vs ~127 pt",
+    "soll/erwartung": "gleich",
+    "ok": false
+   },
+   {
+    "was": "Divider-Einzug Liste",
+    "screen": "Home/Radar vs Onboarding",
+    "wert": "72 vs 74",
+    "soll/erwartung": "gleich (Token)",
+    "ok": false
+   },
+   {
+    "was": "FilterChip-Höhe",
+    "screen": "L_history/L_merchants",
+    "wert": "≈44 pt beide",
+    "soll/erwartung": "44 pt",
+    "ok": true
+   },
+   {
+    "was": "XL Radar Achsenbeschriftung",
+    "screen": "XL_radar",
+    "wert": "‚2029‘ und ‚2030‘ berühren sich",
+    "soll/erwartung": "≥ 4 pt Abstand oder Label ausdünnen",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "radar (Ablauftermine)",
+    "element": "Gutscheinzeile",
+    "problem": "Kein ‚…‘-Menü, kein contextMenu – andere Zeilen-Anatomie als auf Start, Beträge 14 pt versetzt",
+    "schwere": "hoch",
+    "vorschlag": "Zeile aus HomeView (NavigationLink + Menü 44×44 + contextMenu, trailing 4) in eine CardListRow-Komponente ziehen und in RadarView wiederverwenden"
+   },
+   {
+    "screen": "onboarding2/3",
+    "element": "Beispielzeilen",
+    "problem": "Nachgebaute CardRow (Divider 74, kein tag-Symbol, Schatten auf Listen)",
+    "schwere": "mittel",
+    "vorschlag": "CardRow mit RadarItem/Beispiel-GiftCard füttern; Divider-Einzug als Layout.rowDividerInset = 72; Listen ohne Schatten wie auf Start"
+   },
+   {
+    "screen": "global",
+    "element": "Status-Pills",
+    "problem": "4 Pill-Implementierungen mit 8/3, 9/4, 10/4 Padding und 12/13 pt",
+    "schwere": "mittel",
+    "vorschlag": "Eine Pill-Komponente: Padding 8/4, 12 pt semibold, Varianten neutral/warn/brand/onCard"
+   },
+   {
+    "screen": "detail/checkout/form",
+    "element": "Sekundärknöpfe",
+    "problem": ".bordered (System-Grau) neben .quiet, .glass und Text-Links",
+    "schwere": "mittel",
+    "vorschlag": "Drei Stufen festlegen: primary (Tinte 56), secondary = quiet (surface 44, Radius 16), tertiary = Textknopf 15 semibold ink2 min 44; .bordered und .glass außerhalb der Nav-Leiste streichen"
+   },
+   {
+    "screen": "global",
+    "element": "Icon-Behälter",
+    "problem": "5 Varianten (44 r10, 48 Kreis, 56 r16, 40 r10, ohne)",
+    "schwere": "mittel",
+    "vorschlag": "IconTile(size: 44, radius: controlRadius, fill: .fill) für Detail, Verlauf, Einstellungen-Konto, Onboarding; Einstellungszeilen bewusst ohne Behälter dokumentieren"
+   },
+   {
+    "screen": "merchants vs history/settings",
+    "element": "Seitentitel",
+    "problem": "Titel springt beim Tabwechsel um ~56 pt",
+    "schwere": "mittel",
+    "vorschlag": "Alle Tabs: eigene feste Kopfzeile wie Läden (Titel 34 heavy, top 8) oder alle Large Title – nicht gemischt"
+   },
+   {
+    "screen": "XL_radar",
+    "element": "Achsenbeschriftung",
+    "problem": "Jahreslabels überlappen",
+    "schwere": "mittel",
+    "vorschlag": "Label-Frame dynamisch (Abstand zwischen Ticks), bei < Labelbreite+8 pt jedes zweite Label ausblenden oder auf ‚29‘/‚30‘ kürzen"
+   },
+   {
+    "screen": "global",
+    "element": "Padding-Literale",
+    "problem": "14 als heimliche Stufe (spacing 19×, padding 4×), 3/6/9/13/18/30/58/74 off-grid",
+    "schwere": "niedrig",
+    "vorschlag": "14→12 bzw. 16, 18→16/20, 30→32, 13→12; Layout.rowGap = 12 und Layout.textGap = 4 als Tokens ergänzen"
+   },
+   {
+    "screen": "onboarding4",
+    "element": "Scan-Option",
+    "problem": "Gelbe Aktionskachel widerspricht der eigenen Regel ‚Gelb ist keine Aktionsfarbe‘",
+    "schwere": "niedrig",
+    "vorschlag": "Beide Optionen mit Color.fill-Kachel; Hervorhebung über Reihenfolge und primary-Knopf"
+   },
+   {
+    "screen": "detail/bon",
+    "element": "Stempel",
+    "problem": "Zwei Stempel mit verschiedener Schrift, Rahmenstärke, Winkel",
+    "schwere": "niedrig",
+    "vorschlag": "Eine Stamp-Komponente (22 heavy rounded, Rahmen 3, −8°), Farbvariante brand/bad"
+   },
+   {
+    "screen": "settings",
+    "element": "Abschnittskopf",
+    "problem": "Anderer Kopfstil als auf Start/Radar/Läden",
+    "schwere": "niedrig",
+    "vorschlag": "SectionHeader-Komponente 15 semibold ink2, leading 0, Abstand 12 zur Karte, überall"
+   }
+  ],
+  "top3": [
+   "Ablauftermine-Zeilen bekommen dasselbe ‚…‘-Menü und contextMenu wie Start (eine CardListRow-Komponente) – beseitigt auch den 14-pt-Versatz der Beträge",
+   "Button-Hierarchie auf 3 Stufen + destruktiv festziehen; .bordered/.glass im Inhalt ersetzen",
+   "Pills, Icon-Kacheln und Stempel je auf eine Komponente reduzieren; Onboarding nutzt echte CardRow"
+  ],
+  "lob": [
+   "Radien sind fast vollständig tokenisiert – deutliche Verbesserung gegenüber der Vorrunde",
+   "FilterChip ist ein vorbildlicher Baustein: eine Implementierung, 4 Einsatzorte, 44 pt, isSelected-Trait",
+   "Verfallsradar setzt die Marke klug fort (gelbes ‚Heute‘, Ladenkacheln = MerchantMark) und nutzt denselben Abschnittskopf wie Start",
+   "Dunkelmodus des Radars sauber: Achse invertiert, Dringlichkeitsring aufgehellt, Heute bleibt Gelb/Tinte",
+   "Schatten und Farben laufen konsequent über Tokens (shade, onBrand, toggleOn)"
+  ]
+ },
+ {
+  "persona": "Nadine Okafor, 36, UX-Researcherin, zwei Kinder, Schublade voller Gutscheine, bedient an der Kasse mit einer Hand (simuliert)",
+  "fokus": "Hierarchie und Alltag: Was sehe ich pro Screen zuerst, und ist das richtig? Ablauf Kasse, Bezahlt, Ziffernblock, Daumenreichweite, Einstieg, Nutzen des Radars, Verständlichkeit des geschätzten Ablaufdatums",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 8,
+   "farbe": 8,
+   "abstaende_raster": 7,
+   "hierarchie": 7,
+   "konsistenz": 7,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 6,
+   "markencharakter": 8,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Zum ersten Mal wirkt die App wie ein Produkt mit eigener Handschrift: gelbes Ticket, Kerben, Kassenbon im Verlauf. Der Kassenablauf ist jetzt wirklich einhändig bedienbar, aber der Startscreen verbraucht seinen besten Platz für Summe und Radar statt für das, was ich gleich einlösen muss.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Das gelbe Summen-Ticket mit Abrisslinie, die Wortmarke mit gelbem Punkt, Ladenfarbe als Kartenfarbe und der Kassenbon im Verlauf ziehen sich von Einstieg über Start und Detail bis zur Kasse. Wer einen Screenshot sieht, erkennt Restwert, auch im Dunkelmodus (Gelb bleibt, Tinte wird hell).",
+  "vorrunde_behoben": [
+   "Kasse: Entscheidung liegt unten im Daumenbereich. 'Bezahlt – Betrag eintragen' y 732–788 pt, 'Nicht angenommen' / 'Später eintragen' bei y ≈ 814 pt (von 874)",
+   "'Bezahlt' führt direkt zum eigenen Ziffernblock (CheckoutView.pay → router .pay), kein Zwischenformular mehr",
+   "XL-Kasse: die Nebenknöpfe stehen untereinander (ViewThatFits), nichts abgeschnitten",
+   "Detail: 'An der Kasse zeigen' unten fest bei y 780–836 pt, im Hellen, Dunklen und bei XL",
+   "Ticket-Einzüge stimmen: Seitenrand 16 pt, Ticketinhalt 20 pt (Layout.ticketInset)",
+   "Schalter grün (toggleOn #1F7A4D), nicht mehr gelb oder schwarz",
+   "Suchfeld und Wortmarke bleiben beim Scrollen oben (S_start_1/2), in Läden Titel und Suche",
+   "Beträge: Komma auf der Grundlinie, Cent hochgestellt und oben bündig, gut lesbar auch bei 136,25 €",
+   "Text auf Ladenkarten voll deckend, Stadtgutschein-Grau #52525B statt Fast-Schwarz",
+   "Pending-Zustand im Detail als klarer Hinweis 'Betrag offen · Jetzt eintragen' direkt unter dem Ticket"
+  ],
+  "vorrunde_offen": [
+   "Ziffernblock: Tasten sind in Ruhe flach und ohne Fläche (KeyStyle zeigt nur beim Drücken Color.fill). Im Dunkelmodus schweben die Ziffern im Leeren, man sieht keine Trefferflächen",
+   "Ziffernblock skaliert nicht mit der Schriftgröße (Text fest 28 pt, .system statt .scaled), XL_keypad sieht aus wie L_keypad",
+   "Die wichtigste Abkürzung 'Alles (12,40 €)' sitzt bei y ≈ 262 pt, also im oberen Drittel. Mit einer Hand muss ich umgreifen",
+   "Zurück-Knöpfe liegen oben links bei y 84 pt (systemüblich, Wischgeste geht, aber die Kasse hat keinen Abbrechen-Knopf unten)",
+   "Nur ein Abschnitt 'Läuft bald ab' ist auf dem Start über dem Falz, ab y ≈ 652 pt, der zweite Eintrag liegt schon unter der Tab-Leiste (Leiste ab ≈ 792 pt)"
+  ],
+  "neue_probleme": [
+   "Verfallsradar: Kacheln, die nah beieinander liegen, stapeln sich mit 22 pt Spurabstand (laneStep = tile·0,7), aber jede hat eine Trefferfläche von 44×44 pt. Zalando/IKEA (x ≈ 106/112 pt) und Stadtgutschein/Douglas (x ≈ 156/169 pt) überlappen zu rund 50 %. Wer tippt, trifft leicht den falschen Gutschein",
+   "Radar XL: die Jahreszahlen '2029' und '2030' laufen ineinander ('20292030'), weil die Beschriftung einen festen 64-pt-Rahmen hat, aber mit der Schrift wächst und nicht ausweicht",
+   "Radar: am Anfang der Achse fehlt die Jahresbeschriftung ('2026'). Die zwei dringenden Gutscheine (12 und 24 Tage) kleben am Heute-Fähnchen und lassen sich nicht auseinanderlesen, obwohl die gestauchte Skala genau das leisten soll",
+   "Einstieg XL (XL_00_onboarding1): der Fließtext läuft unter die Seitenpunkte, 'Karten, Codes, Stadt…' wird abgeschnitten bzw. überlagert",
+   "XL-Kasse: die Knopfleiste (y 652–744 pt für 'Bezahlt' über zwei Zeilen) überdeckt den unteren Rand des Tickets. 'PIN anzeigen' ist nur halb sichtbar, das Ticket wirkt abgeschnitten, bis man scrollt",
+   "Das geschätzte Ablaufdatum wird nur im Formular ('Gültig bis · geschätzt') und im Detail-Ticket ('(geschätzt)') markiert. Im Radar, in 'Läuft bald ab', in Ablauftermine ('noch 12 Tage') und in der Erinnerung steht es wie ein sicheres Datum",
+   "Codekommentar in ExpiryRadar.span nennt 'höchstens 36' Monate, maxMonths ist aber 48. Kleinigkeit, aber ein Zeichen, dass die Doku nachhinkt"
+  ],
+  "scroll_befund": "Start (S_start_1/2): Wortmarke und Suche bleiben stehen, der Inhalt läuft sauber mit Unschärfe darunter. Am Ende schrumpft die Tab-Leiste auf den Start-Knopf plus '+' (iOS-26-Verhalten), das ist ruhig. Läden Mitte: Titel und Suche bleiben stehen, der Kopf bleibt lesbar. Detail Ende: der Kassenbon-Verlauf und 'Gutschein entfernen' (rot, mittig) liegen über dem fixierten 'An der Kasse zeigen', mit genug Luft. Im Detail stößt der fixierte Knopf in der Ruheposition an die Karte 'Aufbewahrt' (angeschnittene Karte über dem Knopf), das ist als Scroll-Hinweis okay.",
+  "messungen": [
+   {
+    "was": "Primärknopf 'Bezahlt – Betrag eintragen' Höhe/Lage",
+    "screen": "L_checkout",
+    "wert": "y 732–788 pt, Höhe 55 pt",
+    "soll/erwartung": "unteres Drittel (> 583 pt), ≥ 44 pt",
+    "ok": true
+   },
+   {
+    "was": "Nebenaktionen Kasse",
+    "screen": "L_checkout",
+    "wert": "y ≈ 814 pt, minHeight 44 (Code)",
+    "soll/erwartung": "im Daumenbereich, ≥ 44 pt",
+    "ok": true
+   },
+   {
+    "was": "'An der Kasse zeigen' fixiert",
+    "screen": "L_detail",
+    "wert": "y 780–836 pt, Höhe 55 pt",
+    "soll/erwartung": "unten fest",
+    "ok": true
+   },
+   {
+    "was": "XL 'Bezahlt' zweizeilig",
+    "screen": "XL_checkout",
+    "wert": "y 652–744 pt (92 pt hoch)",
+    "soll/erwartung": "unten, ohne das Ticket zu verdecken",
+    "ok": false
+   },
+   {
+    "was": "Ziffernblock-Oberkante",
+    "screen": "L_keypad",
+    "wert": "497 pt, Tastenraster 62 pt (56 + 6), Zeilen bei y 540/602/664/726, 'Abziehen' 796",
+    "soll/erwartung": "komplett in der unteren Hälfte",
+    "ok": true
+   },
+   {
+    "was": "Abkürzung 'Alles (12,40 €)'",
+    "screen": "L_keypad",
+    "wert": "Mitte y ≈ 262 pt",
+    "soll/erwartung": "im Daumenbereich (> 500 pt)",
+    "ok": false
+   },
+   {
+    "was": "Ziffernblock bei XL",
+    "screen": "XL_keypad",
+    "wert": "Ziffern gleich groß wie L (fest 28 pt)",
+    "soll/erwartung": "wächst mit Dynamic Type",
+    "ok": false
+   },
+   {
+    "was": "Radar-Trefferflächen überlappen",
+    "screen": "L_01_start",
+    "wert": "44×44-pt-Flächen, 22,4 pt Spurabstand, ~50 % Überlappung bei Z/IKEA und €/D",
+    "soll/erwartung": "keine überlappenden Tippziele",
+    "ok": false
+   },
+   {
+    "was": "Kontrast ink2 auf page ('Später eintragen')",
+    "screen": "L_checkout",
+    "wert": "10.3:1",
+    "soll/erwartung": "≥ 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast muted auf page (Radar-Striche, Hinweise)",
+    "screen": "L_01_start",
+    "wert": "6.0:1 (auf surface 6.6:1)",
+    "soll/erwartung": "≥ 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast deaktiviertes 'Abziehen'",
+    "screen": "L_keypad / D_keypad",
+    "wert": "5.0:1 hell / 5.8:1 dunkel",
+    "soll/erwartung": "lesbar, aber klar als inaktiv erkennbar",
+    "ok": true
+   },
+   {
+    "was": "Kontrast 'noch 24 Tage' (soon) auf surface",
+    "screen": "L_01_start",
+    "wert": "4.8:1 hell / 9.4:1 dunkel",
+    "soll/erwartung": "≥ 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Tinte auf Markengelb",
+    "screen": "L_01_start",
+    "wert": "13.7:1",
+    "soll/erwartung": "≥ 7:1",
+    "ok": true
+   },
+   {
+    "was": "Kartenfläche gegen Seitenhintergrund",
+    "screen": "L_/D_ alle",
+    "wert": "1.1:1 hell und dunkel",
+    "soll/erwartung": "Trennung über Schatten/Radius reicht, im Dunkeln knapp",
+    "ok": false
+   },
+   {
+    "was": "Seitenrand / Ticketinhalt",
+    "screen": "L_detail",
+    "wert": "16 pt / 20 pt",
+    "soll/erwartung": "Layout.inset 16, ticketInset 20",
+    "ok": true
+   },
+   {
+    "was": "Erster Listeneintrag 'Läuft bald ab' über dem Falz",
+    "screen": "L_01_start",
+    "wert": "Liste ab ≈ 652 pt, Tab-Leiste ab ≈ 792 pt: 1,5 Einträge sichtbar",
+    "soll/erwartung": "mindestens 2 dringende Einträge ohne Scrollen",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "L_01_start",
+    "element": "Reihenfolge Summe / Radar / Läuft bald ab",
+    "problem": "Zuerst sehe ich 136,25 € (schön, aber an der Kasse nutzlos), dann 160 pt Radar, erst danach den Gutschein, den ich wirklich einlösen muss. Für den Alltag ist die Hierarchie verdreht: Handeln kommt nach Staunen.",
+    "schwere": "mittel",
+    "vorschlag": "'Läuft bald ab' direkt unter das Summen-Ticket ziehen und das Radar darunter. Oder das Radar in die Summe integrieren (eine 48 pt hohe Mini-Achse im Ticketabschnitt unter der Abrisslinie) und die eigene Radar-Karte nur in 'Ablauftermine' zeigen."
+   },
+   {
+    "screen": "L_keypad",
+    "element": "'Alles (12,40 €)' und 'Neuen Stand eintragen'",
+    "problem": "Die häufigste Abkürzung ('Karte leer gemacht') sitzt bei y ≈ 262 pt, die Tasten bei 540–726 pt. Einhändig muss ich umgreifen, gerade wenn hinter mir die Schlange steht.",
+    "schwere": "mittel",
+    "vorschlag": "Kapsel 'Alles 12,40 €' als vierte Zeile in den Ziffernblock-Kasten, direkt über 'Abziehen' (Höhe 44 pt, surface-Kapsel auf fill), oder anstelle der ','-Taste, wenn der Betrag ganzzahlig ist. 'Neuen Stand eintragen' kann oben bleiben (selten)."
+   },
+   {
+    "screen": "L_keypad / D_keypad",
+    "element": "Tasten ohne Fläche",
+    "problem": "Flache Ziffern ohne Hintergrund. Im Dunkeln sieht man keine Tippziele, Fehltipps an der Kasse fallen erst später auf.",
+    "schwere": "mittel",
+    "vorschlag": "Ruhefläche Color.fill (#EFECE5 / #2A2926) mit controlRadius 10, Tastenhöhe 56 lassen, gedrückt Color.line. Oder mindestens ein 1-pt-Rand in line."
+   },
+   {
+    "screen": "L_keypad",
+    "element": "Leerer Zustand ohne Frage",
+    "problem": "Titel 'Thalia', darunter klein '12,40 € drauf' und eine graue große 0. Es steht nirgends, was ich tun soll. Der Hinweis 'Wird vom Guthaben abgezogen' erscheint erst nach der ersten Taste.",
+    "schwere": "niedrig",
+    "vorschlag": "Kopfzeile 'Wie viel hast du bezahlt?' in 17 pt semibold ink, darunter muted 'Auf der Karte: 12,40 €'. Hinweiszeile auch bei leerer Eingabe zeigen."
+   },
+   {
+    "screen": "XL_keypad",
+    "element": "Tastengröße",
+    "problem": "Ziffern fest 28 pt, wachsen bei 'accessibility-large' nicht mit.",
+    "schwere": "niedrig",
+    "vorschlag": "Font .scaled(28, weight: .medium, design: .rounded) mit Deckel bei 40 pt, minHeight @ScaledMetric 56 → max 72."
+   },
+   {
+    "screen": "L_01_start / L_radar",
+    "element": "Radar-Kacheln stapeln sich",
+    "problem": "44-pt-Trefferflächen mit 22 pt Versatz überlappen. Zalando (dringend, roter Ring) liegt halb unter IKEA, € halb unter D. Beim Tippen ist unklar, wer drankommt.",
+    "schwere": "mittel",
+    "vorschlag": "Bei Überlappung zu einer Sammelkachel zusammenfassen ('2', 32 pt, Tipp öffnet eine Liste) oder die Trefferfläche auf das sichtbare Kachelrechteck beschränken (contentShape auf die 32-pt-Kachel, laneStep auf tile + 4 = 36 pt, max. 2 Spuren)."
+   },
+   {
+    "screen": "L_01_start",
+    "element": "Radar-Nutzen beim Einlösen",
+    "problem": "Das Radar zeigt Wann, aber nicht Wie viel. Beim Einlösen hilft es kaum, weil die Liste darunter dieselbe Information mit Betrag und 'noch 12 Tage' zeigt. Aktuell eher Deko mit gutem Aha-Effekt.",
+    "schwere": "niedrig",
+    "vorschlag": "Unter dem Radar eine Zeile 'Nächste 30 Tage: 65,00 € + 15 % Rabatt' in 15 pt semibold, tippbar zu Ablauftermine. Dann beantwortet das Radar die Frage 'wie viel Geld verfällt bald?'."
+   },
+   {
+    "screen": "XL_radar / XL_01_start",
+    "element": "Jahresbeschriftung",
+    "problem": "'2029' und '2030' laufen bei großer Schrift ineinander.",
+    "schwere": "niedrig",
+    "vorschlag": "Beschriftungen mit Kollisionsprüfung: Label weglassen, wenn der Abstand zum vorigen kleiner ist als dessen Breite + 8 pt. Oder bei XL auf zweistellige Jahre ('29', '30') wechseln."
+   },
+   {
+    "screen": "L_01_start",
+    "element": "Radar-Anfang",
+    "problem": "Links fehlt der Bezug zum Jahr 2026, die ersten zwei Gutscheine kleben am Fähnchen.",
+    "schwere": "niedrig",
+    "vorschlag": "Ersten Strich immer mit Monat beschriften ('Okt'), die gestauchte Skala stärker machen (Exponent 0,45 statt 0,55), damit 12 und 24 Tage sichtbar getrennt sind (≥ 36 pt Abstand)."
+   },
+   {
+    "screen": "XL_00_onboarding1",
+    "element": "Fließtext unter den Seitenpunkten",
+    "problem": "Der Text wird von der Punktreihe überlagert und abgeschnitten, obwohl die Seite scrollbar sein soll.",
+    "schwere": "mittel",
+    "vorschlag": "Seitenpunkte und Knopf in einen safeAreaInset (bottom) mit page-Hintergrund legen, den Textbereich darüber als ScrollView mit Mindestabstand 12 pt zu den Punkten. Bei XL die Illustration auf 60 % verkleinern."
+   },
+   {
+    "screen": "L_00_onboarding1–4",
+    "element": "Inhalt der vier Seiten",
+    "problem": "In vier Seiten verstehe ich: Überblick, alles an einem Ort, Erinnerungen, anlegen. Die stärkste Funktion fehlt: an der Kasse Barcode zeigen, abreißen, Rest eintragen. Genau das unterscheidet Restwert von Stocard. Seite 1 und 2 sagen fast dasselbe.",
+    "schwere": "mittel",
+    "vorschlag": "Seite 2 ersetzen durch 'An der Kasse: zeigen, bezahlen, fertig.' mit dem Kassenticket (Barcode + 'Bezahlt' und animiertem Abriss). Die Ladenliste als Nebenbild in Seite 1 aufnehmen."
+   },
+   {
+    "screen": "XL_checkout",
+    "element": "Knopfleiste verdeckt das Ticket",
+    "problem": "Die zweizeilige 'Bezahlt'-Taste plus zwei Zeilen Nebenaktionen belegen ~230 pt. 'PIN anzeigen' ist halb verdeckt, das Ticket wirkt abgeschnitten.",
+    "schwere": "niedrig",
+    "vorschlag": "Bei XL den Knopftext auf 'Bezahlt' kürzen (einzeilig), 'Nicht angenommen' und 'Später' als zwei Kapseln nebeneinander mit ViewThatFits. Oben am Leistenrand einen 16-pt-Verlauf page→clear, damit klar ist, dass es darunter weitergeht."
+   },
+   {
+    "screen": "L_01_start / L_radar / Erinnerung",
+    "element": "Geschätztes Ablaufdatum",
+    "problem": "Im Formular und im Detail-Ticket ist 'geschätzt' gut erklärt (gesetzliche Frist, 3 Jahre ab Jahresende). Überall sonst sieht ein geschätztes Datum aus wie ein echtes: 'bis 31.12.2028', 'noch 826 Tage', Radar-Kachel, Push. Wenn ich danach entscheide, welchen Gutschein ich zuerst nutze, verlasse ich mich auf ein erfundenes Datum.",
+    "schwere": "mittel",
+    "vorschlag": "In Listenzeilen 'bis ca. 31.12.2028' in muted, Radar-Kachel mit gestricheltem statt durchgezogenem Rand (1,5 pt, dash 3/2), Erinnerungstext 'läuft vermutlich … ab – prüf das Datum auf dem Gutschein'. Im Detail '(geschätzt)' tippbar machen und die Erklärung als Popover zeigen."
+   },
+   {
+    "screen": "L_checkout",
+    "element": "Kein Abbrechen unten",
+    "problem": "Wenn die Kasse gar nicht erst scannt oder ich mich im Gutschein vertan habe, muss ich oben links bei y 84 pt zurück. 'Später eintragen' setzt dagegen 'Betrag offen', ist also kein neutrales Abbrechen.",
+    "schwere": "niedrig",
+    "vorschlag": "'Später eintragen' in 'Noch nicht bezahlt' umbenennen und ein neutrales 'Schließen' über die Wischgeste hinaus unten anbieten, oder den Zurück-Pfeil zusätzlich als 'Fertig' rechts unten (44 pt)."
+   },
+   {
+    "screen": "D_01_start / D_detail",
+    "element": "Karten im Dunkeln",
+    "problem": "surface #1E1D1B auf page #141311 = 1,1:1. Die Karten trennen sich nur schwach, besonders die Ladenliste und Einstellungen wirken wie eine Fläche.",
+    "schwere": "niedrig",
+    "vorschlag": "Dunkles surface auf #232220 heben oder einen 0,5-pt-Rand in line (#34322E) um Karten ziehen."
+   }
+  ],
+  "top3": [
+   "Startscreen-Hierarchie für den Alltag umdrehen: 'Läuft bald ab' vor das Radar, damit die dringenden Gutscheine ohne Scrollen vollständig sichtbar sind",
+   "Ziffernblock fertig machen: 'Alles'-Abkürzung in den Daumenbereich, Tasten mit sichtbarer Fläche, Frage 'Wie viel hast du bezahlt?' im leeren Zustand, Größe mit Dynamic Type",
+   "Radar tippsicher und ehrlich machen: keine überlappenden Trefferflächen, geschätzte Daten sichtbar anders (gestrichelt, 'ca.'), und eine Summenzeile 'nächste 30 Tage: X €', damit es beim Einlösen hilft und nicht nur schmückt"
+  ],
+  "lob": [
+   "Der Kassenablauf ist endlich so, wie ich ihn in der Schlange brauche: Barcode oben, großer schwarzer 'Bezahlt'-Knopf unten, direkt zum Ziffernblock, Undo-Toast danach. Besser als Stocard, das nach dem Scannen einfach stehen bleibt",
+   "Die Ziffernblock-Logik denkt mit: 'Nur 12,40 € auf der Karte, 7,60 € zahlst du anders', 'Alles abziehen', Wackeln bei leerer Eingabe mit VoiceOver-Ansage",
+   "'Später eintragen' erinnert in 2 Stunden und nie nachts, und sagt ehrlich, wenn Mitteilungen aus sind. Das ist echte Alltagstauglichkeit",
+   "Der Verlauf als Kassenbon mit 'SUMME EINGELÖST' ist die beste Markenidee der App und dabei nützlich",
+   "Die Erklärung des geschätzten Datums im Formular ('drei Jahre, gerechnet ab Ende des Kaufjahres') ist verständlich und kein Juristendeutsch",
+   "Das Detail-Ticket in der Ladenfarbe mit 'noch 826 Tage' ist sofort lesbar. PAYBACK-Gewimmel gibt es hier nirgends"
+  ]
+ },
+ {
+  "persona": "Felix Brenner, 23, Designer bei einem Indie-App-Studio (ADA-Nominierungen), pixel-pedantisch; Referenzen Flighty, (Not Boring) Weather, Opal",
+  "fokus": "Premium-Gefühl und Pixelpolitur: Kerben, Abrisslinien, Schatten, Radar (Kacheln, Achse, Heute-Fähnchen), Onboarding-Karten, App-Icon (3 Varianten)",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 7,
+   "abstaende_raster": 7,
+   "hierarchie": 7,
+   "konsistenz": 6,
+   "komponenten": 7,
+   "ikonografie": 6,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 6,
+   "markencharakter": 7,
+   "premium_gefuehl": 6
+  },
+  "first_impression": "Zum ersten Mal sieht Restwert aus wie eine Marke und nicht mehr wie eine Formularsammlung: gelbes Ticket, Rounded-Heavy-Beträge und Wortmarke mit Punkt tragen die Startseite. Sobald ich aber reinzoome oder die Schrift groß stelle, sieht man, dass noch niemand die Kanten poliert hat: Achsenbeschriftungen kollidieren, die Kerben haben harte Innenecken, Schatten und Scroll-Kanten wirken zufällig.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Ticket mit Kerben und 4/4-Strichelung taucht in Summe, Detail, Kasse (echte TicketHalf), Scan-Karte, Onboarding und App-Icon auf; Gelb #FFD84D bleibt der App vorbehalten (Summe, Heute-Fähnchen, Wortmarkenpunkt); Tinte-Knopf überall. Die Mitteilung im Onboarding zeigt allerdings ein anderes App-Symbol (schwarzes Quadrat mit gelbem Punkt) als das echte Ticket-Icon. Die Marke hat also zwei Logos.",
+  "vorrunde_behoben": [
+   "Kasse: echte TicketHalf-Hälften (CheckoutView.swift:163/214) mit Abreiß-Animation, Knöpfe unten fix (Bezahlt-Knopf 56 pt hoch), bei XL untereinander",
+   "Eine Strichelung für die App: DashLine 4/4 pt, 1 pt stark, beginnt und endet mit vollem Strich; gemessen auf Summe, Detail und Kasse identisch (4 pt Strich, 16 pt vom Kartenrand, 7 pt Luft zur Kerbe)",
+   "Kerben sitzen jetzt exakt auf der Abrisslinie (Summe, Detail, Kasse, auch in XL); Radius überall 9 pt",
+   "Betragsschrift: Komma auf der Grundlinie, Cent oben bündig, proportionale Ziffern (136,25 wirkt jetzt wie ein Preisschild)",
+   "Tokens werden eingehalten: 16 pt Seitenrand überall gemessen (x=48 px bis 1158 px), Zurück-/Stift-Knopf 44x44 pt, 12 pt Abstand zwischen Kacheln im Detail, 9 Schriftstufen (12–34) im Code, nur 2 hartkodierte Radien übrig",
+   "Schalter an = Grün (toggleOn), im Dunkeln sichtbar",
+   "Stempel Aufgebraucht: onBrand (Tinte) auf brandYellow im Code, also in beiden Modi lesbar (kein Screenshot davon)",
+   "An der Kasse zeigen unten fixiert, volle Breite, 56 pt",
+   "Ladenfarben ohne Fast-Schwarz; Amazon-Kachel #22303F mit orangem a, Stadtgutschein #52525B"
+  ],
+  "vorrunde_offen": [
+   "Schatten weiter nicht als System: Radien 4/12/14/16 und y 2/6/8/-4 in 12 Aufrufen. Das Summen-Ticket auf Start hat gar keinen Schatten (gemessen: direkt unter der Karte Seitenfarbe 246,244,239), dasselbe Ticket im Onboarding und das Detail-Ticket schon (Schatten bis ca. 25 pt, bis −12 Helligkeit)",
+   "Platzhaltertext in Formularen: Kontrast 1.72:1 (hell) bzw. 2.46:1 (dunkel), z. B. „z. B. Mia oder Oma“",
+   "Dringlichkeits-Text „noch 24 Tage“ (#B35A00, 13 pt) auf Weiß nur ca. 4.3–4.6:1, grenzwertig",
+   "Scroll-Kante: weiche Kante statt Material, Inhalte schimmern hinter Statusleiste und Kopf durch (Radar-Kacheln hinter der Uhrzeit, Detail-Ticket „gültig bis … noch 826 Tage“ in der Statusleiste)",
+   "Kasse Dunkelmodus: weiße Barcode-Platte mit 0 pt Radius als harte Kante in der 24-pt-Karte"
+  ],
+  "neue_probleme": [
+   "Verfallsradar XL: Jahreslabels überlappen („20292030“), weil das Label-Frame fest 64 pt breit ist, die Strichabstände bei gestauchter Skala am Ende aber nur ca. 50 pt betragen; auf Start XL rutschen Achse und Labels zusätzlich unter die Tab-Leiste",
+   "Verfallsradar: Über 18 Monate gibt es nur Jahresstriche, Quartals-/Monatsstriche fehlen bei der realen Spanne (tickStep 12). Der Zeitraum Heute bis 2027, in dem 4 von 6 Kacheln liegen, hat keine Unterteilung",
+   "Radar: Der 2027-Strich stößt von unten an die €-Kachel, der 2029-/2030-Strich sitzt direkt unter T/a. Kachel und Strich kleben ohne Luft zusammen (Kachel-Unterkante axisY−6, Strich 8 pt hoch → 2 pt Überlappung)",
+   "Radar: Dringende Kachel hat drei Kanten (Ladenfarbe, 2 pt weißer Rand, 2 pt roter Ring mit 3 pt Abstand), das wirkt unruhig; das Heute-Fähnchen nutzt eine zweite Strichelung (3/3 statt 4/4) und einen mustardfarbenen Rand (onBrand 15 %)",
+   "Onboarding XL: Fließtext läuft unter die Seitenpunkte („Karten, Codes, Stadt…“ wird von den Dots überdeckt), ohne Verlauf/Abstand – im ScrollView-Fallback fehlt ein unterer Inset",
+   "Onboarding Seite 3: Die Mitteilung zeigt ein Fantasie-App-Symbol (schwarzes 40-pt-Quadrat, Radius 10, gelber Punkt 14 pt), nicht das echte Ticket-Icon",
+   "Detail gescrollt: Das Minus-Symbol von „Einkauf eintragen“ schaut hinter dem Zurück-Knopf hervor; die Knöpfe schweben ohne Material auf Inhalt",
+   "Kasse XL: Die untere Ticket-Hälfte wird vom Knopfbereich hart abgeschnitten (PIN-Knopf halb sichtbar), weder Kerbe noch Ticketende sind sichtbar"
+  ],
+  "scroll_befund": "Start: Wortmarke und Suche bleiben fest, die Liste läuft darunter mit weicher Kante (scrollEdgeEffectStyle .soft), die Zalando-Zeile wird halb unter dem Suchfeld abgeschnitten, und Radar-Kacheln sowie „Läuft bald ab“ schimmern als Geister hinter Uhrzeit und Wortmarke. Beim Scrollen unten ist die Tab-Leiste auf Home-Symbol und Plus eingeklappt (iOS-26-Verhalten, gut). Detail Ende: Einlöse-Verlauf als Bon und „Gutschein entfernen“ in Rot sind sauber, aber oben liegen die Glas-Knöpfe über Inhalt (Kollision mit Aktionskachel), und die Unterkante des Tickets steht in der Statusleiste. Läden Mitte: Titel und Suche fest, Karten laufen darunter, die unterste Karte liegt unter Tab-Leiste und Plus (Decathlon-Icon hinter dem eingeklappten Tab-Knopf). Funktioniert, ist aber nicht poliert. Flighty/Things setzen hier ein echtes Kopf-Material mit Haarlinie.",
+  "messungen": [
+   {
+    "was": "Seitenrand Karten/Suche/Knöpfe",
+    "screen": "L_01_start, L_detail, L_checkout",
+    "wert": "16 pt (48 px links, 1158 px rechts)",
+    "soll/erwartung": "Layout.page 16",
+    "ok": true
+   },
+   {
+    "was": "Zurück-Knopf Durchmesser",
+    "screen": "L_detail",
+    "wert": "44 x 44 pt",
+    "soll/erwartung": ">= 44 pt",
+    "ok": true
+   },
+   {
+    "was": "Primärknopf-Höhe (Bezahlt / An der Kasse zeigen)",
+    "screen": "L_checkout, L_detail",
+    "wert": "56 pt",
+    "soll/erwartung": "56 pt (FilledButtonStyle)",
+    "ok": true
+   },
+   {
+    "was": "Tab-Leiste und Plus-Knopf Höhe",
+    "screen": "L_01_start",
+    "wert": "61 pt / 61 pt",
+    "soll/erwartung": "gleich hoch",
+    "ok": true
+   },
+   {
+    "was": "Abstand Aktionskacheln horizontal",
+    "screen": "L_detail",
+    "wert": "12 pt (195→207 pt)",
+    "soll/erwartung": "Layout.group 12",
+    "ok": true
+   },
+   {
+    "was": "Kerbe auf Abrisslinie",
+    "screen": "L/D_01_start, L_detail, L_checkout, XL",
+    "wert": "Kerbenmitte = Strichmitte (±0.3 pt), r = 9 pt",
+    "soll/erwartung": "deckungsgleich",
+    "ok": true
+   },
+   {
+    "was": "Kerbe Innenkante",
+    "screen": "L_01_start (Zoom 3x)",
+    "wert": "harte 90°-Ecke, wo Kreis auf Kartenkante trifft",
+    "soll/erwartung": "0.5–1 pt Rundung wie gestanzt (Flighty-Boarding-Pass)",
+    "ok": false
+   },
+   {
+    "was": "Strichelung Abrisslinie",
+    "screen": "Summe, Detail, Kasse",
+    "wert": "4 pt Strich / ~4 pt Lücke, 1 pt",
+    "soll/erwartung": "eine Strichelung",
+    "ok": true
+   },
+   {
+    "was": "Strichelung Heute-Linie",
+    "screen": "L_01_start Radar",
+    "wert": "3/3 pt, Tinte 50 %",
+    "soll/erwartung": "4/4 wie überall",
+    "ok": false
+   },
+   {
+    "was": "Farbe Abrisslinie auf Gelb",
+    "screen": "L_01_start",
+    "wert": "#B89C3B (Tinte 30 % auf Gelb)",
+    "soll/erwartung": "dekorativ, sichtbar",
+    "ok": true
+   },
+   {
+    "was": "Abrisslinie Kasse auf Weiß",
+    "screen": "L_checkout",
+    "wert": "#B8B8B8, 1.98:1",
+    "soll/erwartung": "dekorativ, ok",
+    "ok": true
+   },
+   {
+    "was": "Schatten Summen-Ticket Start",
+    "screen": "L_01_start",
+    "wert": "keiner (Pixel unter Karte = Seitenfarbe)",
+    "soll/erwartung": "gleiches Ticket wie Onboarding/Detail = gleiche Erhebung",
+    "ok": false
+   },
+   {
+    "was": "Schatten-Varianten im Code",
+    "screen": "Code",
+    "wert": "Radius 4/12/14/16, y 2/6/8/−4",
+    "soll/erwartung": "2 Stufen (klein/groß) als Token",
+    "ok": false
+   },
+   {
+    "was": "Kontrast „Nur Beispiele…“ auf Gelb",
+    "screen": "L_01_start",
+    "wert": "7.1:1",
+    "soll/erwartung": ">= 4.5",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Radar-Jahreszahlen",
+    "screen": "L/D_01_start",
+    "wert": "6.63 / 7.12:1",
+    "soll/erwartung": ">= 4.5",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Heute-Fähnchen",
+    "screen": "L_01_start",
+    "wert": "13.65:1",
+    "soll/erwartung": ">= 4.5",
+    "ok": true
+   },
+   {
+    "was": "Kontrast „noch 12 Tage“ Pill",
+    "screen": "L/D_01_start",
+    "wert": "4.79 / 5.5:1",
+    "soll/erwartung": ">= 4.5",
+    "ok": true
+   },
+   {
+    "was": "Kontrast „noch 24 Tage“ (soon)",
+    "screen": "L_01_start",
+    "wert": "ca. 4.3:1 (13 pt semibold)",
+    "soll/erwartung": ">= 4.5",
+    "ok": false
+   },
+   {
+    "was": "Kontrast „Am Handy vorzeigbar“",
+    "screen": "L/D_merchants",
+    "wert": "5.32 / 7.6:1",
+    "soll/erwartung": ">= 4.5",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Weiß auf Thalia-Petrol",
+    "screen": "L_detail",
+    "wert": "6.09:1",
+    "soll/erwartung": ">= 4.5",
+    "ok": true
+   },
+   {
+    "was": "Kontrast deaktiviert „Abziehen“",
+    "screen": "L/D_keypad",
+    "wert": "4.99 / 6.0:1",
+    "soll/erwartung": ">= 4.5",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Platzhalter Formular",
+    "screen": "L/D_form",
+    "wert": "1.72 / 2.46:1",
+    "soll/erwartung": ">= 4.5",
+    "ok": false
+   },
+   {
+    "was": "Radar-Jahreslabels XL",
+    "screen": "XL_radar, XL_01_start",
+    "wert": "„2029“ und „2030“ überlappen ca. 10 pt",
+    "soll/erwartung": "keine Überlappung, sonst Label ausdünnen",
+    "ok": false
+   },
+   {
+    "was": "Radar Kachel ↔ Achsstrich",
+    "screen": "L_01_start",
+    "wert": "Strich (8 pt) ragt 2 pt in die Kachel-Zone (Kachelunterkante 6 pt über Achse)",
+    "soll/erwartung": ">= 2 pt Luft",
+    "ok": false
+   },
+   {
+    "was": "Barcode-Platte Radius (dunkel)",
+    "screen": "D_checkout",
+    "wert": "0 pt",
+    "soll/erwartung": "10 pt (controlRadius)",
+    "ok": false
+   },
+   {
+    "was": "Sum-Gelb gerendert",
+    "screen": "L/D_01_start",
+    "wert": "#FFD84D hell / #F5CE3E dunkel",
+    "soll/erwartung": "Token",
+    "ok": true
+   },
+   {
+    "was": "App-Icon bei 29/40 px",
+    "screen": "AppIcon.png herunterskaliert",
+    "wert": "Strichelung wird zu grauem Brei, Fortschrittsbalken bleibt lesbar",
+    "soll/erwartung": "Silhouette trägt allein",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "XL_radar, XL_01_start",
+    "element": "Radar-Achsenbeschriftung",
+    "problem": "„20292030“ überlappt; auf Start liegen Achse und Labels unter der Tab-Leiste",
+    "schwere": "hoch",
+    "vorschlag": "Labels messen statt fester 64-pt-Frame: Label nur zeichnen, wenn Abstand zum vorigen ≥ Labelbreite + 8 pt, sonst weglassen oder als „’30“ kürzen; ab accessibility1 Labelschrift bei 17 pt deckeln (.dynamicTypeSize(...accessibility1))"
+   },
+   {
+    "screen": "L_00_onboarding1 (XL)",
+    "element": "Fließtext vs. Seitenpunkte",
+    "problem": "Text läuft unter die Dots und wird abgeschnitten",
+    "schwere": "hoch",
+    "vorschlag": "Im ScrollView-Fallback .safeAreaInset(edge: .bottom) für Dots+Button nutzen oder .contentMargins(.bottom, 24) plus scrollEdgeEffectStyle(.soft, for: .bottom)"
+   },
+   {
+    "screen": "L_00_onboarding3",
+    "element": "Mitteilungs-Symbol",
+    "problem": "Zeigt schwarzes Quadrat mit gelbem Punkt statt echtem App-Icon: zwei Logos",
+    "schwere": "mittel",
+    "vorschlag": "Das echte AppIcon (Ticket) als Image-Asset, 38 x 38 pt, Radius 38*0.2237 continuous, einsetzen; oder das App-Icon auf den Punkt umstellen, aber nur eins von beidem"
+   },
+   {
+    "screen": "L_01_start",
+    "element": "Summen-Ticket Schatten",
+    "problem": "Hero-Ticket flach, dasselbe Ticket im Onboarding und das Detail-Ticket mit Schatten: Erhebung inkonsistent",
+    "schwere": "mittel",
+    "vorschlag": "Zwei Schatten-Token: Elevation.ticket = (shade, r 14, y 6) für alle Tickets inkl. Start, Elevation.chip = (shade, r 3, y 1) für Radar-Kacheln; Karten (Listen) flach. Radius 12/16 streichen"
+   },
+   {
+    "screen": "alle Tickets",
+    "element": "Kerben-Innenecke",
+    "problem": "Kreis-Ausschnitt trifft mit harter 90°-Ecke auf die Kartenkante, wirkt digital geschnitten statt gestanzt",
+    "schwere": "niedrig",
+    "vorschlag": "Kerbe als Pfad mit 1 pt Übergangsradius zeichnen (addArc mit tangent-Rundung) oder Kerbenradius 9→10 pt und Kante mit 0.75 pt Rundung"
+   },
+   {
+    "screen": "L_01_start, L_radar",
+    "element": "Radar-Achse",
+    "problem": "Bei Spanne > 18 Monate nur Jahresstriche; der dichte Bereich heute–2027 ist ungegliedert; Striche stoßen an Kacheln",
+    "schwere": "mittel",
+    "vorschlag": "Zweistufige Striche: Jahre 8 pt / 2 pt Tinte, Quartale 4 pt / 1 pt Tinte 30 %; Kachel-Unterkante auf axisY − 12 anheben"
+   },
+   {
+    "screen": "L/D_01_start Radar",
+    "element": "Dringende Kachel",
+    "problem": "Drei Kanten (Farbe, weißer Rand, roter Ring) wirken unruhig",
+    "schwere": "niedrig",
+    "vorschlag": "Weißen Rand bei dringenden Kacheln weglassen, roter Ring 2 pt direkt anliegend (padding −2), oder statt Ring roter 8-pt-Punkt oben rechts wie ein Badge"
+   },
+   {
+    "screen": "L_01_start Radar",
+    "element": "Heute-Fähnchen",
+    "problem": "Eigene Strichelung 3/3 und dunkler Rand (Tinte 15 %) wirkt auf Weiß mustardig",
+    "schwere": "niedrig",
+    "vorschlag": "DashLine() Standard 4/4 verwenden, Rand entfernen (Gelb auf Weiß braucht keinen), Fähnchen 2 pt Tinte-Stab statt Strichelung wie ein echtes Fähnchen"
+   },
+   {
+    "screen": "D_checkout",
+    "element": "Barcode-Platte",
+    "problem": "Weiße Platte mit 0 pt Radius in 24-pt-Karte",
+    "schwere": "mittel",
+    "vorschlag": "clipShape(.rect(cornerRadius: Layout.controlRadius)) und 12 pt Ruhezone innen; alternativ in beiden Modi die ganze untere Ticket-Hälfte weiß (wie echter Boarding-Pass in Wallet)"
+   },
+   {
+    "screen": "S_start_1, S_detail_ende",
+    "element": "Scroll-Kante oben",
+    "problem": "Inhalt schimmert hinter Statusleiste, Wortmarke und Glasknöpfen; Knöpfe kollidieren mit Inhalt",
+    "schwere": "mittel",
+    "vorschlag": "Auf Start/Läden einen festen Kopf mit Color.page + 0.5-pt-Haarlinie (Color.line) bei scrollOffset > 0; im Detail scrollEdgeEffectStyle(.hard, for: .top)"
+   },
+   {
+    "screen": "XL_checkout",
+    "element": "Untere Ticket-Hälfte",
+    "problem": "Wird am Knopfbereich hart abgeschnitten, kein Verlauf",
+    "schwere": "mittel",
+    "vorschlag": "Knöpfe per .safeAreaInset(edge: .bottom) setzen, damit die ScrollView darüber endet und scrollEdgeEffectStyle(.soft, for: .bottom) greift"
+   },
+   {
+    "screen": "L_form, D_form",
+    "element": "Platzhalter",
+    "problem": "1.72:1 / 2.46:1",
+    "schwere": "mittel",
+    "vorschlag": "prompt: Text(...).foregroundStyle(Color.muted) (6.6:1) verwenden"
+   },
+   {
+    "screen": "L_01_start",
+    "element": "„noch 24 Tage“",
+    "problem": "#B35A00 auf Weiß ca. 4.3–4.6:1 bei 13 pt",
+    "schwere": "niedrig",
+    "vorschlag": "soon hell auf #9A4D00 (ca. 6:1)"
+   },
+   {
+    "screen": "AppIcon (alle 3)",
+    "element": "App-Icon",
+    "problem": "Flaches Ticket mit Balken und 7 Strichen: bei 29–40 px wird die Strichelung zu Brei, die untere Ticket-Hälfte ist leer, und der Balken liest sich wie ein Schieberegler. Wortmarken-Punkt fehlt; kein Material, keine Tiefe (Flighty/Not Boring leben von Licht)",
+    "schwere": "mittel",
+    "vorschlag": "Ticket 10° gekippt, größer (86 % Breite), nur 4 dicke Striche (Strich 40 px bei 1024), Fortschrittsbalken raus, stattdessen der gelbe Punkt bzw. „€“-Kerbe; leichter Verlauf #FFE27A→#FFD84D oben und 1 px Innenlicht; iOS-26-Icon Composer mit Ebenen (Hintergrund, Ticket, Punkt) für Liquid-Glass-Varianten statt drei flacher PNGs"
+   }
+  ],
+  "top3": [
+   "Radar in XL reparieren (Label-Kollision „20292030“, Achse unter der Tab-Leiste) und die Achse zweistufig gliedern: Das ist das neue Hero-Element und derzeit der sichtbarste Politurfehler",
+   "Elevation und Scroll-Kanten zum System machen: 2 Schatten-Token, Summen-Ticket auf Start mit Schatten, fester Kopf mit Haarlinie statt Geisterinhalt hinter Statusleiste und Glasknöpfen",
+   "Ein Logo: App-Icon neu (Icon Composer, Ebenen, Tiefe, bei 29 px lesbar) und genau dieses Icon in der Onboarding-Mitteilung. Im Moment hat die Marke zwei Zeichen"
+  ],
+  "lob": [
+   "TicketHalf an der Kasse plus Abreiß-Animation (Drehung 9°, 160 pt nach unten, bei Bewegung reduzieren sofort): genau die Art Moment, die in ADA-Juroren-Videos landet",
+   "Kerben sitzen gemessen exakt auf der Abrisslinie, auch bei XL. Der Aufwand, sie per Messung zu setzen, zahlt sich aus",
+   "Betragsschrift mit Komma auf der Grundlinie und bündigen Cent sieht jetzt wie ein echtes Preisschild aus",
+   "Verlauf als Kassenbon mit Zackenkante und Mono-Schrift: bester Einzelscreen, charmant wie (Not Boring)",
+   "Dunkelmodus konsequent: Tickets behalten Ladenfarbe, Primärknopf invertiert auf Papier, Gelb bleibt Gelb",
+   "Tokens greifen sichtbar: 16/12/24 pt, 44-pt-Tippziele, 56-pt-Primärknöpfe gemessen konsistent"
+  ]
+ }
+]

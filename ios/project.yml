@@ -15,6 +15,7 @@ targets:
       - path: Restwert
     dependencies:
       - package: RestwertKit
+      - target: RestwertWidget
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: de.restwert.app
@@ -33,4 +34,23 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
-        INFOPLIST_KEY_UIUserInterfaceStyle: Light
+        CODE_SIGN_ENTITLEMENTS: Restwert.entitlements
+  RestwertWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: RestwertWidget
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.restwert.app.widget
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "6.0"
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        TARGETED_DEVICE_FAMILY: 1
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: RestwertWidget-Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: Restwert
+        CODE_SIGN_ENTITLEMENTS: RestwertWidget.entitlements
+        SKIP_INSTALL: YES

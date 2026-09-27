@@ -4,14 +4,20 @@ import RestwertKit
 /// Der große Bon: jede Einlösung über alle Gutscheine, wie ein Kassenzettel.
 struct BonView: View {
     @Environment(Store.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var period: Period = .all
 
+    /// Wie überall: „Alle“ zuerst.
     enum Period: String, CaseIterable, Identifiable {
-        case month = "30 Tage", year = "Dieses Jahr", all = "Alles"
+        case all = "Alle", month = "30 Tage", year = "Dieses Jahr"
         var id: String { rawValue }
     }
 
-    private var lines: [BonLine] {
+    /// Ein Datumsformat für den ganzen Bon: TT.MM.JJJJ.
+    private static func bonDate(_ d: Date) -> String { d.dayMonthYear }
+
+    private func filteredLines() -> [BonLine] {
         let cal = Calendar.current
         let monthAgo = cal.date(byAdding: .day, value: -30, to: .now) ?? .now
         return store.bonLines.filter { line in
@@ -23,131 +29,179 @@ struct BonView: View {
         }
     }
 
-    private var days: [(day: Date, lines: [BonLine])] {
+    private func days(_ lines: [BonLine]) -> [(day: Date, lines: [BonLine])] {
         let cal = Calendar.current
         let groups = Dictionary(grouping: lines) { cal.startOfDay(for: $0.redemption.date) }
         return groups.keys.sorted(by: >).map { day in (day, groups[day] ?? []) }
     }
 
-    private var sum: Double { lines.reduce(0) { $0 + $1.redemption.amount } }
-
     var body: some View {
+        // Einmal pro Neuzeichnen berechnen, nicht je Summe und Tag erneut.
+        let lines = filteredLines()
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Was du wann und wo eingelöst hast.").foregroundStyle(Color.muted)
-                HStack(spacing: 10) {
-                    statTile("Eingelöst", sum, "arrow.down.right", .good)
-                    statTile("Noch offen", store.total, "clock", .warn)
+            VStack(alignment: .leading, spacing: Layout.inset) {
+                Text("Was du wann und wo eingelöst hast.").font(.scaled(15)).foregroundStyle(Color.ink2)
+                ScrollView(.horizontal) {
+                    HStack(spacing: 8) {
+                        ForEach(Period.allCases) { p in
+                            FilterChip(title: p.rawValue, on: period == p) { withAnimation(reduceMotion ? nil : .snappy) { period = p } }
+                        }
+                    }
                 }
-                Picker("Zeitraum", selection: $period.animation(.smooth)) {
-                    ForEach(Period.allCases) { Text($0.rawValue).tag($0) }
-                }
-                .pickerStyle(.segmented)
+                .scrollIndicators(.hidden).scrollClipDisabled()
+                .sensoryFeedback(.selection, trigger: period)
 
-                receipt
+                receipt(lines)
 
                 NavigationLink(value: Route.tests) {
                     HStack {
-                        Image(systemName: "checkmark.seal").font(.system(size: 18, weight: .semibold))
-                            .frame(width: 42, height: 42).background(Color.goodSoft, in: .rect(cornerRadius: 12))
+                        Image(systemName: "checkmark.seal").font(.scaled(17, weight: .semibold))
+                            .frame(width: 44, height: 44).background(Color.fill, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
+                            .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Kassentest").font(.system(size: 16, weight: .bold))
-                            Text("\(store.tests.filter(\.success).count) von \(store.tests.count) Kassen haben das Handy genommen")
-                                .font(.system(size: 13)).foregroundStyle(Color.muted)
+                            Text("Kassentests").font(.scaled(16, weight: .semibold))
+                            Text(store.tests.isEmpty ? "Noch kein Kassentest – teste, ob die Kasse das Handy nimmt"
+                                 : "\(store.tests.filter(\.success).count) von \(store.tests.count) Kassen haben das Handy akzeptiert")
+                                .font(.scaled(13)).foregroundStyle(Color.muted)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer()
-                        Image(systemName: "chevron.right").foregroundStyle(Color.muted)
+                        Image(systemName: "chevron.right").foregroundStyle(Color.muted).accessibilityHidden(true)
                     }
-                    .foregroundStyle(Color.ink).padding(14).cardSurface(radius: 20)
+                    .foregroundStyle(Color.ink).padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
         }
         .scrollIndicators(.hidden)
         .pageBackground()
         .navigationTitle("Verlauf")
     }
 
-    private func statTile(_ label: String, _ value: Double, _ icon: String, _ tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(value.euro).font(.system(size: 24, weight: .heavy)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.6)
-                .contentTransition(.numericText(value: value))
-            HStack(spacing: 6) {
-                Text(label)
-                Image(systemName: icon).foregroundStyle(tint)
-            }
-            .font(.system(size: 13.5)).foregroundStyle(Color.muted)
-        }
-        .padding(16).frame(maxWidth: .infinity, alignment: .leading).cardSurface(radius: 24)
-    }
-
-    private var receipt: some View {
-        ReceiptPaper {
+    private func receipt(_ lines: [BonLine]) -> some View {
+        // Nur echte Abzüge. Aufladungen und Korrekturen nach oben sind als negative Beträge gespeichert und stehen extra.
+        let sum = lines.reduce(0) { $0 + max(0, $1.redemption.amount) }
+        let topUps = lines.reduce(0) { $0 + max(0, -$1.redemption.amount) }
+        let days = days(lines)
+        return BonPaper {
             VStack(alignment: .leading, spacing: 10) {
                 VStack(spacing: 4) {
-                    Text("RESTWERT").font(.system(size: 22, weight: .heavy, design: .monospaced)).kerning(3)
-                    Text("EINLÖSUNGEN · \(period.rawValue.uppercased())").font(.system(size: 11, design: .monospaced))
-                        .foregroundStyle(Color.muted)
+                    // Kopf mit der Wortmarke: der Bon ist die Sammlung deiner abgerissenen Ticket-Abschnitte.
+                    Wordmark(size: 22)
+                    Text("EINLÖSUNGEN · \(period.rawValue.uppercased())").font(.scaled(12, design: .monospaced))
+                        .foregroundStyle(Color.ink2)
                         .contentTransition(.interpolate)
-                    Text(Date.now.formatted(date: .numeric, time: .shortened)).font(.system(size: 11, design: .monospaced))
-                        .foregroundStyle(Color.muted)
+                    Text(Self.bonDate(.now) + " " + Date.now.formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits)
+                        .locale(Locale(identifier: "de_DE"))))
+                        .font(.scaled(12, design: .monospaced))
+                        .foregroundStyle(Color.ink2)
+                    Text("NOCH OFFEN \(store.total.euro)").font(.scaled(13, weight: .semibold, design: .monospaced))
+                        .padding(.top, 2)
                 }
+                .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 DashedRule()
                 if days.isEmpty {
                     Text("NOCH KEINE POSTEN\nZieh einen Einkauf ab oder mach einen Kassentest.")
-                        .font(.system(size: 12.5, design: .monospaced)).foregroundStyle(Color.muted)
+                        .font(.scaled(13, design: .monospaced)).foregroundStyle(Color.muted)
                         .multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(.vertical, 12)
                 }
                 ForEach(days, id: \.day) { day in
-                    Text(day.day.formatted(.dateTime.weekday(.abbreviated).day().month(.twoDigits).year()
-                        .locale(Locale(identifier: "de_DE"))).uppercased())
-                        .font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(Color.muted)
+                    Text((day.day.formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "de_DE"))) + " " + Self.bonDate(day.day)).uppercased())
+                        .font(.scaled(12, weight: .bold, design: .monospaced)).foregroundStyle(Color.ink2)
+                        .accessibilityLabel(day.day.formatted(.dateTime.weekday(.wide).day().month(.wide).year().locale(Locale(identifier: "de_DE"))))
+                        .accessibilityAddTraits(.isHeader)
                     ForEach(day.lines) { line in
                         NavigationLink(value: Route.card(line.cardID)) { lineRow(line) }
+                            .accessibilityLabel(accessibilityText(line))
                             .buttonStyle(.plain)
                             .disabled(store.card(line.cardID) == nil)
                     }
                 }
                 DashedRule()
                 HStack {
-                    Text("SUMME").font(.system(size: 16, weight: .heavy, design: .monospaced))
+                    Text("SUMME EINGELÖST").font(.scaled(16, weight: .heavy, design: .monospaced))
                     Spacer()
-                    Text(sum.euro).font(.system(size: 16, weight: .heavy, design: .monospaced))
+                    Text(sum > 0 ? "−" + sum.euro : sum.euro).font(.scaled(16, weight: .heavy, design: .monospaced))
                         .contentTransition(.numericText(value: sum))
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Summe eingelöst \(sum.euro)")
+                if topUps > 0 {
+                    HStack {
+                        Text("AUFGELADEN/KORRIGIERT")
+                        Spacer()
+                        Text("+" + topUps.euro).contentTransition(.numericText(value: topUps))
+                    }
+                    .font(.scaled(12, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(Color.ink2)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Aufgeladen oder korrigiert \(topUps.euro)")
                 }
                 HStack {
                     Text("POSTEN")
                     Spacer()
                     Text("\(lines.count)").contentTransition(.numericText())
                 }
-                .font(.system(size: 12, design: .monospaced))
-                .foregroundStyle(Color.muted)
-                DashedRule()
-                Text("DANKE, DASS DU NICHTS VERFALLEN LÄSST").font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(Color.muted).frame(maxWidth: .infinity)
-                BarcodeView(number: "RESTWERT", format: .code128, height: 34).padding(.horizontal, 40).opacity(0.85)
+                .font(.scaled(12, design: .monospaced))
+                .foregroundStyle(Color.ink2)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(lines.count) Posten")
             }
         }
-        .animation(.smooth, value: period)
+        .animation(reduceMotion ? nil : .smooth, value: period)
+    }
+
+    private func amountText(_ line: BonLine) -> String {
+        let a = line.redemption.amount
+        return a > 0 ? "−" + a.euro : a < 0 ? "+" + (-a).euro : "✓"
+    }
+
+    private func accessibilityText(_ line: BonLine) -> String {
+        let a = line.redemption.amount
+        let amount = a > 0 ? "\(a.euro) eingelöst" : a < 0 ? "\((-a).euro) aufgeladen" : "ohne Betrag"
+        let place = Self.place(line.redemption.store, merchant: line.cardName)
+        let showRest = store.card(line.cardID)?.kind.isValueBased ?? true
+        return [line.cardName, amount, place, line.redemption.note, showRest ? "Rest \(line.redemption.balanceAfter.euro)" : ""]
+            .filter { !$0.isEmpty }.joined(separator: ", ")
     }
 
     private func lineRow(_ line: BonLine) -> some View {
-        HStack(alignment: .top) {
+        // Bei sehr großer Schrift Betrag unter den Namen statt daneben.
+        let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
+                                                  : AnyLayout(HStackLayout(alignment: .top))
+        return layout {
             VStack(alignment: .leading, spacing: 2) {
-                Text(line.cardName.uppercased()).font(.system(size: 14, weight: .bold, design: .monospaced))
-                Text([line.redemption.store, line.redemption.note, "Rest \(line.redemption.balanceAfter.euro)"]
+                Text(line.cardName.uppercased()).font(.scaled(15, weight: .bold, design: .monospaced))
+                // Händlername steht schon darüber, also nur die Filiale („thalia Köln“ → „Köln“, „Thalia“ → nichts).
+                let place = Self.place(line.redemption.store, merchant: line.cardName)
+                // Rabattcodes haben keinen Rest; gelöschte Karten zeigen ihn weiter.
+                let showRest = store.card(line.cardID)?.kind.isValueBased ?? true
+                Text([place, line.redemption.note, showRest ? "Rest \(line.redemption.balanceAfter.euro)" : ""]
                     .filter { !$0.isEmpty }.joined(separator: " · "))
-                    .font(.system(size: 11.5, design: .monospaced)).foregroundStyle(Color.muted)
+                    .font(.scaled(13, design: .monospaced)).foregroundStyle(Color.ink2)
             }
-            Spacer()
-            Text(line.redemption.amount > 0 ? "−" + line.redemption.amount.euro : "✓")
-                .font(.system(size: 14, weight: .bold, design: .monospaced))
+            Spacer(minLength: 8)
+            Text(amountText(line))
+                .font(.scaled(15, weight: .bold, design: .monospaced))
         }
         .foregroundStyle(Color.ink)
+        .frame(maxWidth: .infinity, minHeight: Layout.tap, alignment: .leading)
         .contentShape(.rect)
         .transition(.opacity.combined(with: .move(edge: .leading)))
+    }
+
+    /// Filiale ohne vorangestellten Händlernamen, unabhängig von Groß-/Kleinschreibung und Akzenten.
+    static func place(_ store: String, merchant: String) -> String {
+        let raw = store.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = merchant.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty,
+              let r = raw.range(of: name, options: [.caseInsensitive, .diacriticInsensitive, .anchored]) else { return raw }
+        let rest = raw[r.upperBound...]
+        // Nur abschneiden, wenn der Name allein steht oder ein Trenner folgt („Thalia Köln“, nicht „Thaliahaus“).
+        guard rest.isEmpty || rest.first?.isWhitespace == true || rest.first?.isPunctuation == true else { return raw }
+        return rest.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
     }
 }
 
@@ -155,6 +209,7 @@ struct BonView: View {
 
 struct TestsView: View {
     @Environment(Store.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var filter = 0
 
     var body: some View {
@@ -162,52 +217,63 @@ struct TestsView: View {
         let ok = all.filter(\.success).count
         let shown = all.filter { filter == 0 || (filter == 1 ? $0.success : !$0.success) }
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: Layout.inset) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Quote").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color.ink2)
-                    Text("\(all.isEmpty ? 0 : ok * 100 / all.count) %").font(.system(size: 48, weight: .heavy))
+                    Text("An der Kasse angenommen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                    // Unter 5 Tests ist eine Prozentzahl irreführend, dann in Worten.
+                    Text(all.isEmpty ? "Noch nicht getestet" : all.count < 5 ? "\(ok) von \(all.count) Mal" : "\(ok * 100 / all.count) %")
+                        .font(.display(40))
                         .contentTransition(.numericText())
-                    Text("Kassen, die den Barcode vom Handy angenommen haben").font(.system(size: 13)).foregroundStyle(Color.ink2)
+                    Text("Wie oft Kassen den Barcode vom Handy genommen haben").font(.scaled(13)).foregroundStyle(Color.ink2)
                 }
-                .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.brandYellow.gradient, in: .rect(cornerRadius: 28, style: .continuous))
-                Picker("Filter", selection: $filter.animation(.smooth)) {
-                    Text("Alle").tag(0)
-                    Text("Geklappt").tag(1)
-                    Text("Abgelehnt").tag(2)
+                .padding(Layout.ticketInset).frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                ScrollView(.horizontal) {
+                    HStack(spacing: 8) {
+                        ForEach([(0, "Alle"), (1, "Geklappt"), (2, "Abgelehnt")], id: \.0) { tag, title in
+                            FilterChip(title: title, on: filter == tag) { withAnimation(reduceMotion ? nil : .snappy) { filter = tag } }
+                        }
+                    }
                 }
-                .pickerStyle(.segmented)
-                if shown.isEmpty {
+                .scrollIndicators(.hidden).scrollClipDisabled()
+                .sensoryFeedback(.selection, trigger: filter)
+                if all.isEmpty {
                     Text("Noch keine Tests. Öffne einen Gutschein und tipp auf „An der Kasse zeigen“.").foregroundStyle(Color.muted)
+                } else if shown.isEmpty {
+                    Text(filter == 1 ? "Keine geklappten Tests." : "Keine abgelehnten Tests.").foregroundStyle(Color.muted)
                 }
                 ForEach(shown) { test in
                     HStack(spacing: 14) {
-                        Image(systemName: test.success ? "checkmark" : "xmark").font(.system(size: 17, weight: .bold))
+                        Image(systemName: test.success ? "checkmark" : "xmark").font(.scaled(17, weight: .bold))
+                            .accessibilityLabel(test.success ? "Geklappt" : "Abgelehnt")
                             .foregroundStyle(test.success ? Color.good : Color.bad)
-                            .frame(width: 46, height: 46)
-                            .background(test.success ? Color.goodSoft : Color.badSoft, in: .rect(cornerRadius: 14, style: .continuous))
+                            .frame(width: 44, height: 44)
+                            .background(test.success ? Color.goodSoft : Color.badSoft, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 6) {
-                                Text(test.merchantName).font(.system(size: 16, weight: .bold))
+                                Text(test.merchantName).font(.scaled(16, weight: .bold))
                                 if test.isExample { Chip(text: "Beispiel") }
                             }
                             Text([test.date.dayMonthYear, test.format.label, test.store, test.note].filter { !$0.isEmpty }.joined(separator: " · "))
-                                .font(.system(size: 13)).foregroundStyle(Color.muted)
+                                .font(.scaled(13)).foregroundStyle(Color.muted)
                         }
                         Spacer()
                     }
-                    .padding(12).cardSurface(radius: 20)
+                    .padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                     .transition(.scale(scale: 0.95).combined(with: .opacity))
                 }
             }
-            .padding(.horizontal, 16).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
         }
         .pageBackground()
         .navigationTitle("Kassentest")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                ShareLink(item: exportText(all)) { Image(systemName: "square.and.arrow.up") }
+                // Exportiert, was angezeigt wird, ohne Beispiele (wie Backup und CSV).
+                ShareLink(item: exportText(shown.filter { !$0.isExample })) { Image(systemName: "square.and.arrow.up") }
+                    .accessibilityLabel("Kassentests teilen")
+                    .disabled(!shown.contains { !$0.isExample })
             }
         }
     }
@@ -217,5 +283,56 @@ struct TestsView: View {
             [$0.date.dayMonthYear, $0.merchantName, $0.success ? "geklappt" : "abgelehnt", $0.format.label, $0.store, $0.note]
                 .filter { !$0.isEmpty }.joined(separator: " | ")
         }.joined(separator: "\n")
+    }
+}
+
+// MARK: - Bon-Papier
+
+/// Umriss des Bons in einem Stück: gezackt oben und unten, gerade Seiten. So bekommen Fläche, Kante und Schatten dieselbe Form.
+private struct ReceiptOutline: Shape {
+    var tooth: CGFloat = 10
+
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        let count = max(1, Int(rect.width / tooth))
+        let w = rect.width / CGFloat(count)
+        let half = tooth / 2
+        p.move(to: CGPoint(x: rect.minX, y: rect.minY + half))
+        for i in 0..<count {
+            let x = rect.minX + CGFloat(i) * w
+            p.addLine(to: CGPoint(x: x + w / 2, y: rect.minY))
+            p.addLine(to: CGPoint(x: x + w, y: rect.minY + half))
+        }
+        p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - half))
+        for i in (0..<count).reversed() {
+            let x = rect.minX + CGFloat(i) * w
+            p.addLine(to: CGPoint(x: x + w / 2, y: rect.maxY))
+            p.addLine(to: CGPoint(x: x, y: rect.maxY - half))
+        }
+        p.closeSubpath()
+        return p
+    }
+}
+
+/// Bon im Verlauf: hebt sich mit Kante und Schatten vom Seitengrund ab.
+/// Schatten nur auf der zusammengesetzten Fläche, nie auf dem Text (compositingGroup).
+private struct BonPaper<Content: View>: View {
+    @ViewBuilder var content: Content
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        content
+            .padding(.horizontal, Layout.inset).padding(.vertical, 8 + 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .foregroundStyle(Color.ink)
+            .background {
+                ZStack {
+                    // Hell: weißes Papier auf warmem Grund (paper wäre fast gleich hell wie die Seite). Dunkel: Papierton.
+                    ReceiptOutline().fill(scheme == .dark ? Color.paper : Color.surface)
+                    ReceiptOutline().stroke(Color.line, lineWidth: 1)
+                }
+                .compositingGroup()
+                .shadow(color: Color.shade, radius: 10, y: 4)
+            }
     }
 }

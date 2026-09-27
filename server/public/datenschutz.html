@@ -16,29 +16,59 @@ a{color:#0E0E10}
 <main>
 <p><a href="/">← Restwert</a></p>
 <h1>Datenschutzerklärung</h1>
-<p><span class="todo">Entwurf. Vor der Veröffentlichung mit Namen und Anschrift ergänzen und rechtlich prüfen lassen.</span></p>
+<p><span class="todo">Entwurf. Vor der Veröffentlichung Platzhalter ersetzen und rechtlich prüfen lassen.</span></p>
+<p>Stand: September 2026. Dieselbe Erklärung findest du in der App unter Einstellungen → Datenschutzerklärung.</p>
 
 <h2>Verantwortlich</h2>
-<p><span class="todo">[Name, Anschrift, E-Mail]</span></p>
+<p><span class="todo">[Name]</span><br><span class="todo">[Anschrift]</span><br><span class="todo">[E-Mail]</span></p>
 
-<h2>Ohne Konto</h2>
-<p>Nutzt du Restwert ohne Konto, bleiben alle Gutscheine, Fotos, Einlösungen und Testergebnisse ausschließlich auf deinem Gerät. Wir erhalten davon nichts.</p>
+<h2>Kurz gesagt</h2>
+<p>Restwert hat kein Konto und keinen eigenen Server. Die App enthält keine Tracker, keine Analyse- und keine Werbe-Software. Wir erfahren nicht, welche Gutscheine du hast.</p>
+<p>Frühere Testversionen boten ein Konto mit Kopie auf unserem Server an. Diese Funktion gibt es nicht mehr; die App sendet keine Gutscheine an uns.</p>
 
-<h2>Mit Konto</h2>
-<p>Legst du ein Konto an, speichern wir deine E-Mail-Adresse, optional deinen Namen und dein Passwort als sicheren Hash (scrypt). Damit du deine Gutscheine auf mehreren Geräten nutzen kannst, speichern wir außerdem eine Kopie deiner Gutscheindaten (Shop, Code, Wert, Restwert, Ablaufdatum, Aufbewahrungsort, Einlösungen). Fotos von Karten und PINs werden nicht übertragen.</p>
-<p>Rechtsgrundlage ist die Erfüllung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DSGVO).</p>
+<h2>Auf deinem iPhone</h2>
+<p>Gutscheine, Fotos, PINs, Einlösungen und Testergebnisse liegen in einer Datei im Bereich der App. iOS verschlüsselt sie, solange das iPhone gesperrt ist.</p>
+<p>Für das Widget legt die App eine kurze Übersicht (Name, Betrag, Ablaufdatum – keine Codes, keine PINs) in einem gemeinsamen Ordner von App und Widget auf demselben Gerät ab.</p>
 
-<h2>Hosting</h2>
-<p>Server und Datenbank laufen bei Railway Corp. (USA) in einem Rechenzentrum in der EU. Die Übertragung ist per HTTPS verschlüsselt. <span class="todo">Region und Auftragsverarbeitungsvertrag prüfen.</span></p>
+<h2>Scannen und Texterkennung</h2>
+<p>Kamera, Fotos und PDFs werden auf dem iPhone ausgewertet (Barcode-, Text- und Handschrifterkennung von Apple). Wo Apple Intelligence verfügbar ist, läuft auch sie auf dem Gerät. Bilder und Texte werden dafür nirgendwohin geschickt.</p>
 
-<h2>Texterkennung</h2>
-<p>Die Erkennung von Barcodes, Text und Handschrift läuft vollständig auf dem iPhone (Apple Vision). Bilder werden dafür nicht an uns gesendet.</p>
+<h2>Mitteilungen</h2>
+<p>Erinnerungen plant die App lokal auf dem iPhone. Es gibt keinen Push-Server. Ob Mitteilungen auf dem Sperrbildschirm Inhalte zeigen, stellst du in den iOS-Einstellungen ein.</p>
 
-<h2>Löschen</h2>
-<p>Du kannst dein Konto jederzeit in den Einstellungen löschen. Dabei werden alle gespeicherten Daten sofort und endgültig entfernt.</p>
+<h2>iCloud-Sync (freiwillig)</h2>
+<p>Der Sync ist anfangs aus. Schaltest du ihn ein, speichert die App deine Gutscheine in der privaten iCloud-Datenbank deines eigenen Apple Accounts (CloudKit).</p>
+<p>Jeder Gutschein wird vorher auf dem iPhone mit AES-GCM (256 Bit) verschlüsselt. Der Schlüssel liegt in deinem iCloud-Schlüsselbund, den Apple Ende-zu-Ende verschlüsselt. Den Inhalt können weder wir noch Apple lesen.</p>
+<p>PINs gehen nie in die iCloud-Datenbank, sondern einzeln in deinen iCloud-Schlüsselbund. Fotos werden nicht synchronisiert und bleiben auf dem Gerät.</p>
+<p>Für Apple sichtbar bleiben technische Angaben wie Anzahl, zufällige Kennungen, Größe und Änderungszeit der Einträge. Für iCloud gelten Apples Datenschutzbestimmungen.</p>
+<p>In den Einstellungen der App löscht „Daten aus iCloud löschen“ alles aus deinem iCloud und aus dem iCloud-Schlüsselbund.</p>
+
+<h2>iCloud-Backup des iPhones</h2>
+<p>Unabhängig vom Sync sichert iOS die Daten von Apps im iCloud-Backup, wenn es eingeschaltet ist – auch Gutscheine, Fotos und PINs aus Restwert.</p>
+<p>Ohne „Erweiterten Datenschutz für iCloud“ hält Apple die Schlüssel zu diesem Backup und kann darauf zugreifen. Mit „Erweitertem Datenschutz“ ist das Backup Ende-zu-Ende verschlüsselt. In den iCloud-Einstellungen kannst du Restwert auch vom Backup ausnehmen.</p>
+
+<h2>Sicherung und Export</h2>
+<p>Eine Sicherungsdatei oder Tabelle (CSV) entsteht nur, wenn du sie anforderst. Wohin sie geht, wählst du selbst. Die Zwischendatei auf dem iPhone wird danach gelöscht.</p>
+<p>Die Sicherung enthält PINs und Fotos und ist nicht zusätzlich verschlüsselt. Die Tabelle enthält keine PINs.</p>
+
+<h2>Zwischenablage</h2>
+<p>Kopierst du eine Kartennummer, bleibt sie nur auf diesem Gerät (nicht auf anderen Apple-Geräten) und verschwindet nach zwei Minuten.</p>
+
+<h2>Links zu Shops</h2>
+<p>Links zum Guthaben-Check öffnen die Website des Shops. Restwert gibt dabei keine Gutscheindaten weiter. Auf der Website gelten die Datenschutzregeln des Shops.</p>
+
+<h2>App Store und Absturzberichte</h2>
+<p>Restwert kommt über den App Store oder TestFlight von Apple; dabei gelten Apples Bedingungen. Absturz- und Nutzungsdaten sehen wir nur, wenn du in iOS erlaubst, sie mit App-Entwicklern zu teilen. Apple gibt sie dann ohne deinen Namen weiter. Bei TestFlight sehen wir außerdem Feedback, das du selbst sendest.</p>
+
+<h2>Diese Website</h2>
+<p>Beim Aufruf dieser Seite verarbeitet der Hosting-Anbieter technisch notwendige Verbindungsdaten (z. B. IP-Adresse, Zeitpunkt, abgerufene Seite). <span class="todo">[Hosting-Anbieter, Region und Speicherdauer der Server-Logs ergänzen]</span></p>
+
+<h2>Kontakt</h2>
+<p>Schreibst du uns eine E-Mail, nutzen wir deine Adresse und Nachricht nur, um zu antworten (Art. 6 Abs. 1 lit. b und f DSGVO), und löschen sie, wenn sie dafür nicht mehr nötig sind.</p>
 
 <h2>Deine Rechte</h2>
-<p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Beschwerde bei einer Aufsichtsbehörde.</p>
+<p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde.</p>
+<p>Da deine Gutscheine nur bei dir liegen, löschst du sie selbst: in den Einstellungen der App mit „Alles löschen“ oder indem du die App entfernst. iCloud-Daten löschst du wie oben beschrieben.</p>
 </main>
 </body>
 </html>

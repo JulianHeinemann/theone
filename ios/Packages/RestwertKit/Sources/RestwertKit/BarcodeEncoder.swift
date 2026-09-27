@@ -14,17 +14,36 @@ public enum BarcodeEncoder {
         }
     }
 
-    /// Prüfziffer von EAN/UPC stimmt.
+    /// Prüfziffer von EAN/UPC stimmt. nil bei Formaten ohne Prüfziffer (Code 128, QR, …).
     public static func hasValidChecksum(_ raw: String, format: CodeFormat) -> Bool? {
+        guard [.ean13, .ean8, .upca].contains(format) else { return nil }
         let value = raw.replacingOccurrences(of: " ", with: "")
         guard let d = digits(value) else { return false }
         switch format {
         case .ean13 where d.count == 13: return checkDigit(Array(d.prefix(12))) == d[12]
         case .ean8 where d.count == 8: return checkDigit(Array(d.prefix(7))) == d[7]
         case .upca where d.count == 12: return checkDigit([0] + Array(d.prefix(11))) == d[11]
-        case .ean13, .ean8, .upca: return false
-        default: return nil
+        default: return false
         }
+    }
+
+    /// UPC-E (6, 7 oder 8 Ziffern) auf die 12 Ziffern von UPC-A erweitern. Eine gelesene Prüfziffer bleibt erhalten.
+    public static func expandUPCE(_ raw: String) -> String? {
+        let value = raw.replacingOccurrences(of: " ", with: "")
+        guard var d = digits(value), (6...8).contains(d.count) else { return nil }
+        if d.count == 6 { d.insert(0, at: 0) }
+        guard d[0] == 0 || d[0] == 1 else { return nil }
+        let x = Array(d[1...6])
+        let body: [Int]
+        switch x[5] {
+        case 0...2: body = [x[0], x[1], x[5], 0, 0, 0, 0, x[2], x[3], x[4]]
+        case 3: body = [x[0], x[1], x[2], 0, 0, 0, 0, 0, x[3], x[4]]
+        case 4: body = [x[0], x[1], x[2], x[3], 0, 0, 0, 0, 0, x[4]]
+        default: body = [x[0], x[1], x[2], x[3], x[4], 0, 0, 0, 0, x[5]]
+        }
+        let first11 = [d[0]] + body
+        let check = d.count == 8 ? d[7] : checkDigit(first11)
+        return (first11 + [check]).map(String.init).joined()
     }
 
     // MARK: EAN / UPC

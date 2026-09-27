@@ -14,6 +14,22 @@ enum BarcodeRenderer {
 
     private static let context = CIContext()
 
+    /// Fertige Codes je Nummer und Format: Core Image und Encoder laufen nur einmal, nicht bei jedem Neuzeichnen.
+    private final class Entry { let output: Output?; init(_ output: Output?) { self.output = output } }
+    private static let cache: NSCache<NSString, Entry> = {
+        let c = NSCache<NSString, Entry>()
+        c.countLimit = 40
+        return c
+    }()
+
+    static func cached(_ raw: String, format: CodeFormat) -> Output? {
+        let key = "\(format.rawValue)|\(raw)" as NSString
+        if let hit = cache.object(forKey: key) { return hit.output }
+        let output = render(raw, format: format)
+        cache.setObject(Entry(output), forKey: key)
+        return output
+    }
+
     static func render(_ raw: String, format: CodeFormat) -> Output? {
         let value = raw.replacingOccurrences(of: " ", with: "")
         guard !value.isEmpty else { return nil }
@@ -56,9 +72,11 @@ struct BarcodeView: View {
     let number: String
     let format: CodeFormat
     var height: CGFloat = 90
+    /// Nur für den Text-Rückfall: Nummer als „•••• 1234“ zeigen.
+    var masked = false
 
     var body: some View {
-        switch BarcodeRenderer.render(number, format: format) {
+        switch BarcodeRenderer.cached(number, format: format) {
         case .bars(let modules)?:
             let padded = Array(repeating: false, count: 10) + modules + Array(repeating: false, count: 10)
             Canvas { ctx, size in
@@ -68,7 +86,7 @@ struct BarcodeView: View {
                 }
             }
             .frame(height: height)
-            .background(Color.white)
+            .whitePlate()
             .accessibilityLabel("Barcode \(format.label)")
         case .image(let img)?:
             Image(uiImage: img)
@@ -76,13 +94,27 @@ struct BarcodeView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(maxHeight: format == .qr || format == .aztec ? height * 2.4 : height)
+                .whitePlate()
                 .accessibilityLabel("Barcode \(format.label)")
         case nil:
-            Text(number)
-                .font(.system(size: 26, weight: .heavy, design: .monospaced))
-                .multilineTextAlignment(.center)
-                .textSelection(.enabled)
-                .padding(.vertical, 12)
+            Group {
+                if masked {
+                    Text(number.masked)
+                } else {
+                    Text(number).textSelection(.enabled)
+                }
+            }
+            .font(.scaled(28, weight: .heavy, design: .monospaced))
+            .multilineTextAlignment(.center)
+            .padding(.vertical, 12)
         }
+    }
+}
+
+private extension View {
+    /// Weiße Platte mit kleinem Radius: Scanner brauchen Schwarz auf Weiß, auch im Dunkelmodus.
+    func whitePlate() -> some View {
+        padding(8)
+            .background(Color.white, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
     }
 }

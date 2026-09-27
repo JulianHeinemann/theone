@@ -20,6 +20,7 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
         var d = TextParser.parse(text)
         guard let smart else { return d }
         d.merchantID = d.merchantID ?? smart.merchantID
+        if d.merchantID == nil { d.customName = smart.customName }
         d.value = d.value ?? smart.value
         d.pin = d.pin ?? smart.pin
         d.expires = d.expires ?? smart.expires
@@ -34,7 +35,7 @@ nonisolated extension CodeFormat {
         switch symbology {
         case .ean13: self = .ean13
         case .ean8: self = .ean8
-        case .upce: self = .upca
+        case .upce: self = .upca          // Wert dazu mit BarcodeEncoder.expandUPCE auf 12 Ziffern bringen
         case .itf14, .i2of5, .i2of5Checksum: self = .itf
         case .code39, .code39Checksum, .code39FullASCII, .code39FullASCIIChecksum: self = .code39
         case .qr, .microQR: self = .qr
@@ -43,6 +44,14 @@ nonisolated extension CodeFormat {
         case .dataMatrix: self = .dataMatrix
         default: self = .code128
         }
+    }
+}
+
+nonisolated extension BarcodeObservation {
+    /// Nutzlast passend zu CodeFormat: UPC-E auf die 12 Ziffern von UPC-A erweitert.
+    var normalizedPayload: String? {
+        guard symbology == .upce, let p = payloadString else { return payloadString }
+        return BarcodeEncoder.expandUPCE(p) ?? p
     }
 }
 
@@ -55,7 +64,7 @@ nonisolated enum Importer {
         let (found, text) = await (codes, lines)
         // Strichcodes vor 2D-Codes bevorzugen: Gutscheinkarten tragen an der Kasse meist den Strichcode.
         let best = found.first { !CodeFormat($0.symbology).isTwoDimensional } ?? found.first
-        var outcome = ScanOutcome(barcode: best?.payloadString, format: best.map { CodeFormat($0.symbology) }, text: text)
+        var outcome = ScanOutcome(barcode: best?.normalizedPayload, format: best.map { CodeFormat($0.symbology) }, text: text)
         if let smart = await SmartExtractor.extract(from: text) {
             outcome.smart = smart
             outcome.usedAppleIntelligence = true
@@ -84,9 +93,16 @@ nonisolated enum Importer {
     @MainActor
     static func analyze(image: UIImage) async -> ScanOutcome {
         guard let cg = image.normalizedCGImage else { return ScanOutcome() }
+        // Vorschaubild parallel zur Erkennung und nicht auf dem Main Thread rechnen.
+        async let thumb = thumbnail(cg)
         var out = await analyze(cgImage: cg)
-        out.photo = image.thumbnailJPEG()
+        out.photo = await thumb
         return out
+    }
+
+    @concurrent
+    private static func thumbnail(_ cg: CGImage) async -> Data? {
+        UIImage(cgImage: cg).thumbnailJPEG()
     }
 
     /// E-Mail-Text: nur Parser und Apple Intelligence, kein Bild.
@@ -138,7 +154,7 @@ nonisolated enum Importer {
         if type?.conforms(to: .image) == true, let data = try? Data(contentsOf: url), let img = UIImage(data: data) {
             return await analyze(image: img)
         }
-        if let s = try? String(contentsOf: url, encoding: .utf8) {
+        if let s = (try? String(contentsOf: url, encoding: .utf8)) ?? (try? String(contentsOf: url, encoding: .isoLatin1)) {
             return await analyze(text: s)
         }
         return ScanOutcome()
@@ -149,13 +165,19 @@ extension UIImage {
     /// CGImage in korrekter Ausrichtung, damit Vision Fotos vom iPhone richtig liest.
     var normalizedCGImage: CGImage? {
         if imageOrientation == .up, let cg = cgImage { return cg }
-        return UIGraphicsImageRenderer(size: size).image { _ in draw(in: CGRect(origin: .zero, size: size)) }.cgImage
+        // Originalpixel, nicht Bildschirm-Scale (sonst 3-fache Auflösung)
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = scale
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in draw(in: CGRect(origin: .zero, size: size)) }.cgImage
     }
 
-    func thumbnailJPEG(maxSide: CGFloat = 900) -> Data? {
+    /// Auch abseits des Main Threads nutzbar (UIGraphicsImageRenderer ist threadsicher).
+    nonisolated func thumbnailJPEG(maxSide: CGFloat = 900) -> Data? {
         let s = min(1, maxSide / max(size.width, size.height))
         let target = CGSize(width: size.width * s, height: size.height * s)
-        let img = UIGraphicsImageRenderer(size: target).image { _ in draw(in: CGRect(origin: .zero, size: target)) }
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        let img = UIGraphicsImageRenderer(size: target, format: format).image { _ in draw(in: CGRect(origin: .zero, size: target)) }
         return img.jpegData(compressionQuality: 0.72)
     }
 }

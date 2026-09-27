@@ -1,25 +1,31 @@
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 import LocalAuthentication
+import UserNotifications
 import RestwertKit
 
 struct CardDetailView: View {
     let cardID: UUID
     @Environment(Store.self) private var store
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(Router.self) private var router
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("pinLock") private var pinLock = true
+    @AppStorage("reminders") private var remindersOn = true
     @AppStorage("warnDays") private var warnDays = 30
 
     @State private var pinVisible = false
     @State private var confirmDelete = false
     @State private var showLocation = false
-    @State private var amount: Double = 0
-    @State private var tornAmount: Double = 0
-    @State private var tearTrigger = 0
     @State private var stampVisible = false
     @State private var copied = false
     @State private var success = 0
+    @State private var showPhoto = false
+    @State private var notifStatus: UNAuthorizationStatus?
+    /// Dekodiertes Foto, damit UIImage(data:) nicht bei jedem Neuzeichnen läuft; `source` zeigt, zu welchen Daten es gehört.
+    @State private var photo: (source: Data, image: UIImage?)?
 
     var body: some View {
         Group {
@@ -31,30 +37,71 @@ struct CardDetailView: View {
         }
         .pageBackground()
         .sensoryFeedback(.success, trigger: success)
+        .task { await refreshNotifStatus() }
+        .onChange(of: scenePhase) { _, phase in
+            // PIN schon vor dem Snapshot für den App-Umschalter wieder verbergen.
+            if phase != .active { pinVisible = false } else { Task { await refreshNotifStatus() } }
+        }
     }
 
     private func content(_ card: GiftCard) -> some View {
         let status = card.status(warnDays: warnDays)
         return ScrollView {
-            VStack(spacing: 16) {
-                summary(card, status)
-                locationRow(card)
-                codeTicket(card)
-                if card.isActive {
-                    if card.kind.isValueBased { partialRedeem(card) } else { markRedeemedBlock(card) }
+            // Gruppen mit 12 pt innen, 24 pt zwischen den Abschnitten.
+            VStack(spacing: Layout.section) {
+                VStack(spacing: Layout.group) {
+                    if !card.isActive && !card.isArchived {
+                        archiveBanner(card, status)
+                    }
+                    summary(card, status)
+                    if card.pendingSince != nil && card.isActive {
+                        pendingBanner(card)
+                    }
                 }
-                NavigationLink(value: Route.checkout(card.id)) {
-                    Label("An der Kasse zeigen & testen", systemImage: "barcode.viewfinder")
+                actionGroup(card)
+                VStack(spacing: Layout.group) {
+                    codeTicket(card)
+                    locationRow(card)
+                    // Eigene Erinnerungen plant der Store nur für echte, eigene Gutscheine.
+                    if card.isActive && !card.isExample && !card.forGifting { reminderRow(card) }
                 }
-                .buttonStyle(.quiet)
-                CardBon(card: card).padding(.top, 6)
-                Button("Gutschein entfernen", role: .destructive) { confirmDelete = true }
-                    .font(.system(size: 15, weight: .bold)).padding(.top, 6)
+                CardBon(card: card)
+                VStack(spacing: Layout.group) {
+                    if !card.kind.isValueBased && card.redeemedAt != nil {
+                        Button("Doch nicht eingelöst", systemImage: "arrow.uturn.backward") { unmarkRedeemed(card.id) }
+                            .buttonStyle(.quiet)
+                    }
+                    if card.isArchived {
+                        Button("Wiederherstellen", systemImage: "tray.and.arrow.up") { store.setArchived(card.id, false) }
+                            .buttonStyle(.quiet)
+                    }
+                    Button("Gutschein entfernen", systemImage: "trash", role: .destructive) { confirmDelete = true }
+                        .font(.scaled(15, weight: .bold)).foregroundStyle(Color.bad)
+                        .frame(minHeight: Layout.tap)
+                }
             }
-            .padding(.horizontal, 16).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.top, 4).padding(.bottom, Layout.section)
         }
         .scrollIndicators(.hidden)
-        .navigationTitle(card.kind.label)
+        // Hauptaktion unten im Daumenbereich statt mitten im Inhalt.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if card.isActive {
+                // Online-Codes haben keine Kasse; dieselbe Route zeigt dort den Online-Weg.
+                let online = card.merchant.category == .codeOnly
+                NavigationLink(value: Route.checkout(card.id)) {
+                    Label(online ? "Code einlösen" : "An der Kasse zeigen", systemImage: online ? "globe" : "barcode")
+                }
+                .buttonStyle(.primary)
+                .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, 4)
+                .background(Color.page.ignoresSafeArea())
+            }
+        }
+        .fullScreenCover(isPresented: $showPhoto) {
+            if let image = photo?.image { PhotoViewer(image: image) }
+        }
+        .task(id: card.photo) { await decodePhoto(card.photo) }
+        .toolbar(.hidden, for: .tabBar)
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -64,7 +111,9 @@ struct CardDetailView: View {
         .confirmationDialog("Gutschein endgültig entfernen?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Entfernen", role: .destructive) {
                 dismiss()
+                clearLaterNotification(card.id)
                 store.delete(card.id)
+                router.showUndo("„\(card.name)“ entfernt") { store.undoDelete(card) }
             }
         }
         .sheet(isPresented: $showLocation) {
@@ -73,102 +122,327 @@ struct CardDetailView: View {
             }
             .presentationDetents([.medium, .large])
         }
-        .onAppear { if amount == 0 { amount = min(10, card.balance) } }
+        .onChange(of: card.pendingSince == nil) { _, done in
+            // Betrag eingetragen oder verworfen: „Hast du bezahlt?“-Nachfrage nicht mehr schicken.
+            if done { clearLaterNotification(card.id) }
+        }
     }
 
     // MARK: Übersicht
 
     private func summary(_ card: GiftCard, _ status: VoucherStatus) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 14) {
-                LetterTile(text: card.name, color: Pastel.color(for: card))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(card.name).font(.system(size: 19, weight: .bold))
-                    Text(card.merchant.category.label).font(.system(size: 13)).foregroundStyle(Color.muted)
-                }
-                Spacer()
-                Chip(text: status.label, fg: status.tint, bg: status.soft)
-                    .contentTransition(.interpolate)
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(card.kind.isValueBased ? "Restwert" : "Rabatt")
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.muted)
-                Text(card.headline)
-                    .font(.system(size: 52, weight: .heavy)).kerning(-1.5).monospacedDigit()
-                    .contentTransition(.numericText(value: card.balance))
-                    .strikethrough(status == .redeemed || status == .expired, color: Color.muted)
-                    .minimumScaleFactor(0.5).lineLimit(1)
-            }
-            ProgressBar(value: card.remainingShare, tint: status.tint)
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
-                cell("Gültig bis", card.expires.dayMonthYear)
-                cell("Verbleibend", card.daysLeft < 0 ? "abgelaufen" : "\(card.daysLeft) Tage",
-                     tint: card.daysLeft <= warnDays ? status.tint : .ink)
-                cell("Ursprünglich", card.kind.isValueBased ? card.value.euro : (card.percent.map { "\(Int($0)) %" } ?? "–"))
-                cell("Einlösungen", "\(card.history.count)")
-            }
-            if card.kind == .giftCard && !card.pin.isEmpty {
-                Button { Task { await togglePin(card) } } label: {
-                    HStack {
-                        Image(systemName: pinVisible ? "lock.open" : "faceid")
-                            .contentTransition(.symbolEffect(.replace))
-                        Text(pinVisible ? "PIN \(card.pin)" : "PIN anzeigen")
-                            .font(.system(size: 15, weight: .bold, design: pinVisible ? Font.Design.monospaced : Font.Design.default))
-                        Spacer()
-                    }
-                    .foregroundStyle(Color.ink).padding(14)
-                    .background(Color.fill, in: .rect(cornerRadius: 16, style: .continuous))
-                }
-                .buttonStyle(.plain)
-            }
+            // Gültigkeit steht im Ticket-Abschnitt, Einlösungen im Verlauf unten.
+            BalanceCard(card: card, status: status)
         }
-        .padding(18)
-        .cardSurface(radius: 28)
         .overlay {
             if card.redeemedAt != nil || stampVisible {
-                Stamp(date: card.redeemedAt ?? .now).allowsHitTesting(false)
+                // Nur frisch gestempelt fällt der Stempel; beim Öffnen eines alten Gutscheins liegt er schon.
+                Stamp(date: card.redeemedAt ?? .now, animated: stampVisible).allowsHitTesting(false)
             }
         }
     }
 
     private func cell(_ label: String, _ value: String, tint: Color = .ink) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.system(size: 12)).foregroundStyle(Color.muted)
-            Text(value).font(.system(size: 16, weight: .bold)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
+            Text(label).font(.scaled(12)).foregroundStyle(Color.muted)
+            Text(value).font(.scaled(16, weight: .semibold)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
                 .contentTransition(.numericText())
         }
-        .padding(12)
+        .padding(.vertical, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.fill, in: .rect(cornerRadius: 16, style: .continuous))
+    }
+
+    /// Neben-Aktionen als Kacheln (Icon in Ladenfarbe) statt Einstellungs-Liste; Hauptaktion bleibt „An der Kasse zeigen“.
+    private func actionGroup(_ card: GiftCard) -> some View {
+        let hasPin = card.kind == .giftCard && !card.pin.isEmpty
+        // Codes und Coupons haben kein Guthaben: kein Link „Guthaben prüfen/ansehen“.
+        let link = !card.kind.isValueBased ? nil : card.merchant.balanceURL.flatMap { url in card.merchant.balanceCheck.linkLabel.map { (url, $0) } }
+        let tint = (MerchantBrand.forID(card.merchantID) ?? MerchantBrand.fallback(for: card.name)).accent
+        var tiles: [AnyView] = []
+        if card.isActive {
+            if card.kind.isValueBased {
+                tiles.append(AnyView(NavigationLink(value: Route.keypad(card.id)) { ActionTile(icon: "minus.circle", title: "Einkauf abziehen", tint: tint) }
+                    .buttonStyle(.plain)))
+            } else {
+                tiles.append(AnyView(Button { stamp(card) } label: { ActionTile(icon: "checkmark.seal", title: "Als eingelöst markieren", tint: tint) }
+                    .buttonStyle(.plain).disabled(stampVisible)))
+            }
+        }
+        if hasPin {
+            tiles.append(AnyView(Button { Task { await togglePin(card) } } label: {
+                ActionTile(icon: pinVisible ? "lock.open" : "faceid", title: pinVisible ? card.pin : "PIN anzeigen", tint: tint)
+                    .privacySensitive()
+            }
+            .buttonStyle(.plain)))
+        }
+        if let (url, label) = link {
+            tiles.append(AnyView(Link(destination: url) { ActionTile(icon: "arrow.up.right", title: label, tint: tint) }
+                .buttonStyle(.plain)))
+        }
+        // Zwei Spalten; eine übrige Kachel geht über die volle Breite, damit keine Lücke bleibt.
+        // Bei sehr großer Schrift eine Spalte, sonst brechen die Titel mitten im Wort.
+        let perRow = typeSize.isAccessibilitySize ? 1 : 2
+        return VStack(spacing: Layout.group) {
+            ForEach(Array(stride(from: 0, to: tiles.count, by: perRow)), id: \.self) { start in
+                HStack(spacing: Layout.group) {
+                    ForEach(start..<min(start + perRow, tiles.count), id: \.self) { i in tiles[i] }
+                }
+            }
+        }
+    }
+
+    /// Code/Coupon als eingelöst stempeln; Doppeltipp stempelt nur einmal.
+    private func stamp(_ card: GiftCard) {
+        guard !stampVisible else { return }
+        stampVisible = true
+        success += 1
+        let id = card.id
+        let label = card.kind.label
+        Task {
+            try? await Task.sleep(for: .milliseconds(650))
+            guard store.card(id)?.redeemedAt == nil else { return }
+            withAnimation(.smooth) { store.markRedeemed(id) }
+            router.showUndo("\(label) als eingelöst markiert.") { unmarkRedeemed(id) }
+        }
+    }
+
+    /// Nach „Später eintragen“ an der Kasse: Betrag nachtragen oder verwerfen.
+    private func pendingBanner(_ card: GiftCard) -> some View {
+        // Neutraler Hinweis mit Streifen statt farbiger Fläche; eine Aktion, die zweite leise daneben.
+        // Bei großer Schrift die Knöpfe untereinander, damit nichts abgeschnitten wird.
+        let buttons = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))
+        return VStack(alignment: .leading, spacing: 8) {
+            Label("Betrag offen", systemImage: "clock")
+                .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                .labelStyle(PendingLabelStyle())
+            // Zwei echte Knöpfe mit 44 pt: leise Kontur für „Nicht bezahlt“, gefüllt für „Jetzt eintragen“.
+            buttons {
+                Button { dismissPending(card) } label: {
+                    Text("Nicht bezahlt").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                        .padding(.horizontal, 12).frame(maxWidth: .infinity, minHeight: Layout.tap)
+                        .overlay(RoundedRectangle(cornerRadius: Layout.controlRadius, style: .continuous).strokeBorder(Color.line, lineWidth: 1.5))
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Entfernt den Hinweis und die Nachfrage. Rückgängig möglich.")
+                NavigationLink(value: Route.keypad(card.id)) {
+                    Text("Einkauf abziehen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.onInk)
+                        .padding(.horizontal, 12).frame(maxWidth: .infinity, minHeight: Layout.tap)
+                        .background(Color.ink, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.leading, Layout.inset + 4).padding(.trailing, Layout.inset).padding(.vertical, Layout.group)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+        .overlay(alignment: .leading) {
+            UnevenRoundedRectangle(topLeadingRadius: Layout.buttonRadius, bottomLeadingRadius: Layout.buttonRadius)
+                .fill(Color.notice).frame(width: 4)
+        }
+    }
+
+    /// „Nicht bezahlt“: Hinweis sofort weg, mit Rückgängig. Die geplante Nachfrage wird vorher gemerkt
+    /// (der Store löscht sie beim Zurücksetzen) und beim Rückgängigmachen wieder eingeplant.
+    private func dismissPending(_ card: GiftCard) {
+        let id = card.id
+        Task {
+            let key = "\(id.uuidString)-later"
+            let center = UNUserNotificationCenter.current()
+            let saved = await center.pendingNotificationRequests().first { $0.identifier == key }
+            // Doppeltipp: nur einmal zurücksetzen.
+            guard store.card(id)?.pendingSince != nil else { return }
+            withAnimation(.smooth) { store.setPending(id, false) }
+            clearLaterNotification(id)
+            router.showUndo("„Betrag offen“ entfernt") {
+                withAnimation(.smooth) { store.setPending(id, true) }
+                if let saved { Task { try? await center.add(saved) } }
+            }
+        }
+    }
+
+    /// Foto einmal im Hintergrund dekodieren, nicht bei jedem Neuzeichnen.
+    private func decodePhoto(_ data: Data?) async {
+        guard let data else { photo = nil; return }
+        if photo?.source == data { return }
+        let image = await Task.detached(priority: .userInitiated) { UIImage(data: data)?.preparingForDisplay() ?? UIImage(data: data) }.value
+        guard !Task.isCancelled else { return }
+        photo = (data, image)
+    }
+
+    /// Aufgebraucht oder abgelaufen: direkt oben anbieten, den Gutschein aus der Liste zu nehmen.
+    private func archiveBanner(_ card: GiftCard, _ status: VoucherStatus) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: status == .expired ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
+                .font(.scaled(20)).foregroundStyle(status == .expired ? Color.bad : Color.good)
+            Text(status == .expired ? "Abgelaufen" : "Aufgebraucht").font(.scaled(16, weight: .semibold))
+            Spacer()
+            Button("Archivieren") {
+                store.setArchived(card.id, true)
+                router.showUndo("„\(card.name)“ archiviert") { store.setArchived(card.id, false) }
+                dismiss()
+            }
+            .font(.scaled(15, weight: .semibold))
+            .buttonStyle(.glass)
+        }
+        .foregroundStyle(Color.ink)
+        .padding(14)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+    }
+
+    /// Eigene Erinnerung nur für diesen Gutschein.
+    private func reminderRow(_ card: GiftCard) -> some View {
+        let range = reminderRange(card)
+        return VStack(alignment: .leading, spacing: 10) {
+            Toggle(isOn: Binding(
+                get: { card.reminderAt != nil },
+                set: { on in
+                    store.setReminder(card.id, on ? defaultReminder(card) : nil)
+                    if on && notifStatus == .notDetermined {
+                        Task {
+                            await store.requestNotifications()
+                            await refreshNotifStatus()
+                        }
+                    }
+                })) {
+                Label("Eigene Erinnerung", systemImage: "bell")
+                    .font(.scaled(16, weight: .semibold))
+            }
+            .tint(Color.toggleOn)
+            if let date = card.reminderAt {
+                DatePicker("Am", selection: Binding(get: { min(max(date, range.lowerBound), range.upperBound) },
+                                                   set: { store.setReminder(card.id, $0) }),
+                           in: range, displayedComponents: [.date, .hourAndMinute])
+                    .environment(\.locale, Locale(identifier: "de_DE"))
+                    .font(.scaled(15))
+                if notifStatus == .denied {
+                    Button("Mitteilungen sind aus – in den Einstellungen erlauben", systemImage: "bell.slash") {
+                        if let url = URL(string: UIApplication.openNotificationSettingsURLString) { UIApplication.shared.open(url) }
+                    }
+                    .font(.scaled(13, weight: .medium)).foregroundStyle(Color.bad)
+                } else if !remindersOn {
+                    Label("Erinnerungen sind in den Restwert-Einstellungen ausgeschaltet.", systemImage: "bell.slash")
+                        .font(.scaled(13, weight: .medium)).foregroundStyle(Color.bad)
+                }
+            }
+        }
+        .foregroundStyle(Color.ink)
+        .padding(14)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+    }
+
+    /// Von jetzt bis zum Ende des Ablauftags; nie ein leerer Bereich, auch nicht am Ablauftag selbst.
+    private func reminderRange(_ card: GiftCard) -> ClosedRange<Date> {
+        let now = Date.now
+        let end = Calendar.current.date(bySettingHour: 23, minute: 59, second: 0, of: card.expires) ?? card.expires
+        return now...max(end, now)
+    }
+
+    /// Vorschlag: 3 Tage vor Ablauf zur gewohnten Erinnerungszeit, frühestens in einer Stunde, spätestens am Ablauftag.
+    private func defaultReminder(_ card: GiftCard) -> Date {
+        let cal = Calendar.current
+        let range = reminderRange(card)
+        let day = cal.date(byAdding: .day, value: -3, to: card.expires) ?? card.expires
+        let proposal = cal.date(bySettingHour: ReminderPrefs.hour, minute: 0, second: 0, of: day) ?? day
+        return min(max(proposal, range.lowerBound.addingTimeInterval(3600)), range.upperBound)
+    }
+
+    private func refreshNotifStatus() async {
+        notifStatus = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
+    }
+
+    private func clearLaterNotification(_ id: UUID) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["\(id.uuidString)-later"])
+    }
+
+    /// Nur echte Abzüge und gestempelte Codes, keine Aufladungen oder Korrekturen.
+    private func redemptionCount(_ card: GiftCard) -> Int {
+        card.history.filter { r in
+            r.amount > 0 ? r.note != "Stand korrigiert" : r.amount == 0 && r.note == "\(card.kind.label) eingelöst"
+        }.count
+    }
+
+    /// Kurze Beschriftung neben dem PIN-Knopf, passend zum Prüfweg.
+    private func shortLinkLabel(_ check: BalanceCheck) -> String? {
+        switch check {
+        case .form: "Guthaben prüfen"
+        case .account: "Kundenkonto"
+        case .info: "Infos zum Guthaben"
+        case .none: nil
+        }
     }
 
     private func locationRow(_ card: GiftCard) -> some View {
         Button { showLocation = true } label: {
             HStack(spacing: 14) {
-                Image(systemName: card.location.symbol).font(.system(size: 18, weight: .semibold))
+                Image(systemName: card.location.symbol).font(.scaled(17, weight: .semibold))
                     .contentTransition(.symbolEffect(.replace))
                     .frame(width: 44, height: 44)
-                    .background(Pastel.all[3], in: .rect(cornerRadius: 14, style: .continuous))
+                    .background(Color.fill, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Aufbewahrt: \(card.location.label)").font(.system(size: 16, weight: .bold))
+                    Text("Aufbewahrt: \(card.location.label)").font(.scaled(16, weight: .semibold))
                     Text(card.locationNote.isEmpty ? "Notiz hinzufügen" : card.locationNote)
-                        .font(.system(size: 13)).foregroundStyle(Color.muted).lineLimit(2)
+                        .font(.scaled(13)).foregroundStyle(Color.muted).lineLimit(2)
                 }
                 Spacer()
-                Text("Ändern").font(.system(size: 14, weight: .bold))
+                Text("Ändern").font(.scaled(15, weight: .bold))
             }
-            .foregroundStyle(Color.ink).padding(12).cardSurface(radius: 20)
+            .foregroundStyle(Color.ink).padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
         }
         .buttonStyle(.plain)
     }
 
+    @ViewBuilder
     private func codeTicket(_ card: GiftCard) -> some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("Code").font(.system(size: 16, weight: .bold))
-                Spacer()
+        if card.number.isEmpty {
+            photoTicket(card)
+        } else {
+            barcodeTicket(card)
+        }
+    }
+
+    /// Papiergutschein ohne Code: das Foto ist der Gutschein.
+    private func photoTicket(_ card: GiftCard) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Original").font(.scaled(16, weight: .bold))
+            if card.photo != nil && photo?.source != card.photo {
+                // Wird gerade dekodiert.
+                ProgressView().frame(maxWidth: .infinity, minHeight: 120)
+            } else if let image = photo?.image {
+                Button { showPhoto = true } label: {
+                    Image(uiImage: image).resizable().scaledToFit()
+                        .frame(maxWidth: .infinity, maxHeight: 260)
+                        .clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Foto des Gutscheins groß anzeigen")
+                Text("An der Kasse das Foto zeigen oder das Original mitnehmen.").font(.scaled(13)).foregroundStyle(Color.ink2)
+            } else {
+                Text("Kein Foto und kein Code gespeichert. Tipp oben auf den Stift, um eins hinzuzufügen.")
+                    .font(.scaled(15)).foregroundStyle(Color.ink2)
+            }
+        }
+        .foregroundStyle(Color.ink)
+        .padding(Layout.inset)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+    }
+
+    /// Code als Text zum Kopieren; den Barcode gibt es nur an der Kasse, damit er nicht doppelt erscheint.
+    private func barcodeTicket(_ card: GiftCard) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(card.kind == .discountCode ? "Rabattcode" : card.kind == .giftCard ? "Kartennummer" : "Code").font(.scaled(13)).foregroundStyle(Color.muted)
+                    Text(card.number.grouped).font(.scaled(17, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(Color.ink).textSelection(.enabled).lineLimit(2).minimumScaleFactor(0.7)
+                }
+                Spacer(minLength: 8)
                 Button {
-                    UIPasteboard.general.string = card.number
+                    // Nur auf diesem Gerät und nach 2 Minuten wieder weg.
+                    UIPasteboard.general.setItems([[UTType.plainText.identifier: card.number]],
+                                                  options: [.localOnly: true, .expirationDate: Date.now.addingTimeInterval(120)])
                     copied = true
                     success += 1
                     Task {
@@ -176,135 +450,30 @@ struct CardDetailView: View {
                         copied = false
                     }
                 } label: {
-                    Label(copied ? "Kopiert" : "Code kopieren", systemImage: copied ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 14, weight: .bold))
+                    Label(copied ? "Kopiert" : "Kopieren", systemImage: copied ? "checkmark" : "doc.on.doc")
+                        .font(.scaled(15, weight: .semibold))
                         .contentTransition(.symbolEffect(.replace))
                 }
-                .buttonStyle(.glassProminent)
-                .tint(Color.brandYellow)
+                .buttonStyle(.plain)
                 .foregroundStyle(Color.ink)
             }
-            .padding(.horizontal, 18).padding(.top, 16).padding(.bottom, 4)
-            Perforation()
-            VStack(spacing: 8) {
-                BarcodeView(number: card.number, format: card.format, height: 84)
-                if card.format != .text {
-                    Text(card.number.grouped).font(.system(size: 17, weight: .bold)).kerning(2).textSelection(.enabled)
-                }
-                if let url = card.merchant.balanceURL {
-                    Link(destination: url) {
-                        Label("Guthaben beim Händler prüfen", systemImage: "arrow.up.right").font(.system(size: 14, weight: .bold))
-                    }
-                    .foregroundStyle(Color.ink).padding(.top, 4)
-                }
+            if card.photo != nil {
+                Button("Original-Foto ansehen", systemImage: "photo") { showPhoto = true }
+                    .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                    .disabled(photo?.image == nil)
             }
-            .padding(.horizontal, 18).padding(.bottom, 18)
         }
-        .cardSurface(radius: 28)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
     }
 
-    // MARK: Teileinlösung mit Abriss
-
-    private func partialRedeem(_ card: GiftCard) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Einlösen").font(.system(size: 20, weight: .bold))
-                Spacer()
-                Text(amount.euro).font(.system(size: 28, weight: .heavy)).monospacedDigit()
-                    .contentTransition(.numericText(value: amount))
-                    .animation(.snappy, value: amount)
-            }
-            Slider(value: $amount, in: 0...max(card.balance, 0.5), step: 0.5)
-                .tint(Color.ink)
-                .sensoryFeedback(.selection, trigger: amount)
-            GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
-                    ForEach([5.0, 10, 20], id: \.self) { value in
-                        quickPick("\(Int(value)) €") { amount = min(value, card.balance) }
-                    }
-                    quickPick("Alles") { amount = card.balance }
-                }
-            }
-            Text(amount > 0 ? "Danach übrig: \(max(0, card.balance - amount).euro)" : "Betrag wählen")
-                .font(.system(size: 13)).foregroundStyle(Color.muted)
-                .contentTransition(.numericText())
-            Button {
-                guard amount > 0 else { return }
-                let value = min(amount, card.balance)
-                tornAmount = value
-                tearTrigger += 1
-                success += 1
-                withAnimation(.snappy) { store.redeem(card.id, amount: value) }
-                amount = min(amount, max(0, card.balance - value))
-            } label: {
-                Label("Einlösen", systemImage: "scissors")
-            }
-            .buttonStyle(.accent)
-            .disabled(amount <= 0)
-            NavigationLink(value: Route.keypad(card.id)) {
-                Text("Betrag genau eintippen").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color.muted)
-                    .frame(maxWidth: .infinity)
-            }
+    /// Stempel zurücknehmen (Store entfernt Einlösedatum und Verlaufseintrag).
+    private func unmarkRedeemed(_ id: UUID) {
+        withAnimation(.smooth) {
+            store.undoMarkRedeemed(id)
+            stampVisible = false
         }
-        .padding(18)
-        .cardSurface(radius: 28)
-        .overlay(alignment: .bottom) {
-            TearStub(amount: tornAmount, merchant: card.name)
-                .keyframeAnimator(initialValue: TearFrame(), trigger: tearTrigger) { content, frame in
-                    content
-                        .offset(y: frame.y)
-                        .rotationEffect(.degrees(frame.angle), anchor: .topLeading)
-                        .opacity(frame.opacity)
-                } keyframes: { _ in
-                    KeyframeTrack(\.opacity) {
-                        LinearKeyframe(1, duration: 0.08)
-                        LinearKeyframe(1, duration: 0.55)
-                        LinearKeyframe(0, duration: 0.3)
-                    }
-                    KeyframeTrack(\.y) {
-                        LinearKeyframe(40, duration: 0.08)
-                        SpringKeyframe(52, duration: 0.25, spring: .bouncy)
-                        CubicKeyframe(460, duration: 0.6)
-                    }
-                    KeyframeTrack(\.angle) {
-                        LinearKeyframe(0, duration: 0.2)
-                        SpringKeyframe(-4, duration: 0.15)
-                        CubicKeyframe(16, duration: 0.6)
-                    }
-                }
-                .allowsHitTesting(false)
-                .accessibilityHidden(true)
-        }
-    }
-
-    private func quickPick(_ title: String, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title).font(.system(size: 15, weight: .bold)).foregroundStyle(Color.ink)
-                .frame(maxWidth: .infinity, minHeight: 44)
-        }
-        .buttonStyle(.plain)
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 14, style: .continuous))
-    }
-
-    private func markRedeemedBlock(_ card: GiftCard) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("\(card.kind.label) benutzt?").font(.system(size: 20, weight: .bold))
-            Text("Rabattcodes und Coupons gelten meist nur einmal. Markier ihn nach dem Einkauf, dann erscheint er im Verlauf.")
-                .font(.system(size: 14)).foregroundStyle(Color.muted)
-            Button {
-                stampVisible = true
-                success += 1
-                Task {
-                    try? await Task.sleep(for: .milliseconds(650))
-                    withAnimation(.smooth) { store.markRedeemed(card.id) }
-                }
-            } label: {
-                Label("Als eingelöst markieren", systemImage: "seal")
-            }
-            .buttonStyle(.accent)
-        }
-        .padding(18)
-        .cardSurface(radius: 28)
     }
 
     private func togglePin(_ card: GiftCard) async {
@@ -329,72 +498,34 @@ struct CardDetailView: View {
 
 // MARK: - Bausteine
 
-private struct ProgressBar: View {
-    let value: Double
-    let tint: Color
-
-    var body: some View {
-        Capsule().fill(Color.fill)
-            .overlay(alignment: .leading) {
-                GeometryReader { geo in
-                    Capsule().fill(tint.gradient).frame(width: geo.size.width * value)
-                }
-            }
-            .frame(height: 6)
-            .animation(.spring(duration: 0.6, bounce: 0.3), value: value)
-    }
-}
-
-private struct TearFrame {
-    var y: CGFloat = 40
-    var angle: Double = 0
-    var opacity: Double = 0
-}
-
-/// Abriss-Streifen, der beim Einlösen vom Gutschein abreißt und herunterfällt.
-private struct TearStub: View {
-    let amount: Double
-    let merchant: String
-
-    var body: some View {
-        VStack(spacing: 0) {
-            ZigZag(tooth: 12, top: true).fill(Color.paper).frame(height: 10)
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(merchant.uppercased()).font(.system(size: 12, weight: .bold, design: .monospaced))
-                    Text(Date.now.formatted(date: .numeric, time: .shortened))
-                        .font(.system(size: 11, design: .monospaced)).foregroundStyle(Color.muted)
-                }
-                Spacer()
-                Text("−" + amount.euro).font(.system(size: 20, weight: .heavy, design: .monospaced))
-            }
-            .foregroundStyle(Color.ink)
-            .padding(.horizontal, 18).padding(.vertical, 12)
-            .background(Color.paper)
-            ZigZag(tooth: 12, top: false).fill(Color.paper).frame(height: 10)
-        }
-        .padding(.horizontal, 24)
-        .shadow(color: Color.ink.opacity(0.15), radius: 10, y: 6)
-    }
-}
-
 /// Roter Stempel „Eingelöst“, fällt mit Wucht aufs Papier.
 struct Stamp: View {
     let date: Date
-    @State private var landed = false
+    @State private var landed: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// `animated: false` für schon eingelöste Gutscheine: Stempel liegt still, ohne Fall und ohne Haptik.
+    init(date: Date, animated: Bool = true) {
+        self.date = date
+        _landed = State(initialValue: !animated)
+    }
 
     var body: some View {
         VStack(spacing: 2) {
-            Text("EINGELÖST").font(.system(size: 28, weight: .black, design: .rounded)).kerning(3)
-            Text(date.dayMonthYear).font(.system(size: 13, weight: .bold, design: .monospaced))
+            Text("EINGELÖST").font(.scaled(28, weight: .black, design: .rounded)).kerning(3)
+            Text(date.dayMonthYear).font(.scaled(13, weight: .bold, design: .monospaced))
         }
         .foregroundStyle(Color.bad.opacity(0.85))
         .padding(.horizontal, 18).padding(.vertical, 10)
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.bad.opacity(0.85), lineWidth: 4))
-        .rotationEffect(.degrees(landed ? -14 : -30))
-        .scaleEffect(landed ? 1 : 2.4)
-        .opacity(landed ? 1 : 0)
-        .onAppear { withAnimation(.spring(duration: 0.45, bounce: 0.5)) { landed = true } }
+        .overlay(RoundedRectangle(cornerRadius: Layout.controlRadius).stroke(Color.bad.opacity(0.85), lineWidth: 4))
+        .rotationEffect(.degrees(landed || reduceMotion ? -14 : -30))
+        .scaleEffect(landed || reduceMotion ? 1 : 2.4)
+        .opacity(landed || reduceMotion ? 1 : 0)
+        .onAppear {
+            guard !landed else { return }
+            if reduceMotion { landed = true } else { withAnimation(.spring(duration: 0.45, bounce: 0.5)) { landed = true } }
+        }
+        .accessibilityElement(children: .combine)
         .sensoryFeedback(.impact(weight: .heavy), trigger: landed)
     }
 }
@@ -408,24 +539,24 @@ struct LocationSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Wo liegt der Gutschein?").font(.system(size: 24, weight: .heavy)).padding(.top, 24)
+            Text("Wo liegt der Gutschein?").font(.scaled(22, weight: .heavy)).padding(.top, 24)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                 ForEach(StorageLocation.allCases) { loc in
                     Button { withAnimation(.snappy) { location = loc } } label: {
                         VStack(spacing: 8) {
-                            Image(systemName: loc.symbol).font(.system(size: 22, weight: .semibold))
+                            Image(systemName: loc.symbol).font(.scaled(22, weight: .semibold))
                                 .symbolEffect(.bounce, value: location == loc)
-                            Text(loc.label).font(.system(size: 13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                            Text(loc.label).font(.scaled(13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
                         }
-                        .foregroundStyle(Color.ink)
+                        .foregroundStyle(location == loc ? Color.onInk : Color.ink)
                         .frame(maxWidth: .infinity, minHeight: 84)
-                        .background(location == loc ? Color.brandYellow : Color.fill, in: .rect(cornerRadius: 18, style: .continuous))
+                        .background(location == loc ? Color.ink : Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
                     }
                     .buttonStyle(.plain)
                 }
             }
             .sensoryFeedback(.selection, trigger: location)
-            LabeledField(label: "Notiz", placeholder: "z. B. oberste Schublade im Flur", text: $note)
+            LabeledField(label: "Notiz", placeholder: "z.\u{00A0}B. oberste Schublade im Flur", text: $note)
             Spacer()
             Button("Speichern") {
                 onSave(location, note.trimmingCharacters(in: .whitespaces))
@@ -445,20 +576,20 @@ struct CardBon: View {
         ReceiptPaper {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("Einlöse-Verlauf").font(.system(size: 20, weight: .heavy))
+                    Text("Einlöse-Verlauf").font(.scaled(20, weight: .heavy))
                     Spacer()
-                    Text(card.name.uppercased()).font(.system(size: 12, weight: .bold, design: .monospaced)).foregroundStyle(Color.muted)
+                    Text(card.name.uppercased()).font(.scaled(12, weight: .bold, design: .monospaced)).foregroundStyle(Color.muted)
                 }
                 DashedRule()
                 row(card.kind.isValueBased ? "Erhalten" : "Hinzugefügt", card.received.dayMonthYear,
                     card.kind.isValueBased ? "+" + card.value.euro : card.headline)
                 ForEach(card.history.sorted { $0.date < $1.date }) { r in
                     row(r.store.isEmpty ? (r.amount > 0 ? "Eingelöst" : r.note) : r.store, subline(r),
-                        r.amount > 0 ? "−" + r.amount.euro : "✓")
+                        r.amount > 0 ? "−" + r.amount.euro : r.amount < 0 ? "+" + (-r.amount).euro : "✓")
                         .transition(.move(edge: .top).combined(with: .opacity))
                 }
                 if card.history.isEmpty {
-                    Text("Noch nichts eingelöst.").font(.system(size: 13, design: .monospaced)).foregroundStyle(Color.muted)
+                    Text("Noch nichts eingelöst.").font(.scaled(13, design: .monospaced)).foregroundStyle(Color.muted)
                 }
                 DashedRule()
                 row(card.kind.isValueBased ? "RESTWERT" : "STATUS", "",
@@ -478,13 +609,49 @@ struct CardBon: View {
     private func row(_ title: String, _ sub: String, _ amount: String, bold: Bool = false) -> some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.system(size: 14, weight: bold ? .heavy : .semibold, design: .monospaced))
+                Text(title).font(.scaled(15, weight: bold ? .heavy : .semibold, design: .monospaced))
                 if !sub.isEmpty {
-                    Text(sub).font(.system(size: 11.5, design: .monospaced)).foregroundStyle(Color.muted)
+                    Text(sub).font(.scaled(12, design: .monospaced)).foregroundStyle(Color.muted)
                 }
             }
             Spacer()
-            Text(amount).font(.system(size: 14, weight: bold ? .heavy : .semibold, design: .monospaced))
+            Text(amount).font(.scaled(15, weight: bold ? .heavy : .semibold, design: .monospaced))
         }
+    }
+}
+
+/// Uhr in Hinweisfarbe vor dem Titel; bei sehr großer Schrift nur der Text.
+private struct PendingLabelStyle: LabelStyle {
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 8) {
+            if !typeSize.isAccessibilitySize {
+                configuration.icon.foregroundStyle(Color.notice)
+            }
+            configuration.title
+        }
+    }
+}
+
+/// Kachel für Neben-Aktionen: 72 pt hoch, Icon in Ladenfarbe, kein Pfeil.
+private struct ActionTile: View {
+    let icon: String
+    let title: String
+    let tint: Color
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Ladenfarbe nur im Hellen; im Dunkeln wären dunkle Ladenfarben auf der Fläche zu schwach.
+            Image(systemName: icon).font(.scaled(20, weight: .semibold)).foregroundStyle(scheme == .dark ? Color.ink2 : tint)
+                .accessibilityHidden(true)
+            Text(title).font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                .lineLimit(2).minimumScaleFactor(0.8).multilineTextAlignment(.leading)
+        }
+        .padding(Layout.inset)
+        .frame(maxWidth: .infinity, minHeight: 72, alignment: .topLeading)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+        .contentShape(.rect)
     }
 }

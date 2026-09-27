@@ -1,0 +1,2496 @@
+[
+ {
+  "persona": "Mara Lindqvist, 34, Design-Systems-Lead einer Banking-App in Berlin (4/8-pt-Raster-Verfechterin); Referenzen: Apple Wallet, Linear, Monzo",
+  "fokus": "Abstände und Raster: Seitenränder, Sektions-/Gruppenabstände, Zeilenhöhen, Karten-/Kachel-Innenabstände auf Start, Detail, Läden, Kasse, Verlauf (L_, D_, S_); Einhaltung der Tokens page 16 / section 24 / group 12",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 8,
+   "abstaende_raster": 6,
+   "hierarchie": 8,
+   "konsistenz": 6,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 8,
+   "barrierefreiheit": 7,
+   "markencharakter": 6,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Der Seitenrand sitzt überall präzise auf 16 pt und das gelbe Ticket auf Start ist ein klarer, ruhiger Anker. Aber sobald man zwischen die Karten misst, gibt es kein System: 10, 12, 16 und 24 pt wechseln sich ab, Innenabstände springen zwischen 12, 14, 16, 18 und 20 pt.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Kerben + gestrichelte Abrisslinie auf Summen-Ticket (Start), Laden-Ticket (Detail) und Kassen-Karte, dazu Wortmarke mit gelbem Punkt und Rounded-Heavy-Beträge mit hochgestellten Cent – das ist wiedererkennbar. Auf Läden und in den Listenzeilen fehlt die Signatur komplett; dort sieht es wie eine generische iOS-Liste aus.",
+  "scroll_befund": "Start (S_start_1/S_start_2_ende) und Detail (S_detail_ende): Inhalt wird bei ca. 106 pt hart abgeschnitten – die obere Karte verliert ihre Eckenradien und endet an einer geraden Kante, darüber nur ein weicher Schleier mit verwischter Sektionsüberschrift. Läden (S_laeden_mitte) macht es anders: Inline-Titel „Läden“ mit sichtbar durchscheinender, geblurrter Karte – zwei verschiedene Kantenbehandlungen in einer App. Tab-Leiste minimiert sauber zu zwei runden Buttons (links 28 pt, rechts 29 pt Abstand, symmetrisch); volle Tab-Leiste sitzt mit ca. 21 pt Außenrand, also nicht auf dem 16-pt-Seitenraster. Listenende von Start: 'Alle Ablauftermine' endet bei 647 pt, darunter ~150 pt leere Fläche – ok, aber kein Abschluss. Rhythmus beim Scrollen auf Läden gleichmäßig (Karten 108 pt, Abstand 10 pt), beim Sektionswechsel 'Alle Läden' springt es auf 46 pt.",
+  "messungen": [
+   {
+    "was": "Seitenrand links/rechts Karten",
+    "screen": "L_01_start, L_detail, L_merchants, L_history, D_* (alle)",
+    "wert": "16,0 / 16,0 pt",
+    "soll/erwartung": "Layout.page = 16",
+    "ok": true
+   },
+   {
+    "was": "Seitenrand Kassen-Karte",
+    "screen": "L_checkout",
+    "wert": "16 pt (Karte), Kopf-Icon-Innenabstand 18 pt",
+    "soll/erwartung": "16 / Innenabstand auf 4er-Raster (16 oder 20)",
+    "ok": false
+   },
+   {
+    "was": "Abstand Sektionsüberschrift → Karte",
+    "screen": "L_01_start / L_merchants",
+    "wert": "10 pt (Code spacing: 10 in HomeView & MerchantsView)",
+    "soll/erwartung": "Layout.group = 12",
+    "ok": false
+   },
+   {
+    "was": "Abstand zwischen Laden-Karten",
+    "screen": "D_merchants, S_laeden_mitte",
+    "wert": "10,0 pt (4× gemessen identisch)",
+    "soll/erwartung": "Layout.group = 12",
+    "ok": false
+   },
+   {
+    "was": "Abstand Hero → Button → Kacheln → Kartennummer → Aufbewahrt",
+    "screen": "L_detail / D_detail / D_pending",
+    "wert": "je 16 pt (VStack spacing: 16)",
+    "soll/erwartung": "12 (Gruppe) bzw. 24 (Sektion) – 16 ist kein Abstands-Token",
+    "ok": false
+   },
+   {
+    "was": "Kachel-Raster Aktionen",
+    "screen": "L_detail",
+    "wert": "horizontal 12 pt, vertikal 12–13 pt",
+    "soll/erwartung": "Layout.group = 12",
+    "ok": true
+   },
+   {
+    "was": "Abstand Sektionen Start (Hero → 'Läuft bald ab')",
+    "screen": "L_01_start",
+    "wert": "24 pt (VStack Layout.section)",
+    "soll/erwartung": "24",
+    "ok": true
+   },
+   {
+    "was": "Abstand Bon → Kassentests-Karte",
+    "screen": "D_history",
+    "wert": "≈10 pt",
+    "soll/erwartung": "12 oder 24",
+    "ok": false
+   },
+   {
+    "was": "Innenabstand Listenzeile (Icon-X ab Kartenkante)",
+    "screen": "L_01_start, L_merchants, L_history",
+    "wert": "14 pt (CardRow padding horizontal 14, vertical 12)",
+    "soll/erwartung": "16 (4/8-Raster, wie Seitenrand)",
+    "ok": false
+   },
+   {
+    "was": "Innenabstand Summen-/Laden-Ticket",
+    "screen": "L_01_start, L_detail",
+    "wert": "20 pt horizontal, Abrisslinie aber 16 pt eingerückt; Footer vertikal 12 bzw. 13 pt",
+    "soll/erwartung": "Text und Abrisslinie auf gleicher Einrückung; 13 pt ist off-grid",
+    "ok": false
+   },
+   {
+    "was": "Innenabstände Karten gesamt (Code)",
+    "screen": "Detail/Kasse/Home",
+    "wert": "12, 14, 16, 18, 20 pt parallel im Einsatz",
+    "soll/erwartung": "max. 2 Stufen (16 / 20)",
+    "ok": false
+   },
+   {
+    "was": "Einzug Sektionsüberschriften",
+    "screen": "L_01_start vs. L_merchants",
+    "wert": "Start ≈20 pt (padding .horizontal 4), Läden ≈16–17 pt",
+    "soll/erwartung": "identisch über alle Screens",
+    "ok": false
+   },
+   {
+    "was": "Zeilenhöhe Kartenliste",
+    "screen": "S_start_1",
+    "wert": "67,7 pt ohne Fortschrittsbalken, 74 pt mit Balken",
+    "soll/erwartung": "konstante Zeilenhöhe (z. B. 72 pt)",
+    "ok": false
+   },
+   {
+    "was": "Divider-Einzug vs. Textkante",
+    "screen": "L_01_start",
+    "wert": "72 pt = 14 + 44 + 14, fluchtet mit Titel",
+    "soll/erwartung": "fluchtet",
+    "ok": true
+   },
+   {
+    "was": "Laden-Kartenhöhe",
+    "screen": "D_merchants",
+    "wert": "108 pt konstant",
+    "soll/erwartung": "konstant",
+    "ok": true
+   },
+   {
+    "was": "Tab-Leiste Außenrand",
+    "screen": "L_01_start",
+    "wert": "≈21 pt",
+    "soll/erwartung": "16 pt wie Seitenraster (Systemkomponente, nur bedingt steuerbar)",
+    "ok": false
+   },
+   {
+    "was": "Kontrast muted #5C5C63 auf Papier #F6F4EF",
+    "screen": "L_*",
+    "wert": "6,03:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Tinte auf Gelb",
+    "screen": "L_01_start",
+    "wert": "13,65:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast 'bald' #B35A00 auf Weiß",
+    "screen": "L_01_start",
+    "wert": "4,80:1",
+    "soll/erwartung": "≥ 4,5:1 (knapp)",
+    "ok": true
+   },
+   {
+    "was": "Kontrast rot auf rosa Chip",
+    "screen": "L_01_start",
+    "wert": "4,60:1",
+    "soll/erwartung": "≥ 4,5:1 (knapp)",
+    "ok": true
+   },
+   {
+    "was": "Eckradius Karten",
+    "screen": "Code Theme.swift",
+    "wert": "cardRadius 24, aber cardSurface() Default 26, Buttons 16",
+    "soll/erwartung": "ein Token, kein Schatten-Default mit 26",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "global (Code)",
+    "element": "Abstands-Tokens",
+    "problem": "Layout.section/group werden nur ca. 4× referenziert; im Code dominieren Literale: spacing 10 (19×), 14 (18×), 6 (9×), 3 (6×), padding 14 (8×), 18 (6×), 13, 30. Die Tokens existieren, sind aber nicht das System.",
+    "schwere": "hoch",
+    "vorschlag": "Skala festziehen: xs 4, s 8, group 12, m 16, l 20, section 24, xl 32; alle Literale ersetzen und per Lint (grep auf padding(\\d) / spacing: \\d) verbieten."
+   },
+   {
+    "screen": "Läden, Start",
+    "element": "Karte-zu-Karte und Überschrift-zu-Karte",
+    "problem": "10 pt statt group 12; Läden-Karten wirken dadurch gedrängter als die Detail-Kacheln (12).",
+    "schwere": "mittel",
+    "vorschlag": "MerchantsView LazyVStack spacing 10 → Layout.group (12); HomeView Sektion-VStack spacing 10 → 8 (Überschrift gehört zur Karte) oder 12, aber einheitlich."
+   },
+   {
+    "screen": "Detail",
+    "element": "Hauptstapel",
+    "problem": "Alle Blöcke mit 16 pt – Hero, Primärbutton, Kacheln, Kartennummer, Aufbewahrung haben denselben Abstand, keine Gruppierung ablesbar; 16 ist zudem kein Abstands-Token.",
+    "schwere": "mittel",
+    "vorschlag": "Hero+Primärbutton als Gruppe mit 12, dann 24 zu den Kacheln, Kacheln intern 12, 24 zu Kartennummer/Aufbewahrt (untereinander 12), 24 vor dem Bon."
+   },
+   {
+    "screen": "Start, Läden, Verlauf, Detail",
+    "element": "Karten-Innenabstand",
+    "problem": "Listenzeilen 14 pt, Tickets 20 pt, Kassen-Kopf 18 pt, Aufbewahrt 12 pt, Kachel 16 pt – Inhaltskanten fluchten nicht (Icons bei 30 pt, Tickettext bei 36 pt, Kassen-Icon bei 34 pt).",
+    "schwere": "hoch",
+    "vorschlag": "Zwei Stufen: 16 pt für Listen/Karten, 20 pt für Tickets. CardRow .padding(.horizontal,14)→16, Divider-Einzug dann 76; Checkout-Kopf padding(18)→16 oder 20; Aufbewahrt padding(12)→16."
+   },
+   {
+    "screen": "Start vs. Läden",
+    "element": "Sektionsüberschriften",
+    "problem": "Start rückt Überschriften und Wortmarke um +4 pt ein (≈20 pt), Läden nicht (≈16–17 pt). Sichtbarer Sprung beim Tab-Wechsel.",
+    "schwere": "mittel",
+    "vorschlag": "Entweder überall .padding(.horizontal, 4) weg (Überschrift auf 16 pt Seitenkante) oder überall 4 pt – ich empfehle die Textkante der Karteninhalte (16+16=32) nicht zu imitieren, sondern 16 pt."
+   },
+   {
+    "screen": "Start (S_start_1)",
+    "element": "Listenzeilen-Höhe",
+    "problem": "Zeilen mit Fortschrittsbalken 74 pt, ohne 68 pt – Rhythmus springt mitten in der Liste.",
+    "schwere": "niedrig",
+    "vorschlag": "minHeight 72 für alle Zeilen, Balken in den bestehenden Unterzeilen-Raum (4 pt über Unterkante) integrieren."
+   },
+   {
+    "screen": "S_start_1, S_detail_ende",
+    "element": "Scroll-Kante unter Navigation",
+    "problem": "Karten werden bei ≈106 pt hart gerade abgeschnitten (Ecken verschwinden), Läden hingegen nutzt weichen Blur mit Inline-Titel – inkonsistent.",
+    "schwere": "mittel",
+    "vorschlag": "Einheitlich .scrollEdgeEffectStyle(.soft) bzw. gleiche Nav-Konfiguration wie Läden auf Start und Detail; kein Clip-Rechteck am Safe-Area-Rand."
+   },
+   {
+    "screen": "Start, Detail",
+    "element": "Ticket: Abrisslinie vs. Text",
+    "problem": "Text 20 pt eingerückt, Abrisslinie 16 pt, Footer-Vertikalpadding 12 (Start) bzw. 13 (Detail).",
+    "schwere": "niedrig",
+    "vorschlag": "TearLine .padding(.horizontal, 20) oder bewusst bis in die Kerben laufen lassen (0 pt); Footer vertikal 12 auf beiden."
+   },
+   {
+    "screen": "Verlauf",
+    "element": "Bon → Kassentests",
+    "problem": "≈10 pt Abstand, wirkt wie angeklebt; Bon ist eine eigene Sektion.",
+    "schwere": "niedrig",
+    "vorschlag": "24 pt (Layout.section)."
+   },
+   {
+    "screen": "Theme.swift",
+    "element": "Radien",
+    "problem": "cardSurface(radius:) Default 26 neben cardRadius 24 – latenter Drift.",
+    "schwere": "niedrig",
+    "vorschlag": "Default auf Layout.cardRadius setzen."
+   },
+   {
+    "screen": "XL_01_start",
+    "element": "Listenzeile großer Schrift",
+    "problem": "Mehr-Menü rutscht mittig rechts neben einen gestapelten Block, Betrag landet linksbündig unter dem Chip – Zeile wirkt zerfallen.",
+    "schwere": "niedrig",
+    "vorschlag": "Bei Accessibility-Größen Menü oben rechts auf Titelhöhe ankern (alignment .top)."
+   }
+  ],
+  "top3": [
+   "Abstands-Skala als einzige Quelle durchsetzen: 4/8/12/16/20/24/32, alle Literal-Abstände (10, 14, 18, 13, 6, 3, 30) ersetzen – Läden-Karten und Überschrift→Karte von 10 auf 12, Bon→Kassentests auf 24.",
+   "Karten-Innenabstand auf zwei Stufen normalisieren: 16 pt für alle Listen/Karten (CardRow 14→16, Aufbewahrt 12→16, Kassen-Kopf 18→16, Divider-Einzug 72→76), 20 pt nur für Tickets inkl. Abrisslinie.",
+   "Detail-Stapel gruppieren statt uniform 16: Hero+Kasse-Button 12, dann 24 zu Aktionen, Info-Karten untereinander 12, 24 vor dem Bon – und Start/Detail dieselbe weiche Scroll-Kante wie Läden geben."
+  ],
+  "lob": [
+   "Seitenrand 16 pt ist auf allen Screens, hell und dunkel, pixelgenau eingehalten.",
+   "Detail-Kachelraster mit exakt 12 pt horizontal und vertikal – so soll Layout.group aussehen.",
+   "Divider-Einzug fluchtet exakt mit der Titelkante (72 pt) – sauberes Listenhandwerk.",
+   "Gelbes Summen-Ticket mit Kerben und Abrisslinie als ruhiger Anker; Tinte auf Gelb 13,65:1.",
+   "Dunkelmodus: identische Geometrie wie hell (alle Blockpositionen deckungsgleich gemessen)."
+  ]
+ },
+ {
+  "persona": "Kofi Mensah, 41, Farbspezialist und Brand-Designer (ehem. Retail-Marken-Agentur Hamburg), Referenzen: Revolut, Monocle, Klarna",
+  "fokus": "Farbe und Kontrast: Farbregel Gelb+Tinte = App / Kartenfarbe = Ladenfarbe, WCAG-Kontraste aller Textfarben hell/dunkel, Farbkonkurrenz",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 8,
+   "farbe": 6,
+   "abstaende_raster": 7,
+   "hierarchie": 8,
+   "konsistenz": 6,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 6,
+   "barrierefreiheit": 6,
+   "markencharakter": 6,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Der gelbe Ticket-Hero auf Papier ist ein starker, eigenständiger Auftritt, und die Token-Kontraste für muted/warn/soon sind sauber kalibriert. Aber die Farbregel wird an den Rändern gebrochen: neun Läden sind fast schwarz (#2C2C2E), Rot kommt in drei Tönen vor, dazu ein System-Orange und ein System-Rot außerhalb der Tokens.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Auf Start eindeutig: Wortmarke mit gelbem Punkt plus gelbes Ticket mit Kerben und Abrisslinie. Auf allen anderen Screens trägt fast nur die Ticketform der Ladenkarte die Marke; Onboarding hat weder Gelb noch Ticket noch Punkt an der Wortmarke ('Restwert' klein, schwarz). Gelb taucht nach dem Start nur im Scanner-Balken und im (unsichtbaren) Stempel auf.",
+  "scroll_befund": "Beim Scrollen auf Start (S_start_1) blendet das gelbe Ticket oben unter der Statusleiste als gelber Schleier weg, der Abschnittstitel 'Läuft bald ab' wird unter dem Verlauf fast unlesbar – das ist okay, aber die gelbe Restkante oben wirkt wie ein Fehler statt wie Material. Tab-Leiste minimiert sich sauber auf zwei Kreise. In S_laeden_mitte laufen Ladenkacheln hart unter den Inline-Titel; farbige Kacheln (Aldi dunkelblau, CinemaxX fast schwarz, Decathlon blau) stapeln sich zu einer bunten Kachelspalte plus grünes 'Am Handy vorzeigbar' in jeder Zeile – der Screen ist der farbigste der App, ohne Hierarchie. S_detail_ende: Bon und Entfernen-Link sauber, aber das Entfernen-Rot ist System-Rot #FF383C statt Token.",
+  "messungen": [
+   {
+    "was": "muted #5C5C63 auf page #F6F4EF",
+    "screen": "L_01_start (Ablaufdatum)",
+    "wert": "6.03:1 (gemessen)",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "muted auf surface weiß",
+    "screen": "L_01_start (bis 14.02.2027)",
+    "wert": "6.63:1",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "muted D #A8A8AE auf surface #1E1D1B",
+    "screen": "D_01_start",
+    "wert": "7.12:1",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "soon #B35A00 auf weiß (IKEA 'noch 24 Tage')",
+    "screen": "L_01_start",
+    "wert": "4.80:1 (auf page nur 4.36:1)",
+    "soll/erwartung": ">= 4.5:1 überall",
+    "ok": false
+   },
+   {
+    "was": "soon D #FFB340 auf #1E1D1B",
+    "screen": "D_01_start",
+    "wert": "9.44:1",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "warn #C4221A auf warnSoft-Chip",
+    "screen": "L_01_start (Zalando 'noch 12 Tage')",
+    "wert": "4.79:1",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "warn D #FF7A70 auf Chip #392825",
+    "screen": "D_01_start",
+    "wert": "5.50:1",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "good #1F7A4D auf goodSoft #D9F0E2 (Token-Paar)",
+    "screen": "Theme.swift / Kassentest-Icons",
+    "wert": "4.43:1",
+    "soll/erwartung": ">= 4.5:1 falls Text",
+    "ok": false
+   },
+   {
+    "was": "Tinte auf Gelb (Hero-Betrag)",
+    "screen": "L/D_01_start",
+    "wert": "13.65:1 hell / 12.39:1 dunkel; 'Noch drauf' (Tinte ~75 %) 7.10 / 6.75",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Stempel 'AUFGEBRAUCHT' Color.ink@0.75 auf brandYellow im Dunkelmodus",
+    "screen": "Code Theme.swift:434 (kein Screenshot)",
+    "wert": "1.24:1 (ink dunkel = #F2F0EA auf #F5CE3E)",
+    "soll/erwartung": ">= 4.5:1; hell 7.12:1",
+    "ok": false
+   },
+   {
+    "was": "Weiß auf Ladenfarbe, Detailkarte Thalia ('Noch drauf', 85 %)",
+    "screen": "L_detail",
+    "wert": "4.90:1",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Ladenfarbe-Text 85 % – schwächste Läden",
+    "screen": "MerchantMark.swift Tabelle",
+    "wert": "Lieferando 2.19, Netflix-Rot auf Grau 2.36, Primark 2.39, Zalando 2.45, Müller 2.64, Netto 3.04, DB 3.52, Google Play 3.55, Deichmann 3.57, H&M 3.70",
+    "soll/erwartung": ">= 4.5:1 (Text 13–14 pt)",
+    "ok": false
+   },
+   {
+    "was": "Eigene Palette (Fallback) Weiß@85 %",
+    "screen": "MerchantMark.palette",
+    "wert": "4.15–5.29:1 (C2410C 4.15, B5475A 4.23, 2F7D3B 4.19)",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": false
+   },
+   {
+    "was": "Ladenfarbe als Icon-Akzent auf dunkler Kachel",
+    "screen": "D_detail (Einkauf eintragen / PIN / online prüfen)",
+    "wert": "2.81:1 (Thalia #1E6E6B auf #1E1D1B); C&A #0369A1: 2.84:1",
+    "soll/erwartung": ">= 3:1 (Non-Text)",
+    "ok": false
+   },
+   {
+    "was": "Fast-Schwarz-Kacheln #2C2C2E vs Zeilenfläche dunkel",
+    "screen": "D_01_start (Douglas), D_merchants",
+    "wert": "1.21:1 zur Surface, 1.33:1 zur Page",
+    "soll/erwartung": ">= 1.5:1 damit Kachel als Fläche lesbar; laut Regel 'nie Schwarz'",
+    "ok": false
+   },
+   {
+    "was": "Notice-Orange #FF9F0A (Uhr + Balken 'Betrag offen')",
+    "screen": "L_pending",
+    "wert": "2.06:1 auf weiß, 1.87:1 auf page",
+    "soll/erwartung": ">= 3:1 (Non-Text-Icon)",
+    "ok": false
+   },
+   {
+    "was": "Entfernen-Rot (System .destructive) #FF383C",
+    "screen": "S_detail_ende",
+    "wert": "3.25:1 auf page",
+    "soll/erwartung": ">= 4.5:1, Token warn #C4221A = 5.32",
+    "ok": false
+   },
+   {
+    "was": "Fußnote Einstellungen (System-secondary) #868688",
+    "screen": "L_settings",
+    "wert": "3.31:1",
+    "soll/erwartung": ">= 4.5:1, muted wäre 6.03",
+    "ok": false
+   },
+   {
+    "was": "Placeholder 'leer = für mich'",
+    "screen": "L_form / D_form",
+    "wert": "1.72:1 hell, 2.46:1 dunkel",
+    "soll/erwartung": "~3:1 akzeptabel für Placeholder",
+    "ok": false
+   },
+   {
+    "was": "Gelber Punkt der Wortmarke auf Papier",
+    "screen": "L_01_start",
+    "wert": "1.26:1 (Token), gerendert #DBBA44 1.72:1",
+    "soll/erwartung": "dekorativ, aber als Markenzeichen >= 1.5:1 wünschenswert",
+    "ok": false
+   },
+   {
+    "was": "Gelber Hero-Rand dunkel vs page",
+    "screen": "D_01_start",
+    "wert": "12.18:1",
+    "soll/erwartung": "klar abgesetzt",
+    "ok": true
+   },
+   {
+    "was": "Disabled 'Abziehen' Text auf Fläche",
+    "screen": "L_keypad",
+    "wert": "4.99:1",
+    "soll/erwartung": "deutlich, obwohl disabled",
+    "ok": true
+   },
+   {
+    "was": "Papier-Gutschein braun #99632F auf Creme",
+    "screen": "L_paper",
+    "wert": "4.50:1",
+    "soll/erwartung": ">= 4.5:1 (Grenzfall, Beispielbild)",
+    "ok": true
+   },
+   {
+    "was": "Anzahl gleichzeitiger Hues im Abschnitt 'Läuft bald ab'",
+    "screen": "L_01_start",
+    "wert": "5 (Gelb Hero, Orange Zalando, Rot Chip, Amber 'soon', Blau+Gelb IKEA) auf ~600 pt Höhe",
+    "soll/erwartung": "<= 3 bunte Töne pro Viewport neben Tinte",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "Detail/Checkout mit Guthaben 0 (Code UsedUpStamp)",
+    "element": "Stempel 'AUFGEBRAUCHT'",
+    "problem": "foregroundStyle(Color.ink.opacity(0.75)) auf brandYellow: im Dunkelmodus ist ink = #F2F0EA, Kontrast 1.24:1 – helle Schrift auf Gelb, praktisch unlesbar. Der Markenmoment der App scheitert im Dark Mode.",
+    "schwere": "hoch",
+    "vorschlag": "Color.onBrand (#111111, fix) statt Color.ink verwenden, Rahmen ebenfalls onBrand; ergibt 7.1:1 hell und 6.8:1 dunkel."
+   },
+   {
+    "screen": "01_start, merchants, radar (MerchantMark-Tabelle)",
+    "element": "Ladenkacheln Douglas, Apple, Zara, Nike, CinemaxX, Breuninger, Adidas, Sephora, Netflix, Saturn = #2C2C2E; Stadtgutschein/neutral #3A3A3C",
+    "problem": "Verstößt gegen die eigene Regel 'Ladenkacheln nie Schwarz' (Kommentar Zeile 24). Neben Tinte-Button und schwarzer Scan-Karte konkurriert Fast-Schwarz mit der Aktionsfarbe; im Dunkelmodus nur 1.21:1 zur Zeilenfläche – Kachel verschwindet, nur der Buchstabe bleibt.",
+    "schwere": "hoch",
+    "vorschlag": "Für Marken ohne Farbe gedeckte, nicht-schwarze Töne setzen, z. B. Douglas #5A3E6B (Pflaume), Apple/Zara/Nike #4A4F57 Schiefer mit 1 px weißer 12 %-Kontur im Dunkeln; Mindestabstand Kachel↔Surface 1.5:1 im Code prüfen (analog zur accent-Luminanzregel)."
+   },
+   {
+    "screen": "MerchantMark / BalanceCard (Detail)",
+    "element": "Text auf Ladenfarbe mit opacity(0.85)",
+    "problem": "'Noch drauf', 'von 25,00 €', 'gültig bis' werden mit 85 % Deckkraft gesetzt. Bei 10 Läden fällt das unter 4.5:1, bei Lieferando (2.19), Primark (2.39), Zalando (2.45), Müller (2.64) sogar unter 3:1 – auch mit voller Deckkraft (2.52–3.12). Auch die eigene Fallback-Palette landet mit 85 % bei 4.15–4.23.",
+    "schwere": "hoch",
+    "vorschlag": "opacity(0.85) streichen, Hierarchie über Gewicht/Größe lösen. Für helle Ladenfarben (Orange, Hellblau, Grün) Vordergrund automatisch auf #111111 umschalten, wenn WCAG(weiß, bg) < 4.5 – Lieferando/Zalando/Müller mit Tinte: 7–8:1. Fallback-Palette C2410C→B03A0A, 2F7D3B→28703A, B5475A→A63D50."
+   },
+   {
+    "screen": "D_detail, D_paper",
+    "element": "Aktions-Icons in Ladenfarbe (brand.accent)",
+    "problem": "Ladenfarbe wird als Icon-Tint auf dunklen Kacheln genutzt: Thalia 2.81:1, C&A 2.84:1, Amazon/Tchibo/Aldi nahe 1.1–1.3:1. Die Regel 'Kartenfarbe = Ladenfarbe' wird hier auf Icons ausgeweitet und bricht im Dunkeln.",
+    "schwere": "mittel",
+    "vorschlag": "accent im Dunkelmodus aufhellen (HSL-Lightness auf min. 60 %, z. B. Thalia #4FB5AF = 6.6:1) oder Icons einfach Color.ink2 färben – Ladenfarbe gehört auf die Karte, nicht auf die Werkzeuge."
+   },
+   {
+    "screen": "L_pending / D_pending",
+    "element": "'Betrag offen'-Hinweis: Uhr + 4 pt Balken in Color.notice #FF9F0A",
+    "problem": "Vierte Warnfarbe neben warn-Rot, soon-Amber und Brand-Gelb; 2.06:1 auf weiß (Non-Text-Minimum 3:1 verfehlt). Farblich zu nah am Markengelb – liest sich wie Marke statt Warnung.",
+    "schwere": "mittel",
+    "vorschlag": "notice-Token streichen, soon (#B35A00 hell / #FFB340 dunkel) verwenden: 4.8:1 bzw. 9.4:1; die Liste zeigt 'Betrag offen' bereits in warn – eine Farbe für denselben Zustand wählen."
+   },
+   {
+    "screen": "01_start vs 00_onboarding vs radar",
+    "element": "Dringlichkeitsfarben",
+    "problem": "Gleiche Semantik, drei Darstellungen: Zalando 12 Tage = roter Chip, IKEA 24 Tage = Amber-Text, dm 9 Tage im Onboarding = roter Text ohne Chip. 'Betrag offen' ist in Liste Rot, im Detail Orange. Der Nutzer lernt keine Farbskala.",
+    "schwere": "mittel",
+    "vorschlag": "Feste Skala: <= 14 Tage = warn-Chip, 15–30 Tage = soon-Text mit Uhr, > 30 = muted. Onboarding-Beispiel denselben Chip nutzen lassen; 'Betrag offen' überall soon."
+   },
+   {
+    "screen": "L_01_start 'Läuft bald ab'",
+    "element": "Farbdichte",
+    "problem": "Auf ~600 pt Höhe konkurrieren Gelb (Hero), Zalando-Orange, Chip-Rot, Amber, IKEA-Blau+IKEA-Gelb. IKEA-Gelb #FFDB00 steht direkt unter dem Markengelb – die Regel 'Gelb gehört der App' kollidiert mit echten Markenfarben.",
+    "schwere": "mittel",
+    "vorschlag": "In Listen nur die Ladenkachel farbig lassen, Dringlichkeit ohne Flächenfarbe (warnSoft-Chip durch Text + Uhr ersetzen, 13 pt semibold warn). Hero-Gelb und Ladenkacheln durch 24 pt Abstand + Abschnittstitel trennen (ist da) – zusätzlich Kacheln auf 40 pt verkleinern prüfen."
+   },
+   {
+    "screen": "S_detail_ende, Settings",
+    "element": "System-Rot (.destructive) #FF383C",
+    "problem": "'Gutschein entfernen' 3.25:1 auf Papier, außerhalb der eigenen Tokens (warn #C4221A hätte 5.32:1).",
+    "schwere": "mittel",
+    "vorschlag": ".tint(Color.warn) auf destruktive Buttons setzen oder foregroundStyle(Color.bad)."
+   },
+   {
+    "screen": "L_settings",
+    "element": "Fußnoten unter Abschnitten (System-Footer)",
+    "problem": "#868688 auf page = 3.31:1, unter WCAG AA für 13-pt-Text; weicht vom eigenen muted (6.03) ab.",
+    "schwere": "niedrig",
+    "vorschlag": "Footer-Text explizit .foregroundStyle(Color.muted)."
+   },
+   {
+    "screen": "L_form / D_form",
+    "element": "Placeholder",
+    "problem": "1.72:1 hell / 2.46:1 dunkel – Hinweis 'leer = für mich, z. B. Mia oder Oma' ist Inhalt, nicht Deko.",
+    "schwere": "niedrig",
+    "vorschlag": "prompt mit Color.muted.opacity(0.8) (~4.2:1) setzen oder den Hinweis als Hilfszeile unter das Feld stellen."
+   },
+   {
+    "screen": "Theme.swift good/goodSoft",
+    "element": "Token-Paar good auf goodSoft",
+    "problem": "4.43:1 hell – knapp unter AA, falls je Text im grünen Chip steht.",
+    "schwere": "niedrig",
+    "vorschlag": "good hell auf #1A6B43 (5.3:1 auf goodSoft)."
+   },
+   {
+    "screen": "00_onboarding",
+    "element": "Markenauftritt",
+    "problem": "Erster Screen ohne Gelb, ohne Ticketform, Wortmarke ohne Punkt – die Marke beginnt erst nach 'Los geht's'.",
+    "schwere": "mittel",
+    "vorschlag": "Wortmarke mit gelbem Punkt (9 pt) wie auf Start; Beispielliste in eine gelbe Ticketform mit Kerben setzen oder einen gelben Mini-Hero 'Noch drauf 75,00 €' voranstellen."
+   }
+  ],
+  "top3": [
+   "UsedUpStamp auf Color.onBrand (#111111 fix) umstellen – im Dunkelmodus ist der Stempel aktuell 1.24:1, praktisch unsichtbar.",
+   "Text auf Ladenfarben: opacity(0.85) entfernen und automatische Vordergrundwahl (Weiß oder #111111, je nachdem was >= 4.5:1 erreicht) einbauen; betrifft Zalando, Lieferando, Primark, Müller, Netto, DB, H&M u. a.",
+   "Fast-Schwarz #2C2C2E/#3A3A3C als Ladenfarbe abschaffen (10 Läden + neutral) und notice-Orange sowie System-Rot durch die Tokens soon/warn ersetzen – dann gilt wirklich: Gelb+Tinte = App, Rot/Amber = Zeit, alles andere = Laden."
+  ],
+  "lob": [
+   "Tinte auf Gelb für den Hero (13.7:1) mit zurückgenommener Tinte für Sekundärtext (7.1:1) – ein reifes, eigenständiges Markenpaar, bitte nicht abschwächen.",
+   "Die Token-Kalibrierung muted/warn/soon in hell und dunkel: muted 6.0–7.9:1, warn 5.3–7.3:1, soon dunkel 9.4:1 – sauber durchdacht.",
+   "Kartenfarbe = Ladenfarbe auf der Detailkarte (Thalia-Petrol, Café-Blau) mit Kerben und Abrisslinie in Ladenfarbe – das macht den Wiedererkennungswert aus.",
+   "Primärbutton konsequent Tinte (dunkel: Papierweiß), Gelb nie als Aktionsfarbe – das hält die Marke frei."
+  ]
+ },
+ {
+  "persona": "Sophie Aubert, 29, Type-Designerin und Editorial-Designerin (Leipzig), Referenzen: Things 3, Robinhood, The Browser Company Arc",
+  "fokus": "Typografie: SF Pro/SF Rounded-Mischung, Größenstufen, hochgestellte Cent, Mono-Kartennummer, Wortmarke, Zeilenlängen, Truncations inkl. XL",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 6,
+   "farbe": 8,
+   "abstaende_raster": 7,
+   "hierarchie": 8,
+   "konsistenz": 6,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 8,
+   "barrierefreiheit": 6,
+   "markencharakter": 6,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Die gelbe Summenkarte mit 136,25 € in Rounded Heavy ist ein echter Moment – das Ticket mit Kerben und Abrisslinie trägt die Marke sofort. Sobald man die Startseite verlässt, zerfällt die Typografie aber in vier Stimmen (SF Pro Bold, SF Rounded Heavy, SF Mono, SF Pro mit Sperrung) ohne klare Regel, wer wann spricht.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Auf Start und Detail eindeutig: Ticketform, Gelb+Tinte, Wortmarke mit gelbem Punkt, Preisschild-Cent. Aber die Wortmarke existiert in drei Fassungen (Start: Rounded Heavy 30 mit Punkt; Onboarding: SF Pro Bold 17 ohne Punkt; Verlauf-Bon: 'RESTWERT' Mono Heavy 22 gesperrt), und gerade der erste Screen (Onboarding) zeigt die Marke gar nicht – dort sehen Beträge aus wie bei jeder Banking-App (SF Pro Semibold 17 statt Rounded Heavy).",
+  "scroll_befund": "Start gescrollt (S_start_1): Wortmarke verschwindet komplett, kein Inline-Titel – beim Scrollen ist die App markenlos; unter der Statusleiste bleibt ein gelber Schimmer der Summenkarte und verwischter Text ('Läuft bald ab' als Geisterzeile bei ca. y=62 pt). Tab-Leiste minimiert sauber auf Home + Plus, Listenende steht frei (120 pt contentMargin wirkt). Läden (S_laeden_mitte): Inline-Titel 'Läden' mit weicher Blur-Kante, darunter ist der vorige Karteninhalt geblurrt lesbar – das widerspricht dem Code-Kommentar 'harte Scroll-Kante'. Detail-Ende: harte Kante unter Zurück/Bearbeiten, Icons der Kacheln werden angeschnitten (Kreis/Face-ID halb sichtbar) – akzeptabel. Einstellungen: Abschnittstitel 'Anzeige' lugt unter der Tab-Leiste hervor. Rhythmus der Liste gleichmäßig (Zeilen ca. 52–56 pt).",
+  "messungen": [
+   {
+    "was": "Anzahl unterschiedlicher Schriftgrößen im Code (scaled/amount/system)",
+    "screen": "gesamte App",
+    "wert": "25 Stufen: 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 16, 17, 18, 19, 20, 22, 24, 26, 28, 30, 34, 36, 40, 48, 60, 64 (+ abgeleitete Cent 16.6/22.1/27.6)",
+    "soll/erwartung": "max. 8–9 Stufen (z. B. 12/13/15/17/20/28/34 + Beträge 20/48/64)",
+    "ok": false
+   },
+   {
+    "was": "Summenbetrag: Ziffernhöhe Euro vs. Cent",
+    "screen": "L_01_start",
+    "wert": "Euro 44.0 pt, Cent 19.0 pt (Verhältnis 0.43)",
+    "soll/erwartung": "0.40–0.50 Preisschild-Verhältnis",
+    "ok": true
+   },
+   {
+    "was": "Cent-Oberkante vs. Euro-Oberkante",
+    "screen": "L_01_start",
+    "wert": "Cent 2.6 pt tiefer als Euro-Oberkante (231.7 vs 234.3 pt); Detail 1.7 pt tiefer",
+    "soll/erwartung": "bündig an Versalhöhe (0 pt ±0.5)",
+    "ok": false
+   },
+   {
+    "was": "Komma im hochgestellten Teil",
+    "screen": "L_01_start / L_detail",
+    "wert": "Komma bei 250–258 pt, 18 pt über der Euro-Grundlinie (275.7) – liest sich als Apostroph ('136’25')",
+    "soll/erwartung": "Komma auf Grundlinie oder weglassen (Preisschild-Konvention: 136²⁵)",
+    "ok": false
+   },
+   {
+    "was": "Abstand 1→3 in '136' (tabellarische Ziffern)",
+    "screen": "L_01_start",
+    "wert": "13.3 pt zwischen '1' und '3', aber 4.7 pt zwischen '3' und '6'",
+    "soll/erwartung": "optisch gleiche Abstände, Differenz < 2 pt",
+    "ok": false
+   },
+   {
+    "was": "Abstand 1→2 in '12' (Detail)",
+    "screen": "L_detail",
+    "wert": "11.3 pt vs. 3.7 pt (2→Komma)",
+    "soll/erwartung": "< 2 pt Differenz",
+    "ok": false
+   },
+   {
+    "was": "Wortmarke linke Kante vs. Tab-Titel",
+    "screen": "L_01_start vs L_history/L_merchants",
+    "wert": "Restwert-R bei 21.7 pt, 'Verlauf' bei 16.7 pt, 'Läden' 18.0 pt",
+    "soll/erwartung": "gleiche optische Kante (±1 pt)",
+    "ok": false
+   },
+   {
+    "was": "Wortmarke Versalhöhe vs. Titel anderer Tabs",
+    "screen": "L_01_start vs L_history",
+    "wert": "Wortmarke 21.0 pt hoch, 'Verlauf' 24.3 pt (inkl. Unterlänge-freie Buchstaben)",
+    "soll/erwartung": "Marke mindestens so groß wie die Tab-Titel",
+    "ok": false
+   },
+   {
+    "was": "Mono-Kartennummer: Gruppenabstand vs. Zeichenabstand",
+    "screen": "L_detail",
+    "wert": "Zeichen-Pitch 10.4 pt, Lücke zwischen Ziffern 2.0 pt, zwischen Vierergruppen 12.6 pt (volle Mono-Zelle)",
+    "soll/erwartung": "Gruppenlücke ca. 0.5 Zelle (5–6 pt)",
+    "ok": false
+   },
+   {
+    "was": "Kartennummer: Schrift-Konsistenz",
+    "screen": "L_detail / L_checkout / Vollbild",
+    "wert": "Detail SF Mono Semibold 17; Kasse SF Pro Bold 19 kerning 2.4 (proportional); Vollbild SF Mono Bold 26 kerning 2",
+    "soll/erwartung": "eine Nummern-Schrift überall",
+    "ok": false
+   },
+   {
+    "was": "Kontrast Tinte 85 % auf Gelb ('Noch drauf', Fußzeilen)",
+    "screen": "L_01_start",
+    "wert": "7.1:1 (#4D4320 auf #FFD84D)",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Weiß 85 % auf Thalia-Petrol",
+    "screen": "L_detail",
+    "wert": "4.83:1 (#DDE9E9 auf #1E6E6B) bei 13–14 pt",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast muted auf Papier ('Ablaufdatum')",
+    "screen": "L_01_start",
+    "wert": "6.03:1",
+    "soll/erwartung": ">= 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast deaktivierter Knopf 'Abziehen'",
+    "screen": "L_keypad",
+    "wert": "5.04:1",
+    "soll/erwartung": ">= 4.5:1 (für disabled optional)",
+    "ok": true
+   },
+   {
+    "was": "Betrag-Skalierung bei XL",
+    "screen": "XL_detail vs L_detail",
+    "wert": "Ziffernhöhe 34.4 → 48.6 pt (x1.41), Name 'Thalia' und Fließtext wachsen ca. x1.5–1.8",
+    "soll/erwartung": "Betrag bleibt größtes Element – erfüllt",
+    "ok": true
+   },
+   {
+    "was": "Seitenrand",
+    "screen": "L_history / L_merchants / L_00_onboarding / L_01_start",
+    "wert": "Titel-Ink ab 16.7 pt (Verlauf) bzw. 18.0 pt (Läden); Onboarding-Überschrift 21.3 pt (padding 20); Start-Wortmarke 21.7 pt",
+    "soll/erwartung": "16 pt überall (Layout.page)",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "01_start, detail, paper",
+    "element": "AmountText hochgestellte Cent",
+    "problem": "Das Komma wandert mit in den hochgestellten Teil (`\",\\(cents) €\"` mit baselineOffset) und schwebt 18 pt über der Grundlinie – liest sich wie ein Apostroph. Cent sitzen zudem 2.6 pt unter der Versalhöhe der Euro, also weder bündig oben noch klar abgesetzt.",
+    "schwere": "mittel",
+    "vorschlag": "Komma auf die Grundlinie in Euro-Größe setzen ODER ganz weglassen (Preisschild-Stil 136²⁵ €); baselineOffset so rechnen, dass Cent-Oberkante = Euro-Versalhöhe: offset ≈ capHeight(size) − capHeight(size*0.46) ≈ size*0.385 statt 0.36; Abstand Euro→Cent 1–2 pt (heute 3 pt + Komma)."
+   },
+   {
+    "screen": "01_start, detail, checkout",
+    "element": "Große Beträge mit monospacedDigit",
+    "problem": "Tabellarische Ziffern bei 48–60 pt: die '1' steht in einer vollen Zelle, dadurch Loch von 13.3 pt in '136' und 11.3 pt in '12' – bei Display-Größen sehr sichtbar, kerning −1.5 hilft nicht.",
+    "schwere": "mittel",
+    "vorschlag": "In AmountText .monospacedDigit() nur für Listen (≤ 20 pt) behalten, Displaybeträge ≥ 36 pt proportional setzen; contentTransition(.numericText) funktioniert auch ohne tabellarische Ziffern."
+   },
+   {
+    "screen": "gesamte App",
+    "element": "Schriftgrößen-Skala",
+    "problem": "25 unterschiedliche Punktgrößen inkl. Halbstufen (11.5, 12.5, 13.5, 14.5) – kein erkennbares System; 13/14/15 liegen so dicht, dass sie wie Fehler wirken.",
+    "schwere": "mittel",
+    "vorschlag": "Token-Skala in Theme.swift: caption 12, footnote 13, body 15, bodyStrong 17, title3 20, title 28, largeTitle 34; Beträge 20/48/64. Halbstufen und 14/16/18/19/22/24/26 streichen."
+   },
+   {
+    "screen": "00_onboarding",
+    "element": "Wortmarke und Beispiel-Beträge",
+    "problem": "Erster Screen zeigt 'Restwert' in SF Pro Bold 17 ohne gelben Punkt; Beispielbeträge in SF Pro Semibold 17 statt Rounded Heavy – die Marke fehlt genau dort, wo der erste Eindruck entsteht.",
+    "schwere": "hoch",
+    "vorschlag": "Wordmark-View (Rounded Heavy + 9-pt-Punkt) wiederverwenden, dort in 30 pt; Beispielzeilen mit CardRow bzw. .amount(20) setzen; optional Headline in SF Rounded Bold, damit Onboarding und Start eine Stimme haben."
+   },
+   {
+    "screen": "history (Bon), checkout, detail",
+    "element": "Wortmarke in drei Fassungen",
+    "problem": "'RESTWERT' im Bon als Mono Heavy 22 mit Sperrung 3 ist eine dritte Marke neben Rounded Heavy 30 und SF Pro Bold 17.",
+    "schwere": "niedrig",
+    "vorschlag": "Im Bon die echte Wortmarke (Rounded Heavy, ca. 22 pt, mit Punkt) oder bewusst nur 'EINLÖSUNGEN' in Mono ohne Markennamen."
+   },
+   {
+    "screen": "detail, checkout, Vollbild",
+    "element": "Kartennummer",
+    "problem": "Drei Schriftschnitte für dieselbe Nummer (SF Mono 17 / SF Pro Bold 19 +2.4 / SF Mono 26 +2). In Mono ergibt das Leerzeichen eine volle Zelle: 12.6 pt Gruppenlücke gegen 2 pt Zeichenabstand – wirkt doppelt gespationiert.",
+    "schwere": "mittel",
+    "vorschlag": "Überall SF Mono Semibold mit .monospacedDigit, Gruppentrennung per U+2009 (Thin Space) oder HStack(spacing: 6) statt Leerzeichen; Kasse 22 pt, Detail 17 pt, Vollbild 28 pt, kerning 0.5."
+   },
+   {
+    "screen": "XL_checkout",
+    "element": "Kartennummer und Knöpfe bei XL",
+    "problem": "Nummer bricht als '6300 9812 7456' / '1234' um (Waise); Hauptknopf 'Bezahlt – Betrag eintragen' zweizeilig und Text berührt fast die Knopfkante; 'Nicht angenommen / Später eintragen' laufen unten aus dem Bild.",
+    "schwere": "hoch",
+    "vorschlag": "Nummer .lineLimit(1).minimumScaleFactor(0.6) oder bei isAccessibilitySize 2×2-Gruppen umbrechen; Knopftext bei XL auf 'Bezahlt' kürzen (ViewThatFits), minHeight 56 → padding vertical 16; Nebenaktionen bei XL untereinander stapeln und Seite scrollbar machen."
+   },
+   {
+    "screen": "merchants, XL_merchants",
+    "element": "Beschreibungszeile",
+    "problem": "Einzeilige Truncation schneidet nach 3–5 Wörtern ab ('Online m…', 'G…', bei XL 'Code im Amazon-Kont…') – Satzfragmente ohne Informationswert.",
+    "schwere": "mittel",
+    "vorschlag": "lineLimit(2) im Standard, lineLimit(3) bei Accessibility-Größen; alternativ Kurztext-Feld ≤ 40 Zeichen im Datenmodell."
+   },
+   {
+    "screen": "scan",
+    "element": "Hinweis 'PDF aus einer Mail übernehmen'",
+    "problem": "Automatische Silbentrennung bricht den Markennamen: '3. Rest-' / 'wert wählen'.",
+    "schwere": "niedrig",
+    "vorschlag": "Markennamen mit Word Joiner schützen: \"Rest\\u{2060}wert\" oder den Satz umstellen; generell Markennamen nie trennen."
+   },
+   {
+    "screen": "XL_history",
+    "element": "Bon-Zeile 'Beispielstadt · Rest 12,40 €'",
+    "problem": "Umbruch lässt den Trennpunkt '·' am Zeilenanfang stehen.",
+    "schwere": "niedrig",
+    "vorschlag": "Bei XL zweizeilig ohne Trennpunkt setzen (Ort / Rest), oder geschütztes Leerzeichen vor dem Punkt (\\u{00A0}·)."
+   },
+   {
+    "screen": "01_start vs history/merchants/settings",
+    "element": "Titelzeile",
+    "problem": "Start-Wortmarke 30 pt Rounded Heavy, bei 21.7 pt eingerückt; andere Tabs 34 pt SF Pro Bold bei 16.7–18 pt. Beim Tabwechsel springt Titel in Größe, Schnitt und Kante; Marke ist kleiner als 'Verlauf'.",
+    "schwere": "mittel",
+    "vorschlag": "Wortmarke auf 34 pt und dieselbe Kante (16 pt) wie Tab-Titel; Tab-Titel in SF Rounded Bold 34 setzen, damit alle Titel die Markenschrift sprechen."
+   },
+   {
+    "screen": "detail (Einlöse-Verlauf), tests",
+    "element": "Mischung innerhalb eines Bausteins",
+    "problem": "Bon im Detail: Kopf 'Einlöse-Verlauf' in SF Pro Bold 22, Inhalt in Mono – der Bon verliert seine Anmutung. Kassentest '1 von 2 Mal' SF Pro Bold statt Betragsschrift.",
+    "schwere": "niedrig",
+    "vorschlag": "Bon-Kopf in Mono Heavy 15 versal gesperrt (wie Verlauf-Bon); große Kennzahlen immer .amount(34)."
+   },
+   {
+    "screen": "S_start_1",
+    "element": "Scroll-Zustand Start",
+    "problem": "Nach dem Scrollen keine Wortmarke/kein Inline-Titel, dafür geblurrte Geisterzeile unter der Statusleiste.",
+    "schwere": "niedrig",
+    "vorschlag": "Kompakte Wortmarke (17 pt Rounded Heavy + 5-pt-Punkt) als Inline-Titel einblenden, sobald die große Wortmarke verschwindet."
+   },
+   {
+    "screen": "form",
+    "element": "Feld 'Code oder Kartennummer'",
+    "problem": "16-stellige Nummer ungruppiert in SF Pro Semibold ('6300981274561234'), schwer kontrollierbar.",
+    "schwere": "niedrig",
+    "vorschlag": "Beim Anzeigen .grouped + Mono 16 pt, Eingabe weiter roh."
+   },
+   {
+    "screen": "checkout, form (Thalia)",
+    "element": "Händlertext",
+    "problem": "Text sagt '17-stellige Nummer', das Beispiel hat 16 Ziffern – Widerspruch direkt unter der Nummer.",
+    "schwere": "niedrig",
+    "vorschlag": "Beispielnummer auf 17 Stellen oder Text in Models.swift prüfen."
+   }
+  ],
+  "top3": [
+   "AmountText reparieren: Komma auf Grundlinie oder streichen, Cent-Oberkante an Euro-Versalhöhe (baselineOffset ≈ size*0.385), Displaybeträge ≥ 36 pt ohne monospacedDigit (Loch hinter der '1' misst heute 11–13 pt).",
+   "Schriftskala auf 7 Text-Tokens + 3 Betragsgrößen eindampfen (12/13/15/17/20/28/34; Beträge 20/48/64) und eine Regel festschreiben: Rounded = Marke, Titel und Zahlen; SF Pro = Fließtext; Mono = Bon und Kartennummer (überall gleicher Schnitt, Gruppen mit Thin Space).",
+   "Eine Wortmarke überall: Rounded Heavy + gelber Punkt auf Onboarding (heute SF Pro 17 ohne Punkt), als Inline-Titel beim Scrollen und im Bon; auf 34 pt und 16-pt-Kante wie die anderen Tab-Titel."
+  ],
+  "lob": [
+   "Die gelbe Summenkarte mit Kerben, Abrisslinie und Rounded-Heavy-Betrag – das ist die Marke, nicht anfassen.",
+   "Grundidee Preisschild-Cent (Verhältnis 0.43) ist typografisch richtig und eigenständig.",
+   "Verlauf als Mono-Kassenbon mit Zickzackkante – starke, charmante Metapher.",
+   "Dynamic Type: Zeilen stapeln bei XL sauber, Beträge hängen an Large Title und bleiben das größte Element (x1.41 statt Umbruch).",
+   "Kontraste durchweg ≥ 4.8:1, Ladenfarbe als Kartenfarbe funktioniert in hell und dunkel."
+  ]
+ },
+ {
+  "persona": "Jonas Weber, 38, Creative Director einer Branding-Agentur in München (Marken für Fintechs und Retailer). Referenzen: Headspace, Duolingo, Wise, Lunchgate",
+  "fokus": "Markencharakter: Ist „Das Ticket“ eine eigenständige Marke oder ein iOS-Utility mit gelber Karte? Wie konsequent ist die Signatur (Kerbe, Abrisslinie, gelber Punkt, Rounded-Beträge) über alle Screens, und wie klingen die Texte?",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 8,
+   "abstaende_raster": 7,
+   "hierarchie": 8,
+   "konsistenz": 6,
+   "komponenten": 7,
+   "ikonografie": 6,
+   "dunkelmodus": 8,
+   "barrierefreiheit": 7,
+   "markencharakter": 6,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Start, Detail und Kasse haben jetzt eine echte Idee: Das gelbe Ticket mit Kerben und Abrisslinie ist markenfähig, und die Rounded-Heavy-Beträge mit hochgestellten Cent sind ein gutes Zeichen, wie bei Wise die großen Zahlen. Sobald ich Start, Detail und Kasse verlasse, lande ich aber wieder in einer ordentlichen, gut gemachten iOS-Einstellungs-App. Die Marke ist heute eine Insel auf drei Screens, kein System.",
+  "marke_erkennbar": false,
+  "marke_begruendung": "Mit einem Screenshot von Start oder Kasse erkenne ich die Marke, mit Onboarding, Läden, Verlauf, Einstellungen, Hinzufügen oder Formular nicht. Laut Code kommen TicketShape und AmountText nur in HomeView (Summen-Ticket), MerchantMark/BalanceCard (Detail) und CheckoutView (Perforation) vor. Die Wortmarke ist ein privates struct in HomeView.swift und erscheint nur auf Start. Ausgerechnet das Onboarding, also der erste Kontakt, zeigt „Restwert“ in 17 pt Bold ohne gelben Punkt, die Beispielbeträge in SF Pro Semibold statt Rounded Heavy und kein einziges Ticket. Der Verlauf bringt als zweite Signatur einen Kassenbon (Monospace, Zackenkante, „RESTWERT“ in Versalien). Das ist schön, verwässert aber die Regel „Ticket als einzige Form“. Das Gelb selbst ist gut gesetzt und diszipliniert. Es trägt aber allein nicht, weil es außerhalb der Summenkarte nur noch als 7,7-pt-Punkt vorkommt.",
+  "scroll_befund": "S_start_1: Die Tab-Leiste schrumpft auf Haus + Plus (iOS-26-Verhalten), das ist okay. Oben schimmert das Gelb des weggescrollten Tickets verwischt unter der Statusleiste durch, und die Sektionsüberschrift „Läuft bald ab“ ist als Geisterschrift halb sichtbar. Das wirkt unsauber statt markig. S_start_2_ende: Die Liste endet mit „Alle Ablauftermine“ als weißer Pille und viel leerem Papier. Hier fehlt ein Markenabschluss, z. B. eine perforierte Endlinie oder ein kleiner Stempel „Das war alles“. S_laeden_mitte: Unter dem Inline-Titel „Läden“ scheinen Kartenreste (Icon, Text) durch den Kanteneffekt. Der Rhythmus der Kartenstapel bleibt gleichmäßig (ca. 12 pt Abstand), aber die Karten sind generische Rundrechtecke. Die schwebende Tab-Leiste überdeckt auf Start, Läden und Verlauf die letzte Zeile halb („Amazon 30,00 €“ und „SUMME“ liegen hinter der Leiste). Im Verlauf wird der Bon-Abschluss verdeckt, mehr unteres Inset nötig.",
+  "messungen": [
+   {
+    "was": "Seitenrand links",
+    "screen": "L_01_start, L_merchants, L_settings, L_scan, L_form, L_history",
+    "wert": "16,0 pt",
+    "soll/erwartung": "16 pt (Layout.page)",
+    "ok": true
+   },
+   {
+    "was": "Seitenrand links Onboarding",
+    "screen": "L_00_onboarding",
+    "wert": "18,7 pt",
+    "soll/erwartung": "16 pt wie alle anderen Screens",
+    "ok": false
+   },
+   {
+    "was": "Kartenkante Detail-Ticket (inkl. Schatten)",
+    "screen": "L_detail / L_paper",
+    "wert": "13,0 pt",
+    "soll/erwartung": "16 pt wie das Summen-Ticket auf Start (gemessen 16,0 pt)",
+    "ok": false
+   },
+   {
+    "was": "Markengelb Summen-Ticket",
+    "screen": "L_01_start",
+    "wert": "#FFD84D (255,216,77)",
+    "soll/erwartung": "#FFD84D",
+    "ok": true
+   },
+   {
+    "was": "Markengelb dunkel",
+    "screen": "D_01_start",
+    "wert": "#F5CE3E",
+    "soll/erwartung": "leicht gedämpft im Dark Mode",
+    "ok": true
+   },
+   {
+    "was": "Papierhintergrund",
+    "screen": "L_*",
+    "wert": "#F6F4EF (Verlauf/Kasse gemessen #F4F2ED)",
+    "soll/erwartung": "#F6F4EF überall",
+    "ok": false
+   },
+   {
+    "was": "Größe gelber Punkt der Wortmarke",
+    "screen": "L_01_start",
+    "wert": "7,7 × 7,7 pt",
+    "soll/erwartung": "als Markenzeichen eher 10–12 pt, mind. Punktstärke der Heavy-Schrift",
+    "ok": false
+   },
+   {
+    "was": "Kontrast gelber Punkt vs. Papier",
+    "screen": "L_01_start",
+    "wert": "1,26:1",
+    "soll/erwartung": "dekorativ, aber als Markenträger zu schwach (Kontur mit 15 % Tinte hilft kaum)",
+    "ok": false
+   },
+   {
+    "was": "Kontrast Tinte auf Gelb",
+    "screen": "L_01_start",
+    "wert": "13,65:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast muted #5C5C63 auf Papier",
+    "screen": "L_*",
+    "wert": "6,03:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast muted dunkel #A8A8AE auf Surface #1E1D1B",
+    "screen": "D_*",
+    "wert": "7,12:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Weiß auf Thalia-Ticket (#1E6E6B)",
+    "screen": "L_detail",
+    "wert": "6,00:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Weiß auf Café-am-Markt-Ticket (#0369A1)",
+    "screen": "L_paper",
+    "wert": "5,93:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast ca. 70 % Weiß (Sekundärtext) auf Thalia",
+    "screen": "L_detail",
+    "wert": "3,82:1",
+    "soll/erwartung": "≥ 4,5:1 für „von 25,00 €“/„gültig bis“",
+    "ok": false
+   },
+   {
+    "was": "Kontrast „soon“ #B35A00 auf Weiß",
+    "screen": "L_01_start",
+    "wert": "4,80:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Screens mit Ticket-Signatur (Kerbe + Abrisslinie)",
+    "screen": "alle 15",
+    "wert": "3 von 15 (Start, Detail/Paper/Pending, Kasse)",
+    "soll/erwartung": "Signatur mindestens als Akzent auf jedem Hauptscreen",
+    "ok": false
+   },
+   {
+    "was": "Beträge in Rounded Heavy mit hochgestellten Cent",
+    "screen": "alle",
+    "wert": "nur Hero-Beträge (Start, Detail). Listen: Rounded ohne hochgestellte Cent. Onboarding: SF Pro Semibold",
+    "soll/erwartung": "eine Betragsschrift überall, hochgestellte Cent ab ca. 28 pt",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "00_onboarding",
+    "element": "Kopf/Wortmarke",
+    "problem": "Der erste Kontakt zeigt die Marke nicht: „Restwert“ in 17 pt Bold ohne Punkt, kein Ticket, Beispielbeträge in SF Pro Semibold. Das wirkt wie ein generisches Apple-Template, und die Onboarding-Headline ist austauschbar.",
+    "schwere": "hoch",
+    "vorschlag": "Wordmark aus HomeView.swift in Design/ auslagern und public machen. Im Onboarding in 34 pt mit 11-pt-Punkt als Hero verwenden. Statt Beispiel-Liste ein gelbes Summen-Ticket (Beispiel 75,00 €) mit Kerbe, Abrisslinie und Rounded-Heavy-Betrag zeigen. Die Zeilenbeträge auf .amount(17) umstellen."
+   },
+   {
+    "screen": "merchants / settings / scan / form / radar / tests",
+    "element": "Kartencontainer",
+    "problem": "Nur generische Rundrechtecke (24 pt Radius), keine einzige Kerbe oder Perforation. Mit ausgeblendetem Logo könnte der Screen aus jeder Utility-App stammen.",
+    "schwere": "hoch",
+    "vorschlag": "Einen kleinen „Ticket-Akzent“ als Komponente bauen, z. B. SectionTicket: Surface-Karte mit 6-pt-Kerben und gestrichelter 1-pt-Linie (Dash 4/4, Tinte 20 %) zwischen Kopf und Inhalt. Einsetzen im Hinzufügen-Hero („Karte scannen“), in der Datenschutz-Karte der Einstellungen („Nur auf diesem iPhone“), beim Kassentest-Summary („1 von 2 Mal“) und im Formularkopf (Foto vom Gutschein). Kein neues Formvokabular, nur die Kerbe wiederholen."
+   },
+   {
+    "screen": "history",
+    "element": "Kassenbon",
+    "problem": "Der Bon (Monospace, Zackenkante, Versal-„RESTWERT“) ist gut gemacht, aber er ist eine zweite, konkurrierende Signatur neben dem Ticket. Zwei Metaphern (Ticket + Bon) schwächen beide.",
+    "schwere": "mittel",
+    "vorschlag": "Entweder den Bon zum Ticket-Abschnitt umbauen (Zackenkante durch Kerben + Perforation ersetzen, Summe „EINGELÖST“ in AmountText mit hochgestellten Cent) oder den Bon offiziell ins System aufnehmen als ‚Abriss‘ des Tickets (die abgerissenen Stücke landen im Verlauf). Dann den Abreiß-Übergang aus der Kasse visuell hier ankommen lassen."
+   },
+   {
+    "screen": "01_start / history / merchants",
+    "element": "Listenbeträge",
+    "problem": "Hero nutzt hochgestellte Cent (136,²⁵ €), Listen „20,00 €“ ohne. Die typografische Signatur bricht auf dem gleichen Screen.",
+    "schwere": "mittel",
+    "vorschlag": "AmountText mit Parameter superscriptCents: true ab 19 pt auch in CardRow verwenden. Cent bei 55 % Größe mit Baseline-Offset +0,35 em, damit „20,⁰⁰ €“ überall gleich klingt."
+   },
+   {
+    "screen": "01_start",
+    "element": "Gelber Punkt der Wortmarke",
+    "problem": "7,7 pt, Kontrast 1,26:1 zum Papier. Der Punkt ist das kleinste Markenzeichen, aber hier kaum wahrnehmbar. Er taucht nirgends sonst auf (kein Tab-Indikator, kein Empty State, kein Ladezustand).",
+    "schwere": "mittel",
+    "vorschlag": "Punkt auf 10 pt vergrößern und als wiederkehrendes Mikrozeichen einsetzen: aktiver Tab-Indikator, Bullet für „Betrag offen“, Ladeindikator, Erfolgshäkchen nach „Bezahlt“. Die Kontur auf 1 pt Tinte 25 % erhöhen."
+   },
+   {
+    "screen": "global",
+    "element": "Tab-Leiste / App-Chrome",
+    "problem": "Die Tab-Leiste ist Standard-iOS-26-Glass mit SF Symbols (Haus, Zahnrad), kein Markenmoment. Die Symbole sind generisch, auch „Verlauf“ als Schriftrolle wirkt beliebig.",
+    "schwere": "niedrig",
+    "vorschlag": "Eigenes Ticket-Glyph für Start (Rechteck mit zwei Kerben, 22 pt), Bon-Glyph für Verlauf. Aktiven Tab mit 10-pt-Gelbpunkt statt grauer Pille markieren, Plus-Button in Tinte mit gelbem Plus."
+   },
+   {
+    "screen": "Texte global",
+    "element": "Stimme",
+    "problem": "Die Stimme ist gut, aber ungleich verteilt. Stark: „Noch drauf“, „2 bald weg“, „Nichts geht an uns“, „Nur ‚Bezahlt‘ zieht vom Guthaben ab“, „leer = für mich, z. B. Mia oder Oma“. Neutral oder behördlich: „Einstellungen“, „Sicherheit & Erinnerungen“, „Aus einer Datei“, „Gutschein entfernen“, „Ablauftermine“, „Hinzufügen“. Der Onboarding-Claim „Deine Gutscheine, an einem Ort.“ ist Kategorie-Sprech, den jede Konkurrenz nutzt.",
+    "schwere": "mittel",
+    "vorschlag": "Claim schärfen, z. B. „Kein Cent bleibt liegen.“ oder „Was drauf ist, wird ausgegeben.“. Screen-Titel behalten (Auffindbarkeit), aber Untertitel mit Stimme setzen wie beim Verlauf: Läden „Wo du was einlösen kannst.“, Hinzufügen „Foto, Mail oder abtippen – fertig.“, Einstellungen „Alles bleibt bei dir.“. Leerer Listenabschluss: „Das war alles. Noch 136,25 € drauf.“"
+   },
+   {
+    "screen": "detail / paper / pending",
+    "element": "Sekundärtext auf Ladenfarbe",
+    "problem": "„von 25,00 €“, „gültig bis“, „noch 826 Tage“ in ca. 70 % Weiß erreichen auf Thalia-Grün nur ca. 3,8:1.",
+    "schwere": "mittel",
+    "vorschlag": "Sekundärtext auf Ladenfarbe mit 85 % Weiß (≈ 4,9:1) oder volles Weiß in Regular statt Semibold."
+   },
+   {
+    "screen": "detail / paper",
+    "element": "Ticket-Breite",
+    "problem": "Das Detail-Ticket sitzt bei ca. 13 pt (mit Schatten), das Summen-Ticket auf Start bei 16,0 pt. Beim Übergang Start → Detail springt die Kante.",
+    "schwere": "niedrig",
+    "vorschlag": "Beide Tickets exakt auf Layout.page = 16 pt setzen. Schatten nur nach unten (y 4, blur 12) und nicht seitlich auslaufen lassen."
+   },
+   {
+    "screen": "00_onboarding",
+    "element": "Raster",
+    "problem": "Linker Rand 18,7 pt statt 16 pt, damit als einziger Screen aus dem Raster.",
+    "schwere": "niedrig",
+    "vorschlag": "Auf .padding(.horizontal, Layout.page) = 16 pt vereinheitlichen."
+   },
+   {
+    "screen": "S_start_1 / S_laeden_mitte",
+    "element": "Scroll-Kante",
+    "problem": "Das weggescrollte Gelb schimmert verwischt unter der Statusleiste, Geisterschrift liegt unter dem Inline-Titel. Das wirkt unruhig und nicht markig.",
+    "schwere": "niedrig",
+    "vorschlag": "Ab 8 pt Scroll-Offset einen Kompakt-Header mit Wortmarke 17 pt + Punkt und die Summe „136,²⁵ €“ rechts auf Papierfarbe (100 % deckend, 0,5-pt-Linie unten) einblenden. So bleibt die Marke beim Scrollen sichtbar."
+   },
+   {
+    "screen": "01_start / merchants / history",
+    "element": "Unteres Inset",
+    "problem": "Die schwebende Tab-Leiste verdeckt die letzte Zeile bzw. die Bon-Summe halb.",
+    "schwere": "niedrig",
+    "vorschlag": "contentMargins(.bottom, 96 pt) bzw. safeAreaPadding für die Tab-Leiste (Höhe ca. 62 pt + 16 pt + 16 pt)."
+   },
+   {
+    "screen": "checkout / detail (Code)",
+    "element": "Motion-Signatur",
+    "problem": "Abreißen und Stempel existieren laut Code (tearOff mit Spring 0,45/0,8, 520 ms, Haptik .impact medium; UsedUpStamp, „EINGELÖST“-Stempel). Das habe ich nur im Code gesehen, nicht auf Screenshots. Es ist die stärkste Markenidee der App, bleibt aber auf den Bezahlt-Moment beschränkt.",
+    "schwere": "niedrig",
+    "vorschlag": "Motion-Signatur ein zweites Mal einsetzen, etwa beim Anlegen eines Gutscheins: Das Ticket ‚druckt‘ sich von oben ein (Offset −24 pt → 0, Spring 0,5/0,85) mit leichter Haptik. So wird die Marke auch in Formular und Scan spürbar."
+   }
+  ],
+  "top3": [
+   "Onboarding auf Marke umbauen: die ausgelagerte Wordmark in 34 pt mit 10–11-pt-Gelbpunkt, dazu ein gelbes Beispiel-Summen-Ticket mit Kerbe, Abrisslinie und Rounded-Heavy-Betrag mit hochgestellten Cent, und einen eigenen Claim statt „Deine Gutscheine, an einem Ort.“",
+   "Eine kleine Ticket-Akzent-Komponente (6-pt-Kerben + gestrichelte Linie) auf allen Sekundärscreens einsetzen: Hinzufügen-Hero, Datenschutz-Karte in den Einstellungen, Kassentest-Summary, Formularkopf. Den Verlauf-Bon als ‚abgerissene Tickets‘ ins System holen statt als eigene Metapher.",
+   "Betragstypografie überall vereinheitlichen: AmountText mit hochgestellten Cent in allen Listen, Onboarding und Bon-Summe. Dazu den gelben Punkt als wiederkehrendes Mikrozeichen (aktiver Tab, Status-Bullet, Erfolg) auf 10 pt vergrößern."
+  ],
+  "lob": [
+   "Das gelbe Summen-Ticket auf Start: Kerben, Abrisslinie und 136,²⁵ € in Rounded Heavy sind ein echtes, merkbares Markenbild. Nicht verwässern.",
+   "Die Regel ‚Ladenfarbe = Kartenfarbe, Gelb nur für die Marke‘ wird sauber eingehalten (Thalia-Grün, Café-Blau). Das gibt Ruhe und Wiedererkennung.",
+   "Die Stimme in den Kernmomenten: „Noch drauf“, „2 bald weg“, „Nur ‚Bezahlt‘ zieht vom Guthaben ab.“, „Nichts geht an uns.“ Das ist menschlich und klar und sollte weiter ausgerollt werden.",
+   "Die Kassen-Perforation mit Abreiß-Animation und Haptik (laut Code, Reduce-Motion respektiert) ist die beste Markenidee der App.",
+   "Der Dark Mode: Die Tinte/Papier-Inversion mit gedämpftem Gelb #F5CE3E wirkt erwachsen und nicht wie ein bloß invertiertes Light-Theme."
+  ]
+ },
+ {
+  "persona": "Emre Yıldız, 31, iOS-Engineer und Motion-Designer (iOS 26 Liquid Glass), Referenzen: Apple Music, Flighty, Ivory",
+  "fokus": "Scrollen und Navigations-Chrome: Scroll-Kanteneffekt, minimierte Tab-Leiste, Überlappungen, unterer Innenabstand, Navigationstitel, Zurück-Buttons, Abreiß-Animation (nur aus dem Code beurteilt)",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 8,
+   "abstaende_raster": 6,
+   "hierarchie": 8,
+   "konsistenz": 6,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 7,
+   "markencharakter": 6,
+   "premium_gefuehl": 6
+  },
+  "first_impression": "Oben im Ruhezustand wirkt die App aufgeräumt und eigenständig: das gelbe Summen-Ticket mit echten Kerben, dazu die Wortmarke mit Punkt – das ist eine Marke. Sobald man scrollt, wirkt der Rahmen aber wie gebastelt: eine leere Navigationsleiste ohne Titel, Farbschleier unter der Statusleiste und am Listenende ein toter Streifen von 144–186 pt.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Auf Start und im Detail trägt die Ticketform (TicketShape mit 9-pt-Kerben und Abrisslinie) zusammen mit dem Betrag in SF Rounded Heavy und hochgestellten Cent klar die Marke. Das Kassen-Ticket nutzt dagegen die ältere Perforation mit aufgemalten 28-pt-Kreisen in Seitenfarbe: andere Kerbgröße, andere Strichelung. Dem Onboarding fehlt der gelbe Punkt der Wortmarke. So verwässert die einzige Signaturform genau im Kassen-Moment.",
+  "scroll_befund": "1) Start gescrollt (S_start_1): Die harte Scroll-Kante (scrollEdgeEffectStyle(.hard, .top)) schneidet bei 106 pt. Darüber liegt eine ca. 50 pt hohe, völlig leere Navigationsleiste, weil der Titel „Restwert“ über ToolbarItem(.principal){Color.clear} unterdrückt wird. Man sieht nur den verschwommenen Rest von „Läuft bald ab“ und oben einen gelben Schleier (Zeilen 0–13 pt, B-Kanal < 232) vom Summen-Ticket unter der Statusleiste. Nach dem Scrollen gibt es also weder Titel noch Wortmarke als Orientierung. 2) Die Tab-Leiste minimiert sich korrekt (.onScrollDown): Home-Kapsel 48×48 pt, Plus 48 pt statt 62 pt, sauber nach iOS 26. 3) Listenende (S_start_2_ende): Zwischen „Alle Ablauftermine“ und der Oberkante der Tab-Leiste bleiben 144 pt Leerraum. contentMargins(.bottom, 120) kommt zusätzlich zum Safe-Area-Inset der Tab-Leiste, das iOS 26 schon selbst einrechnet, plus padding(.bottom, 24). Der Platz für die Leiste wird also doppelt gezählt. 4) Detail/Kasse/Radar blenden die Tab-Leiste aus (.toolbar(.hidden, for: .tabBar)), erben über pageBackground() aber trotzdem die 120 pt. Detail-Ende: 186 pt leere Fläche unter „Gutschein entfernen“. 5) Detail gescrollt: Die harte Kante bei 106 pt kappt die Aktionskacheln ohne Radius, die Icons scheinen oberhalb verschwommen durch, und es gibt keinen Titel (navigationTitle(\"\")). Nach dem Scrollen weiß man nicht mehr, welcher Gutschein offen ist. Unter der Statusleiste liegt dort ein grauer Schleier (225,223,219) statt Gelb wie auf Start und statt sauber wie auf Läden: drei verschiedene Chrome-Tönungen. 6) Läden mitten im Scrollen: Der große Titel klappt vorbildlich auf „Läden“ inline zusammen, Kante bei 116 pt. Unten überdeckt die minimierte Tab-Kapsel das Douglas-Logo, der weiche Übergang unten ist aber systemkonform. 7) Rhythmus: Karten links und rechts exakt 16 pt, große Titel auf allen Tabs bei 127–128 pt Oberkante. Das Raster hält, nur die Ränder oben und unten nicht.",
+  "messungen": [
+   {
+    "was": "Seitenrand Karten links/rechts",
+    "screen": "L_01_start",
+    "wert": "16 pt / 16 pt",
+    "soll/erwartung": "16 pt (Layout.page)",
+    "ok": true
+   },
+   {
+    "was": "Oberkante großer Titel bzw. Wortmarke",
+    "screen": "L_01_start, L_merchants, L_history, L_settings, L_scan",
+    "wert": "127,0–127,7 pt",
+    "soll/erwartung": "gleich auf allen Tabs",
+    "ok": true
+   },
+   {
+    "was": "Linke Glyphenkante Wortmarke vs. große Titel",
+    "screen": "L_01_start vs. L_merchants",
+    "wert": "21,7 pt vs. 18,0 pt",
+    "soll/erwartung": "bündig (Differenz ≤ 1 pt); Ursache: Wordmark().padding(.horizontal, 4)",
+    "ok": false
+   },
+   {
+    "was": "Harte Scroll-Kante (erste Inhaltszeile)",
+    "screen": "S_start_1 / S_detail_ende / S_laeden_mitte",
+    "wert": "106 / 106 / 116 pt",
+    "soll/erwartung": "direkt unter einer Leiste, die einen Titel oder Knöpfe trägt",
+    "ok": false
+   },
+   {
+    "was": "Leerraum letzter Inhalt bis Oberkante Tab-Leiste",
+    "screen": "S_start_2_ende",
+    "wert": "144 pt",
+    "soll/erwartung": "16–24 pt (iOS 26 rechnet die Tab-Leiste bereits in die Safe Area ein)",
+    "ok": false
+   },
+   {
+    "was": "Leerraum letzter Inhalt bis Bildschirmunterkante (ohne Tab-Leiste)",
+    "screen": "S_detail_ende",
+    "wert": "186 pt",
+    "soll/erwartung": "ca. 34 pt Home-Indikator + 24 pt",
+    "ok": false
+   },
+   {
+    "was": "Leerraum unter Kassen-Ansicht",
+    "screen": "L_checkout",
+    "wert": "173 pt",
+    "soll/erwartung": "Aktionen weiter unten, näher an den Daumen",
+    "ok": false
+   },
+   {
+    "was": "Minimierte Tab-Kapsel / Plus-Knopf",
+    "screen": "S_start_1",
+    "wert": "48 × 48 pt / 48 pt (voll: 62 pt)",
+    "soll/erwartung": "iOS-26-Standard",
+    "ok": true
+   },
+   {
+    "was": "Farbschleier unter der Statusleiste beim Scrollen",
+    "screen": "S_start_1 / S_detail_ende",
+    "wert": "gelblich (246,241,223) / grau (225,223,219)",
+    "soll/erwartung": "neutral, auf allen Screens gleich",
+    "ok": false
+   },
+   {
+    "was": "Kerben-Durchmesser Summen-/Detail-Ticket vs. Kassen-Ticket",
+    "screen": "L_01_start vs. L_checkout",
+    "wert": "18 pt (TicketShape) vs. 28 pt (aufgemalte Kreise)",
+    "soll/erwartung": "eine Signaturform, eine Größe",
+    "ok": false
+   },
+   {
+    "was": "Aufgemalte Kerben über dem Kartenschatten",
+    "screen": "L_checkout",
+    "wert": "Kreis (246,244,239) auf Schatten (243,241,236), als Scheibe sichtbar",
+    "soll/erwartung": "echter Ausschnitt, Schatten folgt der Kontur",
+    "ok": false
+   },
+   {
+    "was": "Grauer Kasten hinter den Filter-Chips",
+    "screen": "L_merchants",
+    "wert": "(240,238,233) auf (246,244,239), ca. 43 pt hoch, eckig, bei 16 pt abgeschnitten",
+    "soll/erwartung": "kein sichtbarer Container; Chips laufen wie auf Start bis zum Rand (scrollClipDisabled)",
+    "ok": false
+   },
+   {
+    "was": "Kontrast muted #5C5C63 auf Papier",
+    "screen": "alle",
+    "wert": "6,03:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Tinte auf Gelb",
+    "screen": "L_01_start",
+    "wert": "13,65:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast soon #B35A00 auf Weiß",
+    "screen": "L_01_start",
+    "wert": "4,8:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Perforationsstrich #E6E2D9 auf Weiß",
+    "screen": "L_checkout",
+    "wert": "1,29:1",
+    "soll/erwartung": "dekorativ, aber als Signaturform zu blass (TearLine auf dem Ticket ≈ Tinte 22 %)",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "S_start_1",
+    "element": "Navigationsleiste Start",
+    "problem": "Der Titel wird mit ToolbarItem(.principal){Color.clear} versteckt. Gescrollt bleibt eine leere Leiste mit harter Kante bei 106 pt, darin nur verschwommene Textreste. Kein Titel, keine Wortmarke, keine Aktion.",
+    "schwere": "hoch",
+    "vorschlag": "Die Wortmarke in klein (17 pt Heavy Rounded + 6-pt-Punkt) als principal-Item einblenden, sobald die große Wortmarke hinter der Kante verschwindet: onScrollGeometryChange, Schwelle contentOffset.y > 60, .opacity/.blur-Übergang 0,2 s. Alternativ die Kante auf .soft stellen, solange die Leiste leer ist."
+   },
+   {
+    "screen": "S_start_2_ende, S_detail_ende, L_checkout",
+    "element": "pageBackground() → contentMargins(.bottom, 120)",
+    "problem": "Der Platz für die Tab-Leiste wird doppelt gezählt (Safe Area plus 120 pt) und gilt auch auf Screens mit ausgeblendeter Tab-Leiste: 144 pt bzw. 186 pt tote Fläche am Listenende.",
+    "schwere": "hoch",
+    "vorschlag": "contentMargins(.bottom, 120) entfernen. Das System-Inset reicht, dazu padding(.bottom, 24) im Inhalt. Wo die Tab-Leiste ausgeblendet ist: padding(.bottom, 16) über dem Home-Indikator."
+   },
+   {
+    "screen": "S_detail_ende",
+    "element": "Navigationstitel Detail",
+    "problem": "navigationTitle(\"\"): gescrollt nur die Knöpfe Zurück und Stift, kein Kontext, welcher Gutschein offen ist. Apple Music und Flighty blenden den Titel ein, sobald der Kopf verschwindet.",
+    "schwere": "mittel",
+    "vorschlag": "navigationTitle(card.name) mit .inline, per onScrollGeometryChange erst ab y > Höhe des Tickets (ca. 260 pt) mit 0,2 s Einblendung. Optional navigationSubtitle mit dem Restbetrag (iOS 26)."
+   },
+   {
+    "screen": "S_start_1 / S_detail_ende",
+    "element": "Tönung unter der Statusleiste",
+    "problem": "Das gelbe Ticket färbt die harte Kante gelblich, auf dem Detail liegt ein grauer Schleier, Läden bleibt sauber. Der Rahmen wirkt je nach Screen anders.",
+    "schwere": "mittel",
+    "vorschlag": "Einheitlich .soft oben auf Tab-Wurzeln mit großem Titel und .hard nur dort, wo ein Titel steht. Oder toolbarBackground(Color.page) für die obere Leiste auf Start und Detail."
+   },
+   {
+    "screen": "L_checkout / D_checkout / L_paperCheckout",
+    "element": "Perforation am Kassen-Ticket",
+    "problem": "Die Kerben sind aufgemalte 28-pt-Kreise in Seitenfarbe statt echter Ausschnitte. Auf dem Schatten erscheinen sie als hellere, im Dunkelmodus als dunkle Scheiben. Außerdem 18 pt vs. 28 pt gegenüber TicketShape und Strich #E6E2D9 mit 1,29:1.",
+    "schwere": "mittel",
+    "vorschlag": "Kassen-Ticket mit .background(Color.surface, in: TicketShape(notchRadius: 9, notchFromTop: gemessene Kopfhöhe)) plus .shadow auf der Form, Perforation durch TearLine(color: .ink) ersetzen und die Perforation-View löschen."
+   },
+   {
+    "screen": "CheckoutView (Code)",
+    "element": "Abreiß-Animation tearOff",
+    "problem": "Nur der Inhalt fliegt weg (offset 70, −4°, Deckkraft 0). Die weiße cardSurface mit Schatten bleibt in voller Höhe stehen, der Stummel wird nicht kürzer, es reißt also kein Papier, der Inhalt verblasst nur. −4° um topLeading hebt die rechte Seite nach oben statt sie fallen zu lassen. Nach 520 ms kommen Speichern und dismiss() gleichzeitig mit dem Pop-Übergang. Bewegung habe ich nur im Code beurteilt, nicht gesehen.",
+    "schwere": "mittel",
+    "vorschlag": "Den unteren Abschnitt als eigene Fläche mit eigener TicketShape-Hälfte samt Schatten anlegen und ihn animieren (offsetY 0→120 pt, rotation +6° um .topTrailing, 0,4 s spring bounce 0,15). Vorher 80 ms Zug-Phase mit scaleEffect(y: 1.02) und .sensoryFeedback(.impact(flexibility: .soft)), beim Riss .impact(.rigid). Den Stummel per matchedGeometry auf das Summen- oder Detail-Ticket zurückführen, erst dann poppen (ca. 650 ms gesamt)."
+   },
+   {
+    "screen": "L_merchants / XL_merchants",
+    "element": "Filter-Chips (GlassEffectContainer in ScrollView)",
+    "problem": "Hinter den Chips liegt ein sichtbarer grauer, eckiger Kasten (240,238,233), 43 pt hoch, bei 16 pt Rand hart abgeschnitten. Auf Start laufen die Chips dagegen bis zum Bildschirmrand.",
+    "schwere": "mittel",
+    "vorschlag": "Hintergrund des GlassEffectContainer entfernen oder .scrollClipDisabled() plus contentMargins(.horizontal, 16, for: .scrollContent) auf die horizontale ScrollView, damit die Chips randlos laufen wie auf Start."
+   },
+   {
+    "screen": "L_01_start",
+    "element": "Wortmarke",
+    "problem": "Sie steht 3,7 pt weiter rechts als die großen Titel der anderen Tabs (21,7 pt vs. 18,0 pt). Beim Tab-Wechsel springt die Titelkante.",
+    "schwere": "niedrig",
+    "vorschlag": "padding(.horizontal, 4) an der Wordmark entfernen, damit sie bei 18 pt bündig steht."
+   },
+   {
+    "screen": "L_00_onboarding",
+    "element": "Kopfzeile „Restwert“",
+    "problem": "Nur Text ohne gelben Punkt und ohne die Heavy-Rounded-Wortmarke: Der erste Kontakt zeigt die Marke nicht.",
+    "schwere": "niedrig",
+    "vorschlag": "Dieselbe Wordmark-View wie auf Start verwenden (30 pt Heavy Rounded + 9-pt-Punkt)."
+   },
+   {
+    "screen": "XL_checkout",
+    "element": "„Nicht angenommen“ / „Später eintragen“",
+    "problem": "Bei Accessibility-Größen brechen beide nebeneinander in zwei Zeilen um und werden abgeschnitten.",
+    "schwere": "mittel",
+    "vorschlag": "ViewThatFits oder AnyLayout: ab isAccessibilitySize ein VStack mit spacing 8, beide als volle Zeilen mit minHeight 44."
+   },
+   {
+    "screen": "S_laeden_mitte",
+    "element": "Minimierte Tab-Kapsel über dem Inhalt",
+    "problem": "Die Kapsel deckt beim Scrollen das Ladenlogo ab. Das ist systemkonform, aber das Logo ist der Anker der Zeile.",
+    "schwere": "niedrig",
+    "vorschlag": "Nichts erzwingen. Mit korrigiertem Innenabstand am Ende (siehe oben) lässt sich jede Zeile frei scrollen, das genügt."
+   }
+  ],
+  "top3": [
+   "contentMargins(.bottom, 120) aus pageBackground() streichen: Das Inset der Tab-Leiste übernimmt iOS 26. Danach 24 pt unten auf Tab-Screens und 16 pt über dem Home-Indikator auf Screens ohne Tab-Leiste. Das beseitigt 144–186 pt tote Fläche am Listenende.",
+   "Gescrollte Navigationsleiste füllen: auf Start eine kleine Wortmarke (17 pt + Punkt) als principal-Item, die ab Offset 60 pt einblendet; im Detail card.name inline ab Offset ≈ 260 pt. Harte Kante nur dort, wo ein Titel steht, sonst .soft, damit keine leere Leiste mit Schleier (gelb/grau) übrig bleibt.",
+   "Kassen-Ticket auf TicketShape (9-pt-Kerben, TearLine) umstellen und die Abreiß-Animation auf eine echte zweite Ticket-Hälfte mit eigenem Schatten legen (Zug 80 ms → Riss, +6° um .topTrailing, 120 pt Fall, Haptik soft→rigid), statt nur den Inhalt auszublenden."
+  ],
+  "lob": [
+   "tabBarMinimizeBehavior(.onScrollDown) mit separatem Plus als role: .search-Tab: exakt das iOS-26-Muster, 48-pt-Kapseln sauber.",
+   "Das gelbe Summen-Ticket mit gemessener Kerbenhöhe (onGeometryChange → notchFromTop), sodass die Kerben bei jeder Schriftgröße auf der Abrisslinie sitzen. Das ist handwerklich stark.",
+   "Konsequentes 16-pt-Raster und identische Titel-Oberkante (127 pt) auf allen Tabs; Läden klappt vorbildlich von groß auf inline.",
+   "Zurück- und Bearbeiten-Knöpfe als runde Glass-Buttons (44 pt), einheitlich auf Detail, Kasse, Radar und Kassentest.",
+   "Reduce Motion wird in der Abreiß-Animation und im Stempel respektiert, die Haptik hängt am richtigen Trigger."
+  ]
+ },
+ {
+  "persona": "Aiko Tanaka, 27, Product Designerin (nutzt iPhone ausschließlich im Dunkelmodus), Referenzen: Halide, Apollo, Craft",
+  "fokus": "Dunkelmodus: Flächenhierarchie page/surface/fill, Gelb im Dunkeln, Ladenkacheln, invertierter Primärbutton, Kanten/Schatten, Grautöne, Lesbarkeit – alle 15 D_-Screens gegen ihr L_-Pendant, Farbwerte per getpixel gemessen",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 8,
+   "farbe": 7,
+   "abstaende_raster": 7,
+   "hierarchie": 8,
+   "konsistenz": 6,
+   "komponenten": 6,
+   "ikonografie": 7,
+   "dunkelmodus": 6,
+   "barrierefreiheit": 7,
+   "markencharakter": 6,
+   "premium_gefuehl": 6
+  },
+  "first_impression": "Das Dunkel ist bewusst warm getönt (#141311/#1E1D1B statt Systemschwarz) und das gelbe Ticket leuchtet darauf wie ein Halide-Auslöser – das ist die stärkste Seite der App. Dann kommen die Stellen, wo Systemgrau (#5A5A5E, #656468, #26262B) und helle Schatten-Halos reingrätschen, und das warme Dunkel wird fleckig und etwas matschig.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Gelbes Ticket mit Kerben (#F5CE3E auf #141311, 12,2:1) plus Wortmarke mit gelbem Punkt tragen auch im Dunkeln sofort; Beleg-Optik im Verlauf und Ticketform an der Kasse wiederholen die Signatur. Auf den Unterseiten (Einstellungen, Scan, Kassentest) verschwindet die Marke aber vollständig – dort sieht es aus wie jede SwiftUI-App im Dark Mode.",
+  "scroll_befund": "S_-Screens liegen nur hell vor, Dunkel-Scrollen nicht beurteilbar. Hell: Die Tab-Leiste minimiert sich sauber zu Home-Kugel + Plus (S_start_1), am Listenende steht sie wieder voll (S_start_2_ende). Das gelbe Ticket hinterlässt beim Hochscrollen einen gelben Farbschleier unter der Statusleiste (oberste ~10 pt in S_start_1/2) – wirkt wie ein Fleck, nicht wie ein Material. In S_laeden_mitte wird der Titel sauber zur Inline-Überschrift, der Kanteneffekt ist weich. Die schwebende Tab-Leiste überdeckt in D_01_start/D_merchants Zeilen (Thalia/Amazon halb sichtbar hinter Glas) – im Dunkeln ist dieser Durchblick kontrastärmer und liest sich eher als Schmutz denn als Glas.",
+  "messungen": [
+   {
+    "was": "Seitenhintergrund page",
+    "screen": "L/D_01_start",
+    "wert": "L #F6F4EF / D #141311",
+    "soll/erwartung": "warmes Fast-Schwarz, nicht #000",
+    "ok": true
+   },
+   {
+    "was": "Oberfläche surface vs page",
+    "screen": "D_01_start",
+    "wert": "#1E1D1B auf #141311 = 1,10:1 (hell: #FFFFFF auf #F6F4EF = 1,10:1)",
+    "soll/erwartung": "im Dunkeln eher 1,2–1,3:1, weil Schatten dort nicht tragen",
+    "ok": false
+   },
+   {
+    "was": "fill vs surface",
+    "screen": "D_form/D_detail",
+    "wert": "#2A2926 auf #1E1D1B = 1,16:1",
+    "soll/erwartung": ">=1,2:1 für erkennbare Knöpfe/Chips",
+    "ok": false
+   },
+   {
+    "was": "Trennlinie line vs surface",
+    "screen": "D_01_start",
+    "wert": "#34322E auf #1E1D1B = 1,32:1",
+    "soll/erwartung": "Haarlinie sichtbar, aber ruhig",
+    "ok": true
+   },
+   {
+    "was": "Schatten-Halo zwischen Karten",
+    "screen": "D_tests",
+    "wert": "Spalt zwischen Karten #1C1B19 statt page #141311 (+8 pro Kanal), linker Kartenrand läuft über 16 pt von #151412 nach #1F1E1C aus",
+    "soll/erwartung": "im Dunkeln kein heller Schatten; Kante über Fläche/Hairline",
+    "ok": false
+   },
+   {
+    "was": "Gelbes Ticket im Dunkeln",
+    "screen": "D_01_start",
+    "wert": "#F5CE3E (hell #FFD84D); Tinte #111111 darauf 12,39:1; Ticket vs page 12,18:1",
+    "soll/erwartung": "leicht gedämpftes Gelb, AA für Text",
+    "ok": true
+   },
+   {
+    "was": "Primärbutton invertiert",
+    "screen": "D_checkout",
+    "wert": "#F2F0EA mit #111111-Text = 16,57:1",
+    "soll/erwartung": "warmes Weiß statt #FFFFFF, AAA",
+    "ok": true
+   },
+   {
+    "was": "Toggle AN: Knopf vs Spur",
+    "screen": "D_settings",
+    "wert": "Knopf #FFFFFF auf Spur #F2F0EA = 1,14:1; AUS-Spur #5A5A5E (Systemgrau, kalt)",
+    "soll/erwartung": "AN/AUS auf einen Blick unterscheidbar, Knopf >=3:1 zur Spur",
+    "ok": false
+   },
+   {
+    "was": "Muted-Text auf surface",
+    "screen": "D_01_start",
+    "wert": "#A8A8AE auf #1E1D1B = 7,12:1",
+    "soll/erwartung": ">=4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Ladenkachel dunkelgrau vs surface",
+    "screen": "D_01_start (Douglas/Stadtgutschein)",
+    "wert": "#2C2C2E = 1,21:1, #3A3A3C = 1,48:1, Amazon #232F3E = 1,24:1 – nur die 12%-Kontur rettet die Kachel",
+    "soll/erwartung": "Kachel >=1,5:1 oder klare Kontur",
+    "ok": false
+   },
+   {
+    "was": "Aktions-Icon in Ladenfarbe auf dunkler Kachel",
+    "screen": "D_detail / D_paper",
+    "wert": "Thalia #1E6E6B auf #1E1D1B = 2,81:1; Café #0369A1 ≈ 3:1",
+    "soll/erwartung": ">=3:1 für Icons (WCAG 1.4.11)",
+    "ok": false
+   },
+   {
+    "was": "Scan-Kachel dunkel",
+    "screen": "D_scan",
+    "wert": "#26262B (blaustichig) neben warmem #1E1D1B; hell #0E0E10",
+    "soll/erwartung": "warmer Ton oder bewusst Gelb/Tinte",
+    "ok": false
+   },
+   {
+    "was": "Segment-Auswahl dunkel",
+    "screen": "D_history/D_tests",
+    "wert": "ausgewählt #656468, Spur #2B2A2C (Systemgrau)",
+    "soll/erwartung": "Token-Farben (fill/ink2) wie im Hellen",
+    "ok": false
+   },
+   {
+    "was": "Inaktive Filterchips",
+    "screen": "D_merchants",
+    "wert": "#181816 auf page #141311 = 1,04:1, nur Kontur sichtbar",
+    "soll/erwartung": "Chip-Fläche = fill #2A2926",
+    "ok": false
+   },
+   {
+    "was": "Stempel „Aufgebraucht“ (nur Code)",
+    "screen": "UsedUpStamp",
+    "wert": "ink.opacity(0.75) im Dunkeln = heller Text auf Gelb ≈ 1.24:1",
+    "soll/erwartung": "Tinte #111111 fest auf Gelb (wie onBrand) >=4,5:1",
+    "ok": false
+   },
+   {
+    "was": "Ablauf-Warnfarben dunkel",
+    "screen": "D_01_start",
+    "wert": "warn #FF7A70 6,63:1, soon #FFB340 9,44:1, good #4CC38A 7,6:1 auf surface",
+    "soll/erwartung": ">=4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Deaktivierter Button",
+    "screen": "D_keypad",
+    "wert": "Text #A8A8AE auf #2E2D2A = 5,82:1",
+    "soll/erwartung": "lesbar, erkennbar inaktiv",
+    "ok": true
+   }
+  ],
+  "issues": [
+   {
+    "screen": "D_settings (alle Toggles)",
+    "element": "Toggle .tint(Color.ink)",
+    "problem": "Im Dunkeln wird ink zu #F2F0EA, der weiße Knopf verschwindet (1,14:1). AN (fast weiße Pille) und AUS (graue Pille mit weißem Knopf) sehen aus wie zwei helle Pillen – Zustand nicht lesbar.",
+    "schwere": "hoch",
+    "vorschlag": "Toggles mit .tint(Color.good) (#4CC38A dunkel) oder in dark .tint(Color(hex:0x4A4843)) mit Knopf #F2F0EA; alternativ tint = brandYellow nur für Toggles ist gegen die Farbregel – daher good."
+   },
+   {
+    "screen": "alle D_ mit Karten (tests, paperCheckout, detail, checkout)",
+    "element": "shadow(color: Color.ink.opacity(0.06–0.2))",
+    "problem": "ink wird im Dunkeln hell → Schatten wird zu grauem Nebel/Halo (Spalt #1C1B19 statt #141311). Genau das Matschige, das Craft/Apollo vermeiden. Toast (RestwertApp.swift:276) hat sogar 20 % hellen Glow.",
+    "schwere": "hoch",
+    "vorschlag": "Eigenes Token shadowColor = Color(light: 0x111111, dark: 0x000000) mit Opazität dark 0.4/radius 12; oder im Dunkeln Schatten ganz weglassen und stattdessen 0,5 pt Kontur #FFFFFF 6 % oben."
+   },
+   {
+    "screen": "D_01_start, D_radar, D_merchants",
+    "element": "Ladenkacheln Douglas/Zara/Apple/Netflix (#2C2C2E), Stadtgutschein (#3A3A3C), Amazon (#232F3E)",
+    "problem": "Gut ein Dutzend Läden ist in der Tabelle #2C2C2E – im Dunkeln 1,21:1 zur Fläche, die Kachel ist nur eine Kontur. Zusätzlich kaltes Apple-Grau neben warmen Tokens.",
+    "schwere": "mittel",
+    "vorschlag": "Für dunkle Ladenfarben (Luminanz < 50) im Dark Mode auf #3F3D39 (warm) anheben oder Kontur auf ink.opacity(0.18) erhöhen; Regel 'Ladenkachel ≥1,5:1 zur Fläche'."
+   },
+   {
+    "screen": "D_detail, D_pending, D_paper",
+    "element": "Aktionskacheln-Icons in Ladenfarbe (Einkauf eintragen, Guthaben prüfen)",
+    "problem": "Thalia-Teal #1E6E6B auf #1E1D1B = 2,81:1, unter 3:1; wirkt stumpf.",
+    "schwere": "mittel",
+    "vorschlag": "Im Dunkeln Icon in ink2 #CFCDC6 oder Ladenfarbe um +30 % L aufhellen (#3FA39F für Thalia), Mindestkontrast 3:1 prüfen."
+   },
+   {
+    "screen": "D_scan",
+    "element": "Karte-scannen-Kachel",
+    "problem": "Hell ist sie Tinte (#0E0E10, stärkste Fläche), dunkel nur #26262B mit Blaustich – verliert Gewicht und bricht die warme Palette.",
+    "schwere": "mittel",
+    "vorschlag": "Dark: Hintergrund ink (#F2F0EA) mit onInk-Text, analog zum Primärbutton – oder fill #2A2926 + gelbe Scan-Ecken als einzige Markenstelle."
+   },
+   {
+    "screen": "D_history, D_tests, D_form",
+    "element": "Segmented Picker",
+    "problem": "Systemgrau (#656468 ausgewählt, #2B2A2C Spur) statt Tokens – kalt und fleckig neben #1E1D1B.",
+    "schwere": "niedrig",
+    "vorschlag": "Eigenes Segment: Spur fill #2A2926, Auswahl surface #3A3834 mit ink-Text, Radius 10."
+   },
+   {
+    "screen": "D_merchants",
+    "element": "Filterchips inaktiv",
+    "problem": "Chipfläche #181816 praktisch = page (1,04:1); nur Glas-Kontur hält sie zusammen.",
+    "schwere": "niedrig",
+    "vorschlag": "Inaktive Chips auf fill #2A2926 ohne Kontur, aktiver Chip ink #F2F0EA (bleibt)."
+   },
+   {
+    "screen": "UsedUpStamp (Code, kein Screenshot)",
+    "element": "Stempel „AUFGEBRAUCHT“",
+    "problem": "foregroundStyle(Color.ink.opacity(0.75)) auf brandYellow: im Dunkeln hellcreme auf Gelb ≈ 1.24:1 – der Stempel, ein Markenmoment, wird unlesbar.",
+    "schwere": "hoch",
+    "vorschlag": "Farbe fest Color.onBrand (#111111) mit opacity 0.85 für Text und Rahmen, unabhängig vom Modus."
+   },
+   {
+    "screen": "D_checkout",
+    "element": "Barcode-Fläche + Primärbutton",
+    "problem": "Zwei grellweiße Blöcke (Barcode #FFFFFF, Button #F2F0EA) konkurrieren; im Hellen verschmilzt die Barcodefläche mit der Ticketfläche.",
+    "schwere": "niedrig",
+    "vorschlag": "Barcode-Fläche bleibt #FFFFFF (Scanbarkeit), aber Primärbutton an der Kasse im Dunkeln als fill #2A2926 mit ink-Text + 1 pt Kontur – oder Barcode-Platte bis an die Ticketränder ziehen, damit das Ticket selbst weiß wird."
+   },
+   {
+    "screen": "D_paper, D_paperCheckout",
+    "element": "Foto des Papiergutscheins",
+    "problem": "Cremefarbenes Foto (#F8F0DF) leuchtet ungedimmt auf dunkler Seite – blendet in der Detailansicht.",
+    "schwere": "niedrig",
+    "vorschlag": "In der Detailansicht im Dunkeln Foto mit .brightness(-0.08) oder 8 % Schwarz-Overlay; an der Kasse voll hell lassen."
+   }
+  ],
+  "top3": [
+   "Schattenfarbe als eigenes Token: dark = #000000 @ 40 % (oder kein Schatten), nie Color.ink – beseitigt den grauen Halo um alle Karten und den 20-%-Glow am Toast.",
+   "Toggles im Dunkeln reparieren: .tint(Color.good) statt .tint(Color.ink), damit AN/AUS wieder unterscheidbar ist (heute Knopf/Spur 1,14:1).",
+   "UsedUpStamp und alles auf Gelb fest mit onBrand #111111 färben; dunkle Ladenkacheln (#2C2C2E, #232F3E, #3A3A3C) und Ladenfarb-Icons im Dark Mode auf ≥1,5:1 bzw. ≥3:1 anheben, Systemgrau-Komponenten (Segment, Scan-Kachel #26262B) auf warme Tokens umstellen."
+  ],
+  "lob": [
+   "Warmes Fast-Schwarz #141311 / #1E1D1B / #2A2926 statt #000 – ruhige, hochwertige Basis, bitte nicht auf Systemfarben zurückfallen.",
+   "Gelbes Ticket im Dunkeln leicht gedämpft (#F5CE3E) mit Tinte darauf (12,4:1) – leuchtet, ohne zu blenden; der beste Screen im Dark Mode.",
+   "Primärbutton wird warmes Weiß #F2F0EA mit #111111 (16,6:1) statt reinem Weiß – klar die eine Hauptaktion pro Screen.",
+   "Kerben in Seitenfarbe und Beleg-Optik im Verlauf (#262420 Papier) funktionieren im Dunkeln genauso wie im Hellen.",
+   "Statusfarben sind für Dunkel eigens aufgehellt (warn #FF7A70, soon #FFB340, good #4CC38A, alle >6,5:1)."
+  ]
+ },
+ {
+  "persona": "Helga Brandt, 58, Accessibility-Auditorin (BITV/WCAG), selbst sehbehindert, nutzt große Schrift und VoiceOver. Referenzen: Apple-eigene Apps (Wallet, Einstellungen, Erinnerungen); Deutsche Bahn Navigator als Negativbeispiel",
+  "fokus": "Barrierefreiheit: XL-Screens (accessibility-large) auf Abschneidungen, Umbrüche, Überlappungen, Tap-Ziele (gemessen), Kontraste (WCAG-Formel auf Pixelwerten), VoiceOver-Labels und Reduce Motion im Code",
+  "scores": {
+   "gesamt": 6,
+   "typografie": 7,
+   "farbe": 7,
+   "abstaende_raster": 7,
+   "hierarchie": 8,
+   "konsistenz": 6,
+   "komponenten": 6,
+   "ikonografie": 7,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 5,
+   "markencharakter": 6,
+   "premium_gefuehl": 6
+  },
+  "first_impression": "Bei großer Schrift ist das deutlich besser als der DB Navigator: Listenzeilen stapeln sauber, die Detail-Kacheln gehen einspaltig und die Kerben sitzen auch bei XL auf der Abrisslinie. Wo aber keine eigene XL-Lösung gebaut wurde (Kasse unten, Läden-Beschreibungen, Formular-Platzhalter, Segmente, VoiceOver-Überschriften), kippt es sofort in Abschneiden, zu kleine Ziele und fehlende Struktur.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Gelbes Ticket mit Kerben und Abrisslinie auf Start, Karten-Ticket im Detail und die Rounded-Heavy-Beträge mit hochgestellten Cent sind auch bei XL erkennbar. Abzug: Onboarding zeigt die Wortmarke ohne gelben Punkt, der Punkt ist fix 9 pt und schrumpft relativ zur XL-Wortmarke (21 → 30 pt Höhe), und es gibt zwei Stempel-Sprachen (gelb „AUFGEBRAUCHT“ vs. rot „EINGELÖST“).",
+  "scroll_befund": "S_start_1: Der Abschnittstitel „Läuft bald ab“ läuft als blasser Geisterschriftzug in die Statusleiste, ohne Material dahinter – für Sehbehinderte wirkt das wie ein Renderfehler. Die Tab-Leiste minimiert sich auf Haus + Plus, gut. S_laeden_mitte: Das minimierte Tab-Symbol (Läden) und der Plus-Knopf liegen direkt auf dem Douglas-Logo und dem Text der letzten Zeile, der Inhalt bekommt unten keinen Auslauf. XL_01_start/XL_history/XL_merchants: die schwebende Tab-Leiste überdeckt jeweils die halbe letzte sichtbare Zeile (IKEA-Betrag, SUMME, IKEA-Kachel) – beim Scrollen normal, aber mit XL steht bei jeder Position mehr Inhalt dahinter. S_detail_ende: sauber, Inhalt läuft unter Zurück/Stift mit Unschärfe.",
+  "messungen": [
+   {
+    "was": "Zurück-Knopf (Glaskreis) Durchmesser",
+    "screen": "XL_detail / L_detail",
+    "wert": "44,0 × 44,0 pt",
+    "soll/erwartung": "≥ 44 pt",
+    "ok": true
+   },
+   {
+    "was": "Aktionen-Menü (…) in Listenzeile, Trefferfläche laut Code",
+    "screen": "L_01_start / XL_01_start (HomeView.swift:140)",
+    "wert": "36 × 44 pt",
+    "soll/erwartung": "≥ 44 × 44 pt",
+    "ok": false
+   },
+   {
+    "was": "„Alles (12,40 €)“-Pille Höhe",
+    "screen": "L_keypad",
+    "wert": "40,0 pt (Code: minHeight 40)",
+    "soll/erwartung": "≥ 44 pt",
+    "ok": false
+   },
+   {
+    "was": "„Alles (12,40 €)“-Pille Höhe",
+    "screen": "XL_keypad",
+    "wert": "63,3 pt (zweizeilig)",
+    "soll/erwartung": "≥ 44 pt",
+    "ok": true
+   },
+   {
+    "was": "Filter-Chip „Alle“ / „Am Handy vorzeigbar“ Höhe",
+    "screen": "L_merchants",
+    "wert": "35,3 / 37,3 pt",
+    "soll/erwartung": "≥ 44 pt",
+    "ok": false
+   },
+   {
+    "was": "Filter-Chip „Alle“ Höhe",
+    "screen": "XL_merchants",
+    "wert": "49,3 pt",
+    "soll/erwartung": "≥ 44 pt",
+    "ok": true
+   },
+   {
+    "was": "Segment-Steuerung Höhe (30 Tage/Dieses Jahr/Alles)",
+    "screen": "L_history / XL_history",
+    "wert": "32,0 pt in beiden – Schrift wächst bei XL nicht mit",
+    "soll/erwartung": "Schrift skaliert mit Dynamic Type, ≥ 44 pt",
+    "ok": false
+   },
+   {
+    "was": "„PIN anzeigen“-Glaspille Höhe (sichtbar)",
+    "screen": "L_checkout",
+    "wert": "≈ 30 pt; Pillenfläche FDFDFD auf Karte FFFFFF = Kontrast 1,01:1",
+    "soll/erwartung": "≥ 44 pt, Kante ≥ 3:1 (WCAG 1.4.11)",
+    "ok": false
+   },
+   {
+    "was": "Innenabstand „Bezahlt – Betrag eintragen“ bei 2 Zeilen",
+    "screen": "XL_checkout",
+    "wert": "Knopf 67,3 pt, Text oben 5,0 pt / unten 1,3 pt vom Rand",
+    "soll/erwartung": "≥ 12 pt vertikal",
+    "ok": false
+   },
+   {
+    "was": "Seitenrand links/rechts",
+    "screen": "L_01_start, XL_01_start, L/XL_merchants",
+    "wert": "16,0 / 16,0 pt",
+    "soll/erwartung": "16 pt konstant",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Platzhalter „leer = für mich, z. B. Mia oder Oma“",
+    "screen": "L_form",
+    "wert": "C5C5C7 auf FFFFFF = 1,72:1",
+    "soll/erwartung": "≥ 4,5:1 (trägt Anleitung)",
+    "ok": false
+   },
+   {
+    "was": "Kontrast Platzhalter „Für wen?“",
+    "screen": "D_form",
+    "wert": "5B5A5C auf 1E1D1B = 2,46:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": false
+   },
+   {
+    "was": "Kontrast Suchfeld-Platzhalter „Laden suchen“",
+    "screen": "XL_merchants",
+    "wert": "808083 auf E7E5E2 = 3,13:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": false
+   },
+   {
+    "was": "Kontrast Text 75 % auf Gelb (Noch drauf, Rabattcode-Zeile)",
+    "screen": "XL_01_start / D_01_start",
+    "wert": "4D4320 auf FFD84D = 7,10:1 / 6,75:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Weiß 85 % auf Teal (Noch drauf, von 25,00 €, gültig bis)",
+    "screen": "L_detail / XL_detail / D_detail",
+    "wert": "DDE9E9 auf 1E6D6A = 4,90:1 (D 4,80:1)",
+    "soll/erwartung": "≥ 4,5:1 – knapp",
+    "ok": true
+   },
+   {
+    "was": "Kontrast „noch 12 Tage“ Pille (warn auf warnSoft)",
+    "screen": "XL_01_start",
+    "wert": "C4221A auf F8E4E4 = 4,79:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast „noch 24 Tage“ (soon)",
+    "screen": "L_01_start",
+    "wert": "B35A00 auf FFFFFF = 4,80:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast muted auf Papier/Karte",
+    "screen": "L_checkout, XL_keypad, XL_history",
+    "wert": "5C5C63 auf F6F4EF 6,03:1, auf FFFFFF 6,58:1",
+    "soll/erwartung": "≥ 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast „Abziehen“ deaktiviert",
+    "screen": "XL_keypad / D_keypad",
+    "wert": "4,89:1 / 5,74:1",
+    "soll/erwartung": "keine Pflicht, aber lesbar",
+    "ok": true
+   },
+   {
+    "was": "Gelber Punkt vs. Wortmarke",
+    "screen": "XL_01_start",
+    "wert": "Punkt 7,3–8 pt fix, Wortmarke 21,3 pt (L) → 30,0 pt (XL)",
+    "soll/erwartung": "Punkt skaliert mit (@ScaledMetric)",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "XL_checkout",
+    "element": "„Nicht angenommen“ / „Später eintragen“",
+    "problem": "HStack ohne XL-Umschaltung: beide Knöpfe brechen auf 2 Zeilen und stehen am unteren Rand angeschnitten; erst Scrollen zeigt sie. An der Kasse unter Zeitdruck findet man die Alternative nicht.",
+    "schwere": "hoch",
+    "vorschlag": "Bei typeSize.isAccessibilitySize VStack(alignment: .leading, spacing: 8) mit beiden Knöpfen je .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading); zusätzlich die Barcode-Erklärung bei XL auf 1 Satz kürzen, damit die Knöpfe ohne Scrollen sichtbar sind."
+   },
+   {
+    "screen": "XL_checkout (alle Primärknöpfe)",
+    "element": "FilledButtonStyle",
+    "problem": "Nur minHeight 56, kein vertikales Padding: bei 2 Zeilen klebt „eintragen“ mit 1,3 pt am unteren Knopfrand (gemessen), oben 5 pt.",
+    "schwere": "mittel",
+    "vorschlag": ".padding(.vertical, 14) vor .frame(maxWidth: .infinity, minHeight: 56) und .multilineTextAlignment(.center); bei XL Label kürzen auf „Bezahlt“ + Untertext."
+   },
+   {
+    "screen": "L_form / D_form",
+    "element": "Platzhalter „leer = für mich, z. B. Mia oder Oma“",
+    "problem": "Anleitung steckt im Platzhalter, Kontrast 1,72:1 hell / 2,46:1 dunkel; verschwindet beim Tippen; VoiceOver liest Platzhalter nur teilweise vor.",
+    "schwere": "hoch",
+    "vorschlag": "Anleitung als eigene Fußzeile unter dem Feld in Color.muted (6,6:1) + .accessibilityHint; Platzhalter nur „Name“."
+   },
+   {
+    "screen": "alle (Code: SectionHeader in Theme.swift, Screen-Titel)",
+    "element": "VoiceOver-Überschriften",
+    "problem": "Nur die Wortmarke hat .isHeader. „Läuft bald ab“, „Weitere“, „Deine Läden“, „Alle Läden“, „Sicherheit & Erinnerungen“, Monatsköpfe in Ablauftermine sind keine Überschriften → Rotor-Navigation „Überschriften“ unmöglich (WCAG 1.3.1/2.4.6), wie im DB Navigator.",
+    "schwere": "hoch",
+    "vorschlag": "In SectionHeader Text(title).accessibilityAddTraits(.isHeader); dasselbe für Monatszeilen in Ablauftermine und „Einlöse-Verlauf“."
+   },
+   {
+    "screen": "L_detail / XL_detail (Code: ActionTile)",
+    "element": "Icons in den Aktionskacheln",
+    "problem": "Image(systemName:) nicht versteckt: SF-Symbol „minus.circle“ bringt ein Auto-Label („Entfernen“) mit, „faceid“ → „Face ID“. VoiceOver kann also „Entfernen, Einkauf eintragen, Taste“ sagen – missverständlich bei einer Geld-App.",
+    "schwere": "mittel",
+    "vorschlag": "Image(...).accessibilityHidden(true) in ActionTile und ActionRow; Label nur aus title."
+   },
+   {
+    "screen": "L_keypad / XL_keypad (Code)",
+    "element": "Betragsanzeige + „Abziehen“ bei leerer Eingabe",
+    "problem": "Nach jeder Ziffer sagt VoiceOver nur „5“, nie den Gesamtbetrag; Ablehnung bei 0 € nur als Wackeln + Haptik, keine Ansage (WCAG 3.3.1). Wackeln ignoriert Reduce Motion.",
+    "schwere": "mittel",
+    "vorschlag": "Anzeige als .accessibilityElement mit accessibilityLabel(\"Betrag\") + accessibilityValue(\"\\(input) Euro\"); bei Ablehnung AccessibilityNotification.Announcement(\"Erst einen Betrag eingeben\").post(); Shake nur wenn !reduceMotion, sonst Hinweistext in Color.warn."
+   },
+   {
+    "screen": "L_detail (Code: Stamp „EINGELÖST“)",
+    "element": "Stempel-Animation",
+    "problem": "scale 2,4 → 1 plus Rotation −30° → −14° mit bounce 0,5 ohne Reduce-Motion-Prüfung – genau der Effekt, der bei vestibulären Störungen Übelkeit auslöst. UsedUpStamp und Abreißen in der Kasse prüfen reduceMotion korrekt, dieser nicht.",
+    "schwere": "mittel",
+    "vorschlag": "@Environment(\\.accessibilityReduceMotion); bei true landed sofort = true, nur Überblendung .opacity 0,2 s; gleiche Regel für BalanceCard-Spring (bounce 0,3) und KeyStyle-Skalierung."
+   },
+   {
+    "screen": "XL_merchants",
+    "element": "Beschreibungszeile der Läden (MerchantsView.swift:113 lineLimit(1))",
+    "problem": "„Code im Amazon-Kont…“, „eGift digital oder ausge…“ – bei großer Schrift fehlt genau die Info, wie man einlöst (WCAG 1.4.4 Informationsverlust).",
+    "schwere": "mittel",
+    "vorschlag": "lineLimit(typeSize.isAccessibilitySize ? nil : 1) bzw. lineLimit(1...3); Liste darf länger werden."
+   },
+   {
+    "screen": "L_01_start / XL_01_start",
+    "element": "„…“-Menü je Zeile",
+    "problem": "Trefferfläche 36 × 44 pt (Code) – zu schmal, direkt neben der großen Zeilen-Trefferfläche, Fehltipps öffnen das Detail.",
+    "schwere": "mittel",
+    "vorschlag": ".frame(width: 44, height: 44), dafür Spacer der Zeile um 8 pt reduzieren."
+   },
+   {
+    "screen": "L_keypad, L_merchants, L_checkout",
+    "element": "Kleine Pillen („Alles“, Filter-Chips, „PIN anzeigen“)",
+    "problem": "Gemessen 40 / 35–37 / ≈30 pt hoch. Die Glas-Pille „PIN anzeigen“ hat auf weißer Karte praktisch keine Kante (1,01:1) – für mich unsichtbar als Knopf.",
+    "schwere": "mittel",
+    "vorschlag": "Alle auf .frame(minHeight: 44); PIN-Pille auf weißer Karte mit Color.fill (EFECE5) hinterlegen oder 1-pt-Rand Color.line + ink2, statt .glass auf Weiß."
+   },
+   {
+    "screen": "L_history / XL_history",
+    "element": "Segment 30 Tage / Dieses Jahr / Alles",
+    "problem": "32 pt hoch, Schrift bleibt bei XL klein (gleich groß wie bei L) – der einzige Text auf dem Screen, der nicht wächst.",
+    "schwere": "mittel",
+    "vorschlag": "Bei isAccessibilitySize Picker als .menu oder drei eigene Pillen (.scaled(15), minHeight 44) in einer ViewThatFits."
+   },
+   {
+    "screen": "XL_history",
+    "element": "Bon-Zeile „Beispielstadt · Rest 12,40 €“",
+    "problem": "Bricht so um, dass die neue Zeile mit „·“ beginnt; Monospace bei XL erzeugt hässliche Treppen.",
+    "schwere": "niedrig",
+    "vorschlag": "Bei XL Ort und „Rest …“ als zwei eigene Zeilen ohne Trennpunkt ausgeben."
+   },
+   {
+    "screen": "XL_00_onboarding",
+    "element": "Beispielkarte + Wortmarke",
+    "problem": "Beispielkarte wird von „Los geht's“ mitten in der zweiten Zeile abgeschnitten (keine unteren Ecken, keine Auslaufkante); Wortmarke ohne gelben Punkt, anders als auf Start.",
+    "schwere": "niedrig",
+    "vorschlag": "Bei XL nur 1 Beispielzeile zeigen oder Verlauf-Maske 24 pt über dem Knopf; gemeinsame Wordmark-View auch im Onboarding."
+   },
+   {
+    "screen": "S_start_1",
+    "element": "Abschnittstitel unter der Statusleiste",
+    "problem": "„Läuft bald ab“ scheint als blasser Text durch die Statusleiste, wirkt wie ein Rendering-Fehler.",
+    "schwere": "niedrig",
+    "vorschlag": "Scroll-Kanteneffekt .scrollEdgeEffectStyle(.hard, for: .top) oder Titel beim Scrollen inline zeigen, wie in Läden."
+   },
+   {
+    "screen": "XL_checkout / L_checkout",
+    "element": "Hinweistext",
+    "problem": "„17-stellige Nummer“ bei angezeigter 16-stelliger Nummer (6300 9812 7456 1234) – für Screenreader-Nutzer, die nachzählen, verwirrend.",
+    "schwere": "niedrig",
+    "vorschlag": "Beispielnummer oder Text angleichen."
+   }
+  ],
+  "top3": [
+   "Kasse bei XL: „Nicht angenommen“/„Später eintragen“ untereinander, je minHeight 44, ohne Scrollen sichtbar; FilledButtonStyle mit .padding(.vertical, 14), damit zweizeilige Knöpfe nicht am Rand kleben.",
+   "VoiceOver-Struktur: SectionHeader & Monatsköpfe mit .isHeader, Icons in ActionTile/ActionRow .accessibilityHidden(true), Ziffernblock mit accessibilityValue für den Gesamtbetrag und Ansage bei Ablehnung.",
+   "Alle Ziele auf 44 pt und Kontraste ≥ 4,5:1: …-Menü 44×44, „Alles“-Pille, Filter-Chips, PIN-Pille (mit sichtbarer Kante); Anleitung aus dem Formular-Platzhalter (1,72:1) in eine echte Fußzeile verschieben; Stempel „EINGELÖST“ mit Reduce Motion."
+  ],
+  "lob": [
+   "CardRow stapelt bei Accessibility-Größen Logo/Name über Betrag, statt abzuschneiden – und spricht einen einzigen, vollständigen Satz („Thalia, 12,40 € von 25,00 €, bis 31.12.2028“).",
+   "AmountText hat ein echtes accessibilityLabel (value.euro) statt „12 Komma 40 Euro hochgestellt“; BalanceCard/TotalHeader sind kombinierte Elemente.",
+   "Abreißen an der Kasse und UsedUpStamp respektieren Reduce Motion korrekt; Toasts werden per AccessibilityNotification angesagt, mit „Rückgängig möglich“.",
+   "Detail-Aktionskacheln gehen bei XL einspaltig, Gültigkeitszeile der Karte stapelt; Kerben werden per onGeometryChange auf die Abrisslinie gemessen – bei XL sauber.",
+   "Farbtokens sind durchweg kontraststark (muted 6,0–6,6:1, Text auf Gelb 7,1:1, Tinte auf Gelb 13,7:1); Zurück-Knopf exakt 44 pt."
+  ]
+ },
+ {
+  "persona": "Lukas Hoffmann, 45, Principal UX Designer bei einem großen deutschen Händler (verantwortet Komponenten-Kit mit ~200 Bausteinen); Referenzen: Shopify Polaris, Airbnb, Apple Human Interface Guidelines",
+  "fokus": "Konsistenz der Komponenten über alle Screens: Eckenradien (gemessen), Buttonstile, Kacheln vs. Zeilen, Icons, Chips/Pills, Auswahl-Controls, „…“-Menüs – wo gibt es mehr als eine Lösung für dasselbe Problem?",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 7,
+   "abstaende_raster": 7,
+   "hierarchie": 8,
+   "konsistenz": 5,
+   "komponenten": 6,
+   "ikonografie": 6,
+   "dunkelmodus": 6,
+   "barrierefreiheit": 7,
+   "markencharakter": 6,
+   "premium_gefuehl": 6
+  },
+  "first_impression": "Das Grundgerüst stimmt: 16 pt Rand sitzt auf fast jedem Screen pixelgenau, die Karten haben durchgehend 24 pt Radius, und die gelbe Ticket-Summe ist ein echter Anker. Unterhalb dieser Ebene zerfällt das System aber: Für Nebenaktionen, Auswahl, Icon-Behälter und Sekundärknöpfe gibt es je drei bis fünf Lösungen, und der Code enthält Bausteine (ActionRow, SectionHeader, SecondaryPill), die nirgends benutzt werden.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Erkennbar an drei Stellen: gelbe Ticket-Summenkarte mit Kerben, Detail-Hero in Ladenfarbe mit Kerben und Abrisslinie, Kassen-Ticket. Dazu kommen die Wortmarke mit Punkt und die Rounded-Heavy-Beträge mit hochgestellten Cent. Auf Läden, Einstellungen, Hinzufügen und Kassentest kommt die Marke aber gar nicht vor. Dort sieht die App aus wie ein gut gemachtes Standard-iOS mit Papierton. Die Signaturform trägt, sie ist aber zu selten zu sehen, um als System zu gelten.",
+  "scroll_befund": "S_start_1: Die harte Scroll-Kante unter der Statusleiste schneidet die Zalando-Zeile sauber ab, der Überhang der Karte darüber bleibt aber als heller Streifen stehen (y≈80–105 pt). Das wirkt wie ein Fehler, nicht wie Absicht. Die minimierte Tab-Leiste (Haus + Plus) ist ruhig. S_start_2_ende: 120 pt contentMargin reichen, „Alle Ablauftermine“ steht frei. Dieser Knopf ist aber 50 pt hoch mit 24er Radius, also eine vierte Knopfvariante. S_detail_ende: Das Kachelraster endet mit einer verwaisten halben Kachel („Guthaben online prüfen“), dadurch bricht der Rhythmus. Danach folgen Karte (Kartennummer), Karte mit Icon-Quadrat (Aufbewahrt), Bon und roter Textlink: vier Formsprachen hintereinander. S_laeden_mitte: Die harte Kante unter „Läden“ funktioniert, das blasse Logo-Fragment darüber stört aber. Die Plus-Taste überdeckt Inhalt (Douglas-Beschreibung) ohne Abdunklung.",
+  "messungen": [
+   {
+    "was": "Linker Seitenrand der Karten (erste Nicht-Hintergrund-Spalte)",
+    "screen": "L_01_start, L_detail, L_merchants, L_settings, L_scan, L_radar, L_tests, L_history",
+    "wert": "16,0 pt (48 px) überall",
+    "soll/erwartung": "Layout.page = 16",
+    "ok": true
+   },
+   {
+    "was": "Seitenrand Onboarding (Beispielliste und Button)",
+    "screen": "L_00_onboarding",
+    "wert": "Liste 20,0 pt, Button 21,7 pt",
+    "soll/erwartung": "16 pt wie alle anderen Screens (Code: padding(.horizontal, 20) + 4)",
+    "ok": false
+   },
+   {
+    "was": "Eckenradius Karten/Listen (Diagonal-Einzug 7,0 pt → r≈24)",
+    "screen": "Start-Liste, Summen-Ticket, Kartennummer, Laden-Karte, Import-Liste, Radar, Original-Karte, Alle Ablauftermine",
+    "wert": "≈24 pt",
+    "soll/erwartung": "cardRadius 24",
+    "ok": true
+   },
+   {
+    "was": "Eckenradius Einstellungen-Gruppe (System-List)",
+    "screen": "L_settings",
+    "wert": "≈26 pt (Diagonale 7,7 pt)",
+    "soll/erwartung": "24 pt wie alle anderen Karten",
+    "ok": false
+   },
+   {
+    "was": "Eckenradius Scan-Kachel",
+    "screen": "L_scan",
+    "wert": "≈22 pt (Code: 22)",
+    "soll/erwartung": "24 pt (Karte) oder 16 pt (Kachel)",
+    "ok": false
+   },
+   {
+    "was": "Eckenradius Primärknopf und ActionTile",
+    "screen": "L_detail, L_checkout, L_paperCheckout",
+    "wert": "≈16 pt (Diagonale 4,7 pt), Höhe 56,0 pt",
+    "soll/erwartung": "buttonRadius 16, 56 pt",
+    "ok": true
+   },
+   {
+    "was": "Anzahl verschiedener cornerRadius-Werte im Code",
+    "screen": "Code gesamt",
+    "wert": "13 Werte: 8, 10, 12, 14, 16, 18, 20, 22, 24, 28, 32, 26 (cardSurface-Default) + Capsule/Circle; nur 19 von 46 Stellen nutzen Layout-Tokens",
+    "soll/erwartung": "3 Tokens + Capsule, wie in Theme.swift dokumentiert",
+    "ok": false
+   },
+   {
+    "was": "Knopfhöhe „Alle Ablauftermine“",
+    "screen": "S_start_2_ende",
+    "wert": "50,0 pt, Radius ≈24",
+    "soll/erwartung": "56 pt / Radius 16 wie .quiet-Button",
+    "ok": false
+   },
+   {
+    "was": "Toggle „an“ im Dunkelmodus: Spur vs. Knauf",
+    "screen": "D_settings",
+    "wert": "Spur #F2F0EA, Knauf #FFFFFF → Kontrast ≈1,1:1",
+    "soll/erwartung": "Knauf klar von Spur unterscheidbar (≥3:1 für UI-Komponenten)",
+    "ok": false
+   },
+   {
+    "was": "Kontrast muted auf Papier",
+    "screen": "L_01_start",
+    "wert": "6,03:1",
+    "soll/erwartung": "≥4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast soon (#B35A00) auf Weiß",
+    "screen": "L_01_start (noch 24 Tage)",
+    "wert": "4,80:1",
+    "soll/erwartung": "≥4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast warn auf warnSoft-Pill",
+    "screen": "L_01_start (noch 12 Tage)",
+    "wert": "4,71:1",
+    "soll/erwartung": "≥4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Tinte auf Markengelb",
+    "screen": "L_01_start Summenkarte",
+    "wert": "13,65:1",
+    "soll/erwartung": "≥4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Perforation (line) auf Weiß",
+    "screen": "L_checkout",
+    "wert": "1,29:1",
+    "soll/erwartung": "Deko, darf leise sein; als Markensignatur ruhig ≥1,6:1",
+    "ok": false
+   },
+   {
+    "was": "Genutzte ButtonStyles",
+    "screen": "Code gesamt",
+    "wert": ".plain 26×, .primary 9×, .glass 5×, .quiet 4×, .accent 4× (identisch mit .primary), .bordered 2×, KeyStyle 1× + manuelle Knöpfe (Alle Ablauftermine, Filterchips mit glassEffect)",
+    "soll/erwartung": "primär / sekundär / Text / Icon: 4 Stile",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "L_detail, L_paper, S_detail_ende",
+    "element": "ActionTile-Raster",
+    "problem": "2-Spalten-Kachelraster mit 3 (Thalia) bzw. 1 (Café) Kachel. Es bleibt eine verwaiste halbe Kachel mit leerer rechter Hälfte, und der Rhythmus bricht. Gleichzeitig gibt es in Theme.swift ActionRow für genau diesen Zweck, die nirgends benutzt wird.",
+    "schwere": "hoch",
+    "vorschlag": "Eine Lösung wählen: Nebenaktionen als ActionRow-Gruppe (Surface, Radius 24, Zeilen 56 pt, Divider ab 66 pt) wie in Hinzufügen/Einstellungen. Oder Kacheln nur bei gerader Anzahl und bei ungerader Anzahl die letzte Kachel über die volle Breite ziehen. ActionTile ist private in CardDetailView und gehört nach Design/, falls sie bleibt."
+   },
+   {
+    "screen": "alle",
+    "element": "Eckenradien",
+    "problem": "Theme verspricht 3 Radien (24/16/10). Gemessen und im Code stehen 13 Werte: 8 (Stempel), 12 (Icon-Quadrate), 14 (Foto, Testergebnis, SecondaryPill), 18 (Filial-Auswahl, Scan-Ergebnis), 20 (Keypad-Auswahl), 22 (Scan-Kachel), 26 (cardSurface-Default + System-List), 28, 32. Nur 19 von 46 Stellen nutzen die Tokens.",
+    "schwere": "hoch",
+    "vorschlag": "cardSurface-Default auf Layout.cardRadius setzen. Scan-Kachel 22→24. Icon-Container 12→10 (controlRadius). 14/18/20→16 (buttonRadius). Einstellungen-List per eigenem Section-Container auf 24 bringen. Lint-Regel: kein numerisches cornerRadius außerhalb von Theme.swift."
+   },
+   {
+    "screen": "Start, Detail, Kasse, Keypad, Formular, Läden",
+    "element": "Sekundär-/Textknöpfe",
+    "problem": "Für die Nebenaktion gibt es fünf Formen: .quiet (weiß, 56 pt, r16), ‚Alle Ablauftermine‘ (weiß, 50 pt, r24, manuell), ‚PIN anzeigen‘ (Glas-Capsule), ‚Foto machen/Aus Fotos‘ (.bordered grau, Capsule), ‚Alles (12,40 €)‘ (weiße Capsule) neben ‚Neuen Stand eintragen‘ (nackter Text) in derselben Zeile. Dazu Textknöpfe in Tinte (Nicht angenommen, Ändern, Kopieren, Jetzt eintragen) ohne erkennbares Muster. .accent ist ein Alias von .primary.",
+    "schwere": "hoch",
+    "vorschlag": "Vier Stile festlegen: primary (Tinte, 56 pt, r16), secondary (Surface + 1 pt line-Rand, 48 pt, r16), tertiary (Text, 15 pt semibold, Tinte, min. 44 pt Trefferfläche), icon (Glas-Kreis 44 pt). .accent löschen. Keypad: beide Optionen als gleiche Capsule-Chips darstellen."
+   },
+   {
+    "screen": "Läden, Verlauf, Kassentest, Formular",
+    "element": "Auswahl-Controls",
+    "problem": "Drei Lösungen für ‚eins aus n wählen‘: Glas-Filterchips mit Tinten-Aktivzustand (Läden), weißer Segmented Control auf Grau (Verlauf, Kassentest) und Picker-Segmente im Formular (Karte/Gutschein/Code/Andere). Der aktive Zustand ist einmal schwarz und einmal weiß.",
+    "schwere": "mittel",
+    "vorschlag": "Filter über Listen immer als Chips (Capsule, 36 pt hoch, aktiv = ink/onInk, inaktiv = surface + line-Rand). Segmented Control nur für Zeitraum. Beides in Theme.swift als FilterChip/SegmentBar ablegen."
+   },
+   {
+    "screen": "Start vs. Ablauftermine vs. Läden",
+    "element": "„…“-Menü an Zeilen",
+    "problem": "Nur die Start-Liste hat ein sichtbares ‚…‘ (36×44 pt, ink2). Ablauftermine zeigt dieselbe CardRow ohne ‚…‘, Läden-Karten haben gar kein Menü, das Detail nutzt stattdessen einen Stift im Glas-Kreis. Nutzer lernen das Muster und finden es im nächsten Screen nicht wieder.",
+    "schwere": "mittel",
+    "vorschlag": "Überall, wo CardRow erscheint, dasselbe Zeilen-Menü mit identischem Inhalt (Kasse, Bearbeiten, Archivieren, Entfernen) anbieten. Das ‚…‘ in muted statt ink2, damit es hinter dem Betrag zurücktritt."
+   },
+   {
+    "screen": "Detail, Einstellungen, Hinzufügen, Verlauf, Kassentest",
+    "element": "Icon-Behälter und Icon-Stil",
+    "problem": "Fünf Varianten: Symbol in Ladenfarbe ohne Behälter (ActionTile), graues Quadrat r12 42 pt (Aufbewahrt), Kreis (Einstellungen-Kopf, Kassentests), nacktes Tinten-Symbol (Einstellungen-Zeilen, Import-Liste), getöntes Quadrat r12 40 pt (Kassentest-Ergebnis). Gewichte gemischt: semibold 11×, bold 2×, medium 1×, sonst regular. Gefüllte (lock.fill, tag.fill, checkmark.circle.fill) und Outline-Symbole stehen nebeneinander.",
+    "schwere": "mittel",
+    "vorschlag": "Ein Icon-Token: 17 pt, .medium, Outline. In Listen immer im 32-pt-Kreis auf Color.fill (wie in ActionRow). .fill-Varianten nur für Zustände (Erfolg/Fehler). Ladenfarbe nur im MerchantMark, nicht auf Aktions-Icons."
+   },
+   {
+    "screen": "Start, Läden, Radar, Einstellungen",
+    "element": "Abschnittsüberschriften",
+    "problem": "SectionHeader (20 bold) ist definiert und unbenutzt. Tatsächlich gibt es 15 semibold ink2 (Start, Läden, Radar), System-Section-Header in 17 pt grau (Einstellungen) und ‚Original‘ 17 semibold in der Karte (Papier-Detail).",
+    "schwere": "niedrig",
+    "vorschlag": "SectionHeader auf 15 semibold ink2 mit padding(.horizontal, 4) umbauen und überall einsetzen, auch als Section-Header in Einstellungen."
+   },
+   {
+    "screen": "D_settings (+ alle Toggles)",
+    "element": "Toggle mit .tint(Color.ink)",
+    "problem": "Im Dunkelmodus wird ink zu #F2F0EA. Die Spur im An-Zustand ist damit fast weiß mit weißem Knauf (≈1,1:1), An und Aus sind nur noch über die Knaufposition unterscheidbar.",
+    "schwere": "mittel",
+    "vorschlag": "Toggle-Tint im Dunkeln auf Color.good (#4CC38A) oder brandYellow setzen oder die System-Standardfarbe lassen. Knauf-zu-Spur-Kontrast ≥3:1."
+   },
+   {
+    "screen": "L_00_onboarding",
+    "element": "Seitenrand",
+    "problem": "Als einziger Screen 20 pt Rand (Button 21,7 pt), alle anderen 16 pt. Beim Übergang in den Start springt die Kante um 4 pt.",
+    "schwere": "niedrig",
+    "vorschlag": "OnboardingView: padding(.horizontal, Layout.page) und die innere padding 4 der Beispielliste entfernen."
+   },
+   {
+    "screen": "Detail vs. Start/Radar",
+    "element": "‚Betrag offen‘",
+    "problem": "Dreimal anders: orangefarbene Streifenkarte mit Uhr (notice #FF9F0A) im Detail, ‚· Betrag offen‘ als roter Text (warn) in Listen, fehlt im Start-Chip. Zwei verschiedene Farben für denselben Zustand.",
+    "schwere": "niedrig",
+    "vorschlag": "Eine Zustandsfarbe (soon #B35A00) für ‚offen‘. In Listen als Text, im Detail als Zeile im selben Stil wie ActionRow mit Icon im Kreis."
+   },
+   {
+    "screen": "Theme.swift",
+    "element": "Tote Bausteine",
+    "problem": "ActionRow, SectionHeader und SecondaryPill (CardDetailView) sind definiert und nirgends benutzt. LabeledBox/LabeledField und der Form-Stil in CardFormView konkurrieren. Ein Kit mit ungenutzten Teilen verleitet zu neuen Einzellösungen.",
+    "schwere": "niedrig",
+    "vorschlag": "Entweder einsetzen (siehe ActionTile-Issue) oder löschen. Pro Problem genau einen öffentlichen Baustein in Design/ ablegen und private Kopien in Features entfernen."
+   }
+  ],
+  "top3": [
+   "Radien auf die dokumentierten Tokens bringen: cardSurface-Default 26→24, Scan-Kachel 22→24, alle 12/14/18/20 → 16 bzw. 10. Numerische cornerRadius-Werte außerhalb Theme.swift per SwiftLint-Regel verbieten (heute 13 verschiedene Werte, nur 19/46 Stellen mit Token).",
+   "Nebenaktionen vereinheitlichen: Das Detail-Kachelraster mit verwaister halber Kachel durch die bereits vorhandene ActionRow-Gruppe ersetzen (Surface, r24, Icon im 36-pt-Kreis, Chevron). Damit sprechen Detail, Hinzufügen und Einstellungen dieselbe Sprache.",
+   "Knopf-Set auf vier Stile festziehen (primary 56/r16, secondary Surface+Rand 48/r16, Text, Icon-Glas-Kreis 44). .accent-Alias, manuellen ‚Alle Ablauftermine‘-Knopf (50/r24), .bordered-Capsules im Formular und die Mischform im Keypad ablösen."
+  ],
+  "lob": [
+   "16-pt-Seitenrand ist auf 14 von 15 Screens pixelgenau: nicht anfassen.",
+   "Kartenradius 24 ist bei Listen, Summen-Ticket, Laden-Karten und Radar messbar einheitlich. Das ist die Basis, auf der man aufräumen kann.",
+   "Primärknopf: genau einer pro Screen, 56 pt, r16, Tinte (im Dunkeln invertiert). Klar wie bei Polaris.",
+   "CardRow als eine Zeilen-Komponente für Start, Ablauftermine und Onboarding-Beispiel, inklusive sauberem Umbruch bei XL-Schrift. Genau so sollte ein Kit-Baustein aussehen.",
+   "Ticketform mit Kerben nur für Summe, Detail-Hero und Kasse: Die Beschränkung ist richtig, die Marke nicht darüber hinaus verwässern."
+  ]
+ },
+ {
+  "persona": "Nadine Okafor, 36, UX-Researcherin, Mutter von zwei Kindern, Gutschein-Schublade, testet einhändig an der Supermarktkasse; Referenzen: Stocard, Apple Wallet, PAYBACK (Negativbeispiel)",
+  "fokus": "Visuelle Hierarchie und Alltagstauglichkeit: 3-Sekunden-Test pro Screen, Kasse/Ziffernblock unter Zeitdruck, Onboarding, Formular, Scan, Papiergutschein, Daumenreichweite (untere Hälfte, y > 437 pt von 874 pt)",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 8,
+   "abstaende_raster": 7,
+   "hierarchie": 8,
+   "konsistenz": 6,
+   "komponenten": 7,
+   "ikonografie": 7,
+   "dunkelmodus": 7,
+   "barrierefreiheit": 6,
+   "markencharakter": 6,
+   "premium_gefuehl": 7
+  },
+  "first_impression": "Start besteht den 3-Sekunden-Test: das gelbe Ticket mit 136,25 € ist eindeutig das Erste und das Richtige, danach 'Läuft bald ab' – genau die Frage, die ich an der Schublade habe. An der Kasse ist der Barcode sofort da und es gibt genau einen schwarzen Hauptknopf; das ist deutlich ruhiger als PAYBACK, nur sitzen einige Hauptaktionen noch zu weit oben für den Daumen.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Kerben plus Abrisslinie tauchen auf Start (gelb), Detail (Ladenfarbe), Kasse (weiß) und als Bon im Verlauf auf; die hochgestellten Cent in Rounded Heavy sind ein eigenes Erkennungszeichen. Aber genau am ersten Kontakt, dem Onboarding, fehlt alles davon: Wortmarke 17 pt ohne gelben Punkt, keine Ticketform, kein Gelb – das sieht wie jede Listen-App aus. Auch Scan, Läden und Einstellungen sind markenneutral.",
+  "scroll_befund": "S_start_1: Tab-Leiste minimiert sich zu Haus-Knopf + Plus, Listenrhythmus (Zeilen ~80 pt) bleibt gleichmäßig, der Kopf verschwindet sauber unter der Statusleiste mit weichem Kanteneffekt. S_start_2_ende: 'Alle Ablauftermine' als Abschlussknopf, danach ~150 pt Luft über der Tab-Leiste – gut, nichts wird verdeckt. S_laeden_mitte: Inline-Titel 'Läden' mit Kanteneffekt ist ok, aber die minimierte Tab-Leiste (Läden-Knopf links, Plus rechts) liegt über Douglas' Beschreibung und dem Link 'Infos zum Guthaben im Laden' – der Link ist in dieser Position nicht tappbar ohne Weiterscrollen. S_detail_ende: Einlöse-Bon und 'Gutschein entfernen' (rot, allein, zentriert) schließen ruhig ab; die zerstörerische Aktion ist weit weg von 'An der Kasse zeigen' – richtig so.",
+  "messungen": [
+   {
+    "was": "Hauptknopf 'Bezahlt – Betrag eintragen' y-Bereich",
+    "screen": "L_checkout",
+    "wert": "566.7–622.3 pt (Mitte 594 pt = 68 %)",
+    "soll/erwartung": "untere Hälfte (> 437 pt), idealerweise ≥ 700 pt",
+    "ok": true
+   },
+   {
+    "was": "Leerraum unter 'Nur Bezahlt zieht ab' bis Home-Indikator",
+    "screen": "L_checkout",
+    "wert": "ca. 700–840 pt ≈ 140 pt ungenutzt",
+    "soll/erwartung": "Hauptknopf könnte in diesen Daumenbereich rutschen",
+    "ok": false
+   },
+   {
+    "was": "Hauptknopf 'Bezahlt' y-Bereich",
+    "screen": "L_paperCheckout",
+    "wert": "536.7–592.3 pt (Mitte 564 pt = 65 %)",
+    "soll/erwartung": "untere Hälfte",
+    "ok": true
+   },
+   {
+    "was": "'An der Kasse zeigen' y-Bereich",
+    "screen": "L_detail / L_paper",
+    "wert": "360.7–416.3 pt (Mitte 389 pt = 44 %)",
+    "soll/erwartung": "untere Hälfte > 437 pt (einhändig im Laden)",
+    "ok": false
+   },
+   {
+    "was": "'An der Kasse zeigen' y-Bereich",
+    "screen": "L_pending",
+    "wert": "436.7–492.3 pt (Mitte 465 pt)",
+    "soll/erwartung": "untere Hälfte",
+    "ok": true
+   },
+   {
+    "was": "Ziffernblock-Tasten Zeilen 1–4",
+    "screen": "L_keypad",
+    "wert": "Panel ab 503 pt, Tastenzeilen ca. 540/602/664/726 pt, Tastenhöhe 56 pt + 6 pt Abstand (Code)",
+    "soll/erwartung": "komplett in unterer Hälfte, ≥ 44 pt",
+    "ok": true
+   },
+   {
+    "was": "'Abziehen' Knopf y-Bereich",
+    "screen": "L_keypad",
+    "wert": "ca. 769–823 pt",
+    "soll/erwartung": "Daumenzone",
+    "ok": true
+   },
+   {
+    "was": "'Los geht's' y-Bereich",
+    "screen": "L_00_onboarding",
+    "wert": "768.3–823.3 pt",
+    "soll/erwartung": "Daumenzone",
+    "ok": true
+   },
+   {
+    "was": "Kachel 'Karte scannen' (Hauptaktion Hinzufügen)",
+    "screen": "L_scan",
+    "wert": "ca. 176–365 pt",
+    "soll/erwartung": "Hauptaktion in unterer Hälfte",
+    "ok": false
+   },
+   {
+    "was": "Speichern-Knopf im Formular sichtbar ohne Scrollen",
+    "screen": "L_form",
+    "wert": "nicht im ersten Bildschirm (Knopf erst am Scroll-Ende, kein Toolbar-Häkchen)",
+    "soll/erwartung": "Speichern jederzeit erreichbar",
+    "ok": false
+   },
+   {
+    "was": "Seitenrand Listen/Knöpfe",
+    "screen": "L_01_start, L_detail, L_checkout, L_keypad, L_scan, L_merchants, L_settings, L_form",
+    "wert": "16.0 pt links/rechts",
+    "soll/erwartung": "einheitlich 16 pt",
+    "ok": true
+   },
+   {
+    "was": "Seitenrand Bon",
+    "screen": "L_history",
+    "wert": "11.0 pt",
+    "soll/erwartung": "16 pt wie Rest (oder bewusst begründet)",
+    "ok": false
+   },
+   {
+    "was": "Seitenrand Onboarding",
+    "screen": "L_00_onboarding",
+    "wert": "20.0 pt",
+    "soll/erwartung": "16 pt wie App",
+    "ok": false
+   },
+   {
+    "was": "Kontrast 'Nur Beispiele…' auf Gelb",
+    "screen": "L_01_start",
+    "wert": "#4D4320 auf #FFD84D = 7.1:1",
+    "soll/erwartung": "≥ 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast 'noch 24 Tage' Orange auf Weiß",
+    "screen": "L_01_start",
+    "wert": "#B35A00 auf #FFFFFF = 4.8:1",
+    "soll/erwartung": "≥ 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast 'Am Handy vorzeigbar' Grün auf Weiß",
+    "screen": "L_merchants",
+    "wert": "#1F7A4D = 5.32:1",
+    "soll/erwartung": "≥ 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Sekundärtext ink2 auf Papier",
+    "screen": "L_checkout / L_00_onboarding",
+    "wert": "#5C5C63 auf #F6F4EF = 6.03:1",
+    "soll/erwartung": "≥ 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast 'Texterkennung läuft nur…'",
+    "screen": "L_scan",
+    "wert": "#68686E auf #F5F3EE = 4.99:1",
+    "soll/erwartung": "≥ 4.5:1",
+    "ok": true
+   },
+   {
+    "was": "Kontrast Platzhalter 'leer = für mich…'",
+    "screen": "L_form / D_form",
+    "wert": "hell 1.72:1, dunkel 2.46:1",
+    "soll/erwartung": "≥ 3:1, da der Platzhalter hier eine Erklärung trägt",
+    "ok": false
+   },
+   {
+    "was": "Deaktivierter Knopf 'Abziehen' Fläche vs. Papier",
+    "screen": "L_keypad",
+    "wert": "#E3DFD6 auf #F6F4EF, Text 4.99:1",
+    "soll/erwartung": "als deaktiviert erkennbar, Text lesbar",
+    "ok": true
+   },
+   {
+    "was": "Sekundäraktionen bei XL-Schrift",
+    "screen": "XL_checkout",
+    "wert": "'Bezahlt' 744–812 pt (zweizeilig), 'Nicht angenommen/Später eintragen' abgeschnitten ab ~840 pt, Kartennummer bricht als '6300 9812 7456 / 1234' um",
+    "soll/erwartung": "alle drei Optionen ohne Scrollen sichtbar, Nummer in 4er-Blöcken sinnvoll umbrechen",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "detail / paper",
+    "element": "'An der Kasse zeigen'",
+    "problem": "Die wichtigste Aktion im Laden sitzt bei 361–416 pt (44 % Höhe) – mit einer Hand und Einkaufskorb in der anderen muss ich umgreifen. In Apple Wallet ist das Vorzeigen die Karte selbst.",
+    "schwere": "hoch",
+    "vorschlag": "Knopf per safeAreaInset(edge: .bottom) als schwebende Leiste an 16 pt Rand, Unterkante 16 pt über Home-Indikator (≈ 790–846 pt); zusätzlich Tippen auf das Ticket selbst öffnet die Kasse."
+   },
+   {
+    "screen": "checkout",
+    "element": "Betrag nach 'Bezahlt'",
+    "problem": "Nach 'Bezahlt' erscheint ein Inline-Formular mit System-Dezimaltastatur plus Filiale/Notiz – der eigens gebaute große Ziffernblock (56 pt Tasten, 'Alles (12,40 €)') wird genau im stressigsten Moment nicht benutzt. Zwei verschiedene Betragseingaben für dieselbe Aufgabe.",
+    "schwere": "hoch",
+    "vorschlag": "'Bezahlt' führt direkt in den Keypad-Screen (Einkauf eintragen) inkl. 'Alles'-Chip; Filiale/Notiz dort optional hinter '+ Filiale notieren' wie schon vorhanden."
+   },
+   {
+    "screen": "checkout",
+    "element": "Knopfgruppe unten",
+    "problem": "Unter 'Nur Bezahlt zieht vom Guthaben ab' bleiben ~140 pt leer, während der Hauptknopf bei 594 pt steht. Bei XL rutscht 'Nicht angenommen'/'Später eintragen' ganz aus dem Bild.",
+    "schwere": "mittel",
+    "vorschlag": "Knopfgruppe in safeAreaInset(edge: .bottom) legen: 'Bezahlt' Unterkante ≈ 800 pt, Textknöpfe darunter bzw. bei dynamicTypeSize ≥ .accessibility1 untereinander (VStack) statt HStack."
+   },
+   {
+    "screen": "00_onboarding",
+    "element": "Wortmarke und Beispiel-Liste",
+    "problem": "Erster Kontakt ohne Markenzeichen: 'Restwert' klein ohne gelben Punkt, Beispiel als neutrale Liste, kein Ticket, kein Gelb. Im 3-Sekunden-Test sehe ich zuerst die Headline – richtig –, aber nichts, was nach 'Das Ticket' aussieht.",
+    "schwere": "mittel",
+    "vorschlag": "Wortmarke wie auf Start (34 pt Heavy + gelber Punkt); Beispiel oben als gelbes Summen-Ticket (Noch drauf 75,00 € mit Kerben) statt Liste; Seitenrand von 20 auf 16 pt."
+   },
+   {
+    "screen": "scan",
+    "element": "Kachel 'Karte scannen'",
+    "problem": "Hauptaktion bei 176–365 pt, also komplett oben; die Nebenwege (Fotos, E-Mail, Datei, Von Hand) liegen darunter, näher am Daumen.",
+    "schwere": "mittel",
+    "vorschlag": "Reihenfolge drehen: Nebenwege oben als Liste, schwarze Scan-Kachel (Höhe ~150 pt) direkt über der Tab-Leiste; oder einen großen 'Karte scannen'-Knopf als Bottom-Inset."
+   },
+   {
+    "screen": "form",
+    "element": "Speichern",
+    "problem": "Im Bearbeiten-Sheet gibt es oben nur X, 'Speichern' liegt am Scroll-Ende – nach einer Änderung an 'Betrag' muss ich suchen, wie ich raus komme, und X wirkt wie 'verwerfen'.",
+    "schwere": "mittel",
+    "vorschlag": "ToolbarItem(placement: .confirmationAction) mit Häkchen oben rechts ergänzen, und/oder 'Änderungen speichern' als Bottom-Inset fixieren."
+   },
+   {
+    "screen": "form",
+    "element": "Platzhalter 'leer = für mich, z. B. Mia oder Oma'",
+    "problem": "Erklärung steckt im Platzhalter mit 1.72:1 Kontrast (dunkel 2.46:1) – verschwindet beim Tippen und ist in der Sonne im Laden unlesbar.",
+    "schwere": "niedrig",
+    "vorschlag": "Hilfetext als 13-pt-Zeile ink2 (6:1) unter dem Label; Platzhalter nur 'z. B. Mia'."
+   },
+   {
+    "screen": "S_laeden_mitte",
+    "element": "minimierte Tab-Leiste",
+    "problem": "Läden-Knopf und Plus überlagern die unterste Karte inkl. Link.",
+    "schwere": "niedrig",
+    "vorschlag": "contentMargins(.bottom, 96) für die Liste, damit die letzte Karte über der Leiste enden kann."
+   },
+   {
+    "screen": "history",
+    "element": "Bon-Seitenrand",
+    "problem": "Bon steht mit 11 pt Rand, alles andere mit 16 pt – im Tab-Wechsel springt die linke Kante.",
+    "schwere": "niedrig",
+    "vorschlag": "Bon auf 16 pt Rand; die gezackte Kante darf trotzdem bis 12 pt reichen, aber Text-Fluchtlinie auf 32 pt wie Kartentext."
+   },
+   {
+    "screen": "XL_checkout",
+    "element": "Kartennummer",
+    "problem": "Nummer bricht als '6300 9812 7456' / '1234' um – beim Abtippen durch die Kassiererin missverständlich.",
+    "schwere": "niedrig",
+    "vorschlag": "Bei XL in zwei 8er-Hälften (2 Blöcke pro Zeile) umbrechen oder minimumScaleFactor(0.7) mit lineLimit(1)."
+   }
+  ],
+  "top3": [
+   "'An der Kasse zeigen' (Detail/Papier) und die Knopfgruppe auf 'An der Kasse' per safeAreaInset(edge: .bottom) in die Daumenzone legen (Unterkante ≈ 16 pt über Home-Indikator, 16 pt Rand).",
+   "'Bezahlt – Betrag eintragen' direkt in den großen Ziffernblock mit 'Alles (x €)' führen statt ins Inline-Formular mit System-Tastatur – eine Betragseingabe für alles.",
+   "Onboarding markenfähig machen: Wortmarke mit gelbem Punkt in Start-Größe, Beispiel als gelbes Summen-Ticket mit Kerben, Rand 16 statt 20 pt."
+  ],
+  "lob": [
+   "Das gelbe Summen-Ticket auf Start: eine Zahl, sofort lesbar, 7.1:1 Kontrast für Kleingedrucktes auf Gelb – das ist das Gegenteil von PAYBACK.",
+   "Kasse zeigt nur Barcode + einen schwarzen Hauptknopf + einen Satz 'Nur Bezahlt zieht vom Guthaben ab'; Helligkeit wird automatisch hochgedreht.",
+   "Ziffernblock mit 56-pt-Tasten komplett unten, 'Alles (12,40 €)'-Chip, leichte Haptik pro Taste und Fehler-Shake (laut Code) – ideal einhändig.",
+   "Verlauf als Bon mit Monospace-Beträgen und 'Summe eingelöst' – nah am Alltag, sofort verständlich.",
+   "Ladenfarbe als Kartenfarbe (Thalia-Petrol, Café-Blau) und Papierfoto 'GUTSCHEIN' groß auf der Kasse – der Papiergutschein wird endlich gleichwertig behandelt.",
+   "Abreiß-Animation mit mittlerer Haptik respektiert 'Bewegung reduzieren' (nur aus dem Code beurteilt, nicht gesehen)."
+  ]
+ },
+ {
+  "persona": "Felix Brenner, 23, Designer bei einem Indie-App-Studio (mehrfach ADA-nominiert), pixel-pedantisch; Referenzen: Flighty, (Not Boring) Weather, Mercury Weather, Opal",
+  "fokus": "Premium-Gefühl und Pixelpolitur: Kerben, Abrisslinie, Schatten, Anti-Aliasing, optische Ausrichtung, Fortschrittsbalken, App-Icon",
+  "scores": {
+   "gesamt": 7,
+   "typografie": 7,
+   "farbe": 7,
+   "abstaende_raster": 7,
+   "hierarchie": 8,
+   "konsistenz": 5,
+   "komponenten": 6,
+   "ikonografie": 6,
+   "dunkelmodus": 6,
+   "barrierefreiheit": 7,
+   "markencharakter": 6,
+   "premium_gefuehl": 6
+  },
+  "first_impression": "Die gelbe Summenkarte mit ausgestanzten Kerben und der Rounded-Heavy-Zahl mit hochgestelltem Cent ist ein echter Moment – das erste Mal, dass die App nach sich selbst aussieht. Sobald man aber von Start/Detail weggeht (Onboarding, Kasse, Einstellungen), zerfällt die Signatur in drei verschiedene Ticket-Dialekte und generische Systemteile.",
+  "marke_erkennbar": true,
+  "marke_begruendung": "Auf Start und Detail klar: Kerben + Abrisslinie + Rounded-Betrag + Gelb/Tinte. Aber die Signaturform ist nicht als ein System gebaut: An der Kasse steckt noch die alte Perforation (28-pt-Kreise draufgemalt statt ausgestanzt, 2-pt-Striche 6/6), das Onboarding zeigt weder Wortmarke mit Punkt noch Ticket, und das App-Icon zeichnet die Abrisslinie anders als die App. Wiedererkennbar ja, 'unverwechselbar' noch nicht.",
+  "scroll_befund": "S_start_1: Harte Kante oben funktioniert, aber der gelbe Hero schimmert als gelblicher Schleier hinter der Statusleiste (Pixel y=5: 246,241,223 statt Papier 246,244,239) und die Überschrift 'Läuft bald ab' ist als Geisterschrift unter der Kante lesbar – wirkt unaufgeräumt, nicht bewusst. Minimierte Tab-Leiste (nur Haus + Plus) ist sauber. L_01_start: Zeile Thalia läuft unter der Glas-Tab-Leiste durch und doppelt sich optisch ('bis 31.12.2028' überlagert Labels) – Standard-Liquid-Glass, aber unruhig, weil die Beträge in Heavy darunter sehr kontraststark sind. S_laeden_mitte: Kanteneffekt unter 'Läden' sauber, Karte wird weich abgeblendet. S_start_2_ende: contentMargins 120 pt geben dem letzten Element ('Alle Ablauftermine') genug Luft – gut. Rhythmus: Sektionsköpfe bei 20,7 pt, Karten bei 16 pt – bewusster Versatz, konsistent über Start.",
+  "messungen": [
+   {
+    "was": "Kerben-Radius Summenkarte/Detailkarte",
+    "screen": "L_01_start, L_detail",
+    "wert": "9 pt Radius (Ø 17,7 pt), Tiefe 9 pt, identisch hell/dunkel",
+    "soll/erwartung": "eine Kerbe für alle Tickets",
+    "ok": true
+   },
+   {
+    "was": "Kerbe An der Kasse (Perforation)",
+    "screen": "L_checkout, D_checkout",
+    "wert": "28 pt Kreis, als Fläche in Seitenfarbe über die Karte gemalt – im Schatten der Karte als ganze Scheibe sichtbar",
+    "soll/erwartung": "gleiche 9-pt-Stanzung via TicketShape",
+    "ok": false
+   },
+   {
+    "was": "Abrisslinie Strich/Lücke",
+    "screen": "L_01_start, L_detail",
+    "wert": "Strich 4 pt, Lücke 4 pt, 1 pt stark (3 px), Abstand Kerbe→erster Strich 7 pt links",
+    "soll/erwartung": "symmetrisch",
+    "ok": true
+   },
+   {
+    "was": "Abrisslinie letzter Strich rechts",
+    "screen": "L_01_start, L_detail, D_*",
+    "wert": "letzter Strich nur 2 pt (halber Strich) vor der rechten Kerbe; links beginnt ein voller 4-pt-Strich",
+    "soll/erwartung": "beide Enden gleich (Phase zentrieren)",
+    "ok": false
+   },
+   {
+    "was": "Drei verschiedene Strichelungen",
+    "screen": "Code Theme.swift",
+    "wert": "TearLine 1 pt [4,4] 22 %; Perforation 2 pt [6,6] Color.line; DashedRule (Bon) 1,2 pt [5,4]",
+    "soll/erwartung": "eine Signatur-Strichelung",
+    "ok": false
+   },
+   {
+    "was": "Kontrast Abrisslinie auf Gelb / Teal",
+    "screen": "L_01_start / L_detail",
+    "wert": "1,60:1 / 1,58:1",
+    "soll/erwartung": "dekorativ, 1,5–2:1 ist ok",
+    "ok": true
+   },
+   {
+    "was": "Tinte auf Gelb (Summe)",
+    "screen": "L_01_start",
+    "wert": "13,65:1",
+    "soll/erwartung": ">= 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Weiß auf Thalia-Teal",
+    "screen": "L_detail",
+    "wert": "6,0:1",
+    "soll/erwartung": ">= 4,5:1",
+    "ok": true
+   },
+   {
+    "was": "Seitenränder Start",
+    "screen": "L_01_start",
+    "wert": "Karten 16,0 pt links/rechts; Wortmarke 21,3 pt; Sektionsköpfe 20,7–21 pt",
+    "soll/erwartung": "Karte 16 / Text 20 konsequent – Wortmarke 1,3 pt daneben",
+    "ok": false
+   },
+   {
+    "was": "Wortmarken-Punkt",
+    "screen": "L_01_start",
+    "wert": "9 pt fest, Unterkante exakt auf Grundlinie (148,3 pt), Abstand 3 pt; wächst bei XL nicht mit",
+    "soll/erwartung": "Punkt mit Schrift skalieren (@ScaledMetric), runde Form ~0,5 pt unter Grundlinie überschießen lassen",
+    "ok": false
+   },
+   {
+    "was": "Kontrast gelber Punkt auf Papier",
+    "screen": "L_01_start",
+    "wert": "1,26:1 (nur durch 0,5-pt-Tintenrand sichtbar)",
+    "soll/erwartung": "dekorativ ok, Rand ist richtig",
+    "ok": true
+   },
+   {
+    "was": "Mini-Fortschrittsbalken Liste",
+    "screen": "L_01_start (Douglas)",
+    "wert": "4 pt hoch, 64 pt breit, Tinte auf #E6E2D9; rechte Kante 329,7 pt vs. €-Glyphe 327 pt",
+    "soll/erwartung": "bündig mit Betrag (±1 pt)",
+    "ok": false
+   },
+   {
+    "was": "Fortschrittsbalken Detail",
+    "screen": "L_detail",
+    "wert": "ca. 5 pt hoch (275,7–280,3 pt), weiß auf Teal-Track",
+    "soll/erwartung": "gleiche Höhe wie Liste (4 pt) oder bewusst 6 pt",
+    "ok": false
+   },
+   {
+    "was": "Tag-Icon vs. Ziffern '15 %'",
+    "screen": "L_01_start",
+    "wert": "Icon und Ziffern beide 451,7–465,3 pt – exakt auf Versalhöhe",
+    "soll/erwartung": "optisch zentriert",
+    "ok": true
+   },
+   {
+    "was": "Dunkelmodus-Schalter AN",
+    "screen": "D_settings",
+    "wert": "Track 242,240,234 vs. Knopf 255,255,255 = 1,14:1",
+    "soll/erwartung": ">= 3:1 für Zustandsgrafik",
+    "ok": false
+   },
+   {
+    "was": "App-Icon Ticketgröße",
+    "screen": "AppIcon.png",
+    "wert": "Ticket 64,7 % Breite × 41,3 % Höhe, vertikal zentriert; Strichreihe ca. 6 px (von 1024) links versetzt",
+    "soll/erwartung": "~72–78 % Breite, exakt zentriert",
+    "ok": false
+   },
+   {
+    "was": "App-Icon Varianten",
+    "screen": "AppIcon.appiconset",
+    "wert": "nur eine 1024-PNG, keine Dark-/Tinted-Variante, kein Icon-Composer-Layer",
+    "soll/erwartung": "iOS 26: .icon mit Ebenen + Dark/Clear/Tinted",
+    "ok": false
+   }
+  ],
+  "issues": [
+   {
+    "screen": "checkout (L/D)",
+    "element": "Perforation im Kassen-Ticket",
+    "problem": "Alte Perforation: 28-pt-Kreise in Seitenfarbe über die Karte gemalt. Weil die Karte einen 16-pt-Schatten hat, sieht man die Kreise im Schatten als ganze helle bzw. dunkle Scheiben – Fake-Stanzung, bei Zoom sofort erkennbar. Dazu 2-pt-Striche 6/6 statt 1 pt 4/4.",
+    "schwere": "hoch",
+    "vorschlag": "Kassenkarte mit TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchFromTop: gemessene Linie) als Hintergrund + TearLine(color: .ink); Perforation-View löschen."
+   },
+   {
+    "screen": "01_start, detail, checkout",
+    "element": "Abrisslinie",
+    "problem": "Strichphase läuft von links; rechts endet die Linie mit einem 2-pt-Stummel vor der Kerbe. Asymmetrie genau am Signaturelement.",
+    "schwere": "mittel",
+    "vorschlag": "Breite per GeometryReader messen, Anzahl n = floor((w+4)/8), dash-Länge = (w - (n-1)*4)/n oder dashPhase = -((w - n*8 + 4)/2); Ergebnis: an beiden Enden voller Strich, 7 pt zur Kerbe."
+   },
+   {
+    "screen": "00_onboarding (L/D/XL)",
+    "element": "Wortmarke",
+    "problem": "Erster Kontakt zeigt 'Restwert' als kleines Semibold ohne Punkt und ohne Ticket – Marke startet erst nach dem Onboarding.",
+    "schwere": "hoch",
+    "vorschlag": "Wordmark-View (30 pt Rounded Heavy + Punkt) oben verwenden und die Beispielliste in eine gelbe TicketShape-Summenkarte mit Abrisslinie setzen."
+   },
+   {
+    "screen": "D_settings",
+    "element": "Toggle AN",
+    "problem": "tint(Color.ink) wird im Dunkelmodus zu Papierweiß; weißer Knopf auf fast weißem Track = 1,14:1, Zustand kaum lesbar.",
+    "schwere": "mittel",
+    "vorschlag": "Im Dunkelmodus tint auf brandYellow (#FFD84D) oder System-Grün; alternativ Track #F6F4EF mit Knopf #111111 nicht möglich – also Gelb."
+   },
+   {
+    "screen": "App-Icon",
+    "element": "Icon",
+    "problem": "Flach, Ticket nur 65 % breit; Fortschrittsbalken + 12 Striche zerfallen bei 29/40 pt zu grauem Matsch; Striche mit runden Kappen und voller Tinte, in der App eckig mit 22 %; keine Dark/Tinted-Varianten, keine Liquid-Glass-Ebenen.",
+    "schwere": "mittel",
+    "vorschlag": "Ticket auf ~76 % Breite, Balken weglassen, Abrisslinie auf 5–6 kräftige Striche reduzieren, eine Ecke ‚abgerissen‘ oder den gelben Punkt als Detail; in Icon Composer als 2 Ebenen (Tinte-Grund, gelbes Ticket) mit Dark-/Tinted-Variante exportieren."
+   },
+   {
+    "screen": "XL_01_start, XL_detail",
+    "element": "Wortmarken-Punkt, Detail-Fußzeile",
+    "problem": "Punkt bleibt 9 pt, während die Schrift ~1,4× wächst – wirkt wie ein Satzzeichen-Fehler. In XL_detail bricht 'noch 826 Tage' unter das Datum und verliert die Rechtsbündigkeit.",
+    "schwere": "niedrig",
+    "vorschlag": "@ScaledMetric(relativeTo: .largeTitle) var dot = 9; Fußzeile bei XL als ViewThatFits: HStack → VStack(alignment: .leading)."
+   },
+   {
+    "screen": "S_start_1",
+    "element": "Obere Scrollkante",
+    "problem": "Gelber Hero färbt die Statusleiste gelblich ein, Überschrift darunter als Geist lesbar.",
+    "schwere": "niedrig",
+    "vorschlag": "Kante 8–12 pt höher enden lassen oder safeAreaBar mit Papierfläche; Sektionsköpfe unter der Kante mit opacity 0 ausblenden (scrollTransition)."
+   },
+   {
+    "screen": "01_start / detail",
+    "element": "Fortschrittsbalken",
+    "problem": "Liste 4 pt, Detail ~5 pt; Listenbalken endet 2,7 pt rechts der €-Glyphe.",
+    "schwere": "niedrig",
+    "vorschlag": "Ein Token Layout.meterHeight = 4 (Detail 6, aber dann bewusst); Balken per alignmentGuide an die Textkante des Betrags (Glyphenkante, nicht Frame) binden."
+   },
+   {
+    "screen": "checkout",
+    "element": "Abreiß-Animation (nur Code beurteilt)",
+    "problem": "Unterer Abschnitt wird nur verschoben, um 4° gedreht und ausgeblendet; es bleibt keine gerissene Kante oben stehen, die Karte ist eine normale abgerundete Fläche. Stempel landet ohne eigenen Haptik-Tick.",
+    "schwere": "niedrig",
+    "vorschlag": "Oberen Teil als TicketShape mit notchFromBottom = 0 zurücklassen (Halbkerben sichtbar), unteren Teil mit leicht gezackter Oberkante wegfallen lassen; .sensoryFeedback(.impact(weight: .heavy, intensity: 0.7)) beim Stempel-Landen."
+   },
+   {
+    "screen": "01_start",
+    "element": "Linke Kanten",
+    "problem": "Wortmarke 21,3 pt, Sektionsköpfe 20,7 pt – 0,6 pt Versatz ist bei 3x sichtbar (2 px).",
+    "schwere": "niedrig",
+    "vorschlag": "Beide auf exakt 20 pt Textkante (Wortmarke hat Rounded-Seitenfleisch: .padding(.leading, 20 - 1.3))."
+   }
+  ],
+  "top3": [
+   "Ein Ticket-System: Kassenkarte auf TicketShape + TearLine umstellen, Perforation-View entfernen – nie wieder gemalte Kreise (hoch, sichtbar im Schatten).",
+   "Abrisslinie symmetrisch rechnen (volle Striche an beiden Enden, 7 pt zur Kerbe) und nur eine Strichelung (1 pt, 4/4) app-weit inkl. Icon.",
+   "Onboarding + App-Icon auf die Marke heben: Wortmarke mit Punkt und gelbes Ticket im Onboarding; Icon größer (76 %), ohne Balken, mit Dark/Tinted-Varianten via Icon Composer."
+  ],
+  "lob": [
+   "Die Kerbe selbst ist echt ausgestanzt (Path.subtracting), anti-aliased sauber, 9 pt Radius hell/dunkel identisch und exakt auf der Linie gemessen – so macht man das.",
+   "Betrag in Rounded Heavy mit hochgestellten Cent ('136,25 €') – der stärkste Markenmoment, nicht anfassen.",
+   "Einlöse-Verlauf als Bon mit Zickzackkante und Monospace – hat Charakter à la Not Boring.",
+   "Ladenfarbe als Kartenfarbe (Thalia-Teal, Café-Blau) mit 6:1 Weiß-Kontrast – ruhig und wertig.",
+   "Icon-Text-Ausrichtung in Zeilen (Tag-Icon exakt auf Versalhöhe der Ziffern) und 16/20-pt-Raster auf Start."
+  ]
+ }
+]
