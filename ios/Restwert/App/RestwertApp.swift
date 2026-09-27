@@ -36,6 +36,8 @@ struct RestwertApp: App {
                 }
         }
         .onChange(of: scenePhase) { _, phase in
+            // Beim Verlassen der App alles sicher auf die Platte bringen.
+            if phase == .background { store.flush() }
             guard phase == .active else { return }
             // Nach dem Entsperren ggf. die Datei nachladen, die vorher gesperrt war.
             store.reloadIfNeeded()

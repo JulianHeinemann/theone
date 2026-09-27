@@ -32,41 +32,6 @@ final class Store {
         var test: UUID?
     }
 
-    private struct Snapshot: Codable {
-        var cards: [GiftCard]
-        var tests: [TestResult]
-        var deleted: [UUID]?
-        var pinChanged: [UUID: Date]?
-        /// Einträge, die beim Lesen nicht dekodierbar waren und übersprungen wurden.
-        var dropped = 0
-
-        private enum CodingKeys: String, CodingKey { case cards, tests, deleted, pinChanged }
-
-        init(cards: [GiftCard], tests: [TestResult], deleted: [UUID], pinChanged: [UUID: Date]) {
-            self.cards = cards
-            self.tests = tests
-            self.deleted = deleted
-            self.pinChanged = pinChanged
-        }
-
-        /// Einzelne kaputte Einträge überspringen statt die ganze Datei zu verwerfen.
-        init(from decoder: Decoder) throws {
-            let c = try decoder.container(keyedBy: CodingKeys.self)
-            let rawCards = try c.decode([Lossy<GiftCard>].self, forKey: .cards)
-            let rawTests = try c.decodeIfPresent([Lossy<TestResult>].self, forKey: .tests) ?? []
-            cards = rawCards.compactMap(\.value)
-            tests = rawTests.compactMap(\.value)
-            deleted = try? c.decodeIfPresent([UUID].self, forKey: .deleted)
-            pinChanged = try? c.decodeIfPresent([UUID: Date].self, forKey: .pinChanged)
-            dropped = rawCards.count - cards.count + rawTests.count - tests.count
-        }
-    }
-
-    private struct Lossy<T: Decodable>: Decodable {
-        var value: T?
-        init(from decoder: Decoder) throws { value = try? T(from: decoder) }
-    }
-
     init(fileURL: URL? = nil) {
         if let fileURL {
             self.fileURL = fileURL
@@ -149,6 +114,11 @@ final class Store {
         try fm.copyItem(at: fileURL, to: target)
     }
 
+    nonisolated private static let io = DispatchQueue(label: "de.restwert.store.io", qos: .userInitiated)
+
+    /// Wartet, bis alle Schreibvorgänge auf der Platte sind (vor dem Wechsel in den Hintergrund, vor Export).
+    func flush() { Self.io.sync {} }
+
     private func save(notify: Bool = true) {
         // Solange die vorhandene Datei nicht gelesen ist, nie mit einem unvollständigen Stand überschreiben.
         guard isLoaded else { return }
@@ -158,11 +128,20 @@ final class Store {
                 try keepBrokenCopy()
                 keepCopyBeforeWrite = false
             }
+            // Kodieren und Schreiben (samt Fotos) im Hintergrund, damit die Oberfläche nie ruckelt.
+            // Eine serielle Queue hält die Reihenfolge: der letzte Stand landet immer zuletzt auf der Platte.
             let snap = Snapshot(cards: cards, tests: tests, deleted: Array(deletedIDs), pinChanged: pinChangedAt)
-            let data = try JSONEncoder().encode(snap)
-            try data.write(to: fileURL, options: [.atomic, .completeFileProtection])
+            let url = fileURL
+            Self.io.async {
+                do {
+                    let data = try JSONEncoder().encode(snap)
+                    try data.write(to: url, options: [.atomic, .completeFileProtection])
+                } catch {
+                    print("Restwert: Speichern fehlgeschlagen:", error)
+                }
+            }
         } catch {
-            print("Restwert: Speichern fehlgeschlagen:", error)
+            print("Restwert: Sicherungskopie fehlgeschlagen:", error)
         }
         Task { await scheduleReminders() }
         WidgetBridge.update(cards: cards, total: total)
@@ -649,4 +628,41 @@ enum ReminderPrefs {
         let list = days.sorted(by: >).map { $0 == 1 ? "1 Tag" : "\($0) Tage" }
         return list.formatted(.list(type: .and)) + " vorher, um \(hour) Uhr"
     }
+}
+
+/// Gespeicherter Stand auf der Platte. Außerhalb von Store, damit er im Hintergrund kodiert werden kann.
+nonisolated private struct Snapshot: Codable, Sendable {
+    var cards: [GiftCard]
+    var tests: [TestResult]
+    var deleted: [UUID]?
+    var pinChanged: [UUID: Date]?
+    /// Einträge, die beim Lesen nicht dekodierbar waren und übersprungen wurden.
+    var dropped = 0
+
+    private enum CodingKeys: String, CodingKey { case cards, tests, deleted, pinChanged }
+
+    init(cards: [GiftCard], tests: [TestResult], deleted: [UUID], pinChanged: [UUID: Date]) {
+        self.cards = cards
+        self.tests = tests
+        self.deleted = deleted
+        self.pinChanged = pinChanged
+    }
+
+    /// Einzelne kaputte Einträge überspringen statt die ganze Datei zu verwerfen.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let rawCards = try c.decode([Lossy<GiftCard>].self, forKey: .cards)
+        let rawTests = try c.decodeIfPresent([Lossy<TestResult>].self, forKey: .tests) ?? []
+        cards = rawCards.compactMap(\.value)
+        tests = rawTests.compactMap(\.value)
+        deleted = try? c.decodeIfPresent([UUID].self, forKey: .deleted)
+        pinChanged = try? c.decodeIfPresent([UUID: Date].self, forKey: .pinChanged)
+        dropped = rawCards.count - cards.count + rawTests.count - tests.count
+    }
+}
+
+/// Liest einen Eintrag, ohne bei einem kaputten Eintrag die ganze Liste zu verwerfen.
+nonisolated private struct Lossy<T: Decodable>: Decodable {
+    var value: T?
+    init(from decoder: Decoder) throws { value = try? T(from: decoder) }
 }
