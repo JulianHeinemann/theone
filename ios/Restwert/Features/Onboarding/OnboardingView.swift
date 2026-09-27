@@ -64,7 +64,7 @@ struct OnboardingView: View {
                 }
             }
             .foregroundStyle(Color.ink)
-            .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 8) {
                 Label("Kein Konto, keine Werbung, keine Tracker", systemImage: "person.crop.circle.badge.xmark")

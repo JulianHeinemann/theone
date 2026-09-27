@@ -71,7 +71,7 @@ struct CardFormView: View {
                 Button(editing != nil ? "Änderungen speichern" : "Speichern", action: save)
                     .buttonStyle(.primary)
             }
-            .padding(.horizontal, 16).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.bottom, 30)
         }
         .scrollDismissesKeyboard(.interactively)
         .pageBackground()

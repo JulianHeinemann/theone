@@ -133,7 +133,7 @@ struct BalanceCard: View {
             Text(card.kind.isValueBased ? "Guthaben" : card.kind.label)
                 .font(.scaled(14, weight: .medium)).opacity(0.75).lineLimit(1).minimumScaleFactor(0.7)
             Text(card.headline)
-                .font(.scaled(58, weight: .bold)).kerning(-2).monospacedDigit()
+                .font(.amount(58)).kerning(-1.5)
                 .contentTransition(.numericText(value: card.balance))
                 .strikethrough(crossed, color: fg.opacity(0.7))
                 .minimumScaleFactor(0.5).lineLimit(1)

@@ -34,7 +34,7 @@ struct ScanView: View {
                                                 removal: .move(edge: .leading).combined(with: .opacity)))
                 }
             }
-            .padding(.horizontal, 16).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.bottom, 30)
         }
         .scrollIndicators(.hidden)
         .pageBackground()
@@ -127,7 +127,7 @@ struct ScanView: View {
                 }
             }
             .buttonStyle(.plain)
-            .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
             VStack(alignment: .leading, spacing: 6) {
                 Label("PDF aus einer Mail übernehmen", systemImage: "envelope.open").font(.scaled(15, weight: .semibold))
                 Text("1. Anhang in Mail lange drücken  2. „Teilen“  3. Restwert wählen")
@@ -136,7 +136,7 @@ struct ScanView: View {
             .foregroundStyle(Color.ink)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(14)
-            .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
             Label("Texterkennung läuft nur auf deinem iPhone.", systemImage: "lock")
                 .font(.scaled(13)).foregroundStyle(Color.muted).padding(.horizontal, 4)
         }

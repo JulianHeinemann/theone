@@ -55,32 +55,32 @@ struct CheckoutView: View {
                                 .frame(maxWidth: .infinity, minHeight: 44)
                         }
                         .padding(16)
-                        .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+                        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     } else {
-                        VStack(spacing: 14) {
-                            actionButton("Bezahlt – Betrag eintragen", "Wird von deinem Guthaben abgezogen", "checkmark", .accent) {
-                                withAnimation(.snappy) { result = true }
+                        // Ein Hauptknopf, ein ruhiger Knopf, ein Textknopf; eine Zeile Erklärung statt drei.
+                        VStack(spacing: 10) {
+                            Button { withAnimation(.snappy) { result = true } } label: {
+                                Label("Bezahlt – Betrag eintragen", systemImage: "checkmark")
                             }
-                            actionButton("Nicht angenommen", "Guthaben bleibt gleich, wird nur notiert", "xmark", .quiet) {
-                                withAnimation(.snappy) { result = false }
+                            .buttonStyle(.primary)
+                            Button { withAnimation(.snappy) { result = false } } label: {
+                                Label("Nicht angenommen", systemImage: "xmark")
                             }
-                            Button {
+                            .buttonStyle(.quiet)
+                            Button("Später eintragen") {
                                 Task { await remindLater(card) }
                                 dismiss()
-                            } label: {
-                                VStack(spacing: 2) {
-                                    Text("Später eintragen").font(.scaled(15, weight: .semibold))
-                                    Text("Wird als „Betrag offen“ markiert").font(.scaled(12))
-                                }
-                                .foregroundStyle(Color.ink2)
-                                .frame(maxWidth: .infinity, minHeight: 44)
                             }
+                            .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            Text("Nur „Bezahlt“ zieht vom Guthaben ab.")
+                                .font(.scaled(13)).foregroundStyle(Color.muted)
                         }
-                        .padding(.top, 12)
+                        .padding(.top, 8)
                     }
                 }
-                .padding(.horizontal, 16).padding(.bottom, 30)
+                .padding(.horizontal, Layout.page).padding(.bottom, 30)
             }
         }
         .scrollDismissesKeyboard(.interactively)
@@ -184,7 +184,7 @@ struct CheckoutView: View {
             }
             .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 20)
         }
-        .cardSurface(radius: 28)
+        .cardSurface(radius: Layout.cardRadius)
     }
 
     /// Wie CardDetailView.togglePin: bei PIN-Schutz erst Face ID oder Gerätecode.
@@ -266,14 +266,6 @@ struct CheckoutView: View {
         dismiss()
     }
 
-    private func actionButton(_ title: String, _ consequence: String, _ icon: String, _ style: FilledButtonStyle,
-                              action: @escaping () -> Void) -> some View {
-        VStack(spacing: 4) {
-            Button(action: action) { Label(title, systemImage: icon) }.buttonStyle(style)
-            Text(consequence).font(.scaled(13)).foregroundStyle(Color.ink2)
-        }
-    }
-
     private func choice(_ value: Bool, _ title: String, _ subtitle: String, _ icon: String, _ fg: Color, _ bg: Color) -> some View {
         Button { withAnimation(.snappy) { result = value } } label: {
             HStack(spacing: 12) {
@@ -288,7 +280,7 @@ struct CheckoutView: View {
             }
             .padding(12)
             .frame(maxHeight: .infinity)
-            .cardSurface(radius: 20)
+            .cardSurface(radius: Layout.cardRadius)
             .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(result == value ? fg : .clear, lineWidth: 2))
         }
         .buttonStyle(.plain)
@@ -333,7 +325,7 @@ struct KeypadView: View {
                     }
                     Spacer()
                 }
-                .padding(12).cardSurface(radius: 20).padding(.horizontal, 16).padding(.top, 8)
+                .padding(12).cardSurface(radius: Layout.cardRadius).padding(.horizontal, 16).padding(.top, 8)
 
                 Picker("Modus", selection: $correct) {
                     Text("Einkauf abziehen").tag(false)
@@ -344,11 +336,10 @@ struct KeypadView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(correct ? "Guthaben laut Bon oder nach Aufladung" : "Betrag eingeben").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
                     HStack(spacing: 4) {
-                        Text(input.isEmpty ? "0" : input).font(.scaled(56, weight: .heavy)).monospacedDigit()
+                        Text(input.isEmpty ? "0" : input).font(.amount(56))
+                            .foregroundStyle(input.isEmpty ? Color.muted : Color.ink)
                             .contentTransition(.numericText())
-                        Rectangle().fill(Color.ink).frame(width: 2, height: 50)
-                            .phaseAnimator([1.0, 0.2]) { content, opacity in content.opacity(opacity) }
-                        Text(" €").font(.scaled(56, weight: .heavy)).foregroundStyle(Color.muted)
+                        Text(" €").font(.amount(56)).foregroundStyle(Color.ink2)
                     }
                     .lineLimit(1).minimumScaleFactor(0.5)
                     .modifier(Shake(animatableData: CGFloat(rejected)))
@@ -388,10 +379,10 @@ struct KeypadView: View {
                                 if key == "⌫" {
                                     Image(systemName: "delete.left").font(.system(size: 22, weight: .semibold))
                                 } else {
-                                    Text(key).font(.system(size: 28, weight: .semibold))
+                                    Text(key).font(.system(size: 28, weight: .medium, design: .rounded))
                                 }
                             }
-                            .frame(width: 64, height: 58)
+                            .frame(maxWidth: .infinity, minHeight: 56)
                         }
                         .buttonStyle(KeyStyle())
                         .accessibilityLabel(key == "⌫" ? "Löschen" : key)
@@ -470,9 +461,10 @@ struct KeypadView: View {
     private struct KeyStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
-                .foregroundStyle(configuration.isPressed ? Color.onBrand : Color.ink)
-                .background(configuration.isPressed ? Color.brandYellow : Color.disabledFill, in: .circle)
-                .scaleEffect(configuration.isPressed ? 0.92 : 1)
+                // Flache Tasten wie ein Zahlenfeld, nicht wie die Telefon-App: nur beim Drücken eine Fläche.
+                .foregroundStyle(Color.ink)
+                .background(configuration.isPressed ? Color.fill : Color.clear, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
+                .scaleEffect(configuration.isPressed ? 0.96 : 1)
                 .animation(.spring(duration: 0.2, bounce: 0.5), value: configuration.isPressed)
         }
     }

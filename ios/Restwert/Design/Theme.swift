@@ -27,13 +27,14 @@ extension Color {
     static let fill = Color(light: 0xF5F6F8, dark: 0x2A2A2F)
     static let ink = Color(light: 0x0E0E10, dark: 0xF2F2F4)
     static let ink2 = Color(light: 0x3A3C42, dark: 0xC9CAD0)
-    static let muted = Color(light: 0x696C74, dark: 0x9C9EA6)
+    static let muted = Color(light: 0x5E6169, dark: 0xA2A4AC)
     static let line = Color(light: 0xE7E8EB, dark: 0x34353B)
     /// Text auf `ink`-Flächen (Hauptknopf, aktive Chips): weiß im Hellen, schwarz im Dunkeln.
     static let onInk = Color(light: 0xFFFFFF, dark: 0x0E0E10)
     /// Text auf Markengelb: immer dunkel.
     static let onBrand = Color(hex: 0x0E0E10)
-    static let brandYellow = Color(hex: 0xFFE14D)
+    /// Markengelb: nur für Markenmomente (Summe, Widget), nicht für Aktionen. Im Dunkeln gedämpft, damit es nicht blendet.
+    static let brandYellow = Color(light: 0xFFE14D, dark: 0xE3C53C)
     static let keyBlue = Color(hex: 0x2451FF)
     static let good = Color(light: 0x1F7A4D, dark: 0x4CC38A)
     static let goodSoft = Color(light: 0xCFF0DC, dark: 0x163A28)
@@ -95,7 +96,25 @@ extension VoucherStatus {
 
 // MARK: - Buttons
 
-/// Kräftiger Haupt-Button in Markenfarbe (Schwarz oder Gelb).
+// MARK: - Raster
+
+/// Ein Raster für alle Screens: 16 pt Seitenrand, 24 pt zwischen Abschnitten, feste Radien.
+enum Layout {
+    static let page: CGFloat = 16
+    static let section: CGFloat = 24
+    static let cardRadius: CGFloat = 20
+    static let controlRadius: CGFloat = 14
+    static let buttonRadius: CGFloat = 16
+}
+
+extension Font {
+    /// Beträge und Zahlen: SF Rounded, fett, gleich breite Ziffern.
+    static func amount(_ size: CGFloat) -> Font {
+        .scaled(size, weight: .bold, design: .rounded).monospacedDigit()
+    }
+}
+
+/// Haupt-Button: pro Screen genau einer, immer Schwarz (im Dunkeln Weiß). Gelb ist Marke, keine Aktionsfarbe.
 struct FilledButtonStyle: ButtonStyle {
     var background: Color = .ink
     var foreground: Color = .onInk
@@ -106,7 +125,7 @@ struct FilledButtonStyle: ButtonStyle {
             .font(.scaled(16, weight: .bold))
             .frame(maxWidth: .infinity, minHeight: 56)
             .foregroundStyle(isEnabled ? foreground : Color.disabledText)
-            .background(isEnabled ? background : Color.disabledFill, in: .rect(cornerRadius: 18, style: .continuous))
+            .background(isEnabled ? background : Color.disabledFill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.spring(duration: 0.25, bounce: 0.4), value: configuration.isPressed)
     }
@@ -114,11 +133,38 @@ struct FilledButtonStyle: ButtonStyle {
 
 extension ButtonStyle where Self == FilledButtonStyle {
     static var primary: FilledButtonStyle { FilledButtonStyle() }
-    static var accent: FilledButtonStyle { FilledButtonStyle(background: .brandYellow, foreground: .onBrand) }
+    /// Früher Gelb; jetzt wie `primary`, damit es pro Screen nur eine laute Farbe für Aktionen gibt.
+    static var accent: FilledButtonStyle { FilledButtonStyle() }
     static var quiet: FilledButtonStyle { FilledButtonStyle(background: .surface, foreground: .ink) }
 }
 
 // MARK: - Bausteine
+
+/// Ruhige Aktionszeile (Icon, Titel, optional Untertitel, Pfeil) für Neben-Aktionen in einer Gruppe.
+struct ActionRow: View {
+    let icon: String
+    let title: String
+    var subtitle: String? = nil
+    var chevron = true
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.scaled(17, weight: .medium)).foregroundStyle(Color.ink)
+                .frame(width: 36, height: 36)
+                .background(Color.fill, in: .circle)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
+                if let subtitle { Text(subtitle).font(.scaled(13)).foregroundStyle(Color.muted) }
+            }
+            Spacer(minLength: 8)
+            if chevron {
+                Image(systemName: "chevron.right").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
+            }
+        }
+        .padding(.horizontal, 16).padding(.vertical, 12)
+        .contentShape(.rect)
+    }
+}
 
 struct Chip: View {
     let text: String
@@ -280,7 +326,7 @@ extension View {
     func pageBackground() -> some View {
         scrollEdgeEffectStyle(.hard, for: .top)
             // Platz für die schwebende Tab-Leiste, damit die letzte Zeile am Listenende ganz frei steht.
-            .contentMargins(.bottom, 96, for: .scrollContent)
+            .contentMargins(.bottom, 120, for: .scrollContent)
             .background(Color.page.ignoresSafeArea())
     }
 }

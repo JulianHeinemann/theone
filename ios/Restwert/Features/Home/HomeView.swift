@@ -58,7 +58,7 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 32) {
+            VStack(alignment: .leading, spacing: Layout.section) {
                 // Der Kopf beschreibt immer den ganzen Bestand, unabhängig von Filter und Suche.
                 TotalHeader(total: store.total, cards: store.activeCards.filter { !$0.forGifting }, soon: dueSoonAll.count)
                 if store.hasExamples && store.cards.allSatisfy(\.isExample) { exampleHint }
@@ -81,7 +81,7 @@ struct HomeView: View {
                         Label("Alle Ablauftermine", systemImage: "calendar")
                             .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
                             .frame(maxWidth: .infinity, minHeight: 50)
-                            .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+                            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                     }
                     .buttonStyle(.plain)
                     if !done.isEmpty { doneSection }
@@ -92,7 +92,7 @@ struct HomeView: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Layout.page)
             .padding(.top, 4)
             .padding(.bottom, 24)
         }
@@ -117,21 +117,26 @@ struct HomeView: View {
 
     /// Solange nur Beispielkarten da sind: deutlich sagen, dass die Summe nicht echt ist.
     private var exampleHint: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("Das sind Beispielkarten", systemImage: "sparkles").font(.scaled(16, weight: .semibold))
-            Text("Die Summe oben ist nur ein Beispiel. Leg deinen ersten Gutschein an, dann verschwinden sie.")
-                .font(.scaled(14)).foregroundStyle(Color.ink2)
-            HStack(spacing: 8) {
-                Button("Ersten Gutschein hinzufügen") { router.tab = .scan }.buttonStyle(.bordered).tint(Color.ink)
-                Button("Beispiele entfernen") { withAnimation(.smooth) { store.clearExamples() } }
-                    .buttonStyle(.borderless).foregroundStyle(Color.ink2)
-            }
-            .font(.scaled(14, weight: .semibold))
+        // Schmales Banner statt großer Box, damit die Liste oben bleibt.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) { hintText; Spacer(minLength: 4); hintActions }
+            VStack(alignment: .leading, spacing: 8) { hintText; HStack(spacing: 16) { hintActions } }
         }
-        .foregroundStyle(Color.ink)
-        .padding(14)
+        .padding(.horizontal, 14).padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+        .background(Color.fill, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
+    }
+
+    private var hintText: some View {
+        Label("Beispieldaten", systemImage: "sparkles").font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink)
+    }
+
+    @ViewBuilder
+    private var hintActions: some View {
+        Button("Hinzufügen") { router.tab = .scan }
+            .font(.scaled(14, weight: .semibold)).foregroundStyle(Color.ink)
+        Button("Entfernen") { withAnimation(.smooth) { store.clearExamples() } }
+            .font(.scaled(14, weight: .medium)).foregroundStyle(Color.ink2)
     }
 
     @ViewBuilder
@@ -164,7 +169,7 @@ struct HomeView: View {
                         .contextMenu { rowMenu(c) }
                     }
                 }
-                .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
             }
             .animation(.snappy, value: cards.map(\.id))
         }
@@ -244,7 +249,7 @@ struct HomeView: View {
                         .contextMenu { rowMenu(c) }
                     }
                 }
-                .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
             }
         }
     }
@@ -285,7 +290,7 @@ private struct TotalHeader: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Guthaben auf allen Karten").font(.scaled(15, weight: .medium)).foregroundStyle(Color.onBrand.opacity(0.7))
             Text(total.euro)
-                .font(.scaled(60, weight: .bold)).kerning(-2).monospacedDigit()
+                .font(.amount(60)).kerning(-1.5)
                 .contentTransition(.numericText(value: total))
                 .animation(.snappy, value: total)
                 .minimumScaleFactor(0.6).lineLimit(1)
@@ -308,7 +313,7 @@ private struct TotalHeader: View {
                 // Bei sehr großer Schrift eine kompakte Summe, damit die Liste sichtbar bleibt.
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Guthaben auf allen Karten").font(.scaled(13, weight: .medium)).foregroundStyle(Color.onBrand.opacity(0.7))
-                    Text(total.euro).font(.scaled(34, weight: .bold)).monospacedDigit()
+                    Text(total.euro).font(.amount(34))
                         .minimumScaleFactor(0.6).lineLimit(1)
                     Text(caption).font(.scaled(15, weight: .medium)).foregroundStyle(Color.onBrand.opacity(0.75))
                     if let codesNote {
@@ -322,7 +327,7 @@ private struct TotalHeader: View {
         .foregroundStyle(Color.onBrand)
         .padding(typeSize.isAccessibilitySize ? 14 : 20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.brandYellow, in: .rect(cornerRadius: 22, style: .continuous))
+        .background(Color.brandYellow, in: .rect(cornerRadius: Layout.cardRadius + 4, style: .continuous))
         .accessibilityElement(children: .combine)
     }
 }
@@ -338,7 +343,7 @@ private struct EmptyState: View {
             Button("Ersten Gutschein erfassen", action: onScan).buttonStyle(.accent)
         }
         .padding(20)
-        .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
     }
 }
 

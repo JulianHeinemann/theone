@@ -58,10 +58,7 @@ struct CardDetailView: View {
                     }
                     .buttonStyle(.primary)
                 }
-                secondaryActions(card)
-                if card.isActive {
-                    if card.kind.isValueBased { partialRedeem(card) } else { markRedeemedBlock(card) }
-                }
+                actionGroup(card)
                 codeTicket(card)
                 locationRow(card)
                 // Eigene Erinnerungen plant der Store nur für echte, eigene Gutscheine.
@@ -78,7 +75,7 @@ struct CardDetailView: View {
                 Button("Gutschein entfernen", systemImage: "trash", role: .destructive) { confirmDelete = true }
                     .font(.scaled(15, weight: .bold)).padding(.top, 6)
             }
-            .padding(.horizontal, 16).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.bottom, 30)
         }
         .scrollIndicators(.hidden)
         .fullScreenCover(isPresented: $showPhoto) {
@@ -141,30 +138,62 @@ struct CardDetailView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// PIN und Guthaben-Link als gleichrangige, kleinere Knöpfe unter dem Hauptknopf.
+    /// Alle Neben-Aktionen ruhig in einer Gruppe unter dem einzigen Hauptknopf „An der Kasse zeigen“.
     @ViewBuilder
-    private func secondaryActions(_ card: GiftCard) -> some View {
+    private func actionGroup(_ card: GiftCard) -> some View {
         let hasPin = card.kind == .giftCard && !card.pin.isEmpty
         let link = card.merchant.balanceURL.flatMap { url in card.merchant.balanceCheck.linkLabel.map { (url, $0) } }
-        if hasPin || link != nil {
-            HStack(spacing: 8) {
+        let rows = [card.isActive, hasPin, link != nil].filter { $0 }.count
+        if rows > 0 {
+            VStack(spacing: 0) {
+                if card.isActive {
+                    if card.kind.isValueBased {
+                        NavigationLink(value: Route.keypad(card.id)) {
+                            ActionRow(icon: "minus", title: "Einkauf eintragen", subtitle: "Betrag vom Guthaben abziehen")
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        Button { stamp(card) } label: {
+                            ActionRow(icon: "checkmark.seal", title: "Als eingelöst markieren",
+                                      subtitle: "Codes gelten meist nur einmal", chevron: false)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(stampVisible)
+                    }
+                }
                 if hasPin {
+                    if card.isActive { Divider().padding(.leading, 66) }
                     Button { Task { await togglePin(card) } } label: {
-                        Label(pinVisible ? card.pin : "PIN anzeigen", systemImage: pinVisible ? "lock.open" : "faceid")
-                            .contentTransition(.numericText())
+                        ActionRow(icon: pinVisible ? "lock.open" : "faceid",
+                                  title: pinVisible ? "PIN \(card.pin)" : "PIN anzeigen", chevron: false)
                             .privacySensitive()
-                            .modifier(SecondaryPill())
                     }
                     .buttonStyle(.plain)
                 }
                 if let (url, label) = link {
+                    if card.isActive || hasPin { Divider().padding(.leading, 66) }
                     Link(destination: url) {
-                        Label(hasPin ? shortLinkLabel(card.merchant.balanceCheck) ?? label : label, systemImage: "arrow.up.right")
-                            .modifier(SecondaryPill())
+                        ActionRow(icon: "arrow.up.right", title: label, subtitle: card.merchant.name)
                     }
                     .buttonStyle(.plain)
                 }
             }
+            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+        }
+    }
+
+    /// Code/Coupon als eingelöst stempeln; Doppeltipp stempelt nur einmal.
+    private func stamp(_ card: GiftCard) {
+        guard !stampVisible else { return }
+        stampVisible = true
+        success += 1
+        let id = card.id
+        let label = card.kind.label
+        Task {
+            try? await Task.sleep(for: .milliseconds(650))
+            guard store.card(id)?.redeemedAt == nil else { return }
+            withAnimation(.smooth) { store.markRedeemed(id) }
+            router.showUndo("\(label) als eingelöst markiert.") { unmarkRedeemed(id) }
         }
     }
 
@@ -210,7 +239,7 @@ struct CardDetailView: View {
         }
         .foregroundStyle(Color.ink)
         .padding(14)
-        .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
     }
 
     /// Eigene Erinnerung nur für diesen Gutschein.
@@ -251,7 +280,7 @@ struct CardDetailView: View {
         }
         .foregroundStyle(Color.ink)
         .padding(14)
-        .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
     }
 
     /// Von jetzt bis zum Ende des Ablauftags; nie ein leerer Bereich, auch nicht am Ablauftag selbst.
@@ -310,7 +339,7 @@ struct CardDetailView: View {
                 Spacer()
                 Text("Ändern").font(.scaled(14, weight: .bold))
             }
-            .foregroundStyle(Color.ink).padding(12).cardSurface(radius: 20)
+            .foregroundStyle(Color.ink).padding(12).cardSurface(radius: Layout.cardRadius)
         }
         .buttonStyle(.plain)
     }
@@ -345,7 +374,7 @@ struct CardDetailView: View {
         .foregroundStyle(Color.ink)
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .cardSurface(radius: 28)
+        .cardSurface(radius: Layout.cardRadius)
     }
 
     private func barcodeTicket(_ card: GiftCard) -> some View {
@@ -368,9 +397,8 @@ struct CardDetailView: View {
                         .font(.scaled(14, weight: .bold))
                         .contentTransition(.symbolEffect(.replace))
                 }
-                .buttonStyle(.glassProminent)
-                .tint(Color.brandYellow)
-                .foregroundStyle(Color.onBrand)
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.ink)
             }
             .padding(.horizontal, 18).padding(.top, 16).padding(.bottom, 4)
             Perforation()
@@ -386,59 +414,10 @@ struct CardDetailView: View {
             }
             .padding(.horizontal, 18).padding(.bottom, 18)
         }
-        .cardSurface(radius: 28)
+        .cardSurface(radius: Layout.cardRadius)
     }
 
-    // MARK: Teileinlösung mit Abriss
-
-    /// Ein einziger Weg zum Abziehen: dasselbe Tastenfeld wie nach „Bezahlt“ an der Kasse.
-    private func partialRedeem(_ card: GiftCard) -> some View {
-        NavigationLink(value: Route.keypad(card.id)) {
-            HStack(spacing: 14) {
-                Image(systemName: "minus.circle.fill").font(.scaled(24))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Einkauf eintragen").font(.scaled(17, weight: .bold))
-                    Text("Betrag wird vom Guthaben abgezogen").font(.scaled(14)).foregroundStyle(Color.onBrand.opacity(0.75))
-                }
-                Spacer()
-                Image(systemName: "chevron.right").font(.scaled(14, weight: .semibold)).foregroundStyle(Color.onBrand.opacity(0.75))
-            }
-            .foregroundStyle(Color.onBrand)
-            .padding(16)
-            .background(Color.brandYellow, in: .rect(cornerRadius: 18, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func markRedeemedBlock(_ card: GiftCard) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("\(card.kind.label) benutzt?").font(.scaled(20, weight: .bold))
-            Text("Rabattcodes und Coupons gelten meist nur einmal. Markier ihn nach dem Einkauf, dann erscheint er im Verlauf.")
-                .font(.scaled(14)).foregroundStyle(Color.muted)
-            Button {
-                // Doppeltipp: nur der erste Tipp stempelt.
-                guard !stampVisible else { return }
-                stampVisible = true
-                success += 1
-                let id = card.id
-                let label = card.kind.label
-                Task {
-                    try? await Task.sleep(for: .milliseconds(650))
-                    guard store.card(id)?.redeemedAt == nil else { return }
-                    withAnimation(.smooth) { store.markRedeemed(id) }
-                    router.showUndo("\(label) als eingelöst markiert.") { unmarkRedeemed(id) }
-                }
-            } label: {
-                Label("Als eingelöst markieren", systemImage: "seal")
-            }
-            .buttonStyle(.accent)
-            .disabled(stampVisible)
-        }
-        .padding(18)
-        .cardSurface(radius: 28)
-    }
-
-    /// Stempel zurücknehmen: Einlösedatum und den zugehörigen Verlaufseintrag entfernen.
+    /// Stempel zurücknehmen (Store entfernt Einlösedatum und Verlaufseintrag).
     private func unmarkRedeemed(_ id: UUID) {
         withAnimation(.smooth) {
             store.undoMarkRedeemed(id)
@@ -507,9 +486,9 @@ struct LocationSheet: View {
                                 .symbolEffect(.bounce, value: location == loc)
                             Text(loc.label).font(.scaled(13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
                         }
-                        .foregroundStyle(location == loc ? Color.onBrand : Color.ink)
+                        .foregroundStyle(location == loc ? Color.onInk : Color.ink)
                         .frame(maxWidth: .infinity, minHeight: 84)
-                        .background(location == loc ? Color.brandYellow : Color.fill, in: .rect(cornerRadius: 18, style: .continuous))
+                        .background(location == loc ? Color.ink : Color.fill, in: .rect(cornerRadius: 18, style: .continuous))
                     }
                     .buttonStyle(.plain)
                 }

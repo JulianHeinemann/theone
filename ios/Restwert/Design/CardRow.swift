@@ -76,15 +76,12 @@ struct CardRow: View {
 
     @ViewBuilder
     private var tags: some View {
-        if card.isExample {
-            Text("Beispiel").font(.scaled(11, weight: .semibold)).foregroundStyle(Color.ink2)
-                .padding(.horizontal, 6).padding(.vertical, 2)
-                .background(Color.fill, in: .capsule).fixedSize()
-        }
+        // Ruhige Zusätze als Text mit Trennpunkt statt eigener Pillen.
         if card.pendingSince != nil && card.isActive {
-            Text("Betrag offen").font(.scaled(12, weight: .semibold)).foregroundStyle(Color.warn)
-                .padding(.horizontal, 6).padding(.vertical, 2)
-                .background(Color.warnSoft, in: .capsule).fixedSize()
+            Text("· Betrag offen").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.warn).fixedSize()
+        }
+        if card.isExample {
+            Text("· Beispiel").font(.scaled(13)).foregroundStyle(Color.muted).fixedSize()
         }
     }
 
@@ -96,21 +93,14 @@ struct CardRow: View {
             }
             .labelStyle(DueLabelStyle())
             .lineLimit(1).minimumScaleFactor(0.75)
-            .font(.scaled(due.1 == .muted ? 14 : 13, weight: due.1 == .muted ? .regular : (urgent ? .bold : .semibold)))
+            .font(.scaled(13, weight: due.1 == .muted ? .regular : (urgent ? .bold : .semibold)))
             .foregroundStyle(due.1)
-            .padding(.horizontal, due.1 == .muted ? 0 : 8).padding(.vertical, due.1 == .muted ? 0 : 3)
-            .background {
-                if due.1 != .muted {
-                    if urgent { Capsule().fill(due.1 == .warn ? Color.warnSoft : Color.badSoft) }
-                    else { Capsule().strokeBorder(due.1.opacity(0.5), lineWidth: 1) }
-                }
-            }
     }
 
     private var amountBlock: some View {
         VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: 3) {
             if card.kind.isValueBased {
-                Text(card.headline).font(.scaled(typeSize.isAccessibilitySize ? 16 : 20, weight: .bold)).kerning(-0.3).monospacedDigit().foregroundStyle(Color.ink)
+                Text(card.headline).font(.amount(typeSize.isAccessibilitySize ? 16 : 19)).foregroundStyle(Color.ink)
                     .contentTransition(.numericText(value: card.balance))
                     .lineLimit(1).fixedSize()
                 Text("von \(card.value.euro)")
@@ -122,7 +112,7 @@ struct CardRow: View {
                 HStack(spacing: 4) {
                     Image(systemName: "tag.fill").font(.scaled(13)).foregroundStyle(Color.ink2)
                     Text(hasValue ? card.headline : card.kind.label)
-                        .font(.scaled(typeSize.isAccessibilitySize ? 16 : (hasValue ? 20 : 15), weight: .bold)).monospacedDigit()
+                        .font(hasValue ? .amount(typeSize.isAccessibilitySize ? 16 : 19) : .scaled(15, weight: .bold))
                         .foregroundStyle(Color.ink)
                 }
                 .lineLimit(1).fixedSize()

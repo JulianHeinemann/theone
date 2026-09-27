@@ -58,11 +58,11 @@ struct BonView: View {
                         Spacer()
                         Image(systemName: "chevron.right").foregroundStyle(Color.muted)
                     }
-                    .foregroundStyle(Color.ink).padding(14).background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+                    .foregroundStyle(Color.ink).padding(14).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.bottom, 30)
         }
         .scrollIndicators(.hidden)
         .pageBackground()
@@ -186,7 +186,7 @@ struct TestsView: View {
                     Text("Wie oft Kassen den Barcode vom Handy genommen haben").font(.scaled(13)).foregroundStyle(Color.ink2)
                 }
                 .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.surface, in: .rect(cornerRadius: 22, style: .continuous))
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                 Picker("Filter", selection: $filter.animation(.smooth)) {
                     Text("Alle").tag(0)
                     Text("Geklappt").tag(1)
@@ -214,11 +214,11 @@ struct TestsView: View {
                         }
                         Spacer()
                     }
-                    .padding(12).cardSurface(radius: 20)
+                    .padding(12).cardSurface(radius: Layout.cardRadius)
                     .transition(.scale(scale: 0.95).combined(with: .opacity))
                 }
             }
-            .padding(.horizontal, 16).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.bottom, 30)
         }
         .pageBackground()
         .navigationTitle("Kassentest")

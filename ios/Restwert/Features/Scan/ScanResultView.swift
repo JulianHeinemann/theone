@@ -51,7 +51,7 @@ struct ScanResultView: View {
                     BarcodeView(number: code, format: format, height: 70).padding(.top, 4)
                 }
             }
-            .padding(18).cardSurface(radius: 28)
+            .padding(18).cardSurface(radius: Layout.cardRadius)
 
             VStack(alignment: .leading, spacing: 10) {
                 Label("Echtheits-Hinweis", systemImage: "checkmark.shield").font(.scaled(17, weight: .bold))
@@ -62,7 +62,7 @@ struct ScanResultView: View {
                     }
                 }
             }
-            .padding(18).frame(maxWidth: .infinity, alignment: .leading).cardSurface(radius: 24)
+            .padding(18).frame(maxWidth: .infinity, alignment: .leading).cardSurface(radius: Layout.cardRadius)
 
             Button("Hinzufügen", action: onAdd).buttonStyle(.primary)
             Button("Erneut scannen", action: onRescan).buttonStyle(.quiet)

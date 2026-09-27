@@ -51,7 +51,7 @@ struct RadarView: View {
                                 .buttonStyle(.plain)
                             }
                         }
-                        .background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+                        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                     }
                 }
             }

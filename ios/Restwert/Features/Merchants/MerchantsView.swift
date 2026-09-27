@@ -60,7 +60,7 @@ struct MerchantsView: View {
                     ContentUnavailableView.search(text: trimmedQuery)
                 }
             }
-            .padding(.horizontal, 16).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.bottom, 30)
             .animation(.smooth, value: category)
         }
         .scrollIndicators(.hidden)
@@ -124,6 +124,6 @@ struct MerchantsView: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(14).background(Color.surface, in: .rect(cornerRadius: 18, style: .continuous))
+        .padding(14).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
     }
 }
