@@ -64,6 +64,11 @@ struct HomeView: View {
                 // Der Kopf beschreibt immer den ganzen Bestand, unabhängig von Filter und Suche.
                 TotalHeader(total: store.total, cards: store.activeCards.filter { !$0.forGifting }, soon: dueSoonAll.count,
                             examples: !store.cards.isEmpty && store.cards.allSatisfy(\.isExample))
+                if !store.activeCards.isEmpty {
+                    ExpiryRadarSection(items: store.activeCards.map { RadarItem(card: $0) },
+                                       onSelect: { router.homePath.append(.card($0.id)) },
+                                       onShowAll: { router.homePath.append(.radar) })
+                }
                 if showFilters { filterBar }
                 if store.cards.isEmpty {
                     EmptyState { router.tab = .scan }

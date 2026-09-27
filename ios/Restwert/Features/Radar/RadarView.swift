@@ -5,6 +5,7 @@ import RestwertKit
 /// weil die Frage immer dieselbe ist: Was muss ich wann einlösen?
 struct RadarView: View {
     @Environment(Store.self) private var store
+    @Environment(Router.self) private var router
     @AppStorage("warnDays") private var warnDays = 30
     /// Namespace des Zoom-Übergangs zum Detail. Ohne ihn keine Quelle, dann blendet das Detail normal ein.
     var zoom: Namespace.ID? = nil
@@ -19,12 +20,16 @@ struct RadarView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: Layout.section) {
+                if !store.activeCards.isEmpty {
+                    ExpiryRadarSection(items: store.activeCards.map { RadarItem(card: $0) },
+                                       onSelect: { router.homePath.append(.card($0.id)) })
+                }
                 if months.isEmpty {
                     Text("Keine offenen Gutscheine.").foregroundStyle(Color.muted).padding(.top, 20)
                 }
                 ForEach(months, id: \.key) { group in
-                    VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: Layout.group) {
                         HStack(alignment: .firstTextBaseline) {
                             Text(group.key.formatted(.dateTime.month(.wide).year().locale(Locale(identifier: "de_DE"))))
                                 .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
@@ -37,7 +42,6 @@ struct RadarView: View {
                                     .accessibilityLabel("\(total.euro) Guthaben laufen in diesem Monat ab")
                             }
                         }
-                        .padding(.horizontal, 4)
                         VStack(spacing: 0) {
                             ForEach(Array(group.cards.enumerated()), id: \.element.id) { i, card in
                                 if i > 0 { Divider().padding(.leading, 72) }
@@ -55,7 +59,7 @@ struct RadarView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 30)
+            .padding(.horizontal, Layout.page).padding(.top, 8).padding(.bottom, Layout.section)
         }
         .scrollIndicators(.hidden)
         .pageBackground()
