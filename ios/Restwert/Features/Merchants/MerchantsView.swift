@@ -64,7 +64,9 @@ struct MerchantsView: View {
         .scrollIndicators(.hidden)
         .pageBackground()
         .navigationTitle("Läden")
-        .searchable(text: $query, prompt: "Laden suchen")
+        // Titel und Suchfeld bleiben beim Scrollen oben stehen.
+        .toolbarTitleDisplayMode(.inlineLarge)
+        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Laden suchen")
     }
 
     private var filters: some View {

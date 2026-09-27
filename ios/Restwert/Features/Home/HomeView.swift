@@ -62,7 +62,6 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Layout.section) {
                 // Der Kopf beschreibt immer den ganzen Bestand, unabhängig von Filter und Suche.
-                Wordmark()
                 TotalHeader(total: store.total, cards: store.activeCards.filter { !$0.forGifting }, soon: dueSoonAll.count,
                             examples: !store.cards.isEmpty && store.cards.allSatisfy(\.isExample))
                 if showFilters { filterBar }
@@ -98,8 +97,13 @@ struct HomeView: View {
         .pageBackground()
         .navigationTitle("Restwert")
         .toolbarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) } }
-        .modifier(SearchIfNeeded(enabled: manyCards, text: $query))
+        // Wortmarke und Suchfeld stehen fest oben und bleiben beim Scrollen sichtbar.
+        .toolbar {
+            ToolbarItem(placement: .principal) { Color.clear.frame(width: 1, height: 1) }
+            ToolbarItem(placement: .topBarLeading) { Wordmark(size: 28).fixedSize() }
+                .sharedBackgroundVisibility(.hidden)
+        }
+        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Gutschein suchen")
         .onChange(of: offeredFilters) { _, offered in
             if !offered.contains(filter) { withAnimation(.snappy) { filter = .all } }
         }
@@ -314,15 +318,3 @@ enum CardFilter: Hashable {
 }
 
 /// Suchfeld nur, wenn es sich lohnt.
-private struct SearchIfNeeded: ViewModifier {
-    let enabled: Bool
-    @Binding var text: String
-
-    func body(content: Content) -> some View {
-        if enabled {
-            content.searchable(text: $text, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Gutschein suchen")
-        } else {
-            content
-        }
-    }
-}
