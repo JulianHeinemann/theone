@@ -10,8 +10,10 @@ import RestwertKit
 final class Store {
     private(set) var cards: [GiftCard] = []
     private(set) var tests: [TestResult] = []
-    /// Letzter Fehler beim Speichern, als Hinweis für die Oberfläche (z. B. Toast). Wird nach dem nächsten
-    /// erfolgreichen Speichern wieder nil; die App darf ihn nach dem Anzeigen auch selbst auf nil setzen.
+    /// Letzter Fehler beim Speichern, als Hinweis für die Oberfläche (z. B. Toast). Bleibt gesetzt, solange das
+    /// Speichern scheitert (der Wiederholversuch alle 10 s hängt daran), und wird erst nach dem nächsten
+    /// erfolgreichen Speichern wieder nil. Derselbe Fehler meldet dabei keinen neuen Wechsel: Die App erinnert
+    /// selbst in Abständen daran, solange er gesetzt ist (RestwertApp, `.task(id: store.saveError)`).
     var saveError: String?
     /// IDs gelöschter Gutscheine, Kassentests und zurückgenommener Buchungen, damit sie beim Sync nicht wieder auftauchen.
     var deletedIDs: Set<UUID> { Set(deletedAt.keys) }
@@ -25,12 +27,19 @@ final class Store {
     @ObservationIgnored private let photoFiles: PhotoFiles
     /// Fotos, die noch aus ihren Dateien geladen werden: Datei und Verweis bleiben solange erhalten.
     @ObservationIgnored private var pendingPhotos: Set<UUID> = []
+    /// Gerade läuft ein Ladeversuch für Fotos.
+    @ObservationIgnored private var loadingPhotos = false
+    /// Fotos gelöschter Gutscheine, die noch nicht geladen waren: Datei bleibt für „Rückgängig“ bis zum nächsten Start.
+    @ObservationIgnored private var heldPhotos: Set<UUID> = []
+    /// Erneuter Speicherversuch nach einem Fehler (z. B. Speicher voll).
+    @ObservationIgnored private var retryTask: Task<Void, Never>?
     /// Löschvermerke mit Datum; nach 180 Tagen werden sie vergessen (``Tombstones``).
     @ObservationIgnored private var deletedAt: [UUID: Date] = [:]
     /// Datei war beschädigt oder nur teilweise lesbar: vor dem nächsten Schreiben eine Kopie ablegen.
     @ObservationIgnored private var keepCopyBeforeWrite = false
     @ObservationIgnored private var unlockObserver: NSObjectProtocol?
     @ObservationIgnored private var activeObserver: NSObjectProtocol?
+    @ObservationIgnored private var photoObserver: NSObjectProtocol?
     /// Wann die PIN eines Gutscheins zuletzt auf diesem Gerät geändert wurde (für den Abgleich über den Schlüsselbund).
     @ObservationIgnored private var pinChangedAt: [UUID: Date] = [:]
     /// Zustand vor einem Abzug, je Verlaufseintrag, damit „Rückgängig“ ihn exakt wiederherstellt.
@@ -57,10 +66,21 @@ final class Store {
         }
         photoFiles = PhotoFiles(directory: self.fileURL.deletingLastPathComponent().appending(path: "photos"))
         load()
-        // Beim Aktivwerden Erinnerungen nachplanen: Es passen nur 60 ins System, spätere rücken so nach.
+        // Beim Aktivwerden Erinnerungen nachplanen (es passen nur 60 ins System, spätere rücken so nach),
+        // das Widget im Hintergrund auffrischen und nicht lesbare Fotos erneut versuchen.
         activeObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.planReminders() }
+            MainActor.assumeIsolated {
+                guard let self, self.isLoaded else { return }
+                self.planReminders()
+                self.refreshWidget()
+                self.loadPhotos()
+            }
+        }
+        // Nach dem Entsperren sind Fotodateien wieder lesbar.
+        photoObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.protectedDataDidBecomeAvailableNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.loadPhotos() }
         }
     }
 
@@ -111,21 +131,28 @@ final class Store {
     }
 
     /// Fotos im Hintergrund lesen und danach einsetzen, sofern der Gutschein inzwischen kein neues bekommen hat.
+    /// Nicht lesbare Dateien (Gerät gesperrt, I/O-Fehler) bleiben vorgemerkt und werden später erneut versucht –
+    /// solange bleiben Verweis und Datei erhalten.
     private func loadPhotos() {
         let ids = pendingPhotos
-        guard !ids.isEmpty else { return }
+        guard !ids.isEmpty, !loadingPhotos else { return }
+        loadingPhotos = true
         let files = photoFiles
         Self.io.async {
             let loaded = files.load(ids)
-            Task { @MainActor [weak self] in self?.applyPhotos(loaded, requested: ids) }
+            let done = Set(loaded.keys).union(files.missing(ids.subtracting(loaded.keys)))
+            Task { @MainActor [weak self] in self?.applyPhotos(loaded, done: done, requested: ids) }
         }
     }
 
-    private func applyPhotos(_ loaded: [UUID: Data], requested: Set<UUID>) {
+    private func applyPhotos(_ loaded: [UUID: Data], done: Set<UUID>, requested: Set<UUID>) {
+        loadingPhotos = false
         for i in cards.indices where pendingPhotos.contains(cards[i].id) && cards[i].photo == nil {
             if let photo = loaded[cards[i].id] { cards[i].photo = photo }
         }
-        pendingPhotos.subtract(requested)
+        pendingPhotos.subtract(done)
+        // Inzwischen neu vorgemerkt (z. B. nach „Rückgängig“): gleich nachladen.
+        if !pendingPhotos.subtracting(requested).isEmpty { loadPhotos() }
     }
 
     private func retryWhenUnlocked() {
@@ -156,12 +183,12 @@ final class Store {
     }
 
     nonisolated private static let io = DispatchQueue(label: "de.restwert.store.io", qos: .userInitiated)
-    /// Ob das letzte Schreiben fehlgeschlagen ist; nur auf `io` gelesen und geschrieben.
-    nonisolated private static let lastWrite = WriteStatus()
 
     /// Wartet, bis alle Schreibvorgänge auf der Platte sind (vor dem Wechsel in den Hintergrund, vor Export).
     /// Noch gebündelte Nebenarbeiten (Widget, Erinnerungen, Schlüsselbund) starten dabei sofort.
+    /// Ist das letzte Speichern gescheitert, wird es dabei noch einmal versucht.
     func flush() {
+        if saveError != nil { save(notify: false) }
         if sideEffects != nil {
             sideEffects?.cancel()
             runSideEffects()
@@ -181,6 +208,7 @@ final class Store {
                 // Original nicht überschreiben, solange es keine Kopie gibt; beim nächsten Speichern erneut versuchen.
                 print("Restwert: Sicherungskopie fehlgeschlagen:", error)
                 saveError = "Deine Änderung ist noch nicht gespeichert. Restwert versucht es gleich noch einmal."
+                scheduleRetry()
                 scheduleSideEffects(pins: true)
                 if notify { onChange?() }
                 return
@@ -190,30 +218,48 @@ final class Store {
         // Eine serielle Queue hält die Reihenfolge: der letzte Stand landet immer zuletzt auf der Platte.
         let state = StoredState(cards: cards, tests: tests, deletedAt: deletedAt, pinChanged: pinChangedAt)
         let pending = pendingPhotos
+        // Aufräumen nur für Gutscheine, die dieser Stand kennt oder bewusst gelöscht hat. Fotos unbekannter IDs
+        // (z. B. aus einer beschädigten oder nur teilweise lesbaren Datei) bleiben für eine spätere Rettung liegen.
+        let removable = Set(cards.map(\.id)).union(deletedAt.keys).subtracting(heldPhotos)
         let url = fileURL
         let files = photoFiles
         Self.io.async {
             let (disk, keep) = files.prepare(state, pending: pending)
-            let failure: String?
             do {
                 let data = try JSONEncoder().encode(disk)
                 try data.write(to: url, options: [.atomic, .completeFileProtection])
                 // Erst jetzt verwaiste Fotos entfernen: Die gespeicherte Datei verweist nicht mehr auf sie.
-                files.removeAll(except: keep)
-                failure = nil
+                files.removeAll(except: keep, removable: removable)
+                Task { @MainActor [weak self] in
+                    guard let self, self.saveError != nil else { return }
+                    self.saveError = nil
+                }
             } catch {
                 print("Restwert: Speichern fehlgeschlagen:", error)
-                failure = error is EncodingError
+                let encoding = error is EncodingError
+                let failure = encoding
                     ? "Ein Eintrag ließ sich nicht speichern. Prüf die zuletzt eingegebenen Beträge."
-                    : "Speichern hat nicht geklappt. Ist der iPhone-Speicher voll? Deine Änderungen bleiben offen, bis es klappt."
+                    : "Speichern hat nicht geklappt. Ist der iPhone-Speicher voll? Restwert versucht es gleich noch einmal."
+                // Gleicher Text = kein neuer Wechsel; die App erinnert selbst, solange saveError gesetzt ist.
+                Task { @MainActor [weak self] in
+                    self?.saveError = failure
+                    if !encoding { self?.scheduleRetry() }
+                }
             }
-            // Nur bei Wechsel zwischen Erfolg und Fehler die Oberfläche benachrichtigen.
-            guard Self.lastWrite.failed != (failure != nil) else { return }
-            Self.lastWrite.failed = failure != nil
-            Task { @MainActor [weak self] in self?.saveError = failure }
         }
         scheduleSideEffects(pins: true)
         if notify { onChange?() }
+    }
+
+    /// Nach einem Fehlschlag in 10 s erneut speichern (nur einmal gleichzeitig eingeplant).
+    private func scheduleRetry() {
+        guard retryTask == nil else { return }
+        retryTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(10))
+            guard let self else { return }
+            self.retryTask = nil
+            if self.saveError != nil { self.save(notify: false) }
+        }
     }
 
     /// Nicht-endliche Beträge (NaN, ∞) auf kodierbare Werte setzen, sonst würde jedes weitere Speichern scheitern.
@@ -222,7 +268,8 @@ final class Store {
         if tests.contains(where: { !($0.amount?.isFinite ?? true) }) { tests = tests.map(\.sanitized) }
     }
 
-    /// Ablaufdatum als Kalendertag (12:00 Uhr), damit Zeitzonenwechsel es nicht verschieben.
+    /// Ablaufdatum als Kalendertag (12:00 UTC, ``CalendarDay``). Idempotent: Schon gespeicherte Daten bleiben,
+    /// auch wenn in einer anderen Zeitzone geladen wird; nur ältere Stände (Ortszeit) werden einmal umgestellt.
     private static func normalized(_ card: GiftCard) -> GiftCard {
         var c = card
         c.expires = CalendarDay.noon(card.expires)
@@ -239,6 +286,13 @@ final class Store {
             guard !Task.isCancelled, let self else { return }
             self.runSideEffects()
         }
+    }
+
+    /// Widget im Hintergrund auffrischen (z. B. beim Aktivwerden), ohne Schlüsselbund und Erinnerungen.
+    func refreshWidget() {
+        guard isLoaded else { return }
+        let snapshot = cards
+        Task.detached(priority: .utility) { WidgetBridge.update(cards: snapshot) }
     }
 
     /// Schlüsselbund und Widget im Hintergrund, Erinnerungen nacheinander (nie zwei Planungen gleichzeitig).
@@ -267,24 +321,42 @@ final class Store {
         }
     }
 
-    /// Neuere PINs (auch gelöschte) aus dem Schlüsselbund übernehmen.
+    /// Neuere PINs (auch gelöschte) aus dem Schlüsselbund übernehmen. Der Schlüsselbund wird im Hintergrund
+    /// gelesen; übernommen wird nur, wenn sich die PIN hier inzwischen nicht geändert hat.
     private func adoptPins() {
-        for i in cards.indices where !cards[i].isExample {
-            let id = cards[i].id
-            if case .adopt(let entry) = PinEntry.resolve(localPin: cards[i].pin, localChangedAt: pinChangedAt[id],
-                                                         vault: PinVault.entry(for: id)) {
-                cards[i].pin = entry.pin
-                pinChangedAt[id] = entry.changedAt
+        let local = Dictionary(cards.filter { !$0.isExample }.map { ($0.id, $0.pin) }, uniquingKeysWith: { a, _ in a })
+        let changed = pinChangedAt
+        guard !local.isEmpty else { return }
+        Task.detached(priority: .utility) { [weak self] in
+            var found: [UUID: PinEntry] = [:]
+            for (id, pin) in local {
+                if case .adopt(let entry) = PinEntry.resolve(localPin: pin, localChangedAt: changed[id], vault: PinVault.entry(for: id)) {
+                    found[id] = entry
+                }
             }
+            guard !found.isEmpty else { return }
+            await self?.applyPins(found, seen: local, changedAt: changed)
         }
     }
 
-    /// Reste entfernter Gutscheine aufräumen: PIN im Schlüsselbund, Nachfragen und vertagte Erinnerungen.
+    private func applyPins(_ found: [UUID: PinEntry], seen: [UUID: String], changedAt: [UUID: Date]) {
+        var any = false
+        for i in cards.indices {
+            let id = cards[i].id
+            guard let entry = found[id], cards[i].pin == seen[id], pinChangedAt[id] == changedAt[id] else { continue }
+            cards[i].pin = entry.pin
+            pinChangedAt[id] = entry.changedAt
+            any = true
+        }
+        if any { save(notify: false) }
+    }
+
+    /// Reste entfernter Gutscheine aufräumen: PIN im Schlüsselbund (im Hintergrund), Nachfragen und vertagte Erinnerungen.
     private func forget(_ ids: [UUID]) {
         guard !ids.isEmpty else { return }
-        for id in ids {
-            PinVault.remove(for: id)
-            pinChangedAt[id] = nil
+        for id in ids { pinChangedAt[id] = nil }
+        Task.detached(priority: .utility) {
+            for id in ids { PinVault.remove(for: id) }
         }
         clearFollowUps(ids, snooze: true)
     }
@@ -356,6 +428,8 @@ final class Store {
         var deleted = deletedIDs
         guard let removed = CardEdits.delete(id, cards: &cards, deleted: &deleted) else { return }
         markDeleted(deleted)
+        // Foto noch nicht geladen: Datei für „Rückgängig“ aufheben.
+        if pendingPhotos.contains(id) { heldPhotos.insert(id) }
         if !removed.isExample { forget([id]) }
         save()
     }
@@ -366,7 +440,16 @@ final class Store {
         let id = CardEdits.restoreDeleted(card, cards: &cards, tests: &tests)
         // Neue ID: PIN gilt als neue Änderung, damit sie wieder in den Schlüsselbund geht.
         if id != card.id, !card.pin.isEmpty { pinChangedAt[id] = .now }
+        // Noch nicht geladenes Foto zieht unter die neue ID um (vor dem Speichern, gleiche serielle Queue).
+        if id != card.id, card.photo == nil, heldPhotos.remove(card.id) != nil {
+            pendingPhotos.remove(card.id)
+            pendingPhotos.insert(id)
+            let files = photoFiles
+            let old = card.id
+            Self.io.async { files.move(from: old, to: id) }
+        }
         save()
+        loadPhotos()
     }
 
     /// Nach einer Änderung mit neuem Verlaufseintrag den vorherigen Zustand für „Rückgängig“ merken.
@@ -510,6 +593,7 @@ final class Store {
         tests = []
         undoStates = [:]
         pendingPhotos = []
+        heldPhotos = []
         save()
     }
 
@@ -680,9 +764,11 @@ final class Store {
         var fallbacks: [String: Date] = [:]
         var planned: [(card: GiftCard, id: String, fire: Date, title: String)] = []
         for c in cards where c.isActive && !c.isExample && !c.forGifting {
+            // Ablauftag als 12:00 Ortszeit (gespeichert ist der Kalendertag in UTC).
+            let expiry = CalendarDay.local(c.expires)
             var count = 0
             for days in leadDays {
-                guard let day = cal.date(byAdding: .day, value: -days, to: c.expires),
+                guard let day = cal.date(byAdding: .day, value: -days, to: expiry),
                       let fire = cal.date(bySettingHour: hour, minute: 0, second: 0, of: day), fire > now else { continue }
                 planned.append((c, "\(days)", fire, days == 1 ? "\(c.name): läuft morgen ab" : "\(c.name): noch \(days)\u{00A0}Tage"))
                 count += 1
@@ -691,11 +777,11 @@ final class Store {
             // Ohne gewählte Vorlaufzeit gibt es keine Ablauf-Erinnerung.
             if count == 0, !leadDays.isEmpty {
                 let key = "\(c.id.uuidString)|\(Int(c.expires.timeIntervalSince1970))"
-                if let fire = firedBefore[key] ?? ReminderPrefs.fallback(expires: c.expires, hour: hour) {
+                if let fire = firedBefore[key] ?? ReminderPrefs.fallback(expires: expiry, hour: hour) {
                     fallbacks[key] = fire
                     if fire > now {
                         planned.append((c, "fallback", fire,
-                                        cal.isDate(fire, inSameDayAs: c.expires) ? "\(c.name): läuft heute ab" : "\(c.name): läuft bald ab"))
+                                        cal.isDate(fire, inSameDayAs: expiry) ? "\(c.name): läuft heute ab" : "\(c.name): läuft bald ab"))
                     }
                 }
             }
@@ -714,7 +800,7 @@ final class Store {
     private func add(_ center: UNUserNotificationCenter, _ c: GiftCard, id: String, at date: Date, title: String) async {
         let content = UNMutableNotificationContent()
         content.title = title
-        content.body = "\(c.headline) gültig bis \(c.expires.dayMonthYear). Jetzt einlösen."
+        content.body = "\(c.headline) gültig bis \(CalendarDay.local(c.expires).dayMonthYear). Jetzt einlösen."
         content.sound = .default
         content.categoryIdentifier = ReminderPrefs.category.identifier
         // Name und Ablauf mitgeben: „Morgen erinnern“ braucht sie auch bei gesperrtem Gerät (Datei dann nicht lesbar).
@@ -724,11 +810,6 @@ final class Store {
                                             trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
         try? await center.add(request)
     }
-}
-
-/// Merker für den Schreib-Status; nur von der seriellen Speicher-Queue benutzt.
-nonisolated private final class WriteStatus: @unchecked Sendable {
-    var failed = false
 }
 
 /// Wann vor dem Ablauf erinnert wird. Gespeichert in UserDefaults, damit Einstellungen und Store dieselben Werte sehen.

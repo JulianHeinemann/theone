@@ -89,6 +89,11 @@ final class Router {
         toast = Toast(message: message, undo: undo)
     }
 
+    /// Fehlerhinweis (z. B. Speichern fehlgeschlagen): Warndreieck statt Haken, bleibt länger stehen.
+    func showError(_ message: String) {
+        toast = Toast(message: message, undo: nil, isError: true)
+    }
+
     func openImport(_ url: URL) {
         // restwert://card/<id> aus dem Widget öffnet den Gutschein.
         if url.scheme == "restwert" {
@@ -210,6 +215,27 @@ struct MainTabView: View {
             }
         }
         .animation(.snappy, value: router.toast?.id)
+        // Speichern gescheitert (Speicher voll, Kodierfehler, Sicherungskopie): sichtbar machen.
+        // Der Store meldet nur Wechsel, derselbe Fehler erscheint also nicht bei jedem Speichern erneut.
+        .onChange(of: store.saveError, initial: true) { _, error in
+            if let error {
+                router.showError(error)
+            } else if router.toast?.isError == true {
+                // Wieder gespeichert: veralteten Fehler wegnehmen.
+                router.toast = nil
+            }
+        }
+        // Bleibt derselbe Fehler bestehen (gleicher Text, kein Wertwechsel), nach dem Schließen erneut erinnern.
+        // saveError hier bewusst nicht auf nil setzen: Der Store plant seinen Wiederholversuch nur, solange er gesetzt ist.
+        .task(id: store.saveError) {
+            guard store.saveError != nil else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(30))
+                guard !Task.isCancelled, let error = store.saveError else { return }
+                // Einen gerade sichtbaren „Rückgängig“-Hinweis nicht verdrängen; dann eben beim nächsten Durchlauf.
+                if router.toast == nil { router.showError(error) }
+            }
+        }
         #if DEBUG
         .task { router.applyDemoScreen(store: store) }
         #endif
@@ -282,20 +308,28 @@ struct Toast: Identifiable {
     let id = UUID()
     let message: String
     let undo: (() -> Void)?
+    var isError = false
 }
 
-/// Bestätigung mit „Rückgängig“, verschwindet nach 8 Sekunden.
+/// Bestätigung mit „Rückgängig“, verschwindet nach 8 Sekunden. Fehler bleiben 15 Sekunden und lassen sich schließen.
 struct ToastView: View {
     let toast: Toast
     let onClose: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.good)
-            Text(toast.message).font(.scaled(15, weight: .medium)).lineLimit(2)
+            Image(systemName: toast.isError ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                .foregroundStyle(toast.isError ? Color.warnOnInk : Color.goodOnInk)
+                .accessibilityHidden(true)
+            // Fehlertexte sind länger: nicht abschneiden.
+            Text(toast.message).font(.scaled(15, weight: .medium)).lineLimit(toast.isError ? nil : 2)
+                .fixedSize(horizontal: false, vertical: toast.isError)
             Spacer(minLength: 8)
-            if UIAccessibility.isVoiceOverRunning {
-                Button("Schließen", systemImage: "xmark") { onClose() }.labelStyle(.iconOnly)
+            if toast.isError || UIAccessibility.isVoiceOverRunning {
+                Button("Schließen", systemImage: "xmark") { onClose() }
+                    .labelStyle(.iconOnly)
+                    .frame(minWidth: Layout.tap, minHeight: Layout.tap)
+                    .contentShape(.rect)
             }
             if let undo = toast.undo {
                 Button("Rückgängig") {
@@ -312,9 +346,12 @@ struct ToastView: View {
         .ticketShadow(radius: Shadow.float)
         .task {
             // Vorlesen, und mit VoiceOver ohne Zeitlimit stehen lassen, damit „Rückgängig“ erreichbar bleibt.
-            AccessibilityNotification.Announcement(toast.undo == nil ? toast.message : "\(toast.message). Rückgängig möglich.").post()
+            let spoken = toast.isError ? "Fehler: \(toast.message)" : toast.undo == nil ? toast.message : "\(toast.message). Rückgängig möglich."
+            var announcement = AttributedString(spoken)
+            if toast.isError { announcement.accessibilitySpeechAnnouncementPriority = .high }
+            AccessibilityNotification.Announcement(announcement).post()
             guard !UIAccessibility.isVoiceOverRunning else { return }
-            try? await Task.sleep(for: .seconds(8))
+            try? await Task.sleep(for: .seconds(toast.isError ? 15 : 8))
             guard !Task.isCancelled else { return }
             onClose()
         }
@@ -457,7 +494,7 @@ final class NotificationHandler: NSObject, UIApplicationDelegate, UNUserNotifica
         if response.actionIdentifier == "snooze" {
             let fire = Date.now.addingTimeInterval(24 * 3600)
             let expires = (content.userInfo["expires"] as? Double).map { Date(timeIntervalSince1970: $0) }
-            guard let text = await Self.snoozeText(id: id, fire: fire, title: content.title, body: content.body,
+            guard let text = Self.snoozeText(id: id, fire: fire, title: content.title, body: content.body,
                                                    name: content.userInfo["name"] as? String, expires: expires) else { return }
             let copy = content.mutableCopy() as? UNMutableNotificationContent ?? UNMutableNotificationContent()
             copy.title = text.title

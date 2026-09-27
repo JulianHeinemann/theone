@@ -65,6 +65,8 @@ struct CheckoutView: View {
         }
         // Bei großer Schrift ist die Leiste unten hoch: extra Luft, damit „PIN anzeigen“ ganz darüber passt.
         .contentMargins(.bottom, Layout.section, for: .scrollContent)
+        // Zeigt beim Öffnen kurz, dass unter der Leiste noch mehr kommt.
+        .scrollIndicatorsFlash(onAppear: true)
         .scrollDismissesKeyboard(.interactively)
         // Entscheidung unten im Daumenbereich, auch wenn das Ticket hoch ist.
         .safeAreaInset(edge: .bottom, spacing: Layout.group) {
@@ -250,11 +252,7 @@ struct CheckoutView: View {
                     Label("Helligkeit automatisch erhöht", systemImage: "checkmark.circle")
                         .font(.scaled(13)).foregroundStyle(Color.ink2)
                 }
-                if card.merchantID != Merchant.other.id {
-                    Text(card.merchant.tip)
-                        .font(.scaled(13)).foregroundStyle(Color.muted)
-                        .multilineTextAlignment(.center)
-                }
+                // PIN direkt unter dem Code, vor dem Tipp: bei großer Schrift sonst unter der Leiste.
                 if !card.pin.isEmpty {
                     Button { Task { await togglePin(card) } } label: {
                         Label(showPin ? "PIN \(card.pin)" : "PIN anzeigen", systemImage: showPin ? "lock.open" : pinLock ? "faceid" : "eye")
@@ -263,6 +261,11 @@ struct CheckoutView: View {
                     }
                     .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.large).tint(Color.ink)
                     .frame(minHeight: Layout.tap)
+                }
+                if card.merchantID != Merchant.other.id {
+                    Text(card.merchant.tip)
+                        .font(.scaled(13)).foregroundStyle(Color.muted)
+                        .multilineTextAlignment(.center)
                 }
             }
             .padding(.horizontal, Layout.inset).padding(.top, Layout.inset).padding(.bottom, Layout.ticketInset)
@@ -337,9 +340,9 @@ struct CheckoutView: View {
         }
         .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.large).tint(Color.ink)
         .accessibilityHint("Legt den Code für 10 Minuten in die Zwischenablage.")
-        if let url = card.merchant.balanceURL {
+        if let link = Self.redeemLinks[card.merchantID], let url = URL(string: link.url) {
             Link(destination: url) {
-                Label("\(card.name) öffnen", systemImage: "arrow.up.right.square")
+                Label(link.label, systemImage: "arrow.up.right.square")
                     .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
                     .frame(minHeight: Layout.tap)
             }
@@ -348,6 +351,23 @@ struct CheckoutView: View {
             .font(.scaled(13)).foregroundStyle(Color.ink2)
             .multilineTextAlignment(.center)
     }
+
+    /// Wo man den Code eingibt – nicht `balanceURL`, die führt meist zu Guthaben-, Konto- oder FAQ-Seiten.
+    /// Ohne eigene Einlöseseite (Code im Warenkorb) führt der Link zum Shop. Unbekannt: kein Link.
+    private static let redeemLinks: [String: (label: String, url: String)] = [
+        "amazon": ("Bei Amazon einlösen", "https://www.amazon.de/gc/redeem"),
+        "apple": ("Im App Store einlösen", "https://apps.apple.com/redeem"),
+        "googleplay": ("Bei Google Play einlösen", "https://play.google.com/redeem"),
+        "spotify": ("Bei Spotify einlösen", "https://www.spotify.com/de/redeem/"),
+        "netflix": ("Bei Netflix einlösen", "https://www.netflix.com/redeem"),
+        "wunschgutschein": ("Bei Wunschgutschein einlösen", "https://app.wunschgutschein.de/"),
+        "zalando": ("Zalando-Shop öffnen", "https://www.zalando.de/"),
+        "otto": ("Otto-Shop öffnen", "https://www.otto.de/"),
+        "db": ("bahn.de öffnen", "https://www.bahn.de/"),
+        "lieferando": ("Lieferando öffnen", "https://www.lieferando.de/"),
+        "eventim": ("Eventim öffnen", "https://www.eventim.de/"),
+        "ticketmaster": ("Ticketmaster öffnen", "https://www.ticketmaster.de/"),
+    ]
 
     private func copy(_ code: String) {
         // Nicht dauerhaft in der Zwischenablage liegen lassen.
@@ -429,10 +449,14 @@ struct CheckoutView: View {
         // Rabattcodes und Coupons: kein Betrag, sondern als Ganzes einlösen.
         if ok && !card.kind.isValueBased {
             tearOff {
-                _ = store.addTest(card: card, success: true, store: storeName, note: note, amount: nil)
-                store.setPending(card.id, false)
-                store.markRedeemed(card.id, store: storeName)
-                router.toast = Toast(message: "\(card.kind.label) eingelöst. Gut genutzt.", undo: nil)
+                // addTest stempelt und beendet „Betrag offen“; der Eintrag merkt den Stand davor fürs „Rückgängig“.
+                let message = "\(card.kind.label) eingelöst. Gut genutzt."
+                if let entry = store.addTest(card: card, success: true, store: storeName, note: note, amount: nil) {
+                    let id = card.id
+                    router.showUndo(message) { store.undoRedemption(id, entry: entry) }
+                } else {
+                    router.toast = Toast(message: message, undo: nil)
+                }
                 dismiss()
             }
             return
@@ -463,6 +487,11 @@ struct KeypadView: View {
     @State private var lastUsedUp: UsedUp?
     /// Ziffern wachsen mit der Schrift, aber gedeckelt, damit das Feld auf den Bildschirm passt.
     @ScaledMetric(relativeTo: .title) private var keyFont: CGFloat = 28
+    @Environment(\.dynamicTypeSize) private var typeSize
+    /// Sperre gegen Doppeltipp: ab dem ersten Bestätigen wird nichts mehr gebucht.
+    @State private var saving = false
+    @State private var panelHeight: CGFloat = 0
+    @State private var screenHeight: CGFloat = .infinity
 
     private var value: Double { parseMoney(input.isEmpty ? "0" : input) ?? 0 }
     private var digitSize: CGFloat { min(keyFont, 40) }
@@ -471,6 +500,11 @@ struct KeypadView: View {
         Group {
             if let card = store.card(cardID) { content(card) }
         }
+        // Höhe ohne Tastatur messen: Beim Tippen der Filiale darf das Layout nicht umspringen (Fokus bliebe weg).
+        .background {
+            Color.clear.ignoresSafeArea(.keyboard)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { screenHeight = $0 }
+        }
         .pageBackground()
         .toolbar(.hidden, for: .tabBar)
         .navigationTitle(store.card(cardID)?.name ?? "Einkauf")
@@ -478,70 +512,92 @@ struct KeypadView: View {
         .sheet(item: $usedUp, onDismiss: finishUsedUp) { UsedUpSheet(info: $0) }
     }
 
+    @ViewBuilder
     private func content(_ card: GiftCard) -> some View {
-        // Oberer Teil scrollt, Kurzwege, Tastenfeld und Bestätigung bleiben unten im Daumenbereich.
-        ScrollView {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(correct ? "Neuer Stand laut Bon" : "\(card.balance.euro) drauf")
-                    .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
-                amountDisplay
-                    .modifier(Shake(animatableData: CGFloat(rejected)))
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(correct ? "Neuer Stand" : "Betrag")
-                    .accessibilityValue(value.euro)
-                    .accessibilityAddTraits(.updatesFrequently)
-                if !input.isEmpty || correct {
-                    Text(hint(card)).font(.scaled(15, weight: !correct && value > card.balance ? .semibold : .regular))
-                        .foregroundStyle(!correct && value > card.balance ? Color.warn : Color.ink2)
+        // Sehr große Schrift oder kleiner Bildschirm: Das feste Tastenfeld ließe für den Betrag
+        // keinen Platz – dann scrollt alles gemeinsam, der Betrag steht oben.
+        if typeSize.isAccessibilitySize || (panelHeight > 0 && screenHeight - panelHeight < 170) {
+            ScrollView {
+                VStack(spacing: 0) {
+                    top(card)
+                    panel(card)
                 }
-                Group {
-                    if showStore {
-                        LabeledField(label: "Filiale (für deinen Verlauf)", placeholder: "z.\u{00A0}B. Thalia Köln", text: $storeName)
-                    } else {
-                        Button("+ Filiale notieren") { withAnimation(.snappy) { showStore = true } }
-                            .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
-                            .frame(minHeight: Layout.tap)
-                    }
-                }
-                .padding(.top, Layout.group)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, Layout.inset)
+            .scrollDismissesKeyboard(.interactively)
+            .sensoryFeedback(.error, trigger: rejected)
+        } else {
+            // Oberer Teil scrollt, Kurzwege, Tastenfeld und Bestätigung bleiben unten im Daumenbereich.
+            ScrollView { top(card) }
+                .scrollDismissesKeyboard(.interactively)
+                .safeAreaInset(edge: .bottom, spacing: 0) { panel(card) }
+                .sensoryFeedback(.error, trigger: rejected)
         }
-        .scrollDismissesKeyboard(.interactively)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: Layout.group) {
-                shortcuts(card)
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3), spacing: 6) {
-                    ForEach(["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "⌫"], id: \.self) { key in
-                        Button { press(key) } label: {
-                            Group {
-                                if key == "⌫" {
-                                    Image(systemName: "delete.left").font(.system(size: digitSize * 0.8, weight: .semibold))
-                                } else {
-                                    Text(key).font(.system(size: digitSize, weight: .medium, design: .rounded))
-                                }
+    }
+
+    private func top(_ card: GiftCard) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(correct ? "Neuer Stand laut Bon" : "\(card.balance.euro) drauf")
+                .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
+            amountDisplay
+                .modifier(Shake(animatableData: CGFloat(rejected)))
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(correct ? "Neuer Stand" : "Betrag")
+                .accessibilityValue(value.euro)
+                .accessibilityAddTraits(.updatesFrequently)
+            if !input.isEmpty || correct {
+                Text(hint(card)).font(.scaled(15, weight: !correct && value > card.balance ? .semibold : .regular))
+                    .foregroundStyle(!correct && value > card.balance ? Color.warn : Color.ink2)
+            }
+            Group {
+                if showStore {
+                    LabeledField(label: "Filiale (für deinen Verlauf)", placeholder: "z.\u{00A0}B. Thalia Köln", text: $storeName)
+                } else {
+                    Button("+ Filiale notieren") { withAnimation(.snappy) { showStore = true } }
+                        .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+                        .frame(minHeight: Layout.tap)
+                }
+            }
+            .padding(.top, Layout.group)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, Layout.inset)
+    }
+
+    /// Kurzwege, Tasten und Bestätigung auf einer Fläche. Nach dem ersten Bestätigen gesperrt.
+    private func panel(_ card: GiftCard) -> some View {
+        VStack(spacing: Layout.group) {
+            shortcuts(card)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 3), spacing: 6) {
+                ForEach(["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "⌫"], id: \.self) { key in
+                    Button { press(key) } label: {
+                        Group {
+                            if key == "⌫" {
+                                Image(systemName: "delete.left").font(.system(size: digitSize * 0.8, weight: .semibold))
+                            } else {
+                                Text(key).font(.system(size: digitSize, weight: .medium, design: .rounded))
                             }
-                            .frame(maxWidth: .infinity, minHeight: min(digitSize + 28, 68))
                         }
-                        .buttonStyle(KeyStyle())
-                        .accessibilityLabel(key == "⌫" ? "Löschen" : key == "," ? "Komma" : key)
+                        .frame(maxWidth: .infinity, minHeight: min(digitSize + 28, 64))
                     }
+                    .buttonStyle(KeyStyle())
+                    .accessibilityLabel(key == "⌫" ? "Löschen" : key == "," ? "Komma" : key)
                 }
-                .sensoryFeedback(.impact(weight: .light), trigger: input)
-                Button { confirm(card) } label: {
-                    Text(correct ? (input.isEmpty ? "Neuen Stand eintragen" : "\(value.euro) eintragen")
-                         : value > card.balance ? "Alles abziehen (\(card.balance.euro))"
-                         : value > 0 ? "\(value.euro) abziehen" : "Abziehen")
-                }
-                .buttonStyle(.primary)
-                .disabled(correct ? input.isEmpty : value <= 0)
             }
-            .padding(Layout.inset)
-            .background(Color.surface, in: UnevenRoundedRectangle(topLeadingRadius: Layout.cardRadius, topTrailingRadius: Layout.cardRadius, style: .continuous))
-            .shadow(color: Color.shade, radius: 16, y: -4)
+            .sensoryFeedback(.impact(weight: .light), trigger: input)
+            Button { confirm(card) } label: {
+                Text(correct ? (input.isEmpty ? "Neuen Stand eintragen" : "\(value.euro) eintragen")
+                     : value > card.balance ? "Alles abziehen (\(card.balance.euro))"
+                     : value > 0 ? "\(value.euro) abziehen" : "Abziehen")
+            }
+            .buttonStyle(.primary)
+            .disabled(saving || (correct ? input.isEmpty : value <= 0))
         }
-        .sensoryFeedback(.error, trigger: rejected)
+        .disabled(saving)
+        .padding(Layout.inset)
+        .background(Color.surface, in: UnevenRoundedRectangle(topLeadingRadius: Layout.cardRadius, topTrailingRadius: Layout.cardRadius, style: .continuous))
+        // Ein Schatten für die ganze Fläche, nicht einer je Taste.
+        .ticketShadow(radius: Shadow.float, y: -4)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { panelHeight = $0 }
     }
 
     /// Betrag wie ein Preisschild: große Euro, kleine hochgestellte Cent. Noch nicht getippte Cent stehen blass da.
@@ -585,13 +641,18 @@ struct KeypadView: View {
         }
     }
 
-    private func confirm(_ card: GiftCard) {
+    private func confirm(_ rendered: GiftCard) {
+        // Zweiter Tipp während Speichern, Sheet oder Zurück-Animation: nichts buchen.
+        guard !saving else { return }
+        // Frischer Stand statt des zuletzt gezeichneten.
+        let card = store.card(rendered.id) ?? rendered
         // Neuer Stand darf 0 sein (Bon zeigt leer), Abzug nicht.
         guard correct ? parseMoney(input) != nil : value > 0 else {
             withAnimation(.linear(duration: 0.4)) { rejected += 1 }
             AccessibilityNotification.Announcement(correct ? "Erst den neuen Stand eintragen." : "Erst einen Betrag eingeben.").post()
             return
         }
+        saving = true
         // „Betrag offen“ endet erst hier: redeem, setBalance und addTest setzen pendingSince zurück
         // und merken den alten Zustand, damit „Rückgängig“ ihn wiederherstellt.
         let entry: UUID?
@@ -684,6 +745,8 @@ struct KeypadView: View {
                 // Ruhefläche sichtbar (auch im Dunkeln), beim Drücken eine Stufe kräftiger.
                 .foregroundStyle(Color.ink)
                 .background(configuration.isPressed ? Color.line : Color.fill, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
+                // Feiner Rand: im Hellen hebt sich die Taste sonst kaum von der weißen Fläche ab.
+                .overlay(RoundedRectangle(cornerRadius: Layout.controlRadius, style: .continuous).strokeBorder(Color.line))
                 .contentShape(.rect)
                 .scaleEffect(configuration.isPressed ? 0.96 : 1)
                 .animation(.spring(duration: 0.2, bounce: 0.5), value: configuration.isPressed)
@@ -725,8 +788,11 @@ private struct UsedUpSheet: View {
     var body: some View {
         ScrollView {
             VStack(spacing: Layout.section) {
+                // Kein scaleEffect: der ändert das Layout nicht, der Stempel ragte über den Rand.
+                // Stattdessen gedeckelte Schriftgröße, damit er samt Drehung in die Breite passt.
                 UsedUpStamp()
-                    .scaleEffect(1.5)
+                    .fixedSize()
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .padding(.vertical, Layout.section)
                 VStack(spacing: 6) {
                     Text("Gut genutzt: \(info.amount.euro) eingelöst")
@@ -777,18 +843,21 @@ private struct ShareCard: View {
             DashedRule()
             Text(name).font(.system(size: 22, weight: .bold))
             Text("Gut genutzt – eingelöst:").font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.muted)
-            HStack(alignment: .bottom) {
-                AmountText(value: amount, size: 56)
-                Spacer(minLength: Layout.group)
-                // Stempel ohne Einblend-Animation: ImageRenderer ruft kein onAppear auf.
-                Text("AUFGEBRAUCHT")
-                    .font(.system(size: 17, weight: .heavy, design: .rounded)).kerning(2.5)
-                    .foregroundStyle(Color.onBrand)
-                    .padding(.horizontal, 12).padding(.vertical, 6)
-                    .overlay(RoundedRectangle(cornerRadius: Layout.controlRadius).strokeBorder(Color.onBrand, lineWidth: 3))
-                    .background(Color.brandYellow, in: .rect(cornerRadius: Layout.controlRadius))
-                    .rotationEffect(.degrees(-8))
-            }
+            // Betrag und Stempel untereinander: nebeneinander wäre es breiter als die Karte.
+            AmountText(value: amount, size: 56)
+                .lineLimit(1).minimumScaleFactor(0.6)
+            // Stempel ohne Einblend-Animation: ImageRenderer ruft kein onAppear auf.
+            Text("AUFGEBRAUCHT")
+                .font(.system(size: 17, weight: .heavy, design: .rounded)).kerning(2.5)
+                .fixedSize()
+                .foregroundStyle(Color.onBrand)
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .overlay(RoundedRectangle(cornerRadius: Layout.controlRadius).strokeBorder(Color.onBrand, lineWidth: 3))
+                .background(Color.brandYellow, in: .rect(cornerRadius: Layout.controlRadius))
+                .rotationEffect(.degrees(-8))
+                // Platz für die Drehung, damit nichts über den Kartenrand ragt.
+                .padding(.vertical, 14).padding(.trailing, 8)
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .foregroundStyle(Color.ink)
         .padding(28)

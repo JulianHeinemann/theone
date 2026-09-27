@@ -105,12 +105,27 @@ public final class PhotoFiles: @unchecked Sendable {
         return failed
     }
 
+    /// IDs, deren Datei es nicht (mehr) gibt. Nur diese dürfen nach einem Ladeversuch als „erledigt“ gelten;
+    /// war eine Datei bloß nicht lesbar (Gerät gesperrt, I/O-Fehler), wird es später erneut versucht.
+    public func missing(_ ids: some Sequence<UUID>) -> Set<UUID> {
+        Set(ids.filter { !FileManager.default.fileExists(atPath: url(for: $0).path) })
+    }
+
+    /// Foto einer Karte unter neuer ID weiterführen (z. B. „Rückgängig“ nach dem Löschen).
+    public func move(from old: UUID, to new: UUID) {
+        try? FileManager.default.moveItem(at: url(for: old), to: url(for: new))
+        known[new] = known.removeValue(forKey: old)
+    }
+
     /// Dateien entfernen, die kein Gutschein mehr braucht. Erst nach erfolgreichem Schreiben der JSON aufrufen.
-    public func removeAll(except keep: Set<UUID>) {
+    /// `removable`: nur diese IDs dürfen weg (Gutscheine, die der Store kennt, und alte Löschvermerke). Fotos
+    /// unbekannter IDs – etwa von Einträgen einer beschädigten Datei – bleiben liegen, damit man sie retten kann.
+    public func removeAll(except keep: Set<UUID>, removable: Set<UUID>? = nil) {
         let fm = FileManager.default
         guard let files = try? fm.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) else { return }
         for file in files where file.pathExtension == "jpg" {
-            guard let id = UUID(uuidString: file.deletingPathExtension().lastPathComponent), !keep.contains(id) else { continue }
+            guard let id = UUID(uuidString: file.deletingPathExtension().lastPathComponent), !keep.contains(id),
+                  removable?.contains(id) ?? true else { continue }
             try? fm.removeItem(at: file)
             known[id] = nil
         }

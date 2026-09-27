@@ -26,7 +26,26 @@ nonisolated enum IntentData {
     }
 
     /// Offene Gutscheine; Beispiele nur, solange es keine eigenen gibt (wie Widget und Start).
+    /// Für „Gutschein öffnen“: Beispiele lassen sich wie in der App antippen.
     static func activeCards() throws -> [GiftCard] {
+        let cards = try storedCards()
+        let own = cards.filter { !$0.isExample }
+        return (own.isEmpty ? cards : own).filter(\.isActive)
+    }
+
+    /// Für gesprochene Antworten: nur eigene Gutscheine. Beispiele nie als echtes Guthaben vorlesen,
+    /// `onlyExamples` sagt, ob es bisher nur die Beispiele gibt.
+    static func ownActiveCards() throws -> (cards: [GiftCard], onlyExamples: Bool) {
+        let cards = try storedCards()
+        let own = cards.filter { !$0.isExample }
+        return (own.filter(\.isActive), own.isEmpty && !cards.isEmpty)
+    }
+
+    static var examplesDialog: IntentDialog {
+        "Du hast noch keine eigenen Gutscheine, in Restwert liegen nur Beispiele. Füg deinen ersten Gutschein in der App hinzu."
+    }
+
+    private static func storedCards() throws -> [GiftCard] {
         let url = URL.applicationSupportDirectory.appending(path: "restwert.json")
         guard FileManager.default.fileExists(atPath: url.path) else { return [] }
         let data: Data
@@ -36,9 +55,7 @@ nonisolated enum IntentData {
             // Dateischutz: bei gesperrtem Gerät nicht lesbar.
             throw IntentError.locked
         }
-        let cards = (try? JSONDecoder().decode(Stored.self, from: data).cards) ?? []
-        let own = cards.filter { !$0.isExample }
-        return (own.isEmpty ? cards : own).filter(\.isActive)
+        return (try? JSONDecoder().decode(Stored.self, from: data).cards) ?? []
     }
 
     /// Mit „App mit Face ID sperren“ keine Beträge oder Namen über Siri preisgeben.
@@ -75,28 +92,48 @@ nonisolated struct GiftCardEntity: AppEntity, Identifiable, Sendable {
     let name: String
     let headline: String
     let expires: Date
+    /// Mit App-Sperre: nur die ID, keine Namen, Beträge oder Daten nach außen.
+    let hidden: Bool
 
     init(_ card: GiftCard) {
         id = card.id
         name = card.name
         headline = card.headline
         expires = card.expires
+        hidden = false
+    }
+
+    /// Platzhalter bei aktiver App-Sperre: „Gutschein öffnen“ funktioniert weiter, die App fragt dann Face ID ab.
+    init(lockedID id: UUID) {
+        self.id = id
+        name = "Gutschein"
+        headline = ""
+        expires = .distantFuture
+        hidden = true
     }
 
     var displayRepresentation: DisplayRepresentation {
-        DisplayRepresentation(title: "\(name)",
-                              subtitle: "\(headline) · bis \(expires.dayMonthYear)",
-                              image: .init(systemName: "ticket"))
+        if hidden {
+            return DisplayRepresentation(title: "Gutschein", subtitle: "Gesperrt – öffne Restwert", image: .init(systemName: "lock.fill"))
+        }
+        return DisplayRepresentation(title: "\(name)",
+                                     subtitle: "\(headline) · bis \(expires.dayMonthYear)",
+                                     image: .init(systemName: "ticket"))
     }
 }
 
 nonisolated struct GiftCardQuery: EntityStringQuery {
     func entities(for identifiers: [UUID]) async throws -> [GiftCardEntity] {
-        try IntentData.activeCards().filter { identifiers.contains($0.id) }.map(GiftCardEntity.init)
+        let cards = try IntentData.activeCards().filter { identifiers.contains($0.id) }
+        // App-Sperre: gespeicherte Kurzbefehle lassen sich weiter auflösen, zeigen aber nichts vom Inhalt.
+        guard !IntentData.appLocked else { return cards.map { GiftCardEntity(lockedID: $0.id) } }
+        return cards.map(GiftCardEntity.init)
     }
 
     /// Suche nach Name: „Zal“ findet Zalando, ohne Rücksicht auf Groß-/Kleinschreibung und Akzente.
     func entities(matching string: String) async throws -> [GiftCardEntity] {
+        // Bei aktiver App-Sperre keine Suche: sie verriete Namen, Guthaben und Ablaufdaten.
+        guard !IntentData.appLocked else { return [] }
         let query = string.trimmingCharacters(in: .whitespaces)
         return try IntentData.activeCards()
             .filter { query.isEmpty || $0.name.range(of: query, options: [.caseInsensitive, .diacriticInsensitive]) != nil }
@@ -123,20 +160,25 @@ nonisolated struct BalanceIntent: AppIntent {
         guard !IntentData.appLocked else {
             return .result(value: 0, dialog: "Deine App-Sperre ist an. Öffne Restwert, um dein Guthaben zu sehen.")
         }
-        let cards = try IntentData.activeCards().filter { !$0.forGifting }
+        let (all, onlyExamples) = try IntentData.ownActiveCards()
+        if onlyExamples { return .result(value: 0, dialog: IntentData.examplesDialog) }
+        let cards = all.filter { !$0.forGifting }
         let total = CardQueries.openTotal(cards)
-        switch cards.count {
-        case 0:
-            return .result(value: 0, dialog: "Du hast gerade keine offenen Gutscheine.")
-        case 1:
+        if cards.count == 1 {
             let card = cards[0]
             return .result(value: total, dialog: "Du hast einen offenen Gutschein: \(card.name) mit \(card.headline).")
-        default:
-            let valueCount = cards.filter { $0.kind.isValueBased }.count
-            let extra = cards.count - valueCount
-            let rest = extra == 0 ? "" : extra == 1 ? " Dazu kommt ein Gutschein ohne Eurobetrag." : " Dazu kommen \(extra) Gutscheine ohne Eurobetrag."
-            return .result(value: total, dialog: "Du hast \(total.euro) Guthaben auf \(valueCount) Gutscheinen.\(rest)")
         }
+        let valueCount = cards.filter { $0.kind.isValueBased }.count
+        let extra = cards.count - valueCount
+        let head = switch valueCount {
+        case 0 where extra == 0: "Du hast gerade keine offenen Gutscheine."
+        case 0: "Du hast \(extra) offene Gutscheine, keiner davon mit Eurobetrag."
+        case 1: "Du hast \(total.euro) Guthaben auf einem Gutschein."
+        default: "Du hast \(total.euro) Guthaben auf \(valueCount) Gutscheinen."
+        }
+        let rest = valueCount == 0 || extra == 0 ? ""
+            : extra == 1 ? " Dazu kommt ein Gutschein ohne Eurobetrag." : " Dazu kommen \(extra) Gutscheine ohne Eurobetrag."
+        return .result(value: total, dialog: IntentDialog(stringLiteral: head + rest))
     }
 }
 
@@ -150,7 +192,9 @@ nonisolated struct ExpiringIntent: AppIntent {
         guard !IntentData.appLocked else {
             return .result(value: [], dialog: "Deine App-Sperre ist an. Öffne Restwert, um deine Ablauftermine zu sehen.")
         }
-        let next = try IntentData.activeCards().sorted { $0.expires < $1.expires }.prefix(3)
+        let (cards, onlyExamples) = try IntentData.ownActiveCards()
+        if onlyExamples { return .result(value: [], dialog: IntentData.examplesDialog) }
+        let next = cards.sorted { $0.expires < $1.expires }.prefix(3)
         guard !next.isEmpty else {
             return .result(value: [], dialog: "Gerade läuft nichts ab – du hast keine offenen Gutscheine.")
         }

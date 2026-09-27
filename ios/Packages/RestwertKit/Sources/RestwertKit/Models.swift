@@ -317,10 +317,10 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
 
     public var daysLeft: Int { daysLeft(now: .now) }
 
-    /// Ganze Kalendertage bis zum Ablauftag. `expires` liegt auf 12:00 Uhr (``CalendarDay/noon(_:calendar:)``),
-    /// damit ein Zeitzonenwechsel um bis zu ±11 Stunden den Tag nicht verschiebt.
+    /// Ganze Kalendertage von heute (Ortszeit) bis zum Ablauftag. `expires` ist ein Kalendertag
+    /// (``CalendarDay``), daher verschiebt kein Zeitzonenwechsel das Ergebnis.
     public func daysLeft(now: Date, calendar: Calendar = .current) -> Int {
-        calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: expires)).day ?? 0
+        CalendarDay.days(from: now, to: expires, calendar: calendar)
     }
 
     public var remainingShare: Double {
@@ -330,9 +330,8 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
 
     /// Gutscheine ohne Datum verjähren meist nach 3 Jahren, gerechnet ab Ende des Kaufjahres (§ 195 BGB).
     public static func legalExpiry(from received: Date) -> Date {
-        let cal = Calendar.current
-        let year = cal.component(.year, from: received) + 3
-        return cal.date(from: DateComponents(year: year, month: 12, day: 31, hour: 12)) ?? received
+        let year = Calendar.current.component(.year, from: received) + 3
+        return CalendarDay.utc.date(from: DateComponents(year: year, month: 12, day: 31, hour: 12)) ?? received
     }
 
     /// Betrag abziehen und im Verlauf festhalten. Gibt den neuen Restwert zurück.
@@ -358,7 +357,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
         guard diff != 0 else { return balance }
         balance = target
         if target > value { value = target }
-        history.append(Redemption(date: date, amount: diff, store: "", note: note.isEmpty ? (diff < 0 ? "Aufgeladen" : "Stand korrigiert") : note, balanceAfter: balance))
+        history.append(Redemption(date: date, amount: diff, store: "", note: note.isEmpty ? (diff < 0 ? Redemption.toppedUp : Redemption.corrected) : note, balanceAfter: balance))
         modifiedAt = date
         return balance
     }
@@ -420,6 +419,14 @@ public struct Redemption: Codable, Identifiable, Hashable, Sendable {
     public init(id: UUID = UUID(), date: Date, amount: Double, store: String = "", note: String = "", balanceAfter: Double) {
         self.id = id; self.date = date; self.amount = amount; self.store = store; self.note = note; self.balanceAfter = balanceAfter
     }
+
+    /// Notizen von ``GiftCard/setBalance(_:note:at:)`` ohne eigene Notiz.
+    public static let corrected = "Stand korrigiert"
+    public static let toppedUp = "Aufgeladen"
+
+    /// Stand direkt gesetzt (laut Bon oder Aufladung): `balanceAfter` ist ein absoluter Stand, kein Abzug.
+    /// Erkannt an der Standard-Notiz; `setBalance` mit eigener Notiz zählt wie eine normale Buchung.
+    public var isBalanceSet: Bool { store.isEmpty && (note == Self.corrected || note == Self.toppedUp) }
 }
 
 /// Eine Bon-Zeile mit Kartenbezug, für die Gesamtansicht.

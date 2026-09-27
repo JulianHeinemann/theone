@@ -2,11 +2,52 @@ import Foundation
 
 // MARK: - Ablaufdatum als Kalendertag
 
-/// Ablaufdaten sind Kalendertage, keine Zeitpunkte. Sie liegen auf 12:00 Uhr Ortszeit, damit ein Wechsel
-/// der Zeitzone um bis zu ±11 Stunden den Tag nicht verschiebt (Mitternacht in Berlin wäre in London der Vortag).
+/// Ablaufdaten sind Kalendertage, keine Zeitpunkte. Gespeichert wird der Tag als 12:00 Uhr UTC; verglichen wird
+/// Tag gegen Tag (``GiftCard/daysLeft(now:calendar:)``). So verschiebt keine Zeitzone und kein erneutes Laden
+/// den Tag. Die Anzeige über `Calendar.current` stimmt in allen Zonen von UTC−11 bis UTC+11; für Anzeigen,
+/// die auch in Neuseeland/Tonga stimmen sollen, ``local(_:calendar:)`` benutzen.
 public enum CalendarDay {
+    public static let utc: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "UTC") ?? TimeZone(secondsFromGMT: 0)!
+        return c
+    }()
+
+    /// Liegt schon auf 12:00 UTC (gespeicherte Form)?
+    public static func isStored(_ date: Date) -> Bool {
+        abs(date.timeIntervalSince1970.truncatingRemainder(dividingBy: 86_400) - 43_200) < 0.001
+    }
+
+    /// Kalendertag des Ablaufdatums: gespeicherte Form in UTC, ältere Stände (Mitternacht oder 12:00 Ortszeit) in `calendar`.
+    public static func day(_ date: Date, calendar: Calendar = .current) -> DateComponents {
+        let cal = isStored(date) ? utc : calendar
+        let d = cal.dateComponents([.year, .month, .day], from: date)
+        return DateComponents(year: d.year, month: d.month, day: d.day)
+    }
+
+    /// In die gespeicherte Form bringen (12:00 UTC desselben Kalendertags). Idempotent: Schon gespeicherte Daten
+    /// bleiben unverändert, auch wenn das Gerät inzwischen in einer anderen Zeitzone ist.
     public static func noon(_ date: Date, calendar: Calendar = .current) -> Date {
-        calendar.date(bySettingHour: 12, minute: 0, second: 0, of: date) ?? date
+        if isStored(date) { return date }
+        var d = day(date, calendar: calendar)
+        d.hour = 12
+        return utc.date(from: d) ?? date
+    }
+
+    /// Derselbe Kalendertag als 12:00 Uhr in `calendar` (Ortszeit) – für Anzeige, Erinnerungen und das Widget.
+    public static func local(_ date: Date, calendar: Calendar = .current) -> Date {
+        var d = day(date, calendar: calendar)
+        d.hour = 12
+        return calendar.date(from: d) ?? date
+    }
+
+    /// Ganze Kalendertage von `now` (Ortszeit) bis zum Ablauftag.
+    public static func days(from now: Date, to expiry: Date, calendar: Calendar = .current) -> Int {
+        let t = calendar.dateComponents([.year, .month, .day], from: now)
+        guard let a = utc.date(from: DateComponents(year: t.year, month: t.month, day: t.day, hour: 12)),
+              let b = utc.date(from: { var d = day(expiry, calendar: calendar); d.hour = 12; return d }())
+        else { return 0 }
+        return utc.dateComponents([.day], from: a, to: b).day ?? 0
     }
 }
 
@@ -71,13 +112,15 @@ public struct RedemptionUndo: Sendable, Equatable {
 
 extension GiftCard {
     /// Verlaufseintrag zurücknehmen. Beim letzten Eintrag mit gemerktem Zustand wird exakt der alte Stand
-    /// hergestellt; sonst wird der gebuchte Betrag zurückgerechnet (nie unter 0). Gibt `false` zurück, wenn es
-    /// den Eintrag nicht (mehr) gibt.
+    /// hergestellt – aber nur, wenn das Guthaben noch genau dem Stand nach dieser Buchung entspricht. Hat ein
+    /// Sync inzwischen eine fremde Buchung eingemischt, wird stattdessen der gebuchte Betrag zurückgerechnet
+    /// (nie unter 0), damit die fremde Buchung nicht verloren geht. Gibt `false` zurück, wenn es den Eintrag nicht (mehr) gibt.
     @discardableResult
     public mutating func undo(entry: UUID, restoring state: RedemptionUndo?) -> Bool {
         guard let i = history.firstIndex(where: { $0.id == entry }) else { return false }
         let isLast = i == history.count - 1
-        if let state, isLast {
+        let untouched = abs(balance - history[i].balanceAfter) < 0.005
+        if let state, isLast, untouched {
             value = state.value
             balance = state.balance
             pendingSince = state.pendingSince
@@ -85,8 +128,15 @@ extension GiftCard {
         } else {
             balance = max(0, ((balance + history[i].amount) * 100).rounded() / 100)
         }
-        history.remove(at: i)
+        let removed = history.remove(at: i)
+        // Eingelöst-Stempel ohne gemerkten Zustand: Stempel mit zurücknehmen.
+        if isStamp(removed), !history.contains(where: { isStamp($0) }) { redeemedAt = nil }
         return true
+    }
+
+    /// Verlaufseintrag „… eingelöst“ eines Rabattcodes oder Coupons (``markRedeemed(store:at:)``).
+    public func isStamp(_ entry: Redemption) -> Bool {
+        !kind.isValueBased && entry.amount == 0 && entry.note == "\(kind.label) eingelöst"
     }
 
     /// Art gewechselt: Der Einlöse-Status bleibt erhalten, damit ein Gutschein nie zugleich „eingelöst“ ist
@@ -144,6 +194,8 @@ public enum CardEdits {
         }
         var c = card
         c.id = UUID()
+        // Kassentests ziehen mit, sonst verwirft der Sync sie wegen des Löschvermerks der alten ID.
+        for i in tests.indices where tests[i].cardID == card.id { tests[i].cardID = c.id }
         upsert(c, cards: &cards, tests: &tests, now: now)
         return c.id
     }

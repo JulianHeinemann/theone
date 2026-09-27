@@ -42,6 +42,10 @@ extension Color {
     static let sumFill = brandYellow
     static let sumText = Color(hex: 0x111111)
     static let sumAmount = Color(hex: 0x111111)
+    /// Symbole auf `ink`-Flächen (Toast): jeweils die Variante des anderen Modus, weil `ink` die Helligkeit umkehrt.
+    /// Hell #4CC38A/#FF7A70 auf #111111, dunkel #1F7A4D/#C4221A auf #F2F0EA – alle ≥ 4,5:1.
+    static let goodOnInk = Color(light: 0x4CC38A, dark: 0x1F7A4D)
+    static let warnOnInk = Color(light: 0xFF7A70, dark: 0xC4221A)
     static let good = Color(light: 0x1F7A4D, dark: 0x4CC38A)
     static let goodSoft = Color(light: 0xD9F0E2, dark: 0x173628)
     static let bad = Color(light: 0xC4221A, dark: 0xFF7A70)
@@ -345,6 +349,7 @@ extension View {
 
     /// Einheitlicher Seitenhintergrund mit weicher Scroll-Kante oben auf allen Screens.
     /// Unten ebenfalls weich, damit Inhalt unter Tab-Leiste und `safeAreaBar`-Leisten ausblendet statt hart zu enden.
+    /// Achtung: Leisten per `safeAreaInset` bekommen keinen Kanteneffekt – dafür `safeAreaBar` nehmen.
     func pageBackground() -> some View {
         scrollEdgeEffectStyle(.soft, for: [.top, .bottom])
             // Die schwebende Tab-Leiste steckt schon in der Safe Area; nur ein Abschnittsabstand Luft dazu.
@@ -464,7 +469,9 @@ struct AmountText: View {
         comma.kern = -em * 0.075
         text += comma
         var small = AttributedString("\(cents) €")
-        small.font = .display(size * 0.46)
+        // Fest an „Large Title“ wie die Euro: über `.display` hinge die kleine Größe (< 28) an „Title 2“,
+        // die bei großen Textgrößen stärker wächst – dann kippt das Verhältnis und die Hochstellung passt nicht mehr.
+        small.font = .system(.largeTitle, design: .rounded, weight: .heavy).scaled(by: size * 0.46 / 34)
         small.baselineOffset = em * 0.40
         text += small
         return text

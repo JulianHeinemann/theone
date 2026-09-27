@@ -68,8 +68,9 @@ struct ExpiryRadar: View {
     @State private var width: CGFloat = 0
 
     // Wächst mit „Größerer Text“, gedeckelt, damit die Achse nicht nur aus Kacheln besteht.
-    @ScaledMetric(relativeTo: .body) private var tileBase: CGFloat = 32
-    private var tile: CGFloat { min(tileBase, 46) }
+    // 28 pt: Kachel + Betrag + Luft ergeben genau eine 44-pt-Spur, das Radar bleibt kompakt.
+    @ScaledMetric(relativeTo: .body) private var tileBase: CGFloat = 28
+    private var tile: CGFloat { min(tileBase, 42) }
     /// Beschriftungen wachsen bis Accessibility 1 (≈ 17 pt), danach nicht weiter.
     private static let maxType = DynamicTypeSize.accessibility1
 
@@ -81,7 +82,7 @@ struct ExpiryRadar: View {
             labels(plan)
             ForEach(Array(plan.marks.enumerated()), id: \.element.id) { i, m in
                 mark(m, plan: plan)
-                    .position(x: m.x, y: plan.slotTop(m.lane) + plan.slot / 2)
+                    .position(x: m.x, y: plan.slotTop(m.lane) + plan.laneH[m.lane] / 2)
                     .offset(y: shown ? 0 : -30)
                     .opacity(shown ? 1 : 0)
                     .animation(.spring(duration: 0.5, bounce: 0.3).delay(0.06 * Double(min(i, 10))), value: landed)
@@ -233,7 +234,7 @@ struct ExpiryRadar: View {
             }
             Spacer(minLength: 0)
         }
-        .frame(width: plan.hit, height: plan.slot, alignment: .top)
+        .frame(width: plan.hit, height: plan.laneH[m.lane], alignment: .top)
         .contentShape(.rect)
 
         let label = spoken(m.items)
@@ -311,13 +312,16 @@ private struct RadarPlan {
     struct Band { var x0: CGFloat; var x1: CGFloat; var strong: Bool }
 
     static let horizon = 90
-    static let labelGap: CGFloat = 5
+    static let labelGap: CGFloat = 3
+    /// Luft über der obersten Spur für Warnring und „!“ (der Rest ragt in den Innenabstand der Hülle).
+    static let topGap: CGFloat = 2
     static let breakW: CGFloat = 12
 
     let tile: CGFloat
     let hit: CGFloat
     let captionH: CGFloat
-    let slot: CGFloat
+    /// Höhe je Spur (unten → oben): Beträge bekommen nur dort eine Zeile, wo auch einer steht.
+    var laneH: [CGFloat] = []
     var marks: [Mark] = []
     var ticks: [Tick] = []
     var columns: [Column] = []
@@ -330,7 +334,7 @@ private struct RadarPlan {
     var height: CGFloat = 0
     var summary = ""
 
-    func slotTop(_ lane: Int) -> CGFloat { axisY - CGFloat(lane + 1) * slot }
+    func slotTop(_ lane: Int) -> CGFloat { axisY - laneH[...lane].reduce(0, +) }
 
     init(items: [RadarItem], width: CGFloat, tile t: CGFloat, fonts: RadarFonts, now: Date) {
         let cal = Calendar.current
@@ -341,7 +345,6 @@ private struct RadarPlan {
         tile = t
         hit = max(Layout.tap, t + 4)
         captionH = ceil(fonts.caption.lineHeight)
-        slot = t + 1 + captionH + 3
         todayX = t / 2 + 2
 
         let dated: [(item: RadarItem, d: Int)] = items.map { (item: $0, d: days($0.expires)) }
@@ -393,14 +396,20 @@ private struct RadarPlan {
             if fits { lastRight = x + 3 + w }
         }
 
-        // Zone A in höchstens zwei Spuren, Mindestabstand = Trefferfläche. Sonst ans nächste Ziel bündeln.
-        var lastInLane: [Int?] = [nil, nil]
+        // Zone A in höchstens zwei Spuren, Mindestabstand in der Spur = Trefferfläche.
+        // Der Stiel einer Kachel aus Spur 2 darf von keiner Kachel der Spur 1 (samt Warnring) verdeckt werden –
+        // weder von der vorigen noch von der nächsten. Passt beides nicht, ans nächste Ziel bündeln.
+        let clear = t / 2 + 5
+        var last: [Int?] = [nil, nil]
         for (item, d) in near {
             let x = xA(d)
-            if let lane = (0..<2).first(where: { l in lastInLane[l].map { x - marks[$0].x >= hit } ?? true }) {
+            let gap = last.map { i in i.map { x - marks[$0].x } ?? .infinity }
+            let lane: Int? = gap[0] >= hit && gap[1] >= clear ? 0
+                : gap[1] >= hit && gap[0] >= clear ? 1 : nil
+            if let lane {
                 marks.append(Mark(items: [item], x: x, lane: lane, zoneB: false))
-                lastInLane[lane] = marks.count - 1
-            } else if let idx = lastInLane.compactMap({ $0 }).max(by: { marks[$0].x < marks[$1].x }) {
+                last[lane] = marks.count - 1
+            } else if let idx = last.compactMap({ $0 }).max(by: { marks[$0].x < marks[$1].x }) {
                 marks[idx].items.append(item)
             }
         }
@@ -449,8 +458,13 @@ private struct RadarPlan {
         }
 
         lanes = (marks.map(\.lane).max() ?? 0) + 1
-        axisY = 4 + CGFloat(lanes) * slot
-        height = axisY + 1 + Self.labelGap + ceil(fonts.pill.lineHeight) + 4 + 2
+        laneH = (0..<lanes).map { lane in
+            let caps = marks.contains { $0.lane == lane && $0.showCaption }
+            return max(Layout.tap, t + 2 + (caps ? 1 + captionH : 0))
+        }
+        axisY = Self.topGap + laneH.reduce(0, +)
+        // Achse, Abstand, „Heute“-Pille (Zeile + 2 × 2 pt Innenabstand).
+        height = axisY + 1 + Self.labelGap + ceil(fonts.pill.lineHeight) + 4
 
         // Zusammenfassung für VoiceOver.
         let in14 = dated.filter { $0.d <= 14 }
@@ -482,8 +496,8 @@ struct ExpiryRadarSection: View {
     var onBundle: (([RadarItem]) -> Void)? = nil
 
     @Environment(\.dynamicTypeSize) private var typeSize
-    @State private var axisY: CGFloat = 100
-    private let top: CGFloat = 12
+    @State private var axisY: CGFloat = 94
+    private let top: CGFloat = 8
 
     /// „2 in 30 Tagen · 70 €“ – was bald verfällt und wie viel Geld daran hängt.
     private var soon: (text: String, spoken: String) {
@@ -527,7 +541,7 @@ struct ExpiryRadarSection: View {
             ExpiryRadar(items: items, onSelect: onSelect,
                         onBundle: onBundle ?? onShowAll.map { all in { _ in all() } },
                         animateIn: animateIn, onAxis: { axisY = $0 })
-                .padding(.horizontal, Layout.inset).padding(.top, top).padding(.bottom, 10)
+                .padding(.horizontal, Layout.inset).padding(.top, top).padding(.bottom, 6)
                 .background(Color.surface, in: TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchFromTop: top + axisY))
         }
     }

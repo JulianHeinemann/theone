@@ -69,6 +69,9 @@ public enum SyncMerge {
     /// Gleichzeitige Buchungen zusammenführen: Die neuere Fassung (`winner`) bleibt die Grundlage; Verlaufseinträge,
     /// die nur die andere Fassung kennt, werden nachgebucht (Guthaben entsprechend verrechnet). Zurückgenommene
     /// Einträge (ID in `deleted`) fallen heraus und ihr Betrag wird wieder gutgeschrieben.
+    /// Ein gesetzter Stand (``Redemption/isBalanceSet``, „laut Bon“) ist absolut: Er schließt alle früheren Buchungen
+    /// ein, verrechnet werden nur Buchungen danach. Ist der jüngste gesetzte Stand von der anderen Seite, wird ab ihm
+    /// neu gerechnet (spätere Formular-Korrekturen der Gewinner-Seite ohne Verlaufseintrag gehen dann unter).
     /// Hat sich dadurch etwas geändert, rückt `modifiedAt` 2 ms weiter, damit der vereinigte Stand wieder hochgeht.
     /// Einschränkung: Eine Guthaben-Korrektur im Formular ohne Verlaufseintrag kann nicht verrechnet werden.
     public static func unite(_ winner: GiftCard, _ other: GiftCard, deleted: Set<UUID>) -> GiftCard {
@@ -77,16 +80,34 @@ public enum SyncMerge {
         let extra = other.history.filter { !known.contains($0.id) && !deleted.contains($0.id) }
         let undone = winner.history.filter { deleted.contains($0.id) }
         guard !extra.isEmpty || !undone.isEmpty else { return winner }
+        c.history = (winner.history.filter { !deleted.contains($0.id) } + extra).sorted { $0.date < $1.date }
         var balance = c.balance
-        for e in undone { balance += e.amount }
-        for e in extra { balance -= e.amount }
+        if let s = c.history.lastIndex(where: \.isBalanceSet) {
+            let set = c.history[s]
+            if extra.contains(where: { $0.id == set.id }) {
+                // Jüngster Stand laut Bon kommt von der anderen Seite: ab ihm neu rechnen.
+                balance = set.balanceAfter
+                for e in c.history[(s + 1)...] { balance -= e.amount }
+            } else {
+                // Eigener Stand ist der jüngste: nur, was danach kam oder danach zurückgenommen wurde.
+                for e in undone where e.date > set.date { balance += e.amount }
+                for e in extra where e.date > set.date { balance -= e.amount }
+            }
+        } else {
+            for e in undone { balance += e.amount }
+            for e in extra { balance -= e.amount }
+        }
         c.balance = max(0, (balance * 100).rounded() / 100)
         if c.balance > c.value { c.value = c.balance }
-        c.history = (winner.history.filter { !deleted.contains($0.id) } + extra).sorted { $0.date < $1.date }
-        // Eingelöst-Stempel eines Codes/Coupons von der anderen Seite übernehmen.
-        if !c.kind.isValueBased, c.redeemedAt == nil,
-           let stamp = extra.first(where: { $0.amount == 0 && $0.note == "\(c.kind.label) eingelöst" }) {
+        // Eingelöst-Stempel eines Codes/Coupons von der anderen Seite übernehmen …
+        let card = c
+        if c.redeemedAt == nil, let stamp = extra.first(where: { card.isStamp($0) }) {
             c.redeemedAt = stamp.date
+        }
+        // … und einen zurückgenommenen Stempel auch hier zurücknehmen (sonst „eingelöst“ ohne Verlaufseintrag).
+        if c.redeemedAt != nil, undone.contains(where: { card.isStamp($0) }),
+           !c.history.contains(where: { card.isStamp($0) }) {
+            c.redeemedAt = nil
         }
         c.modifiedAt = max(winner.modifiedAt, other.modifiedAt).addingTimeInterval(0.002)
         return c

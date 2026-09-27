@@ -26,8 +26,17 @@ nonisolated enum WidgetBridge {
         var updated: Date
     }
 
+    /// Eine serielle Queue: Aufrufe kehren sofort zurück (auch vom Main Thread aus, z. B. beim Aktivwerden),
+    /// die Arbeit läuft nacheinander im Hintergrund. Doppelte Aufrufe mit gleichem Stand schreiben nichts
+    /// und lösen keine zweite Zeitleisten-Aktualisierung aus (Vergleich unten).
+    private static let queue = DispatchQueue(label: "de.restwert.widget", qos: .utility)
+
     /// `total` wird nicht mehr verwendet: Die Summe entsteht aus denselben Karten wie die Liste.
     static func update(cards: [GiftCard], total: Double = 0) {
+        queue.async { write(cards) }
+    }
+
+    private static func write(_ cards: [GiftCard]) {
         guard let dir = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.de.restwert.app") else {
             Logger(subsystem: "de.restwert.app", category: "widget").error("App Group nicht verfügbar")
             return
@@ -36,7 +45,9 @@ nonisolated enum WidgetBridge {
         let own = cards.filter { !$0.isExample }
         let active = (own.isEmpty ? cards : own).filter { $0.isActive && !$0.forGifting }.sorted { $0.expires < $1.expires }
         let snap = Snapshot(items: active.prefix(200).map {
-                                .init(id: $0.id.uuidString, name: $0.name, headline: $0.headline, expires: $0.expires,
+                                // Kalendertag als 12:00 Ortszeit: Das Widget rechnet Tage mit Calendar.current.
+                                .init(id: $0.id.uuidString, name: $0.name, headline: $0.headline,
+                                      expires: CalendarDay.local($0.expires),
                                       amount: $0.kind.isValueBased ? $0.balance : nil, color: brandHex($0))
                             },
                             updated: .now)

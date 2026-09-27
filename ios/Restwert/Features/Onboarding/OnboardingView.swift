@@ -36,6 +36,9 @@ struct OnboardingView: View {
                 actions
             }
             .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, 8)
+            // Knöpfe wachsen mit, aber nur bis AX2: darüber fräße die feste Aktionszone (inkl. reserviertem
+            // „Erstmal umschauen“) so viel Höhe, dass für den scrollenden Seitentext kaum etwas bleibt.
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .background(Color.page)
         }
         .foregroundStyle(Color.ink)
@@ -43,9 +46,12 @@ struct OnboardingView: View {
     }
 
     /// Wortmarke wie auf dem Start: gleiche Größe, 16 pt Rand, 44 pt hohe Leiste direkt unter der Statusleiste.
+    /// Auf dem Start steht sie als Element der Navigationsleiste; die lässt sie bis zur größten Nicht-AX-Stufe
+    /// mitwachsen (bei XL/XXL gemessen größer als mit Deckel xLarge). Dieselbe Grenze hier, sonst springt der Übergang.
     private var header: some View {
         HStack {
             Wordmark(size: 28).fixedSize()
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             Spacer()
             Button("Überspringen") { go(to: pages - 1) }
                 .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
@@ -58,7 +64,7 @@ struct OnboardingView: View {
         }
         .frame(minHeight: Layout.tap)
         .lineLimit(1)
-        // Kopfzeile wächst nur bis zu einer Größe, bei der Wortmarke und „Überspringen“ nebeneinander passen.
+        // „Überspringen“ wächst nur bis zu einer Größe, bei der es neben der Wortmarke in eine Zeile passt.
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .padding(.horizontal, Layout.page)
     }
@@ -124,9 +130,14 @@ private struct PageFrame<Stage: View>: View {
     let title: String
     let text: String
     let active: Bool
+    /// Reines Anschauungsbild (für VoiceOver zusammengefasst oder ausgeblendet): wächst nur mäßig mit der Schrift,
+    /// damit bei großer Schrift der Fließtext Platz hat. Seite 4 zeigt echte Knöpfe, die wachsen voll mit.
+    var decorativeStage = true
     @ViewBuilder var stage: Stage
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var moreBelow = false
+    /// Eigener Zähler: Scroll-Indikator blitzt, wenn die Seite aktiv wird oder sich herausstellt, dass Text unten fehlt.
+    @State private var flashes = 0
 
     var body: some View {
         GeometryReader { geo in
@@ -134,6 +145,7 @@ private struct PageFrame<Stage: View>: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Spacer(minLength: Layout.section)
                     stage.frame(maxWidth: .infinity)
+                        .dynamicTypeSize(...(decorativeStage ? DynamicTypeSize.xxLarge : .accessibility5))
                     Spacer(minLength: Layout.section)
                     copy
                 }
@@ -142,11 +154,17 @@ private struct PageFrame<Stage: View>: View {
             }
             .scrollBounceBehavior(.basedOnSize)
             .scrollIndicators(.visible)
-            .scrollIndicatorsFlash(trigger: active)
+            // Beim ersten Erscheinen (Seite 1 ist dann schon aktiv, ein Wechsel von `active` bleibt aus) und danach per Zähler.
+            .scrollIndicatorsFlash(onAppear: true)
+            .scrollIndicatorsFlash(trigger: flashes)
             .onScrollGeometryChange(for: Bool.self) { g in
                 g.visibleRect.maxY < g.contentSize.height - 4
             } action: { _, more in
                 moreBelow = more
+                if more && active { flashes += 1 }
+            }
+            .onChange(of: active) { _, now in
+                if now && moreBelow { flashes += 1 }
             }
             .overlay(alignment: .bottom) {
                 LinearGradient(colors: [Color.page.opacity(0), Color.page], startPoint: .top, endPoint: .bottom)
@@ -465,7 +483,7 @@ private struct FirstCardPage: View {
     var body: some View {
         PageFrame(title: "Leg deinen ersten\nGutschein an.",
                   text: "Dauert 20 Sekunden. Die Beispiele auf „Start“ verschwinden dann automatisch.",
-                  active: active) {
+                  active: active, decorativeStage: false) {
             VStack(spacing: Layout.group) {
                 option(icon: "viewfinder", title: "Gutschein scannen", text: "Barcode oder QR-Code abfotografieren",
                        strong: true, shown: step >= 1) { onPick(.scan) }

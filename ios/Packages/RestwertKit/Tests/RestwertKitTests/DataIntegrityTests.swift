@@ -162,40 +162,68 @@ struct UndoTests {
 
 @Suite("Zeitzonen")
 struct TimeZoneTests {
-    @Test("Ablaufdatum bleibt derselbe Kalendertag nach Zeitzonenwechsel")
-    func expiryStaysSameDay() {
-        let berlin = TimeZone(identifier: "Europe/Berlin")!
-        var calBerlin = Calendar(identifier: .gregorian)
-        calBerlin.timeZone = berlin
-        // Im DatePicker gewählt: Mitternacht in Berlin → auf 12:00 normalisiert.
-        let picked = day(2027, 3, 31, hour: 0, in: berlin)
-        let stored = CalendarDay.noon(picked, calendar: calBerlin)
-        var c = voucher()
-        c.expires = stored
-        for id in ["America/New_York", "America/Los_Angeles", "Asia/Tokyo", "Europe/London", "Asia/Kolkata"] {
-            var cal = Calendar(identifier: .gregorian)
-            cal.timeZone = TimeZone(identifier: id)!
-            let comps = cal.dateComponents([.year, .month, .day], from: c.expires)
-            #expect(comps.day == 31 && comps.month == 3, "Zeitzone \(id)")
-            let now = cal.date(from: DateComponents(year: 2027, month: 3, day: 30, hour: 23))!
-            #expect(c.daysLeft(now: now, calendar: cal) == 1, "Zeitzone \(id)")
-        }
-        // Ohne Normalisierung wäre es in New York noch der 30.
-        var ny = Calendar(identifier: .gregorian)
-        ny.timeZone = TimeZone(identifier: "America/New_York")!
-        #expect(ny.component(.day, from: picked) == 30)
+    private static let zones = ["Europe/Berlin", "America/New_York", "America/Los_Angeles", "Pacific/Honolulu",
+                                "Pacific/Pago_Pago", "Asia/Tokyo", "Europe/London", "Asia/Kolkata",
+                                "Pacific/Auckland", "Pacific/Tongatapu", "Pacific/Kiritimati"]
+
+    private static func cal(_ id: String) -> Calendar {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: id)!
+        return c
     }
 
-    @Test("Speichern normalisiert das Ablaufdatum auf 12:00 Uhr")
+    @Test("Ablaufdatum bleibt derselbe Kalendertag, egal wo gewählt und wo geprüft (auch > 12 h Unterschied)",
+          arguments: zones)
+    func expiryStaysSameDay(_ from: String) {
+        // Im DatePicker gewählt: Mitternacht bzw. 23:30 Ortszeit → Kalendertag in UTC gespeichert.
+        let src = Self.cal(from)
+        for hour in [0, 12, 23] {
+            let picked = src.date(from: DateComponents(year: 2027, month: 3, day: 31, hour: hour, minute: hour == 23 ? 30 : 0))!
+            var c = voucher()
+            c.expires = CalendarDay.noon(picked, calendar: src)
+            for to in Self.zones {
+                let cal = Self.cal(to)
+                #expect(CalendarDay.day(c.expires, calendar: cal) == DateComponents(year: 2027, month: 3, day: 31),
+                        "\(from) → \(to)")
+                let shown = cal.dateComponents([.month, .day], from: CalendarDay.local(c.expires, calendar: cal))
+                #expect(shown.month == 3 && shown.day == 31, "\(from) → \(to)")
+                let late = cal.date(from: DateComponents(year: 2027, month: 3, day: 30, hour: 23, minute: 59))!
+                let early = cal.date(from: DateComponents(year: 2027, month: 3, day: 31, hour: 0, minute: 1))!
+                let after = cal.date(from: DateComponents(year: 2027, month: 4, day: 1, hour: 0, minute: 1))!
+                #expect(c.daysLeft(now: late, calendar: cal) == 1, "\(from) → \(to)")
+                #expect(c.daysLeft(now: early, calendar: cal) == 0, "\(from) → \(to)")
+                #expect(c.daysLeft(now: after, calendar: cal) == -1, "\(from) → \(to)")
+            }
+        }
+    }
+
+    @Test("Normalisieren ist idempotent: erneutes Laden in einer fernen Zone verschiebt nichts")
+    func normalizeIsIdempotent() {
+        let berlin = Self.cal("Europe/Berlin")
+        let stored = CalendarDay.noon(day(2027, 1, 15, hour: 12, in: berlin.timeZone), calendar: berlin)
+        #expect(CalendarDay.isStored(stored))
+        // Neu laden in Tonga (+13) und New York (−5), dann zurück in Berlin.
+        let tonga = CalendarDay.noon(stored, calendar: Self.cal("Pacific/Tongatapu"))
+        let ny = CalendarDay.noon(tonga, calendar: Self.cal("America/New_York"))
+        #expect(ny == stored)
+        #expect(CalendarDay.day(ny, calendar: berlin) == DateComponents(year: 2027, month: 1, day: 15))
+        // Alte Stände (12:00 Ortszeit in Berlin) werden einmal richtig übernommen.
+        let legacy = day(2027, 1, 15, hour: 12, in: berlin.timeZone)
+        #expect(!CalendarDay.isStored(legacy))
+        #expect(CalendarDay.day(CalendarDay.noon(legacy, calendar: berlin), calendar: Self.cal("Pacific/Tongatapu"))
+                == DateComponents(year: 2027, month: 1, day: 15))
+    }
+
+    @Test("Speichern bringt das Ablaufdatum in die gespeicherte Form (12:00 UTC)")
     func upsertNormalizes() {
         var c = voucher()
         c.expires = day(2027, 3, 31, hour: 0)
         var cards: [GiftCard] = []
         var tests: [TestResult] = []
         CardEdits.upsert(c, cards: &cards, tests: &tests)
-        #expect(Calendar.current.component(.hour, from: cards[0].expires) == 12)
-        #expect(Calendar.current.component(.day, from: cards[0].expires) == 31)
-        #expect(Calendar.current.component(.hour, from: GiftCard.legalExpiry(from: .now)) == 12)
+        #expect(CalendarDay.isStored(cards[0].expires))
+        #expect(CalendarDay.day(cards[0].expires) == DateComponents(year: 2027, month: 3, day: 31))
+        #expect(CalendarDay.isStored(GiftCard.legalExpiry(from: .now)))
     }
 }
 
@@ -222,6 +250,64 @@ struct ConcurrentSyncTests {
                                     remote: SyncData(cards: onB.cards, tests: [], deleted: []))
         #expect(again.cards[0].balance == 35)
         #expect(again.cards[0].history.count == 2)
+    }
+
+    /// Beide Richtungen mischen und prüfen, dass beide Geräte beim selben Guthaben landen.
+    private func mergedBalance(_ a: GiftCard, _ b: GiftCard) -> (onA: Double, onB: Double) {
+        let onA = SyncMerge.merge(localCards: [a], localTests: [], localDeleted: [], remote: SyncData(cards: [b], tests: [], deleted: []))
+        let onB = SyncMerge.merge(localCards: [b], localTests: [], localDeleted: [], remote: SyncData(cards: [a], tests: [], deleted: []))
+        return (onA.cards[0].balance, onB.cards[0].balance)
+    }
+
+    @Test("Stand laut Bon auf beiden Geräten gleichzeitig: nicht doppelt abgezogen")
+    func concurrentSetBalance() {
+        let base = voucher(value: 30, modified: day(2026, 1, 1))
+        var a = base
+        a.setBalance(10, at: day(2026, 2, 1))
+        var b = base
+        b.setBalance(10, at: day(2026, 2, 2))
+        let r = mergedBalance(a, b)
+        #expect(r.onA == 10 && r.onB == 10)
+    }
+
+    @Test("Einlösung auf A, danach Stand laut Bon auf B: der Bon gilt")
+    func redeemThenSetBalance() {
+        let base = voucher(value: 30, modified: day(2026, 1, 1))
+        var a = base
+        a.redeem(10, at: day(2026, 2, 1))
+        var b = base
+        b.setBalance(10, at: day(2026, 2, 2))
+        let r = mergedBalance(a, b)
+        #expect(r.onA == 10 && r.onB == 10)
+    }
+
+    @Test("Stand laut Bon auf B, danach Einlösung auf A: Einlösung wird vom Bon-Stand abgezogen")
+    func setBalanceThenRedeem() {
+        let base = voucher(value: 30, modified: day(2026, 1, 1))
+        var b = base
+        b.setBalance(15, at: day(2026, 2, 1))
+        var a = base
+        a.redeem(10, at: day(2026, 2, 2))
+        let r = mergedBalance(a, b)
+        #expect(r.onA == 5 && r.onB == 5)
+    }
+
+    @Test("Rückgängig nach einem Sync verliert die eingemischte Buchung nicht")
+    func undoAfterMergeKeepsForeignRedemption() {
+        let base = voucher(value: 50, modified: day(2026, 1, 1))
+        var b = base
+        b.redeem(5, at: day(2026, 2, 1))
+        var a = base
+        let state = RedemptionUndo(a)
+        a.redeem(10, at: day(2026, 2, 2))
+        let mine = a.history.last!.id
+        var merged = SyncMerge.merge(localCards: [a], localTests: [], localDeleted: [],
+                                     remote: SyncData(cards: [b], tests: [], deleted: [])).cards[0]
+        #expect(merged.balance == 35)
+        #expect(merged.history.last?.id == mine)
+        merged.undo(entry: mine, restoring: state)
+        #expect(merged.balance == 45)
+        #expect(merged.history.count == 1)
     }
 
     @Test("Zurückgenommene Buchung kommt über den Sync nicht zurück")
@@ -353,5 +439,73 @@ struct PhotoFileTests {
         let s = try JSONDecoder().decode(StoredState.self, from: Data(json.utf8))
         #expect(s.cards.count == 1)
         #expect(s.dropped == 1)
+    }
+}
+
+@Suite("Nachbesserung: Stempel, Rückholen, Fotos")
+struct FollowUpTests {
+    private func tempDir() -> URL {
+        let dir = FileManager.default.temporaryDirectory.appending(path: "restwert-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    @Test("Zurückgenommener Stempel bleibt zurückgenommen, auch wenn die andere Seite neuer ist")
+    func undoneStampStaysUndone() {
+        var a = voucher(.discountCode, value: 0, balance: 0, modified: day(2026, 1, 1))
+        a.markRedeemed(at: day(2026, 2, 1))
+        let stamp = a.history[0].id
+        // Gerät A nimmt den Stempel zurück (ohne gemerkten Zustand, z. B. nach Neustart).
+        var undone = a
+        undone.undo(entry: stamp, restoring: nil)
+        undone.modifiedAt = day(2026, 2, 2)
+        #expect(undone.redeemedAt == nil)
+        // Gerät B ändert danach etwas anderes und ist damit neuer.
+        var b = a
+        b.location = .wallet
+        b.modifiedAt = day(2026, 2, 5)
+        let onA = SyncMerge.merge(localCards: [undone], localTests: [], localDeleted: [stamp],
+                                  remote: SyncData(cards: [b], tests: [], deleted: []))
+        #expect(onA.cards[0].redeemedAt == nil)
+        #expect(onA.cards[0].history.isEmpty)
+        #expect(onA.cards[0].location == .wallet)
+        let onB = SyncMerge.merge(localCards: [b], localTests: [], localDeleted: [],
+                                  remote: SyncData(cards: [undone], tests: [], deleted: [stamp]))
+        #expect(onB.cards[0].redeemedAt == nil)
+        #expect(onB.cards[0].isOpen)
+    }
+
+    @Test("Eigene Karte zurückholen: Kassentests ziehen mit und überstehen den Sync")
+    func restoredCardKeepsTests() {
+        let a = voucher()
+        var cards = [a]
+        var tests = [TestResult(cardID: a.id, merchantID: "thalia", merchantName: "Thalia", date: .now, success: true,
+                                format: .code128, isExample: false)]
+        var deleted: Set<UUID> = []
+        CardEdits.delete(a.id, cards: &cards, deleted: &deleted)
+        let id = CardEdits.restoreDeleted(a, cards: &cards, tests: &tests)
+        #expect(tests[0].cardID == id)
+        let r = SyncMerge.merge(localCards: cards, localTests: tests, localDeleted: deleted,
+                                remote: SyncData(cards: [], tests: [], deleted: [a.id]))
+        #expect(r.tests.count == 1)
+        #expect(r.cards.map(\.id) == [id])
+    }
+
+    @Test("Fotos unbekannter Gutscheine bleiben liegen; nur fehlende Dateien gelten als erledigt")
+    func photosOfUnknownCardsSurvive() throws {
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let files = PhotoFiles(directory: dir)
+        let known = UUID(), unknown = UUID(), gone = UUID()
+        _ = files.write([known: Data([1]), unknown: Data([2])])
+        #expect(files.missing([known, unknown, gone]) == [gone])
+        // Nur Gutscheine, die der Store kennt, dürfen aufgeräumt werden.
+        files.removeAll(except: [], removable: [known])
+        #expect(!FileManager.default.fileExists(atPath: files.url(for: known).path))
+        #expect(FileManager.default.fileExists(atPath: files.url(for: unknown).path))
+        // Umzug unter neue ID (Rückholen nach dem Löschen).
+        let moved = UUID()
+        files.move(from: unknown, to: moved)
+        #expect(files.load([moved])[moved] == Data([2]))
     }
 }
