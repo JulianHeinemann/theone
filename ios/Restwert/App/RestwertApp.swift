@@ -41,6 +41,8 @@ struct RestwertApp: App {
 
 enum AppTab: Hashable { case home, history, merchants, settings, scan }
 
+enum ScanIntent { case camera, manual }
+
 enum Route: Hashable {
     case card(UUID)
     case checkout(UUID)
@@ -62,6 +64,8 @@ final class Router {
     var pendingImport: URL?
     /// Kurze Bestätigung unten, optional mit „Rückgängig“.
     var toast: Toast?
+    /// Aus dem Einstieg: direkt Kamera oder Formular im Hinzufügen-Tab öffnen.
+    var scanIntent: ScanIntent?
 
     func showUndo(_ message: String, undo: @escaping () -> Void) {
         toast = Toast(message: message, undo: undo)
@@ -113,10 +117,15 @@ struct RootView: View {
     var body: some View {
         ZStack {
             if !onboarded {
-                OnboardingView {
-                    // Auch nach „Einführung ansehen“ auf Start landen, nicht wieder in den Einstellungen.
-                    router.tab = .home
+                OnboardingView { exit in
+                    // Auch nach „Einführung ansehen“ nicht wieder in den Einstellungen landen.
                     router.homePath = []
+                    switch exit {
+                    case .browse: router.tab = .home
+                    case .add: router.tab = .scan
+                    case .scan: router.tab = .scan; router.scanIntent = .camera
+                    case .manual: router.tab = .scan; router.scanIntent = .manual
+                    }
                     withAnimation(.smooth(duration: 0.5)) { onboarded = true }
                 }
                 .transition(.blurReplace)

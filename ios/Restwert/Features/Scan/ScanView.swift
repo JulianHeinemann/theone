@@ -16,6 +16,16 @@ struct ScanView: View {
     @State private var formSeed: FormSeed?
     @State private var importError: String?
 
+    /// Wunsch aus dem Einstieg einlösen: Kamera oder Formular öffnen.
+    private func consumeIntent() {
+        guard let intent = router.scanIntent else { return }
+        router.scanIntent = nil
+        switch intent {
+        case .camera: showScanner = true
+        case .manual: formSeed = FormSeed(outcome: nil)
+        }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -38,6 +48,8 @@ struct ScanView: View {
         }
         .scrollIndicators(.hidden)
         .pageBackground()
+        .onAppear(perform: consumeIntent)
+        .onChange(of: router.scanIntent != nil) { _, _ in consumeIntent() }
         .navigationTitle(outcome == nil ? "Hinzufügen" : "Ergebnis")
         .toolbar {
             if outcome != nil {
