@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "RestwertKit",
     defaultLocalization: "de",
-    platforms: [.iOS(.v17), .macOS(.v14)],
+    platforms: [.iOS(.v18), .macOS(.v15)],
     products: [
         .library(name: "RestwertKit", targets: ["RestwertKit"]),
     ],

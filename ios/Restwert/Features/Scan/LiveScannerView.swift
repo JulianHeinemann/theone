@@ -16,11 +16,13 @@ struct LiveScannerView: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var reading = false
     @State private var loadFailed = false
+    @State private var capturing = false
+    @State private var torchOn = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Simulator und Geräte ohne Neural Engine haben keinen Live-Scanner.
     private var supported: Bool { DataScannerViewController.isSupported }
-    private var canUse: Bool { supported && access == .authorized && DataScannerViewController.isAvailable }
+    private var canUse: Bool { supported && access == .authorized && DataScannerViewController.isAvailable && !model.startFailed }
     private var denied: Bool { access == .denied }
     private var hasSomething: Bool { model.barcode != nil || !model.texts.isEmpty }
 
@@ -30,6 +32,7 @@ struct LiveScannerView: View {
                 DataScannerRepresentable(model: model).ignoresSafeArea()
                 ScanLine()
                 controls
+                    .overlay(alignment: .topLeading) { torchButton.offset(y: -64) }
             } else if supported && access == .notDetermined {
                 Color.black.ignoresSafeArea()
             } else {
@@ -70,6 +73,7 @@ struct LiveScannerView: View {
                 .controlSize(.large)
                 .padding(16)
         }
+        .onDisappear { setTorch(false) }
         .sensoryFeedback(.success, trigger: model.barcode)
         .onChange(of: model.barcode) { _, code in
             if code != nil { AccessibilityNotification.Announcement("\(model.format?.label ?? "Barcode") erkannt").post() }
@@ -93,7 +97,8 @@ struct LiveScannerView: View {
     }
 
     private var fallbackTitle: String {
-        !supported ? "Keine Kamera verfügbar" : denied ? "Kamera nicht freigegeben" : "Scanner gerade nicht verfügbar"
+        !supported ? "Keine Kamera verfügbar" : denied ? "Kamera nicht freigegeben"
+            : model.startFailed ? "Kamera ließ sich nicht starten" : "Scanner gerade nicht verfügbar"
     }
 
     private var fallbackText: String {
@@ -132,6 +137,53 @@ struct LiveScannerView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// Standbild aufnehmen und gründlich auswerten (Kontrast, Ausschnitte), mit dem Live-Ergebnis zusammenführen.
+    /// So kommt man immer weiter – auch wenn der Live-Scan nichts sicher erkannt hat.
+    private func finish() async {
+        capturing = true
+        defer { capturing = false }
+        let still = await model.captureImage()
+        var outcome = ScanOutcome(barcode: model.barcode, format: model.format, text: model.orderedText)
+        if let still, let cg = still.normalizedCGImage {
+            let deep = await Importer.analyze(cgImage: cg)
+            // Live-Barcode ist bestätigt (mehrfach gesehen); sonst den aus dem Standbild nehmen.
+            if outcome.barcode == nil || !model.barcodeConfirmed, let b = deep.barcode {
+                outcome.barcode = b
+                outcome.format = deep.format
+            }
+            if deep.text.count > outcome.text.count { outcome.text = deep.text }
+            outcome.smart = deep.smart
+            outcome.usedAppleIntelligence = deep.usedAppleIntelligence
+            outcome.photo = still.thumbnailJPEG()
+        }
+        setTorch(false)
+        onDone(outcome)
+        dismiss()
+    }
+
+    private var torchButton: some View {
+        Button {
+            setTorch(!torchOn)
+        } label: {
+            Image(systemName: torchOn ? "flashlight.on.fill" : "flashlight.off.fill")
+                .font(.scaled(17, weight: .semibold))
+                .frame(width: Layout.tap, height: Layout.tap)
+        }
+        .buttonStyle(.glass)
+        .buttonBorderShape(.circle)
+        .padding(.leading, 16)
+        .accessibilityLabel(torchOn ? "Licht aus" : "Licht an")
+        .opacity(AVCaptureDevice.default(for: .video)?.hasTorch == true ? 1 : 0)
+    }
+
+    /// Taschenlampe für dunkle Läden. Fehler (keine Lampe, belegt) werden still ignoriert.
+    private func setTorch(_ on: Bool) {
+        guard let device = AVCaptureDevice.default(for: .video), device.hasTorch, (try? device.lockForConfiguration()) != nil else { return }
+        device.torchMode = on ? .on : .off
+        device.unlockForConfiguration()
+        torchOn = on && device.torchMode == .on
+    }
+
     private var controls: some View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
@@ -152,17 +204,12 @@ struct LiveScannerView: View {
             .foregroundStyle(Color.ink)
             .accessibilityElement(children: .combine)
             Button {
-                Task {
-                    let photo = await model.capturePhoto()
-                    onDone(ScanOutcome(barcode: model.barcode, format: model.format,
-                                       text: model.orderedText, photo: photo))
-                    dismiss()
-                }
+                Task { await finish() }
             } label: {
-                Text("Übernehmen")
+                Text(capturing ? "Wird gelesen …" : hasSomething ? "Übernehmen" : "Foto aufnehmen und lesen")
             }
             .buttonStyle(.accent)
-            .disabled(!hasSomething)
+            .disabled(capturing)
         }
         .padding(18)
         .glassEffect(.regular, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
@@ -182,22 +229,26 @@ final class LiveScanModel {
 
     var barcode: String?
     var format: CodeFormat?
+    /// Barcode ist bestätigt: mindestens zweimal gleich gelesen oder mit gültiger Prüfziffer.
+    var barcodeConfirmed = false
     var texts: [UUID: TextLine] = [:]
+    /// Kamera ließ sich nicht starten – dann zeigt die Ansicht den Foto-Weg.
+    var startFailed = false
     @ObservationIgnored weak var controller: DataScannerViewController?
+    /// Wie oft jeder Code gesehen wurde – ein einzelner Fehlscan soll nicht gewinnen.
+    @ObservationIgnored private var sightings: [ScanReading.Code: Int] = [:]
 
     func handle(_ items: [RecognizedItem]) {
         for item in items {
             switch item {
             case .barcode(let b):
-                guard let payload = b.payloadStringValue, !payload.isEmpty else { continue }
+                guard let payload = b.payloadStringValue?.trimmingCharacters(in: .whitespacesAndNewlines), !payload.isEmpty else { continue }
                 let f = CodeFormat(vision: b.observation.symbology)
                 // UPC-E als UPC-A mit 12 Ziffern, damit Prüfziffer und Barcode stimmen
                 let value = b.observation.symbology == .upce ? (BarcodeEncoder.expandUPCE(payload) ?? payload) : payload
-                // Strichcode behalten, sobald einer gefunden ist; 2D-Codes nur als Notlösung
-                if barcode == nil || (format?.isTwoDimensional == true && !f.isTwoDimensional) {
-                    barcode = value
-                    format = f
-                }
+                let code = ScanReading.Code(payload: value, format: f)
+                sightings[code, default: 0] += 1
+                chooseBarcode()
             case .text(let t):
                 texts[item.id] = TextLine(text: t.transcript,
                                           top: min(t.bounds.topLeft.y, t.bounds.topRight.y), left: t.bounds.topLeft.x)
@@ -207,6 +258,26 @@ final class LiveScanModel {
         }
     }
 
+    func remove(_ items: [RecognizedItem]) {
+        // Text von früheren Kamerapositionen nicht mitschleppen; Barcodes bleiben (sie sind gezählt).
+        for item in items { if case .text = item { texts[item.id] = nil } }
+    }
+
+    /// Bester Kandidat: bestätigte Codes zuerst, dann nach Kassen-Tauglichkeit (Strichcode, Prüfziffer, Länge) und Häufigkeit.
+    private func chooseBarcode() {
+        func confirmed(_ c: ScanReading.Code) -> Bool {
+            (sightings[c] ?? 0) >= 2 || BarcodeEncoder.hasValidChecksum(c.payload, format: c.format) == true
+        }
+        let best = sightings.keys.max { a, b in
+            let ka = (confirmed(a) ? 10_000 : 0) + VoucherScanner.score(a) + min(sightings[a] ?? 0, 50)
+            let kb = (confirmed(b) ? 10_000 : 0) + VoucherScanner.score(b) + min(sightings[b] ?? 0, 50)
+            return ka < kb
+        }
+        guard let best else { return }
+        if barcode != best.payload { barcode = best.payload; format = best.format }
+        barcodeConfirmed = confirmed(best)
+    }
+
     /// Zeilen in Leserichtung: oben nach unten, in einer Zeile links nach rechts.
     var orderedText: String {
         texts.values
@@ -214,9 +285,10 @@ final class LiveScanModel {
             .map(\.text).joined(separator: "\n")
     }
 
-    func capturePhoto() async -> Data? {
-        guard let controller, let image = try? await controller.capturePhoto() else { return nil }
-        return image.thumbnailJPEG()
+    /// Standbild in voller Auflösung für die gründliche Auswertung.
+    func captureImage() async -> UIImage? {
+        guard let controller else { return nil }
+        return try? await controller.capturePhoto()
     }
 }
 
@@ -251,12 +323,20 @@ private struct DataScannerRepresentable: UIViewControllerRepresentable {
             isHighlightingEnabled: true)
         vc.delegate = context.coordinator
         model.controller = vc
-        try? vc.startScanning()
+        start(vc)
         return vc
     }
 
     func updateUIViewController(_ vc: DataScannerViewController, context: Context) {
-        if !vc.isScanning { try? vc.startScanning() }
+        if !vc.isScanning && !model.startFailed { start(vc) }
+    }
+
+    /// Start kann scheitern (Kamera belegt, gesperrt) – dann nicht schwarz bleiben, sondern den Foto-Weg zeigen.
+    private func start(_ vc: DataScannerViewController) {
+        do { try vc.startScanning() } catch {
+            let model = model
+            Task { @MainActor in model.startFailed = true }
+        }
     }
 
     static func dismantleUIViewController(_ vc: DataScannerViewController, coordinator: Coordinator) {
@@ -279,6 +359,14 @@ private struct DataScannerRepresentable: UIViewControllerRepresentable {
 
         func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: RecognizedItem) {
             model.handle([item])
+        }
+
+        func dataScanner(_ dataScanner: DataScannerViewController, didRemove removedItems: [RecognizedItem], allItems: [RecognizedItem]) {
+            model.remove(removedItems)
+        }
+
+        func dataScanner(_ dataScanner: DataScannerViewController, becameUnavailableWithError error: DataScannerViewController.ScanningUnavailable) {
+            model.startFailed = true
         }
     }
 }

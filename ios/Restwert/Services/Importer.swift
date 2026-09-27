@@ -30,64 +30,18 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
     }
 }
 
-nonisolated extension CodeFormat {
-    init(_ symbology: BarcodeSymbology) {
-        switch symbology {
-        case .ean13: self = .ean13
-        case .ean8: self = .ean8
-        case .upce: self = .upca          // Wert dazu mit BarcodeEncoder.expandUPCE auf 12 Ziffern bringen
-        case .itf14, .i2of5, .i2of5Checksum: self = .itf
-        case .code39, .code39Checksum, .code39FullASCII, .code39FullASCIIChecksum: self = .code39
-        case .qr, .microQR: self = .qr
-        case .pdf417, .microPDF417: self = .pdf417
-        case .aztec: self = .aztec
-        case .dataMatrix: self = .dataMatrix
-        default: self = .code128
-        }
-    }
-}
-
-nonisolated extension BarcodeObservation {
-    /// Nutzlast passend zu CodeFormat: UPC-E auf die 12 Ziffern von UPC-A erweitert.
-    var normalizedPayload: String? {
-        guard symbology == .upce, let p = payloadString else { return payloadString }
-        return BarcodeEncoder.expandUPCE(p) ?? p
-    }
-}
-
 nonisolated enum Importer {
-    /// Barcode und Text (inkl. Handschrift) mit der Vision-Swift-API lesen, danach optional mit Apple Intelligence strukturieren.
+    /// Barcode und Text (inkl. Handschrift) lesen – gestuft über `VoucherScanner` (ganzes Bild, Kontrast, Ausschnitte) –,
+    /// danach optional mit Apple Intelligence strukturieren.
     @concurrent
     static func analyze(cgImage: CGImage) async -> ScanOutcome {
-        async let codes = detectBarcodes(cgImage)
-        async let lines = recognizeText(cgImage)
-        let (found, text) = await (codes, lines)
-        // Strichcodes vor 2D-Codes bevorzugen: Gutscheinkarten tragen an der Kasse meist den Strichcode.
-        let best = found.first { !CodeFormat($0.symbology).isTwoDimensional } ?? found.first
-        var outcome = ScanOutcome(barcode: best?.normalizedPayload, format: best.map { CodeFormat($0.symbology) }, text: text)
-        if let smart = await SmartExtractor.extract(from: text) {
+        let reading = await VoucherScanner.read(cgImage)
+        var outcome = ScanOutcome(barcode: reading.best?.payload, format: reading.best?.format, text: reading.text)
+        if let smart = await SmartExtractor.extract(from: reading.text) {
             outcome.smart = smart
             outcome.usedAppleIntelligence = true
         }
         return outcome
-    }
-
-    @concurrent
-    private static func detectBarcodes(_ image: CGImage) async -> [BarcodeObservation] {
-        let request = DetectBarcodesRequest()
-        let results = (try? await request.perform(on: image)) ?? []
-        return results.filter { !($0.payloadString ?? "").isEmpty }
-    }
-
-    @concurrent
-    private static func recognizeText(_ image: CGImage) async -> String {
-        var request = RecognizeTextRequest()
-        request.recognitionLevel = .accurate          // erkennt auch Handschrift
-        request.usesLanguageCorrection = true
-        request.automaticallyDetectsLanguage = true
-        request.recognitionLanguages = [Locale.Language(identifier: "de-DE"), Locale.Language(identifier: "en-US")]
-        let observations = (try? await request.perform(on: image)) ?? []
-        return observations.compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n")
     }
 
     @MainActor
@@ -130,7 +84,7 @@ nonisolated enum Importer {
                 guard let page = doc.page(at: i) else { continue }
                 let pageText = page.string ?? ""
                 let box = page.bounds(for: .mediaBox)
-                let scale = 1800 / max(box.width, box.height, 1)
+                let scale = 2600 / max(box.width, box.height, 1)   // fein genug für kleine Barcodes auf A4
                 let img = page.thumbnail(of: CGSize(width: box.width * scale, height: box.height * scale), for: .mediaBox)
                 if result.photo == nil { result.photo = img.thumbnailJPEG() }
                 if let cg = img.cgImage {
