@@ -296,6 +296,20 @@ extension Router {
             homePath = [.checkout(card.id)]
             return
         }
+        // `-demoRadar YES`: Bestand wie auf einem echten Gerät (dringend, nächstes Jahr, spätere Jahre mit Rabattcode).
+        if UserDefaults.standard.bool(forKey: "demoRadar") {
+            let cal = Calendar.current
+            func day(_ d: Int) -> Date { cal.date(byAdding: .day, value: d, to: .now) ?? .now }
+            let specs: [(String, String, Double, Double?, Int)] = [
+                ("other", "Stadler", 25, nil, 11), ("other", "KM Kaffee", 25, nil, 400),
+                ("amazon", "", 70, nil, 900), ("other", "Buchladen", 25.15, nil, 1000), ("zalando", "", 0, 20, 820)]
+            for (id, name, value, percent, d) in specs {
+                var c = GiftCard(kind: percent == nil ? .giftCard : .discountCode, merchantID: id, customName: name, number: "RADAR\(d)",
+                                 format: .code128, value: value, balance: value, percent: percent, received: .now, expires: day(d))
+                c.isExample = true
+                store.upsert(c)
+            }
+        }
         guard let screen = UserDefaults.standard.string(forKey: "demoScreen") else { return }
         let sample = store.cards.first { !$0.history.isEmpty } ?? store.cards.first
         switch screen {

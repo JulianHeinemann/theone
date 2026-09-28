@@ -108,14 +108,23 @@ struct ExpiryRadar: View {
         Canvas { ctx, size in
             let top: CGFloat = 0
             let axis = p.axisY
-            // Warnband hinter der Achse: 0–14 Tage kräftiger, 15–30 Tage zart.
+            // Warnband hinter der Achse: 0–14 Tage kräftiger, 15–30 Tage zart. Läuft nach oben weich aus
+            // (kein harter Block bis zum Kartenrand) und beginnt mit einem schmalen, klaren Streifen an der Achse.
             for band in p.bands {
-                let r = CGRect(x: band.x0, y: top, width: max(0, band.x1 - band.x0), height: axis - top)
-                ctx.fill(Path(r), with: .color(band.strong ? Color.warnSoft : Color.soon.opacity(0.1)))
+                let w = max(0, band.x1 - band.x0)
+                let tint = band.strong ? Color.warn : Color.soon
+                let h = axis - top
+                let r = CGRect(x: band.x0, y: top, width: w, height: h)
+                ctx.fill(Path(roundedRect: r, cornerRadii: RectangleCornerRadii(topLeading: 6, topTrailing: 6)),
+                         with: .linearGradient(Gradient(colors: [tint.opacity(0), tint.opacity(band.strong ? 0.13 : 0.08)]),
+                                               startPoint: CGPoint(x: 0, y: top), endPoint: CGPoint(x: 0, y: axis)))
+                ctx.fill(Path(CGRect(x: band.x0, y: axis - 4, width: w, height: 3)), with: .color(tint.opacity(band.strong ? 0.45 : 0.25)))
             }
-            // Spaltengrenzen der Jahreszone.
+            // Spaltengrenzen der Jahreszone: zart gestrichelt, damit sie nicht wie ein Stiel wirken.
             for c in p.columns.dropFirst() {
-                ctx.fill(Path(CGRect(x: c.x0 - 0.5, y: top + 4, width: 1, height: axis - top - 4)), with: .color(Color.line))
+                var line = Path()
+                line.move(to: CGPoint(x: c.x0, y: top + 8)); line.addLine(to: CGPoint(x: c.x0, y: axis - 8))
+                ctx.stroke(line, with: .color(Color.line), style: StrokeStyle(lineWidth: 1, dash: [2, 4]))
             }
             // Stiele von der Kachel zur Achse, damit auch Spur 2 eindeutig auf ihrem Tag steht.
             for m in p.marks where !m.zoneB {
@@ -210,7 +219,7 @@ struct ExpiryRadar: View {
                             .frame(width: t * 0.4, height: t * 0.4)
                             .background(Color.warn, in: .circle)
                             .overlay(Circle().strokeBorder(Color.surface, lineWidth: 1.5))
-                            .offset(x: -t * 0.16, y: -t * 0.16)
+                            .offset(x: -t * 0.24, y: -t * 0.24)
                     }
                 }
                 .overlay(alignment: .topTrailing) {
@@ -314,7 +323,9 @@ private struct RadarPlan {
     static let horizon = 90
     static let labelGap: CGFloat = 3
     /// Luft über der obersten Spur für Warnring und „!“ (der Rest ragt in den Innenabstand der Hülle).
-    static let topGap: CGFloat = 2
+    static let topGap: CGFloat = 8
+    /// Abstand zwischen Betrag der unteren Spur und Achse (sonst klebt „25 €“ am Heute-Punkt).
+    static let axisGap: CGFloat = 6
     static let breakW: CGFloat = 12
 
     let tile: CGFloat
@@ -425,16 +436,21 @@ private struct RadarPlan {
             let label = full ? "\(c.from)\(c.from == c.to ? "" : "+")" : "’\(yy)\(c.from == c.to ? "" : "+")"
             columns.append(Column(x0: c.x0, x1: c.x1, label: label))
             guard let first = inCol.first else { continue }
-            let cx = (c.x0 + c.x1) / 2
-            marks.append(Mark(items: [first], x: cx, lane: 0, zoneB: true))
-            if inCol.count > 1 { marks.append(Mark(items: Array(inCol.dropFirst()), x: cx, lane: 1, zoneB: true)) }
+            // Eine Kachel je Jahr (früheste vorne, „+N“ für den Rest): gestapelte Kacheln mit Beträgen dazwischen
+            // ließen nicht erkennen, welcher Betrag zu welcher Kachel gehört.
+            // Vorne der Gutschein mit dem meisten Guthaben, damit die Summe darunter zu ihm passt.
+            let face = inCol.max { ($0.value ?? -1) < ($1.value ?? -1) } ?? first
+            marks.append(Mark(items: [face] + inCol.filter { $0.id != face.id }, x: (c.x0 + c.x1) / 2, lane: 0, zoneB: true))
         }
 
         // Beträge unter den Kacheln: nur wenn sie weder Nachbarn noch Stiele berühren.
         for i in marks.indices {
             let its = marks[i].items
+            // Bündel: Summe der Euro-Guthaben auf ganze Euro („95 €“ statt „95,15 €“), damit sie in die Spalte passt;
+            // Rabattcodes zählen nicht mit. Nur Rabattcodes im Bündel: kein Betrag.
+            let sum = its.reduce(0) { $0 + ($1.value ?? 0) }
             if its.count == 1 { marks[i].caption = its[0].amount }
-            else if its.allSatisfy({ $0.value != nil }) { marks[i].caption = RadarItem.short(its.reduce(0) { $0 + ($1.value ?? 0) }) }
+            else if sum > 0 { marks[i].caption = RadarItem.short(sum.rounded()) }
             if let c = marks[i].caption { marks[i].captionW = fonts.width(c, fonts.caption) }
         }
         let upperStems = marks.filter { $0.lane == 1 && !$0.zoneB }.map(\.x)   // schon aufsteigend
@@ -460,7 +476,7 @@ private struct RadarPlan {
         lanes = (marks.map(\.lane).max() ?? 0) + 1
         laneH = (0..<lanes).map { lane in
             let caps = marks.contains { $0.lane == lane && $0.showCaption }
-            return max(Layout.tap, t + 2 + (caps ? 1 + captionH : 0))
+            return max(Layout.tap, t + 2 + (caps ? 1 + captionH : 0)) + (lane == 0 ? Self.axisGap : 0)
         }
         axisY = Self.topGap + laneH.reduce(0, +)
         // Achse, Abstand, „Heute“-Pille (Zeile + 2 × 2 pt Innenabstand).

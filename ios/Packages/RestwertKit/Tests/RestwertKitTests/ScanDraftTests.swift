@@ -270,7 +270,8 @@ struct ScanDraftTests {
         #expect(d.number == nil)
         #expect(d.pin == nil)
         #expect(d.value != 45)
-        #expect(d.customName == nil)
+        // Nicht der erfundene Name der KI, sondern die Überschrift aus dem Text.
+        #expect(d.customName == "Café Sonnenschein")
     }
 
     @Test("Handschrift: Name in Originalschreibweise, Betrag und Beschenkte übernommen")

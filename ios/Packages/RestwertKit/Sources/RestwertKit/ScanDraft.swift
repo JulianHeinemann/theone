@@ -9,8 +9,12 @@ import Foundation
 public enum ScanDraft {
     public static func merge(text: String, smart: CardDraft?, now: Date = .now) -> CardDraft {
         var d = TextParser.parse(text, now: now)
-        guard let smart else { return d }
         let lines = text.split(whereSeparator: \.isNewline).map(String.init)
+        guard let smart else {
+            // Ohne KI: markante Überschrift als Vorschlag für den Ladennamen (nur bei Gutscheinen, siehe merge-Aufrufer).
+            if d.merchantID == nil, d.customName == nil { d.customName = headlineName(in: lines) }
+            return d
+        }
 
         if d.merchantID == nil, let id = smart.merchantID, onOneLine(Merchant.byID[id]?.name ?? id, in: lines) {
             d.merchantID = id
@@ -29,6 +33,7 @@ public enum ScanDraft {
             d.pin = pin
         }
         if d.expires == nil, let e = smart.expires, dateAppears(e, in: lines) { d.expires = e }
+        if d.merchantID == nil, d.customName == nil { d.customName = headlineName(in: lines) }
         if let n = smart.number, isPlausibleCode(n), onOneLine(n, in: lines), n != d.pin,
            d.number == nil || (d.number?.count ?? 0) < n.count {
             d.number = n
@@ -53,11 +58,66 @@ public enum ScanDraft {
     /// auch wenn sie Betrag, Nummer oder Barcode haben. Sonst genügt ein Barcode, ein Rabatt, eine PIN oder Betrag und Code zusammen.
     public static func looksLikeVoucher(_ d: CardDraft, text: String, hasBarcode: Bool) -> Bool {
         if text.range(of: bankDocuments, options: .regularExpression) != nil { return false }
-        if text.range(of: voucherWords, options: .regularExpression) != nil { return true }
+        if text.range(of: voucherWords, options: .regularExpression) != nil || hasGarbledVoucherWord(text) { return true }
         // Kassenbon von REWE, Fahrkarte der Bahn, Ausweis „gültig bis“: kein Gutschein, auch mit bekanntem Laden.
         if text.range(of: otherDocuments, options: .regularExpression) != nil { return false }
         if d.merchantID != nil || text.range(of: weakVoucherWords, options: .regularExpression) != nil { return true }
+        // Gestalteter Gutschein ohne lesbares Gutschein-Wort (Schreibschrift, Foto): genau ein Betrag mit Währung,
+        // keine Beleg-Wörter (oben schon ausgeschlossen). Listen und Bons haben mehrere Beträge.
+        if d.value != nil, currencyAmounts(in: text) == 1 { return true }
         return hasBarcode || d.percent != nil || d.pin != nil || (d.value != nil && d.number != nil)
+    }
+
+    /// Verlesenes Gutschein-Wort aus Schreibschrift oder unscharfem Foto („Gesdienkgutsdiein“, „Gutscbein“).
+    static func hasGarbledVoucherWord(_ text: String) -> Bool {
+        let targets = ["gutschein", "geschenkgutschein", "geschenkkarte", "geschenkgutscheine"]
+        for raw in text.split(whereSeparator: { !$0.isLetter }) {
+            let word = compact(String(raw))
+            guard word.count >= 7 else { continue }
+            if word.contains("gutsch") || word.contains("utschein") { return true }
+            for t in targets where abs(t.count - word.count) <= 3 && distance(word, t) <= (t.count >= 13 ? 3 : 2) { return true }
+        }
+        return false
+    }
+
+    /// Wie viele Beträge mit Währung im Text stehen („25 €“, „EUR 40“, „30,- Euro“).
+    static func currencyAmounts(in text: String) -> Int {
+        let p = #"(?i)(?:€|EUR)\s?\d|\d(?:[\d.,]*\d)?(?:\s?,\s?[-–])?\s?(?:€|EUR\b|Euro\b)"#
+        guard let re = try? NSRegularExpression(pattern: p) else { return 0 }
+        return re.numberOfMatches(in: text, range: NSRange(text.startIndex..., in: text))
+    }
+
+    /// Markante Überschrift als Ladenname, wenn kein Laden erkannt wurde: längste der ersten Zeilen mit einem bis drei Wörtern,
+    /// ohne Ziffern und ohne Gutschein-/Füllwörter („KRUSTENZAUBER“ → „Krustenzauber“).
+    static func headlineName(in lines: [String]) -> String? {
+        let filler = #"(?i)\b(gutschein\w*|geschenk\w*|gift|voucher|für|fuer|for|über|ueber|wert|gültig\w*|einlösbar|guthaben|von|an|zum|zur|dein\w*|ihr\w*|liebe\w*|herzlich\w*|alles\s+gute)\b"#
+        var best: String?
+        for line in lines.prefix(5) {
+            let t = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            let words = t.split(separator: " ")
+            guard (1...3).contains(words.count), t.filter(\.isLetter).count >= 4, t.count <= 30,
+                  !t.contains(where: \.isNumber), t.range(of: filler, options: .regularExpression) == nil,
+                  !hasGarbledVoucherWord(t) else { continue }
+            // Die längste Überschrift gewinnt (Anhänger „KRUSTEN“/„ZAUBER“ vor „KRUSTENZAUBER“).
+            if t.filter(\.isLetter).count > (best?.filter(\.isLetter).count ?? 0) { best = t }
+        }
+        guard let t = best else { return nil }
+        return t == t.uppercased() || t == t.lowercased() ? t.capitalized(with: Locale(identifier: "de_DE")) : t
+    }
+
+    /// Editierdistanz (Levenshtein) für kurze Wörter.
+    static func distance(_ a: String, _ b: String) -> Int {
+        let a = Array(a), b = Array(b)
+        var row = Array(0...b.count)
+        for i in 1...max(a.count, 1) where !a.isEmpty {
+            var prev = row[0]; row[0] = i
+            for j in 1...max(b.count, 1) where !b.isEmpty {
+                let cur = row[j]
+                row[j] = min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] == b[j - 1] ? 0 : 1))
+                prev = cur
+            }
+        }
+        return a.isEmpty ? b.count : row[b.count]
     }
 
     /// Code muss nach Code aussehen: mindestens 4 Zeichen und eine Ziffer.
