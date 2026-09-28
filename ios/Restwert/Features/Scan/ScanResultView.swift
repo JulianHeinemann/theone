@@ -238,7 +238,8 @@ struct ScanResultView: View {
             t.append(Tile(label: "Abgelaufen", value: "\(expires.dayMonthYear) · frag im Laden, oft noch einlösbar", alert: true))
         } else {
             t.append(Tile(label: draft.expiresIsEstimate ? "Gültig bis · berechnet" : "Gültig bis",
-                          value: draft.expires.map(\.dayMonthYear) ?? "nicht gefunden"))
+                          // Kein Datum auf dem Gutschein: gesetzliche Frist nennen statt nur „nicht gefunden“.
+                          value: draft.expires.map(\.dayMonthYear) ?? "nicht angegeben – gesetzlich bis \(GiftCard.legalExpiry(from: outcome.received ?? .now).dayMonthYear)"))
         }
         if let m = draft.minOrder { t.append(Tile(label: "Mindestbestellwert", value: "ab \(m.euro)")) }
         if let code {
@@ -414,10 +415,10 @@ struct ScanResultView: View {
         }
         if let value = draft.value, value >= 100, outcome.recentHighValueCount >= 1 {
             let n = outcome.recentHighValueCount
-            out.append(Check(level: .warning, text: "Du hast in den letzten 7 Tagen schon \(n == 1 ? "einen Gutschein" : "\(n) Gutscheine") ab 100 € erfasst. Hat dich jemand gebeten, Gutscheine zu kaufen und die Codes durchzugeben? So gehen Betrüger oft vor. Gib nichts weiter. \(Self.nextStep)"))
+            out.append(Check(level: .warning, text: "Du hast in den letzten 7 Tagen schon \(n == 1 ? "einen Gutschein" : "\(n) Gutscheine") ab 100 € erfasst. Hat dich jemand gebeten, Gutscheine zu kaufen und die Codes durchzugeben? So gehen Betrüger oft vor. Gib nichts weiter.\n\n\(Self.nextStep)"))
         } else if let value = draft.value, value >= Self.highValue {
             // Schon der erste hohe Gutschein: Betrug kurz beim Namen nennen, nicht erst weit unten.
-            out.append(Check(level: .warning, text: "Hohes Guthaben (\(value.euro)). Hat dich jemand am Telefon oder per Nachricht gebeten, diesen Gutschein zu kaufen? Dann ist es Betrug. Gib den Code nicht weiter. \(Self.nextStep)"))
+            out.append(Check(level: .warning, text: "Hohes Guthaben (\(value.euro)). Hat dich jemand am Telefon oder per Nachricht gebeten, diesen Gutschein zu kaufen? Dann ist es Betrug. Gib den Code nicht weiter.\n\n\(Self.nextStep)"))
         }
         return out
     }

@@ -26,9 +26,9 @@ struct HomeView: View {
                 if store.cards.isEmpty {
                     EmptyState { router.tab = .scan }
                 } else {
-                    // Reihenfolge: Guthaben → Dringendes (mit Weg zur Kasse) → Filter und Liste → Verfallsradar.
+                    // Reihenfolge: Guthaben → Dringendes → Filter und Liste → selbst ausgestellte → Verfallsradar.
                     // Die Liste kommt früh, weil man auf dem Start meist einen bestimmten Gutschein sucht.
-                    section("Läuft bald ab", cards: lists.dueSoon, quickCheckout: true)
+                    section("Läuft bald ab", cards: lists.dueSoon)
                     if lists.showFilters { filterBar(lists) }
                     if lists.searchEmpty {
                         ContentUnavailableView.search(text: lists.query)
@@ -40,10 +40,17 @@ struct HomeView: View {
                     // Der Zoom-Übergang hängt dann nur an der oberen Zeile, sonst gäbe es zwei Quellen mit derselben ID.
                     section(listTitle(lists), cards: lists.list, sortable: true,
                             zoomSkip: lists.activeFilter == .all ? [] : Set(lists.dueSoon.map(\.id)))
+                    // Selbst ausgestellte Gutscheine (Laden/Café) in einem eigenen Bereich: das ist Guthaben der Kunden,
+                    // nicht das eigene – nie mit der eigenen Liste vermischt.
+                    if !lists.issued.isEmpty && lists.activeFilter == .all {
+                        let open = lists.issued.reduce(0) { $0 + $1.balance }
+                        section("Selbst ausgestellt · \(open.euro) offen bei Kunden", cards: lists.issued)
+                    }
                     // Verfallsradar als Überblick unter der Liste; „Läuft bald ab“ oben nennt das Dringende schon.
                     // Selbst ausgegebene Gutscheine (Café) sind Fristen der Kunden, nicht eigene.
                     let own = lists.active.filter { !$0.issuedByMe }
-                    if !own.isEmpty && lists.query.isEmpty {
+                    // Nur ohne Suche und ohne Chip: unter „Ausgegeben“ stünden sonst die eigenen Fristen.
+                    if !own.isEmpty && lists.query.isEmpty && lists.activeFilter == .all {
                         ExpiryRadarSection(items: own.map { RadarItem(card: $0) },
                                            onSelect: { router.homePath.append(.card($0.id)) },
                                            onShowAll: { router.homePath.append(.radar) })
@@ -64,6 +71,10 @@ struct HomeView: View {
             .padding(.bottom, Layout.section * 2)
         }
         .scrollIndicators(.hidden)
+        #if DEBUG
+        // Nur für Screenshots: `-demoScrollBottom YES` zeigt das Listenende mit dem Verfallsradar.
+        .defaultScrollAnchor(UserDefaults.standard.bool(forKey: "demoScrollBottom") ? .bottom : .top)
+        #endif
         // Solange der Rückgängig-Hinweis über der Tab-Leiste steht, lässt sich das Listenende darüber schieben.
         .safeAreaPadding(.bottom, router.toast == nil ? 0 : 88)
         .pageBackground()
@@ -78,10 +89,6 @@ struct HomeView: View {
                 .sharedBackgroundVisibility(.hidden)
         }
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Gutschein, Code oder Notiz")
-        #if DEBUG
-        // Nur für Screenshots: `-demoFilter issued` wählt den Chip „Ausgegeben“.
-        .onAppear { if UserDefaults.standard.string(forKey: "demoFilter") == "issued" { filter = .issued } }
-        #endif
         .onChange(of: lists.offered) { _, offered in
             if !offered.contains(filter) { withAnimation(.snappy) { filter = .all } }
         }
@@ -98,18 +105,12 @@ struct HomeView: View {
     }
 
     private func listTitle(_ lists: HomeLists) -> String {
-        if lists.activeFilter == .issued {
-            // Für Läden: was an eigenen Gutscheinen noch offen ist.
-            let open = lists.list.reduce(0) { $0 + $1.balance }
-            return "Ausgegeben · \(open.euro) noch offen"
-        }
         if lists.activeFilter != .all { return chipTitle(lists.activeFilter) }
         return lists.dueSoon.isEmpty ? "Deine Gutscheine" : "Weitere"
     }
 
     @ViewBuilder
-    private func section(_ title: String, cards: [GiftCard], sortable: Bool = false, zoomSkip: Set<UUID> = [],
-                         quickCheckout: Bool = false) -> some View {
+    private func section(_ title: String, cards: [GiftCard], sortable: Bool = false, zoomSkip: Set<UUID> = []) -> some View {
         if !cards.isEmpty {
             VStack(alignment: .leading, spacing: Layout.group) {
                 HStack(alignment: .firstTextBaseline) {
@@ -139,33 +140,12 @@ struct HomeView: View {
                             .padding(.trailing, 4)
                         }
                         .contextMenu { rowMenu(c) }
-                        // Bald ablaufend: der nächste Schritt direkt an der Zeile, nicht erst im „…“-Menü.
-                        if quickCheckout && c.isActive { quickAction(c) }
                     }
                 }
                 .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
             }
             .animation(.snappy, value: cards.map(\.id))
         }
-    }
-
-    /// „An der Kasse zeigen“ / „Code einlösen“ / „Foto zeigen“ unter einer bald ablaufenden Zeile.
-    private func quickAction(_ c: GiftCard) -> some View {
-        let online = c.merchant.category == .codeOnly && !c.number.isEmpty
-        let paper = c.number.isEmpty && c.photo != nil
-        let title = online ? "Code einlösen" : paper ? "Foto an der Kasse zeigen" : c.number.isEmpty ? "Einlösen" : "An der Kasse zeigen"
-        return Button { router.homePath.append(c.number.isEmpty && !paper ? .card(c.id) : .checkout(c.id)) } label: {
-            Label(title, systemImage: online ? "globe" : paper ? "photo" : "barcode")
-                .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.onInk)
-                .padding(.horizontal, 14)
-                .frame(minHeight: 40)
-                .background(Color.ink, in: .capsule)
-                .contentShape(.capsule)
-        }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.leading, 72).padding(.bottom, Layout.group)
-        .accessibilityLabel("\(title): \(c.name)")
     }
 
     private func filterBar(_ lists: HomeLists) -> some View {
@@ -190,7 +170,7 @@ struct HomeView: View {
         case .balance: "Guthaben"
         case .codes: "Rabattcodes"
         case .gifts: "Zum Verschenken"
-        case .issued: "Ausgegeben"
+        case .issued: "Selbst ausgestellt"
         case .owner(let name): "Für \(name)"
         }
     }
@@ -286,6 +266,8 @@ private struct HomeLists {
     /// Hauptliste: ohne Filter alles Übrige, mit Filter alles Passende.
     private(set) var list: [GiftCard] = []
     private(set) var done: [GiftCard] = []
+    /// Selbst ausgestellte, noch offene Gutscheine (eigener Bereich).
+    private(set) var issued: [GiftCard] = []
     private(set) var offered: [CardFilter] = [.all]
     private(set) var activeFilter: CardFilter = .all
     private(set) var showFilters = false
@@ -294,7 +276,7 @@ private struct HomeLists {
     private(set) var examplesOnly = false
     let query: String
 
-    var searchEmpty: Bool { !query.isEmpty && dueSoon.isEmpty && list.isEmpty && done.isEmpty }
+    var searchEmpty: Bool { !query.isEmpty && dueSoon.isEmpty && list.isEmpty && done.isEmpty && issued.isEmpty }
     var filterEmpty: Bool { activeFilter != .all && list.isEmpty && done.isEmpty }
 
     private struct Entry {
@@ -330,16 +312,14 @@ private struct HomeLists {
         let hasBalance = cards.contains { $0.kind.isValueBased && !$0.forGifting && !$0.issuedByMe }
         let hasCodes = cards.contains { !$0.kind.isValueBased }
         let hasGifts = cards.contains(where: \.forGifting)
-        let hasIssued = cards.contains(where: \.issuedByMe)
-        let kinds = [hasBalance, hasCodes, hasGifts, hasIssued].filter { $0 }.count + owners.count
+        let kinds = [hasBalance, hasCodes, hasGifts].filter { $0 }.count + owners.count
         // Wer selbst Gutscheine ausgibt, braucht den Chip „Ausgegeben“ auch bei wenigen Karten.
-        showFilters = (cards.count > 3 || hasIssued) && kinds > 1
+        showFilters = cards.count > 3 && kinds > 1
         if showFilters {
             var f: [CardFilter] = [.all]
             if hasBalance { f.append(.balance) }
             if hasCodes { f.append(.codes) }
             if hasGifts { f.append(.gifts) }
-            if hasIssued { f.append(.issued) }
             offered = f + owners.map { .owner($0) }
         }
         // Verschwindet der Chip des gewählten Filters, gilt wieder „Alle“, sonst bliebe die Liste ohne Ausweg leer.
@@ -362,8 +342,10 @@ private struct HomeLists {
         dueSoonCount = due.count
         dueSoon = due.map(\.card).filter(search.matches)
         let dueIDs = Set(dueSoon.map(\.id))
+        // Selbst ausgestellte stehen im eigenen Bereich, nie in der eigenen Liste.
+        issued = sorted.compactMap { e in e.active && e.card.issuedByMe && search.matches(e.card) ? e.card : nil }
         list = sorted.compactMap { e in
-            guard e.active, search.matches(e.card) else { return nil }
+            guard e.active, !e.card.issuedByMe, search.matches(e.card) else { return nil }
             if chip == .all { return dueIDs.contains(e.card.id) ? nil : e.card }
             return passesChip(e.card) ? e.card : nil
         }

@@ -11,8 +11,6 @@ shot() { local n="$1"; shift; xcrun simctl terminate "$U" $B 2>/dev/null || true
 M=(-onboarded YES -appLock NO -codeLock NO)
 shot einstieg -onboarded NO
 shot start "${M[@]}"
-# Startseite mit echtem Bestand (dringend, nächstes Jahr, spätere Jahre mit Rabattcode), oben und nach unten gescrollt
-shot start-bestand "${M[@]}" -demoRadar YES
 shot hinzufuegen "${M[@]}" -demoScreen scan
 shot detail "${M[@]}" -demoScreen detail
 shot kasse "${M[@]}" -demoScreen checkout
@@ -48,5 +46,14 @@ shot kasse-code93 "${M[@]}" -demoBarcode "code128:C93-4471-2208" -demoOriginal "
 shot kasse-online-mindestbestellwert "${M[@]}" -demoBarcode "text:ZAL-SOMMER15-K4@zalando" -demoMinOrder 50
 shot papier-foto-geschuetzt -onboarded YES -appLock NO -codeLock YES -demoScreen paper
 scripts/barcode-kasse-test.sh "$U" "$O/barcodes" >/dev/null
+# Startseite mit echtem Bestand (dringend, nächstes Jahr, spätere Jahre mit Rabattcode) – frisch installiert, damit
+# die Demo-Karten keine anderen Aufnahmen verändern; oben, nach unten gescrollt und mit großer Schrift
+xcrun simctl uninstall "$U" $B; xcrun simctl install "$U" "$APP"
+shot start-bestand "${M[@]}" -demoRadar YES
+shot start-bestand-unten "${M[@]}" -demoScrollBottom YES
+xcrun simctl ui "$U" content_size accessibility-extra-large
+shot gross-start-bestand "${M[@]}"
+shot gross-start-bestand-unten "${M[@]}" -demoScrollBottom YES
+xcrun simctl ui "$U" content_size large
 xcrun simctl terminate "$U" $B 2>/dev/null || true
 echo "fertig: $(ls "$O" | wc -l) Dateien"

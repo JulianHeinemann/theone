@@ -723,16 +723,18 @@ struct CardFormView: View {
         guard editing == nil, outcome == nil else { return nil }
         func plain(_ s: String) -> String { s.filter { $0.isLetter || $0.isNumber }.uppercased() }
         let code = plain(number)
+        // Beide Hinweise zusammen, wenn beides zutrifft (Dublette und hoher Wert).
+        var notes: [String] = []
         if !code.isEmpty, let dup = store.cards.first(where: { !$0.isExample && !$0.issuedByMe && plain($0.number) == code }) {
-            return "Diesen Code hast du schon gespeichert („\(dup.name)“)."
+            notes.append("Diesen Code hast du schon gespeichert („\(dup.name)“).")
         }
         let value = parseMoney(valueText) ?? 0
         let weekAgo = Date.now.addingTimeInterval(-7 * 24 * 3600)
         let recent = store.cards.filter { !$0.isExample && !$0.issuedByMe && $0.value >= 100 && $0.addedOrReceived >= weekAgo }.count
         if value >= ScanResultView.highValue || (value >= 100 && recent >= 1) {
-            return "Hat dich jemand am Telefon oder per Nachricht gebeten, Gutscheine zu kaufen und die Codes durchzugeben? Dann ist es Betrug. Gib nichts weiter. \(ScanResultView.nextStep)"
+            notes.append("Hat dich jemand am Telefon oder per Nachricht gebeten, Gutscheine zu kaufen und die Codes durchzugeben? Dann ist es Betrug. Gib nichts weiter.\n\n\(ScanResultView.nextStep)")
         }
-        return nil
+        return notes.isEmpty ? nil : notes.joined(separator: "\n\n")
     }
 
     private func save() {

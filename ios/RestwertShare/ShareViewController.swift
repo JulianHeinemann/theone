@@ -76,8 +76,17 @@ final class ShareModel {
             state = .failed("Darin war nichts, was Restwert lesen kann. Teile ein Foto, ein PDF oder den markierten Text der Gutschein-Mail.")
             return
         }
+        Self.protect(dir)
         state = .done(photos: photos, documents: documents, texts: texts, preview: preview)
         await Self.notifyReady(count: photos + documents + texts)
+    }
+
+    /// Wie die App-Daten: Übergabedateien nur lesbar, nachdem das Gerät seit dem Start einmal entsperrt wurde.
+    private static func protect(_ dir: URL) {
+        for url in SharedInbox.pending(in: dir) {
+            try? FileManager.default.setAttributes([.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+                                                   ofItemAtPath: url.path())
+        }
     }
 
     /// Kurze Vorschau aus dem Text ohne KI: „Amazon · 25,00 €“.
@@ -97,7 +106,7 @@ final class ShareModel {
         guard status == .authorized || status == .provisional else { return }
         let content = UNMutableNotificationContent()
         content.title = count == 1 ? "Gutschein bereit zum Prüfen" : "\(count) Gutscheine bereit zum Prüfen"
-        content.body = "Tippen, um sie in Restwert einzulesen."
+        content.body = count == 1 ? "Tippen, um ihn in Restwert einzulesen." : "Tippen, um sie in Restwert einzulesen."
         content.userInfo = ["inbox": true]
         content.threadIdentifier = "inbox"
         let request = UNNotificationRequest(identifier: "inbox-ready", content: content,
@@ -202,7 +211,7 @@ private struct ShareView: View {
                         Text("So geht es weiter").font(.headline)
                         Label("Tippe auf „Fertig“.", systemImage: "1.circle")
                         Label("Öffne Restwert – die App liest alles ein.", systemImage: "2.circle")
-                        Label("Prüfen und mit einem Tipp speichern.", systemImage: "3.circle")
+                        Label("Prüfen und speichern.", systemImage: "3.circle")
                     }
                     .font(.body)
                     Text("Sind Mitteilungen erlaubt, erinnert dich Restwert gleich daran.")

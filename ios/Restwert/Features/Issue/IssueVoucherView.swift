@@ -36,7 +36,7 @@ struct IssueVoucherView: View {
             issue()
         }
         #endif
-        .navigationTitle(issued == nil ? "Gutschein ausgeben" : "Gutschein teilen")
+        .navigationTitle(issued == nil ? "Gutschein ausstellen" : "Gutschein teilen")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -78,7 +78,7 @@ struct IssueVoucherView: View {
                 .font(.scaled(14, weight: .medium))
             }
             Button("Gutschein erstellen", action: issue).buttonStyle(.primary)
-            Text("Ausgegebene Gutscheine zählen nicht zu deinem Guthaben. Du findest sie in der Liste mit „ausgegeben“.")
+            Text("Selbst ausgestellte Gutscheine zählen nicht zu deinem Guthaben. Du findest sie auf der Startseite im eigenen Bereich „Selbst ausgestellt“.")
                 .font(.scaled(13)).foregroundStyle(Color.muted)
         }
     }
@@ -174,6 +174,6 @@ struct IssuedVoucherCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(hex: 0xFFD84D), in: TicketShape(radius: 20, notchRadius: 10, notchY: 0.62))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Gutschein \(card.name), \(card.value.euro)\(card.issuedTo.isEmpty ? "" : ", für \(card.issuedTo)"), Code \(card.number)")
+        .accessibilityLabel("Gutschein \(card.name), \(card.value.euro)\(card.issuedTo.isEmpty ? "" : ", für \(card.issuedTo)")\(message.isEmpty ? "" : ", Gruß: \(message)"), gültig bis \(card.expires.dayMonthYear), Code \(card.number)")
     }
 }

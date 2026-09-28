@@ -184,7 +184,7 @@ struct CheckoutView: View {
                     if checkoutTypeSize.isAccessibilitySize {
                         // Sehr große Schrift: beide Nebenwege in einem Menü, damit die Leiste nicht den halben Bildschirm füllt.
                         Menu {
-                            Button(isOnline(card) ? "Hat nicht geklappt" : "Nicht angenommen") { withAnimation(.snappy) { result = false } }
+                            Button("Nicht angenommen") { withAnimation(.snappy) { result = false } }
                             Button("Später eintragen") { Task { await remindLater(card) }; dismiss() }
                         } label: {
                             Label("Andere Möglichkeiten", systemImage: "ellipsis.circle")
@@ -207,13 +207,13 @@ struct CheckoutView: View {
     }
 
     private func primaryTitle(_ card: GiftCard) -> String {
-        if card.issuedByMe { return "Einlösen – Betrag abziehen" }
+        if card.issuedByMe { return "Einlösen – vom Guthaben abziehen" }
         if isOnline(card) { return card.kind.isValueBased ? "Eingelöst – Einkauf abziehen" : "Als eingelöst markieren" }
         return card.kind.isValueBased ? "Bezahlt – Einkauf abziehen" : "Eingelöst"
     }
 
     private func notAccepted(_ card: GiftCard) -> some View {
-        Button(isOnline(card) ? "Hat nicht geklappt" : "Nicht angenommen") { withAnimation(.snappy) { result = false } }
+        Button("Nicht angenommen") { withAnimation(.snappy) { result = false } }
             .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
             .buttonStyle(.bordered).buttonBorderShape(.capsule).tint(Color.ink)
             .frame(minHeight: Layout.tap)
@@ -980,6 +980,11 @@ private struct FullBarcode: View {
                     .font(.system(size: 26, weight: .bold, design: .monospaced)).kerning(2)
                     .foregroundStyle(.black)
                     .onTapGesture { if hidden { revealed = true } else { dismiss() } }
+                // Ersatzformat auch im Vollbild nennen (Kassierer sieht meist nur diese Ansicht).
+                if let original = card.originalSymbology ?? (BarcodeRenderer.drawnAsCode128(card.number, format: card.format) ? card.format.label : nil) {
+                    Text("Als Code 128 gezeichnet (auf der Karte: \(original))")
+                        .font(.system(size: 15, weight: .medium)).foregroundStyle(.black.opacity(0.7))
+                }
             }
             // Weißer Hintergrund: Textcodes auch im Dunkelmodus dunkel zeichnen.
             .environment(\.colorScheme, .light)

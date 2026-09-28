@@ -48,6 +48,11 @@ struct GoldenOCRTests {
              value: 25),
         Case(id: "Krustenzauber verlesen", text: "KRUSTENZAUBER\nGesdienkgutsdiein\nFÜR UNSERE BACKWELT\n25 €", value: 25),
         Case(id: "Preisliste mit mehreren Beträgen", text: "Brot 4,50 €\nBrötchen 0,60 €\nKuchen 3,20 €", value: 4.5, voucher: false),
+        // Einzelner Betrag, aber Preis/Werbung/Karte (Befund Runde 10): kein Gutschein.
+        Case(id: "Preisschild", text: "BIO-HONIG\nnur 7,99 €\nje 500 g", value: 7.99, voucher: false),
+        Case(id: "Tageskarte", text: "Tageskarte\nSchnitzel mit Pommes\n12 €", value: 12, voucher: false),
+        Case(id: "Werbung", text: "SOMMER SALE\nJetzt kaufen\nab 49 €", voucher: false),
+        Case(id: "Plakat Eintritt", text: "STADTFEST\nEintritt 10 €", value: 10, voucher: false),
         Case(id: "v12 Stadtgutschein", text: "Kassel Stadtgutschein\nWert 10 Euro\nSeriennummer KS-2026-004711\nGültigkeit: 24 Monate",
              merchant: "stadtgutschein", value: 10, number: "KS-2026-004711", expires: [2028, 9, 27]),
     ]

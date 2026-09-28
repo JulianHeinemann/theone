@@ -23,6 +23,10 @@ struct ScanView: View {
     @State private var batchUnreadable = 0
     @State private var batchSaved = 0
     @State private var batchSkipped = 0
+    /// Zuletzt gespeicherter Gutschein einer Reihe: die Bilanz am Ende behält sein „Ansehen“.
+    @State private var lastSaved: GiftCard?
+    /// „Foto“ bei Mehrfachauswahl aus Fotos, „Eintrag“ bei geteilten Texten/PDFs.
+    @State private var batchPhotos = true
     @State private var formSeed: FormSeed?
     @State private var importError: String?
     /// Zählt Lesevorgänge; ein abgebrochener oder überholter Vorgang zeigt sein Ergebnis nicht mehr.
@@ -49,7 +53,7 @@ struct ScanView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 if outcome != nil && batchTotal > 1 {
-                    Text("Foto \(batchTotal - batch.count) von \(batchTotal)")
+                    Text("\(batchPhotos ? "Foto" : "Eintrag") \(batchTotal - batch.count) von \(batchTotal)")
                         .font(.scaled(13, weight: .semibold)).foregroundStyle(Color.ink2)
                         .padding(.top, 8)
                 }
@@ -164,7 +168,7 @@ struct ScanView: View {
                 outcome = nil
                 // Immer im Hinzufügen-Tab bleiben (mehrere hintereinander, gleich welche Quelle); „Ansehen“ öffnet ihn.
                 router.toast = Toast(message: "„\(saved.name)“ gespeichert", undo: { [router] in router.showCard(saved.id) }, actionTitle: "Ansehen")
-                if batchTotal > 1 { batchSaved += 1 }
+                if batchTotal > 1 { batchSaved += 1; lastSaved = saved }
                 nextFromBatch()
             }
         }
@@ -190,6 +194,7 @@ struct ScanView: View {
             photoItems = []
             batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
             batch = items.map { .photo($0) }
+            batchPhotos = true
             batchTotal = items.count
             nextFromBatch()
         }
@@ -231,7 +236,7 @@ struct ScanView: View {
                     }
                     Divider().padding(.leading, 56)
                     Button { showEmail = true } label: {
-                        SourceRow(icon: "envelope", title: "Aus dem Text einer E-Mail", subtitle: "Text kopieren und hier einfügen")
+                        SourceRow(icon: "envelope", title: "Aus dem Text einer E-Mail", subtitle: "Einfügen – oder in Mail markieren und „Teilen“ → Rest\u{2060}wert")
                     }
                     if clipboardHasText {
                         Button(action: pasteFromClipboard) {
@@ -254,11 +259,11 @@ struct ScanView: View {
                     }
                     Divider().padding(.leading, 56)
                     Button { formSeed = FormSeed(outcome: nil) } label: {
-                        SourceRow(icon: "keyboard", title: "Von Hand eingeben", subtitle: "Laden, Betrag und Code selbst eintippen")
+                        SourceRow(icon: "keyboard", title: "Von Hand eingeben", subtitle: "Laden, Guthaben und Code selbst eintippen")
                     }
                     Divider().padding(.leading, 56)
                     Button { showIssue = true } label: {
-                        SourceRow(icon: "storefront", title: "Eigenen Gutschein ausgeben",
+                        SourceRow(icon: "storefront", title: "Eigenen Gutschein ausstellen",
                                   subtitle: "Für Läden und Cafés: Gutschein mit QR-Code erstellen und teilen")
                     }
                 }
@@ -316,7 +321,7 @@ struct ScanView: View {
         // Abbrechen in einer Mehrfachauswahl: Rest als übersprungen zählen und mit Bilanz beenden.
         if batchTotal > 1 {
             batchSkipped += batch.count + 1
-            batch = []
+            dropPendingBatch()
             nextFromBatch()
         }
     }
@@ -381,16 +386,27 @@ struct ScanView: View {
         let files = router.pendingBatch
         guard !files.isEmpty else { return }
         router.pendingBatch = []
-        let running = batchTotal > 0 && (busy || outcome != nil || !batch.isEmpty)
+        // Ein offenes Ergebnis (auch ein einzelnes, noch nicht gespeichertes) nie verwerfen: hinten anhängen.
+        let running = busy || outcome != nil || !batch.isEmpty
+        let images = files.allSatisfy { UTType(filenameExtension: $0.pathExtension)?.conforms(to: .image) == true }
+        batchPhotos = (running ? batchPhotos : true) && images
         batch += files.map { .file($0) }
         if running {
-            batchTotal += files.count
+            batchTotal = max(batchTotal, 1) + files.count
         } else {
             batchTotal = files.count
             batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
             withAnimation(reduceMotion ? nil : .smooth) { outcome = nil }
             nextFromBatch()
         }
+    }
+
+    /// Reihe abbrechen: übernommene Kopien aus dem Teilen-Menü, die nicht mehr gelesen werden, gleich löschen.
+    private func dropPendingBatch() {
+        for case .file(let url) in batch where url.path().contains("/shared-inbox/") {
+            try? FileManager.default.removeItem(at: url)
+        }
+        batch = []
     }
 
     /// Mehrere Fotos: aktuelles Ergebnis auslassen, weiter mit dem nächsten.
@@ -419,9 +435,14 @@ struct ScanView: View {
                 if batchSaved > 0 { parts.append("\(batchSaved) gespeichert") }
                 if batchSkipped > 0 { parts.append("\(batchSkipped) übersprungen") }
                 if batchUnreadable > 0 { parts.append("\(batchUnreadable) nicht lesbar") }
-                router.toast = Toast(message: "\(batchTotal) Fotos: " + parts.joined(separator: ", "), undo: nil)
+                let summary = "\(batchTotal) \(batchPhotos ? "Fotos" : "Einträge"): " + parts.joined(separator: ", ")
+                if let last = lastSaved {
+                    router.toast = Toast(message: summary, undo: { [router] in router.showCard(last.id) }, actionTitle: "Letzten ansehen")
+                } else {
+                    router.toast = Toast(message: summary, undo: nil)
+                }
             }
-            batchTotal = 0; batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
+            batchTotal = 0; batchUnreadable = 0; batchSaved = 0; batchSkipped = 0; lastSaved = nil
             return
         }
         let source = batch.removeFirst()
@@ -444,7 +465,7 @@ struct ScanView: View {
     private func rescan() {
         // Altes Ergebnis bleibt stehen, bis ein neues da ist: Abbrechen im Scanner verliert nichts.
         // Eine laufende Mehrfachauswahl endet hier: sonst käme nach dem Kamera-Scan unerwartet das nächste Foto.
-        batch = []; batchTotal = 0; batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
+        dropPendingBatch(); batchTotal = 0; batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
         showScanner = true
     }
 
@@ -455,10 +476,10 @@ struct ScanView: View {
            let own = store.cards.first(where: { $0.issuedByMe && plain($0.number) == plain(scanned) }) {
             withAnimation(reduceMotion ? nil : .smooth) { outcome = nil }
             // Eigener Café-Gutschein in einer Reihe: die Reihe endet hier (Einlösen hat Vorrang).
-            batch = []; batchTotal = 0; batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
+            dropPendingBatch(); batchTotal = 0; batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
             router.tab = .home
             router.homePath = [.checkout(own.id)]
-            router.toast = Toast(message: "Dein Gutschein: noch \(own.balance.euro) offen", undo: nil)
+            router.toast = Toast(message: "Eigener Gutschein erkannt: noch \(own.balance.euro) Guthaben", undo: nil)
             return
         }
         var result = result
@@ -553,7 +574,7 @@ private struct EmailImportSheet: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Kopier in Mail den Text der Gutschein-E-Mail und füg ihn hier ein. Rest\u{2060}wert sucht Laden, Wert, Code, PIN und Ablaufdatum heraus.")
+                Text("Kopier in Mail den Text der Gutschein-E-Mail und füg ihn hier ein. Rest\u{2060}wert sucht Laden, Guthaben, Code, PIN und Ablaufdatum heraus. Schneller: In Mail den Text markieren und „Teilen“ → Rest\u{2060}wert wählen.")
                     .font(.scaled(15)).foregroundStyle(Color.ink2)
                     .fixedSize(horizontal: false, vertical: true)
                 if hasClipboard {

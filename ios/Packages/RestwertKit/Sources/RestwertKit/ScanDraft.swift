@@ -52,6 +52,9 @@ public enum ScanDraft {
     /// Schwache Wörter: stehen auch auf Ausweisen, Fahrkarten und Bons („gültig bis“, „Rabatt“).
     private static let weakVoucherWords = #"(?i)\b(einlösbar|einloesbar|gültig\w*|gueltig\w*|valid|rabatt\w*|guthaben|coupons?)\b"#
 
+    /// Preisschilder, Werbung und Karten: ein einzelner Betrag ist dort ein Preis, kein Gutscheinwert.
+    private static let priceWords = #"(?i)\b(preis\w*|nur|statt|uvp|angebot\w*|aktion\w*|sale|rabatt\w*|sparen|spare|jetzt|kaufen|bestell\w*|je|pro|kg|stück|stk|liter|inkl|zzgl|versand\w*|tageskarte|mittagstisch|menü|gericht|tagesgericht|speise\w*|getränk\w*|eintritt|ticket\w*|miete|monat\w*|jahr\w*|abo\w*)\b"#
+
     /// Belege und Dokumente, die Betrag, Nummer oder Barcode haben, aber kein Gutschein sind.
     private static let otherDocuments = #"(?i)\b(kassenbon|kassenbeleg|quittung|rechnung|beleg\s?nr|summe|zwischensumme|bar\s?gegeben|rückgeld|gesamt|gesamtbetrag|bonnummer|bon-nr|beleg-nr|belegnummer|tse|kartenzahlung|ec-cash|mwst|ust\.?|fahrkarte|fahrschein|ticket|boarding\s?pass|bordkarte|personalausweis|reisepass|ausweis\w*|führerschein|parkschein|parkticket|speisekarte|getränkekarte|visitenkarte|mitgliedsausweis|krankenversicherung|versichertenkarte|iban|bic)\b"#
 
@@ -64,9 +67,12 @@ public enum ScanDraft {
         // Kassenbon von REWE, Fahrkarte der Bahn, Ausweis „gültig bis“: kein Gutschein, auch mit bekanntem Laden.
         if text.range(of: otherDocuments, options: .regularExpression) != nil { return false }
         if d.merchantID != nil || text.range(of: weakVoucherWords, options: .regularExpression) != nil { return true }
-        // Gestalteter Gutschein ohne lesbares Gutschein-Wort (Schreibschrift, Foto): genau ein Betrag mit Währung,
-        // keine Beleg-Wörter (oben schon ausgeschlossen). Listen und Bons haben mehrere Beträge.
-        if d.value != nil, currencyAmounts(in: text) == 1 { return true }
+        // Gestalteter Gutschein ohne lesbares Gutschein-Wort (Schreibschrift, Foto): genau ein Betrag mit Währung
+        // in ganzen Euro (Gutscheine: 10, 25, 50 €; Preise: 2,99 €), eine markante Überschrift (Laden)
+        // und keine Preis-, Werbe- oder Speisekarten-Wörter. Listen und Bons haben mehrere Beträge.
+        if let v = d.value, v >= 5, v == v.rounded(), currencyAmounts(in: text) == 1,
+           text.range(of: priceWords, options: .regularExpression) == nil,
+           headlineName(in: text.split(whereSeparator: \.isNewline).map(String.init)) != nil { return true }
         return hasBarcode || d.percent != nil || d.pin != nil || (d.value != nil && d.number != nil)
     }
 

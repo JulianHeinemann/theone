@@ -42,8 +42,8 @@ run eigener-gutschein-einloesen 9 -demoImport "$DATA/Documents/scan-tests/eigene
 xcrun simctl ui "$U" content_size accessibility-extra-large
 run gross-eigener-gutschein-einloesen 9 -demoImport "$DATA/Documents/scan-tests/eigener-qr.png"
 xcrun simctl ui "$U" content_size large
-run liste-ausgegeben 5
-run liste-ausgegeben-filter 5 -demoFilter issued
+run liste-ausgestellt 5
+run liste-ausgestellt-unten 5 -demoScrollBottom YES
 xcrun simctl terminate "$U" $B 2>/dev/null || true
 # iPad
 xcrun simctl install "$P" "$APP"

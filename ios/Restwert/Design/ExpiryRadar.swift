@@ -67,10 +67,11 @@ struct ExpiryRadar: View {
     @State private var landed = false
     @State private var width: CGFloat = 0
 
+    /// Kachelgröße bei Standardschrift; auf der Startseite 36 pt (gut lesbar), sonst 28 pt.
+    var baseTile: CGFloat = 28
     // Wächst mit „Größerer Text“, gedeckelt, damit die Achse nicht nur aus Kacheln besteht.
-    // 28 pt: Kachel + Betrag + Luft ergeben genau eine 44-pt-Spur, das Radar bleibt kompakt.
-    @ScaledMetric(relativeTo: .body) private var tileBase: CGFloat = 28
-    private var tile: CGFloat { min(tileBase, 42) }
+    @ScaledMetric(relativeTo: .body) private var unit: CGFloat = 1
+    private var tile: CGFloat { min(baseTile * unit, baseTile * 1.5) }
     /// Beschriftungen wachsen bis Accessibility 1 (≈ 17 pt), danach nicht weiter.
     private static let maxType = DynamicTypeSize.accessibility1
 
@@ -108,17 +109,11 @@ struct ExpiryRadar: View {
         Canvas { ctx, size in
             let top: CGFloat = 0
             let axis = p.axisY
-            // Warnband hinter der Achse: 0–14 Tage kräftiger, 15–30 Tage zart. Läuft nach oben weich aus
-            // (kein harter Block bis zum Kartenrand) und beginnt mit einem schmalen, klaren Streifen an der Achse.
+            // Warnzonen nur als farbige Achse (bis 14 Tage rot, bis 30 Tage orange) – keine Flächen hinter den Kacheln.
             for band in p.bands {
                 let w = max(0, band.x1 - band.x0)
-                let tint = band.strong ? Color.warn : Color.soon
-                let h = axis - top
-                let r = CGRect(x: band.x0, y: top, width: w, height: h)
-                ctx.fill(Path(roundedRect: r, cornerRadii: RectangleCornerRadii(topLeading: 6, topTrailing: 6)),
-                         with: .linearGradient(Gradient(colors: [tint.opacity(0), tint.opacity(band.strong ? 0.13 : 0.08)]),
-                                               startPoint: CGPoint(x: 0, y: top), endPoint: CGPoint(x: 0, y: axis)))
-                ctx.fill(Path(CGRect(x: band.x0, y: axis - 4, width: w, height: 3)), with: .color(tint.opacity(band.strong ? 0.45 : 0.25)))
+                ctx.fill(Path(roundedRect: CGRect(x: band.x0, y: axis - 2.5, width: w, height: 5), cornerRadius: 2.5),
+                         with: .color(band.strong ? Color.warn : Color.soon))
             }
             // Spaltengrenzen der Jahreszone: zart gestrichelt, damit sie nicht wie ein Stiel wirken.
             for c in p.columns.dropFirst() {
@@ -200,45 +195,31 @@ struct ExpiryRadar: View {
         let face = m.items[0]
         let extra = m.items.count - 1
         let t = plan.tile
-        let content = VStack(spacing: 1) {
-            MerchantMark(merchantID: face.merchantID, name: face.name, size: t)
-                .overlay(RoundedRectangle(cornerRadius: t * 0.24, style: .continuous).strokeBorder(Color.surface, lineWidth: 2))
-                .overlay {
-                    // Dringend (bis 14 Tage): roter Ring …
-                    if face.urgent {
-                        RoundedRectangle(cornerRadius: t * 0.24 + 3, style: .continuous)
-                            .strokeBorder(Color.warn, lineWidth: 2).padding(-3)
-                    }
+        let content = VStack(spacing: 3) {
+            ZStack {
+                // Bündel: eine zweite Kachel lugt leicht versetzt hervor – statt einer „+N“-Plakette auf der Kachel.
+                if extra > 0 {
+                    RoundedRectangle(cornerRadius: t * 0.24, style: .continuous)
+                        .fill(Color.fill)
+                        .overlay(RoundedRectangle(cornerRadius: t * 0.24, style: .continuous).strokeBorder(Color.line, lineWidth: 1))
+                        .frame(width: t, height: t)
+                        .offset(x: 4, y: -4)
                 }
-                .overlay(alignment: .topLeading) {
-                    // … und ein Ausrufezeichen, damit es nicht nur an der Farbe hängt.
-                    if face.urgent {
-                        Image(systemName: "exclamationmark")
-                            .font(.system(size: t * 0.24, weight: .black))
-                            .foregroundStyle(Color.onInk)
-                            .frame(width: t * 0.4, height: t * 0.4)
-                            .background(Color.warn, in: .circle)
-                            .overlay(Circle().strokeBorder(Color.surface, lineWidth: 1.5))
-                            .offset(x: -t * 0.24, y: -t * 0.24)
+                MerchantMark(merchantID: face.merchantID, name: face.name, size: t)
+                    .overlay(RoundedRectangle(cornerRadius: t * 0.24, style: .continuous).strokeBorder(Color.surface, lineWidth: 2))
+                    .overlay {
+                        // Dringend (bis 14 Tage): roter Ring; dazu der Betrag rot und fett (nicht nur Farbe).
+                        if face.urgent {
+                            RoundedRectangle(cornerRadius: t * 0.24 + 3, style: .continuous)
+                                .strokeBorder(Color.warn, lineWidth: 2.5).padding(-3)
+                        }
                     }
-                }
-                .overlay(alignment: .topTrailing) {
-                    if extra > 0 {
-                        Text("+\(extra)")
-                            .font(.system(size: max(10, t * 0.3), weight: .heavy, design: .rounded)).monospacedDigit()
-                            .foregroundStyle(Color.onInk)
-                            .padding(.horizontal, 4).frame(minWidth: t * 0.5, minHeight: t * 0.44)
-                            .background(Color.ink, in: .capsule)
-                            .overlay(Capsule().strokeBorder(Color.surface, lineWidth: 1.5))
-                            .fixedSize()
-                            .offset(x: t * 0.22, y: -t * 0.18)
-                    }
-                }
-                .shadow(color: Color.shade, radius: 3, y: 1)
+            }
+            .shadow(color: Color.shade, radius: 3, y: 1)
             if m.showCaption, let c = m.caption {
                 Text(c)
-                    .font(.scaled(12, weight: .semibold, design: .rounded)).monospacedDigit()
-                    .foregroundStyle(Color.ink2)
+                    .font(.scaled(12, weight: face.urgent ? .heavy : .semibold, design: .rounded)).monospacedDigit()
+                    .foregroundStyle(face.urgent ? Color.warn : Color.ink2)
                     .lineLimit(1).fixedSize()
             }
             Spacer(minLength: 0)
@@ -377,11 +358,12 @@ private struct RadarPlan {
         if let first = far.first, let last = far.last {
             let y0 = cal.component(.year, from: first.item.expires)
             let y1 = cal.component(.year, from: last.item.expires)
-            let colMin = max(hit, fonts.width("2027+", fonts.label) + 6)
-            let room = W * 0.45 - Self.breakW
+            // Spalten breit genug für Kachel und Betrag („2× 120 €“); passen nicht alle Jahre, fasst die letzte zusammen.
+            let colMin = max(hit, fonts.width("2× 120 €", fonts.caption) + 8, fonts.width("2027+", fonts.label) + 6)
+            let room = W * 0.5 - Self.breakW
             let fit: Int = max(1, Int(room / colMin))
             let k: Int = Swift.min(y1 - y0 + 1, fit)
-            let colW: CGFloat = Swift.max(colMin, Swift.min(72, room / CGFloat(k)))
+            let colW: CGFloat = Swift.max(colMin, Swift.min(84, room / CGFloat(k)))
             let start = W - CGFloat(k) * colW
             for i in 0..<k {
                 let x0 = start + CGFloat(i) * colW
@@ -465,7 +447,9 @@ private struct RadarPlan {
             // Jahresspalten sind schmal: Euro dort ohne Cent („12 €“ statt „12,40 €“), sonst fiele der Betrag weg.
             if its.count == 1, marks[i].zoneB, let v = its[0].value { marks[i].caption = RadarItem.short(v.rounded()) }
             else if its.count == 1 { marks[i].caption = its[0].amount }
-            else if sum > 0 { marks[i].caption = RadarItem.short(sum.rounded()) }
+            // Bündel: Anzahl und Summe ausgeschrieben („2× 95 €“) statt einer Plakette auf der Kachel.
+            else if sum > 0 { marks[i].caption = "\(its.count)×\u{2009}\(RadarItem.short(sum.rounded()))" }
+            else { marks[i].caption = "\(its.count)×" }
             if let c = marks[i].caption { marks[i].captionW = fonts.width(c, fonts.caption) }
         }
         let upperStems = marks.filter { $0.lane == 1 && !$0.zoneB }.map(\.x)   // schon aufsteigend
@@ -478,7 +462,8 @@ private struct RadarPlan {
                 let half = mk.captionW / 2
                 var ok = mk.caption != nil && mk.x - half >= prevRight + 4 && mk.x - half >= -8 && mk.x + half <= W + 8
                 if ok, n + 1 < idx.count { ok = marks[idx[n + 1]].x - t / 2 >= mk.x + half + 4 }
-                if ok, mk.zoneB { ok = mk.captionW <= (farCols.first.map { $0.x1 - $0.x0 } ?? 0) - 2 }
+                // Jahresspalte: Betrag darf etwas überstehen (bis zum Nachbarn bzw. Rand), sonst fiele „120 €“ weg.
+                if ok, mk.zoneB { ok = mk.captionW <= (farCols.first.map { $0.x1 - $0.x0 } ?? 0) + 10 }
                 if ok, lane == 0, !mk.zoneB {
                     while stem < upperStems.count, upperStems[stem] < mk.x - half - 2 { stem += 1 }
                     if stem < upperStems.count, upperStems[stem] <= mk.x + half + 2 { ok = false }
@@ -491,7 +476,8 @@ private struct RadarPlan {
         lanes = (marks.map(\.lane).max() ?? 0) + 1
         laneH = (0..<lanes).map { lane in
             let caps = marks.contains { $0.lane == lane && $0.showCaption }
-            return max(Layout.tap, t + 2 + (caps ? 1 + captionH : 0)) + (lane == 0 ? Self.axisGap : 0)
+            // Luft zwischen den Spuren, damit Kachel und Betrag der unteren nie an die obere stoßen.
+            return max(Layout.tap, t + 8 + (caps ? 3 + captionH : 0)) + (lane == 0 ? Self.axisGap : 0)
         }
         axisY = Self.topGap + laneH.reduce(0, +)
         // Achse, Abstand, „Heute“-Pille (Zeile + 2 × 2 pt Innenabstand).
@@ -523,8 +509,10 @@ struct ExpiryRadarSection: View {
     var onSelect: ((RadarItem) -> Void)? = nil
     var onShowAll: (() -> Void)? = nil
     var animateIn = true
-    /// Tipp auf ein „+N“-Bündel. Ohne Angabe öffnet es wie `onShowAll` die Ablauftermine.
+    /// Tipp auf ein Bündel. Ohne Angabe öffnet es wie `onShowAll` die Ablauftermine.
     var onBundle: (([RadarItem]) -> Void)? = nil
+    /// Kachelgröße: 36 pt – das Radar steht unten auf der Startseite und darf Platz nehmen.
+    var tileSize: CGFloat = 36
 
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var axisY: CGFloat = 94
@@ -571,7 +559,7 @@ struct ExpiryRadarSection: View {
             }
             ExpiryRadar(items: items, onSelect: onSelect,
                         onBundle: onBundle ?? onShowAll.map { all in { _ in all() } },
-                        animateIn: animateIn, onAxis: { axisY = $0 })
+                        animateIn: animateIn, onAxis: { axisY = $0 }, baseTile: tileSize)
                 .padding(.horizontal, Layout.inset).padding(.top, top).padding(.bottom, 6)
                 .background(Color.surface, in: TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchFromTop: top + axisY))
         }

@@ -29,6 +29,7 @@ struct PrivacyPolicyView: View {
             "Gutscheine, Fotos, PINs, Einlösungen und Testergebnisse liegen in einer Datei im Bereich der App. iOS verschlüsselt sie, solange das \(Device.name) gesperrt ist.",
             "Für das Widget legt die App eine kurze Übersicht (Name, Betrag, Ablaufdatum – keine Codes, keine PINs) in einem gemeinsamen Ordner von App und Widget auf demselben Gerät ab.",
             "Was du über „Teilen“ an Restwert gibst (Foto, PDF, markierter Mail-Text), liegt bis zum nächsten Öffnen der App in diesem gemeinsamen Ordner auf deinem Gerät; die App holt es dann ab und löscht es dort. Nichts davon wird hochgeladen.",
+            "Gibst du als Laden eigene Gutscheine aus, speichert Restwert Empfänger und Gruß nur bei diesem Gutschein auf deinem Gerät (und im Gutscheinbild, das du selbst teilst).",
         ]),
         LegalSection(title: "Scannen und Texterkennung", paragraphs: [
             "Kamera, Fotos und PDFs werden auf dem \(Device.name) ausgewertet (Barcode-, Text- und Handschrifterkennung von Apple). Wo Apple Intelligence verfügbar ist, läuft auch sie auf dem Gerät. Bilder und Texte werden dafür nirgendwohin geschickt.",
