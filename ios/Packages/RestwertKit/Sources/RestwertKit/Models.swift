@@ -35,7 +35,7 @@ public enum MerchantCategory: String, Codable, CaseIterable, Identifiable, Senda
 
     public var label: String {
         switch self {
-        case .official: "Am Handy vorzeigbar"
+        case .official: "Auf dem Bildschirm vorzeigbar"
         case .codeOnly: "Nur online"
         case .merchantApp: "Über die App des Ladens"
         case .untested: "Noch unklar"
@@ -44,7 +44,7 @@ public enum MerchantCategory: String, Codable, CaseIterable, Identifiable, Senda
 
     public var long: String {
         switch self {
-        case .official: "Digitale Karte am Handy offiziell möglich"
+        case .official: "Digitale Karte auf dem Bildschirm offiziell möglich"
         case .codeOnly: "Keine Plastikkarte nötig, Code online einlösen"
         case .merchantApp: "Nur über die App des Ladens"
         case .untested: "Offiziell unklar, hier hilft der Kassentest"
@@ -114,14 +114,14 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         Merchant("tkmaxx", "TK Maxx", .official, .code128, "https://wbiprod.storedvalue.com/wbir/clients/tkmaxx-de", check: .form, "Digitalen Gutschein an der Kasse vorzeigen."),
         Merchant("decathlon", "Decathlon", .official, .code128, "https://www.decathlon.de/services/giftcard/balance", check: .form, "Offiziell auch digital auf dem Smartphone."),
         Merchant("douglas", "Douglas", .official, .code128, "https://www.douglas.de/de/cp/helpv2wherecanicheckthebalanceofmygiftcard/help-where-can-i-check-the-balance-of-my-gift-card", check: .info, "eGift digital oder ausgedruckt. Online mit Code und PIN."),
-        Merchant("hm", "H&M", .official, .code128, "https://www2.hm.com/de_de/customer-service/geschenkkarten.html", check: .info, "E-Geschenkkarte am Handy zeigen."),
-        Merchant("rossmann", "Rossmann", .official, .code128, "https://www.rossmann.de/de/service-und-hilfe/geschenkgutscheine", check: .info, "Digitaler Gutschein am Handy möglich. Guthaben nur an der Kasse."),
-        Merchant("lidl", "Lidl", .official, .code128, "https://www.lidl.de/c/lidl-geschenkkarten/s10007775", check: .form, "PDF-Geschenkkarte am Handy zeigen. Guthaben mit Code und PIN."),
-        Merchant("kaufland", "Kaufland", .official, .code128, "https://giftcard.kaufland.com/de_de/faq", check: .info, "Digitale Karte, Barcode am Handy. Nicht im Onlineshop."),
-        Merchant("aldi", "Aldi", .official, .code128, "https://www.helaba.com/de/aldi/", check: .form, "Digitale Karte mit Barcode am Handy. Guthaben online oder an jeder Aldi-Kasse."),
+        Merchant("hm", "H&M", .official, .code128, "https://www2.hm.com/de_de/customer-service/geschenkkarten.html", check: .info, "E-Geschenkkarte auf dem Bildschirm zeigen."),
+        Merchant("rossmann", "Rossmann", .official, .code128, "https://www.rossmann.de/de/service-und-hilfe/geschenkgutscheine", check: .info, "Digitaler Gutschein auf dem Bildschirm möglich. Guthaben nur an der Kasse."),
+        Merchant("lidl", "Lidl", .official, .code128, "https://www.lidl.de/c/lidl-geschenkkarten/s10007775", check: .form, "PDF-Geschenkkarte auf dem Bildschirm zeigen. Guthaben mit Code und PIN."),
+        Merchant("kaufland", "Kaufland", .official, .code128, "https://giftcard.kaufland.com/de_de/faq", check: .info, "Digitale Karte, Barcode auf dem Bildschirm. Nicht im Onlineshop."),
+        Merchant("aldi", "Aldi", .official, .code128, "https://www.helaba.com/de/aldi/", check: .form, "Digitale Karte mit Barcode auf dem Bildschirm. Guthaben online oder an jeder Aldi-Kasse."),
         Merchant("mueller", "Müller", .official, .code128, "https://www.mueller.de/service/geschenkgutscheine/", check: .form, "Digitale Karte digital oder ausgedruckt."),
         Merchant("tchibo", "Tchibo", .official, .code128, "https://www.tchibo.de/c/geschenkkarte", check: .info, "Kartennummer vorzeigen reicht laut FAQ. Guthaben im Warenkorb oder in der Filiale."),
-        Merchant("cinemaxx", "CinemaxX", .official, .code128, "https://www.cinemaxx.de/kontakt/faq", check: .info, "PDF am Handy an Kino- und Gastro-Kasse."),
+        Merchant("cinemaxx", "CinemaxX", .official, .code128, "https://www.cinemaxx.de/kontakt/faq", check: .info, "PDF auf dem Bildschirm an Kino- und Gastro-Kasse."),
         Merchant("nike", "Nike", .official, .code128, "https://www.nike.com/de/orders/gift-card-lookup", check: .form, "An der Kasse Code und PIN nennen."),
         Merchant("mediamarkt", "MediaMarkt", .official, .code128, "https://www.mediamarkt.de/de/service/giftCard", check: .form, "Die Kasse scannt den Barcode auf dem Bildschirm. Die Kasse fragt eventuell nach der PIN."),
         Merchant("saturn", "Saturn", .official, .code128, "https://www.saturn.de/de/service/giftCard", check: .form, "Wie MediaMarkt. Karte gilt nur bei Saturn."),
@@ -135,8 +135,8 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         Merchant("edeka", "EDEKA", .untested, .code128, "https://evci.pin-host.com/evci/#/guthabenabfrage", check: .form, "Keine offizielle digitale Karte gefunden."),
         Merchant("netto", "Netto", .untested, .code128, "https://www.netto-online.de/ueber-netto/Bezahlmoeglichkeiten.chtm#Geschenkkarten", check: .info, "Offiziell nur an der Kasse."),
         Merchant("penny", "Penny", .untested, .code128, "https://kartenwelt.penny.de/faq", check: .info, "Barcode nur über Drittanbieter-Apps belegt."),
-        Merchant("galeria", "Galeria", .untested, .code128, "https://www.galeria.de/service/geschenkkarten/kartenwert-abrufen", check: .form, "PDF-Giftcard existiert, Nutzung am Handy in der Filiale nicht belegt."),
-        Merchant("adidas", "Adidas", .untested, .code128, "https://wbiprod.storedvalue.com/wbir/clients/adidas?lng=de", check: .form, "Im Store wird der Barcode gescannt. Vom Handy nicht belegt."),
+        Merchant("galeria", "Galeria", .untested, .code128, "https://www.galeria.de/service/geschenkkarten/kartenwert-abrufen", check: .form, "PDF-Giftcard existiert, Nutzung auf dem Bildschirm in der Filiale nicht belegt."),
+        Merchant("adidas", "Adidas", .untested, .code128, "https://wbiprod.storedvalue.com/wbir/clients/adidas?lng=de", check: .form, "Im Store wird der Barcode gescannt. Vom Bildschirm nicht belegt."),
         Merchant("sephora", "Sephora", .untested, .code128, "https://geschenkgutschein.sephora.de/ecard/balance/consult3", check: .form, "eGift existiert. Gilt nicht in Galeria-Shops."),
     ]
 
@@ -187,7 +187,7 @@ public enum StorageLocation: String, Codable, CaseIterable, Identifiable, Sendab
         switch self {
         case .wallet: "Portemonnaie"
         case .drawer: "Schublade"
-        case .phone: "Handy"
+        case .phone: "Digital"
         case .inbox: "Postfach"
         case .glovebox: "Handschuhfach"
         case .pinboard: "Pinnwand"
@@ -279,6 +279,8 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     public var greeting: String = ""
     /// Wann in Restwert erfasst (nicht wann gekauft): Grundlage für die Betrugsmuster-Warnung. Fehlt bei älteren Ständen.
     public var addedAt: Date?
+    /// Originale Barcode-Art, wenn Restwert sie nicht selbst zeichnen kann und Code 128 zeigt (z. B. „Code 93“).
+    public var originalSymbology: String?
 
     /// Erfasst seit – für Altbestände ohne `addedAt` das Kaufdatum.
     public var addedOrReceived: Date { addedAt ?? received }
@@ -385,7 +387,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id, kind, merchantID, customName, number, format, pin, value, balance, percent, received, expires
         case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt, archivedAt, reminderAt, owner, forGifting, pendingSince, expiresEstimated
-        case minOrder, issuedByMe, issuedTo, greeting, addedAt
+        case minOrder, issuedByMe, issuedTo, greeting, addedAt, originalSymbology
     }
 
     /// Tolerantes Dekodieren, damit ältere Speicherstände nach Updates lesbar bleiben.
@@ -421,6 +423,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
         issuedTo = try c.decodeIfPresent(String.self, forKey: .issuedTo) ?? ""
         greeting = try c.decodeIfPresent(String.self, forKey: .greeting) ?? ""
         addedAt = try c.decodeIfPresent(Date.self, forKey: .addedAt)
+        originalSymbology = try c.decodeIfPresent(String.self, forKey: .originalSymbology)
         // Ältere Stände legten Empfänger und Gruß in owner/locationNote ab: einmal umziehen.
         if issuedByMe && !c.contains(.issuedTo) {
             issuedTo = owner; greeting = locationNote

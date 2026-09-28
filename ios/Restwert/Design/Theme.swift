@@ -578,6 +578,11 @@ extension View {
     }
 }
 
+/// Kopierte Codes: nur auf diesem Gerät und nach 10 Minuten wieder weg (Detail, Kasse, Datenschutztext).
+nonisolated enum Clipboard {
+    static let lifetime: TimeInterval = 600
+}
+
 nonisolated enum Device {
     static let name: String = {
         var id = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? ""

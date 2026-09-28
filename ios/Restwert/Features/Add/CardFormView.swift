@@ -71,6 +71,8 @@ struct CardFormView: View {
     /// Von Hand eingegeben: Dublette oder Betrugsmuster einmal nachfragen (der Scan fragt selbst).
     @State private var riskMessage: String?
     @State private var riskConfirmed = false
+    /// Gescannte Barcode-Art, die Restwert als Code 128 zeigt (Code 93, Codabar, DataBar): an der Kasse nennen.
+    @State private var convertedFrom: String?
 
     /// „Speichern“ direkt aus dem Scan-Ergebnis: vorbefüllen, prüfen und ohne weiteren Tipp speichern.
     /// Findet die Prüfung doch etwas, bleibt das Formular mit den Hinweisen offen.
@@ -602,6 +604,7 @@ struct CardFormView: View {
     private func apply(_ o: ScanOutcome) {
         let d = o.draft
         fromScan = true
+        convertedFrom = o.convertedSymbology
         if let r = o.received { received = r }
         if let id = d.merchantID {
             merchantID = id
@@ -776,6 +779,9 @@ struct CardFormView: View {
         card.forGifting = forGifting
         card.photo = photo
         if editing == nil { card.addedAt = .now }
+        // Nur solange es beim umgewandelten Code 128 bleibt; wer die Art ändert, hat bewusst gewählt.
+        if let from = convertedFrom, card.format == .code128 { card.originalSymbology = from }
+        else if editing?.format != card.format { card.originalSymbology = nil }
         store.upsert(card)
         // Erinnerungen plant der Store beim Speichern. Nur wenn noch nie gefragt wurde: einmal mit Erklärung fragen.
         Task {

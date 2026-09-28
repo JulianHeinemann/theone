@@ -115,7 +115,8 @@ struct IssuedVoucherShare: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Layout.group) {
-            IssuedVoucherCard(card: card, message: message)
+            // Vorschau wächst mit der Schrift; das geteilte Bild bleibt fest gesetzt.
+            IssuedVoucherCard(card: card, message: message, scalable: true)
             if let image {
                 ShareLink(item: image, preview: SharePreview("Gutschein \(card.name)", image: image)) {
                     Label("Gutschein teilen oder drucken", systemImage: "square.and.arrow.up")
@@ -141,21 +142,31 @@ struct IssuedVoucherShare: View {
 struct IssuedVoucherCard: View {
     let card: GiftCard
     var message = ""
+    /// Vorschau in der App: Schrift wächst mit „Größerer Text“. Für das geteilte Bild aus (feste Größe).
+    var scalable = false
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    private func font(_ size: CGFloat, _ weight: Font.Weight = .regular, _ design: Font.Design = .default) -> Font {
+        scalable ? .scaled(size, weight: weight, design: design) : .system(size: size, weight: weight, design: design)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("GUTSCHEIN").font(.system(size: 13, weight: .heavy)).kerning(2).foregroundStyle(Color(hex: 0x5C5953))
-            Text(card.name).font(.system(size: 24, weight: .bold)).foregroundStyle(Color(hex: 0x111111))
-            Text(card.value.euro).font(.system(size: 40, weight: .heavy, design: .rounded)).foregroundStyle(Color(hex: 0x111111))
-            if !card.issuedTo.isEmpty { Text("für \(card.issuedTo)").font(.system(size: 17)).foregroundStyle(Color(hex: 0x3A3833)) }
-            if !message.isEmpty { Text(message).font(.system(size: 16).italic()).foregroundStyle(Color(hex: 0x3A3833)) }
-            HStack(alignment: .bottom, spacing: 14) {
+            Text("GUTSCHEIN").font(font(13, .heavy)).kerning(2).foregroundStyle(Color(hex: 0x5C5953))
+            Text(card.name).font(font(24, .bold)).foregroundStyle(Color(hex: 0x111111))
+            Text(card.value.euro).font(font(40, .heavy, .rounded)).foregroundStyle(Color(hex: 0x111111))
+            if !card.issuedTo.isEmpty { Text("für \(card.issuedTo)").font(font(17)).foregroundStyle(Color(hex: 0x3A3833)) }
+            if !message.isEmpty { Text(message).font(font(16).italic()).foregroundStyle(Color(hex: 0x3A3833)) }
+            // Sehr große Schrift in der Vorschau: Code-Angaben unter den QR-Code statt daneben.
+            let layout = scalable && typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10))
+                                                                  : AnyLayout(HStackLayout(alignment: .bottom, spacing: 14))
+            layout {
                 BarcodeView(number: card.number, format: .qr, height: 60)
                     .frame(width: 130, height: 130)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(card.number).font(.system(size: 15, weight: .bold, design: .monospaced)).foregroundStyle(Color(hex: 0x111111))
-                    Text("gültig bis \(card.expires.dayMonthYear)").font(.system(size: 13)).foregroundStyle(Color(hex: 0x3A3833))
-                    Text("Einlösbar bei \(card.name)").font(.system(size: 13)).foregroundStyle(Color(hex: 0x3A3833))
+                    Text(card.number).font(font(15, .bold, .monospaced)).foregroundStyle(Color(hex: 0x111111))
+                    Text("gültig bis \(card.expires.dayMonthYear)").font(font(13)).foregroundStyle(Color(hex: 0x3A3833))
+                    Text("Einlösbar bei \(card.name)").font(font(13)).foregroundStyle(Color(hex: 0x3A3833))
                 }
             }
         }

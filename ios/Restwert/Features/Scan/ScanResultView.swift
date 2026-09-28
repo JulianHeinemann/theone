@@ -115,37 +115,23 @@ struct ScanResultView: View {
                             .accessibilityLabel("Mit Apple Intelligence gelesen")
                     }
                 }
-                // Bei sehr großer Schrift eine Spalte, damit Code und Datum nicht abgeschnitten werden.
-                // Kacheln oben bündig, auch wenn die Nachbarkachel mehr Zeilen hat.
-                LazyVGrid(columns: typeSize.isAccessibilitySize ? [GridItem(.flexible(), alignment: .top)]
+                // Kacheln als Liste, dann im Raster: bei ungerader Zahl steht die letzte über die volle Breite
+                // (keine einzelne Kachel mit Lücke daneben). Bei sehr großer Schrift eine Spalte.
+                let tiles = tileList(draft, code: code)
+                let oneColumn = typeSize.isAccessibilitySize
+                let lone = !oneColumn && tiles.count % 2 == 1 ? tiles.last : nil
+                LazyVGrid(columns: oneColumn ? [GridItem(.flexible(), alignment: .top)]
                           : [GridItem(.flexible(), alignment: .top), GridItem(.flexible(), alignment: .top)],
                           spacing: 8) {
-                    if let p = draft.percent {
-                        cell("Rabatt", "\(Int(p))\u{00A0}%", index: 0)
-                    } else {
-                        cell("Guthaben", draft.value.map(\.euro) ?? "nicht gefunden", index: 0)
-                    }
-                    if let expires = draft.expires, expires < Calendar.current.startOfDay(for: .now) {
-                        // Abgelaufen direkt an der Kachel, nicht nur im Warnkasten.
-                        cell("Abgelaufen", "\(expires.dayMonthYear) · frag im Laden, oft noch einlösbar", index: 1, alert: true)
-                    } else {
-                        cell(draft.expiresIsEstimate ? "Gültig bis · berechnet" : "Gültig bis",
-                             draft.expires.map(\.dayMonthYear) ?? "nicht gefunden", index: 1)
-                    }
-                    if let m = draft.minOrder {
-                        cell("Mindestbestellwert", "ab \(m.euro)", index: 2)
-                    }
-                    if let code {
-                        cell("Code", code, index: 2)
-                        cell("Barcode an der Kasse", formatText, index: 3)
-                        if let pin = draft.pin { cell("PIN", String(repeating: "•", count: pin.count), index: 4) }
-                    } else {
-                        // Papiergutschein ohne Code: keine leeren „–“-Kacheln, sondern sagen, was an der Kasse passiert.
-                        cell("An der Kasse", outcome.photo != nil ? "Foto zeigen" : "Code eintragen", index: 2)
+                    ForEach(Array(tiles.dropLast(lone == nil ? 0 : 1).enumerated()), id: \.offset) { i, t in
+                        cell(t.label, t.value, index: i, alert: t.alert)
                     }
                 }
+                if let lone { cell(lone.label, lone.value, index: tiles.count - 1, alert: lone.alert) }
                 // Kaufdatum direkt unter der Datumskachel, von der es abhängt.
                 receivedRow(draft)
+                // Betrugshinweis in der Karte vor dem Foto: so ist er vor „Speichern“ zu sehen, nicht hinter der Leiste.
+                fraudBox(draft)
                 if !outcome.aiFilled.isEmpty {
                     Label("✦ = Apple Intelligence hat diese Angabe im Text gefunden und zugeordnet. Bitte besonders prüfen.", systemImage: "apple.intelligence")
                         .font(.scaled(12)).foregroundStyle(Color.ink2)
@@ -165,9 +151,6 @@ struct ScanResultView: View {
                 }
             }
             .padding(Layout.inset).cardSurface(radius: Layout.cardRadius)
-
-            // Ergebnis zuerst; der Betrugshinweis danach (rote Warnungen stehen trotzdem ganz oben).
-            fraudBox(draft)
 
             VStack(alignment: .leading, spacing: 10) {
                 // Kein „Echtheits“-Versprechen: geprüft werden nur Form und Plausibilität.
@@ -190,11 +173,11 @@ struct ScanResultView: View {
     /// Betrugshinweis: bei hohem Wert ausführlich mit nächstem Schritt, sonst nach drei Scans kurz.
     @ViewBuilder
     private func fraudBox(_ draft: CardDraft) -> some View {
-    // Ab 250 € und beim Muster steht die Betrugsfrage schon oben in der roten Box: hier nur der nächste Schritt.
+    // Ab 200 € und beim Muster steht alles (Frage und nächster Schritt) schon oben in der roten Box.
     let value = draft.value ?? 0
     let redBox = value >= Self.highValue || (value >= 100 && outcome.recentHighValueCount >= 1)
-    Label(redBox ? Self.nextStep
-          : value >= 100 ? "Hat dich jemand gebeten, diesen Gutschein zu kaufen und den Code durchzugeben? Dann ist es Betrug. Gib den Code nicht weiter. \(Self.nextStep)"
+    if !redBox {
+    Label(value >= 100 ? "Hat dich jemand gebeten, diesen Gutschein zu kaufen und den Code durchzugeben? Dann ist es Betrug. Gib den Code nicht weiter. \(Self.nextStep)"
           : fraudHintScans < 3 ? "Kein Laden, keine Behörde und keine Firma lässt sich mit Gutscheincodes bezahlen. Wer am Telefon oder per Nachricht nach dem Code fragt, will betrügen."
           : "Gib Gutscheincodes nie am Telefon oder per Nachricht weiter.",
           systemImage: "exclamationmark.shield")
@@ -203,11 +186,12 @@ struct ScanResultView: View {
         .padding(Layout.group).frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
     }
+    }
 
     /// Ab diesem Wert warnt schon der erste Gutschein rot und fragt vor dem Hinzufügen nach.
-    static let highValue: Double = 250
+    static let highValue: Double = 200
     /// Was man im Betrugsfall tut: beim Aussteller sperren lassen, bevor jemand einlöst.
-    static let nextStep = "Ruf sofort die Firma auf dem Gutschein an und lass das Guthaben sperren. Melde den Betrugsversuch der Polizei (auch online über die Onlinewache deines Bundeslands)."
+    static let nextStep = "Ruf sofort die Firma auf dem Gutschein an und lass das Guthaben sperren. Zeig den Betrug bei der Polizei an. Das geht auch online."
 
     /// Ganzes Foto zeigen (nicht beschneiden), damit Ladenname und Logo sichtbar bleiben.
     @ViewBuilder private var photoView: some View {
@@ -230,6 +214,35 @@ struct ScanResultView: View {
         // Nicht gelesen: keine Art behaupten.
         case .merchant: return "nicht gelesen – im nächsten Schritt wählen"
         }
+    }
+
+    private struct Tile { let label: String; let value: String; var alert = false }
+
+    /// Die Angaben des Ergebnisses in fester Reihenfolge.
+    private func tileList(_ draft: CardDraft, code: String?) -> [Tile] {
+        var t: [Tile] = []
+        if let p = draft.percent {
+            t.append(Tile(label: "Rabatt", value: "\(Int(p))\u{00A0}%"))
+        } else {
+            t.append(Tile(label: "Guthaben", value: draft.value.map(\.euro) ?? "nicht gefunden"))
+        }
+        if let expires = draft.expires, expires < Calendar.current.startOfDay(for: .now) {
+            // Abgelaufen direkt an der Kachel, nicht nur im Warnkasten.
+            t.append(Tile(label: "Abgelaufen", value: "\(expires.dayMonthYear) · frag im Laden, oft noch einlösbar", alert: true))
+        } else {
+            t.append(Tile(label: draft.expiresIsEstimate ? "Gültig bis · berechnet" : "Gültig bis",
+                          value: draft.expires.map(\.dayMonthYear) ?? "nicht gefunden"))
+        }
+        if let m = draft.minOrder { t.append(Tile(label: "Mindestbestellwert", value: "ab \(m.euro)")) }
+        if let code {
+            t.append(Tile(label: "Code", value: code))
+            t.append(Tile(label: "Barcode an der Kasse", value: formatText))
+            if let pin = draft.pin { t.append(Tile(label: "PIN", value: String(repeating: "•", count: pin.count))) }
+        } else {
+            // Papiergutschein ohne Code: keine leeren „–“-Kacheln, sondern sagen, was an der Kasse passiert.
+            t.append(Tile(label: "An der Kasse", value: outcome.photo != nil ? "Foto zeigen" : "Code eintragen"))
+        }
+        return t
     }
 
     private func cell(_ label: String, _ value: String, index: Int, alert: Bool = false) -> some View {
@@ -258,11 +271,18 @@ struct ScanResultView: View {
         .animation(reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.3).delay(0.08 * Double(index)), value: revealed)
     }
 
-    /// EAN-13 wie auf der Packung gruppiert (1-6-6: „4 006381 333931“), sonst Vierergruppen.
+    /// Handelscodes wie unter dem Strichcode gedruckt: EAN-13 1-6-6 („4 006381 333931“), UPC-A 1-5-5-1
+    /// („0 36000 29145 2“), EAN-8 4-4 („9638 5074“); sonst Vierergruppen.
     static func codeDisplay(_ code: String) -> String {
         let c = code.replacingOccurrences(of: " ", with: "")
         if ScanDraft.retailCheck(c)?.valid == true {
             return "\(c.prefix(1)) \(c.dropFirst().prefix(6)) \(c.suffix(6))"
+        }
+        if c.count == 12 || c.count == 8, c.allSatisfy(\.isNumber),
+           BarcodeEncoder.hasValidChecksum(c, format: c.count == 12 ? .upca : .ean8) == true {
+            return c.count == 12
+                ? "\(c.prefix(1)) \(c.dropFirst().prefix(5)) \(c.dropFirst(6).prefix(5)) \(c.suffix(1))"
+                : "\(c.prefix(4)) \(c.suffix(4))"
         }
         return code.grouped
     }
@@ -385,10 +405,10 @@ struct ScanResultView: View {
         }
         if let value = draft.value, value >= 100, outcome.recentHighValueCount >= 1 {
             let n = outcome.recentHighValueCount
-            out.append(Check(level: .warning, text: "Du hast in den letzten 7 Tagen schon \(n == 1 ? "einen Gutschein" : "\(n) Gutscheine") ab 100 € erfasst. Hat dich jemand gebeten, Gutscheine zu kaufen und die Codes durchzugeben? So gehen Betrüger oft vor. Gib nichts weiter."))
+            out.append(Check(level: .warning, text: "Du hast in den letzten 7 Tagen schon \(n == 1 ? "einen Gutschein" : "\(n) Gutscheine") ab 100 € erfasst. Hat dich jemand gebeten, Gutscheine zu kaufen und die Codes durchzugeben? So gehen Betrüger oft vor. Gib nichts weiter. \(Self.nextStep)"))
         } else if let value = draft.value, value >= Self.highValue {
             // Schon der erste hohe Gutschein: Betrug kurz beim Namen nennen, nicht erst weit unten.
-            out.append(Check(level: .warning, text: "Hoher Wert (\(value.euro)). Hat dich jemand am Telefon oder per Nachricht gebeten, diesen Gutschein zu kaufen? Dann ist es Betrug. Gib den Code nicht weiter."))
+            out.append(Check(level: .warning, text: "Hohes Guthaben (\(value.euro)). Hat dich jemand am Telefon oder per Nachricht gebeten, diesen Gutschein zu kaufen? Dann ist es Betrug. Gib den Code nicht weiter. \(Self.nextStep)"))
         }
         return out
     }

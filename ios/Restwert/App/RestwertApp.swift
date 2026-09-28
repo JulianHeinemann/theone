@@ -260,6 +260,11 @@ extension Router {
             }, actionTitle: "Nächsten scannen")
             return
         }
+        // `-demoImportBatch /a.jpg|/b.jpg` liest mehrere Dateien wie eine Mehrfach-Fotoauswahl ein (ScanView).
+        if UserDefaults.standard.string(forKey: "demoImportBatch") != nil {
+            tab = .scan
+            return
+        }
         // `-demoImport /pfad/gutschein.jpg` liest die Datei wie „Aus einer Datei“ ein (Scan-Tests im Simulator).
         if let path = UserDefaults.standard.string(forKey: "demoImport") {
             openImport(URL(fileURLWithPath: path))

@@ -18,6 +18,8 @@ run mindestbestellwert 16 -demoImport "$(imp v05-zalando-rabatt-mbw.jpg)"
 # Speichern mit einem Tipp: Douglas speichern, danach bleibt man im Hinzufügen-Tab
 run gespeichert-im-tab 16 -demoOpenForm YES -demoAutoSave YES -demoImport "$(imp v01-douglas-ean13.jpg)"
 # Dublette: denselben Gutschein noch einmal scannen
+# Mehrere Fotos auf einmal (wie Mehrfachauswahl in „Aus Fotos“): erstes Ergebnis mit „Foto 1 von 3“
+run mehrere-fotos 16 -demoImportBatch "$(imp v05-zalando-rabatt-mbw.jpg)|$(imp v06-mediamarkt-falsche-pruefziffer.jpg)|$(imp v09-amazon-online.jpg)"
 run dublette 16 -demoImport "$(imp v01-douglas-ean13.jpg)"
 xcrun simctl ui "$U" content_size accessibility-extra-large
 run gross-dublette 20 -demoImport "$(imp v01-douglas-ean13.jpg)"
@@ -33,7 +35,10 @@ run gross-ausgeben 7 -demoScreen issue -demoIssueAuto YES
 xcrun simctl ui "$U" content_size large
 CODE=$(python3 -c "import json,sys;d=json.load(open(sys.argv[1]));print([c['number'] for c in d['cards'] if c.get('issuedByMe')][-1])" "$DATA/Library/Application Support/restwert.json")
 "$(dirname "$0")/qr-image.sh" "$CODE" "$DATA/Documents/scan-tests/eigener-qr.png"
-run eigener-gutschein-einloesen 14 -demoImport "$DATA/Documents/scan-tests/eigener-qr.png"
+run eigener-gutschein-einloesen 9 -demoImport "$DATA/Documents/scan-tests/eigener-qr.png"
+xcrun simctl ui "$U" content_size accessibility-extra-large
+run gross-eigener-gutschein-einloesen 9 -demoImport "$DATA/Documents/scan-tests/eigener-qr.png"
+xcrun simctl ui "$U" content_size large
 run liste-ausgegeben 5
 run liste-ausgegeben-filter 5 -demoFilter issued
 xcrun simctl terminate "$U" $B 2>/dev/null || true

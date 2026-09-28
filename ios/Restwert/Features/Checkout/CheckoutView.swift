@@ -155,7 +155,6 @@ struct CheckoutView: View {
 
     private func actions(_ card: GiftCard) -> some View {
         VStack(spacing: 4) {
-            if result == nil && !card.pin.isEmpty && checkoutTypeSize.isAccessibilitySize { pinButton(card) }
             if let result {
                 Button(!result ? "Notieren" : "Als eingelöst markieren") { save(card, result) }
                     .buttonStyle(.primary)
@@ -207,7 +206,7 @@ struct CheckoutView: View {
 
     private func primaryTitle(_ card: GiftCard) -> String {
         if card.issuedByMe { return "Einlösen – Betrag abziehen" }
-        if isOnline(card) { return card.kind.isValueBased ? "Eingelöst? Einkauf abziehen" : "Als eingelöst markieren" }
+        if isOnline(card) { return card.kind.isValueBased ? "Eingelöst – Einkauf abziehen" : "Als eingelöst markieren" }
         return card.kind.isValueBased ? "Bezahlt – Einkauf abziehen" : "Eingelöst"
     }
 
@@ -290,9 +289,10 @@ struct CheckoutView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(hidden && (textOnly || codeLock) ? "Geschützt. Tippen und entsperren" : "Barcode groß anzeigen")
-                    if !textOnly && !(codeLock && hidden) && BarcodeRenderer.drawnAsCode128(card.number, format: card.format) {
+                    if !textOnly && !(codeLock && hidden),
+                       let original = card.originalSymbology ?? (BarcodeRenderer.drawnAsCode128(card.number, format: card.format) ? card.format.label : nil) {
                         // Ersatzformat sichtbar machen: Kassierer und Kunde wissen dann, warum er anders aussieht.
-                        Label("Als Code 128 gezeichnet (\(card.format.label) ließ sich nicht darstellen). Klappt es nicht, zeig das Original.",
+                        Label("Als Code 128 gezeichnet (auf der Karte: \(original)). Klappt es nicht, zeig das Original.",
                               systemImage: "info.circle")
                             .font(.scaled(13)).foregroundStyle(Color.ink2)
                             .multilineTextAlignment(.center)
@@ -324,9 +324,9 @@ struct CheckoutView: View {
                             .font(.scaled(13)).foregroundStyle(Color.ink2)
                     }
                 }
-                // PIN direkt unter dem Code. Bei sehr großer Schrift steht sie stattdessen in der Leiste unten,
-                // sonst läge sie unter der Leiste.
-                if !card.pin.isEmpty && !checkoutTypeSize.isAccessibilitySize { pinButton(card) }
+                // PIN direkt unter dem Code, bei jeder Schriftgröße (die Leiste unten bleibt so zweizeilig;
+                // der Inhalt läuft über ihr weich aus und lässt sich ganz darüber schieben).
+                if !card.pin.isEmpty { pinButton(card) }
                 if let m = card.minOrder {
                     // Rabattcodes: an der Kasse bzw. im Shop sofort sehen, ab welchem Einkauf sie gelten.
                     Label("Gilt ab \(m.euro) Einkauf", systemImage: "cart")
@@ -460,7 +460,7 @@ struct CheckoutView: View {
     private func copy(_ code: String) {
         // Nicht dauerhaft in der Zwischenablage liegen lassen.
         UIPasteboard.general.setItems([[UTType.plainText.identifier: code]],
-                                      options: [.localOnly: true, .expirationDate: Date.now.addingTimeInterval(600)])
+                                      options: [.localOnly: true, .expirationDate: Date.now.addingTimeInterval(Clipboard.lifetime)])
         copied += 1
         AccessibilityNotification.Announcement("Code kopiert").post()
     }

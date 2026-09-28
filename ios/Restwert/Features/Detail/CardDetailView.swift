@@ -495,7 +495,7 @@ struct CardDetailView: View {
                 Button {
                     // Nur auf diesem Gerät und nach 10 Minuten wieder weg.
                     UIPasteboard.general.setItems([[UTType.plainText.identifier: card.number]],
-                                                  options: [.localOnly: true, .expirationDate: Date.now.addingTimeInterval(600)])
+                                                  options: [.localOnly: true, .expirationDate: Date.now.addingTimeInterval(Clipboard.lifetime)])
                     copied = true
                     success += 1
                     Task {

@@ -21,8 +21,10 @@ struct ScanView: View {
     @State private var showEmail = false
     @State private var photoItems: [PhotosPickerItem] = []
     /// Mehrere Fotos auf einmal: werden nacheinander gelesen; nach jedem Speichern kommt das nächste.
-    @State private var batch: [PhotosPickerItem] = []
+    @State private var batch: [BatchSource] = []
     @State private var batchTotal = 0
+    /// Fotos der Mehrfachauswahl, die sich nicht lesen ließen – am Ende genannt.
+    @State private var batchUnreadable = 0
     @State private var formSeed: FormSeed?
     @State private var importError: String?
     /// Zählt Lesevorgänge; ein abgebrochener oder überholter Vorgang zeigt sein Ergebnis nicht mehr.
@@ -81,6 +83,16 @@ struct ScanView: View {
         // Im Ergebnis keine Tab-Leiste: sie verdeckte „Hinzufügen“, Zurück geht oben links.
         .toolbar(outcome == nil ? .automatic : .hidden, for: .tabBar)
         .onAppear(perform: consumeIntent)
+        #if DEBUG
+        .onAppear {
+            // Nur für Screenshots: Mehrfachauswahl mit Dateien statt Fotos nachstellen.
+            guard !Self.demoBatchDone, let list = UserDefaults.standard.string(forKey: "demoImportBatch") else { return }
+            Self.demoBatchDone = true
+            batch = list.split(separator: "|").map { .file(URL(fileURLWithPath: String($0))) }
+            batchTotal = batch.count
+            nextFromBatch()
+        }
+        #endif
         .onChange(of: router.scanIntent != nil) { _, _ in consumeIntent() }
         .tabTitle(outcome == nil ? "Hinzufügen" : "Ergebnis")
         .toolbar {
@@ -170,7 +182,7 @@ struct ScanView: View {
         .onChange(of: photoItems) { _, items in
             guard !items.isEmpty else { return }
             photoItems = []
-            batch = items
+            batch = items.map { .photo($0) }
             batchTotal = items.count
             nextFromBatch()
         }
@@ -265,8 +277,8 @@ struct ScanView: View {
         guard id == readID else { return }
         busy = false
         if result.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && result.barcode == nil && result.photo == nil {
-            // Mehrere Fotos: ein unlesbares überspringen statt die Reihe anzuhalten.
-            if !batch.isEmpty { nextFromBatch(); return }
+            // Mehrere Fotos: ein unlesbares überspringen statt die Reihe anzuhalten, am Ende nennen.
+            if batchTotal > 1 { batchUnreadable += 1; nextFromBatch(); return }
             importError = "Datei oder Foto konnte nicht gelesen werden. Versuch ein anderes Format oder gib den Gutschein von Hand ein."
             return
         }
@@ -341,6 +353,14 @@ struct ScanView: View {
                          + "\n\nDu kannst alles im nächsten Schritt korrigieren.")
                 }
                 Button("Erneut scannen") { rescan() }.buttonStyle(.quiet)
+            } else if !batch.isEmpty {
+                // Mehrere Fotos: Nicht-Gutschein einfach auslassen.
+                Button("Überspringen – nächstes Foto") {
+                    withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
+                    nextFromBatch()
+                }
+                .buttonStyle(.primary)
+                Button("Trotzdem von Hand eintragen") { formSeed = FormSeed(outcome: nil) }.buttonStyle(.quiet)
             } else {
                 Button("Erneut scannen") { rescan() }.buttonStyle(.primary)
                 Button("Trotzdem von Hand eintragen") { formSeed = FormSeed(outcome: nil) }.buttonStyle(.quiet)
@@ -351,18 +371,32 @@ struct ScanView: View {
 
     /// Nächstes Foto aus der Mehrfachauswahl lesen; am Ende die Zählung zurücksetzen.
     private func nextFromBatch() {
-        guard !batch.isEmpty else { batchTotal = 0; return }
-        let item = batch.removeFirst()
-        read {
-            guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
-                return ScanOutcome()
+        guard !batch.isEmpty else {
+            if batchTotal > 1 {
+                let n = batchUnreadable
+                router.toast = Toast(message: n == 0 ? "Alle \(batchTotal) Fotos bearbeitet"
+                                     : "\(batchTotal) Fotos bearbeitet, \(n == 1 ? "1 war" : "\(n) waren") nicht lesbar", undo: nil)
             }
-            return await Importer.analyze(image: image)
+            batchTotal = 0; batchUnreadable = 0
+            return
+        }
+        let source = batch.removeFirst()
+        read {
+            switch source {
+            case .file(let url): return await Importer.analyze(url: url)
+            case .photo(let item):
+                guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
+                    return ScanOutcome()
+                }
+                return await Importer.analyze(image: image)
+            }
         }
     }
 
     private func rescan() {
         // Altes Ergebnis bleibt stehen, bis ein neues da ist: Abbrechen im Scanner verliert nichts.
+        // Eine laufende Mehrfachauswahl endet hier: sonst käme nach dem Kamera-Scan unerwartet das nächste Foto.
+        batch = []; batchTotal = 0; batchUnreadable = 0
         showScanner = true
     }
 
@@ -403,6 +437,19 @@ struct ScanView: View {
         }
         read { await Importer.analyze(text: text) }
     }
+}
+
+#if DEBUG
+extension ScanView {
+    /// Nur einmal je Start (Launch-Argumente lassen sich nicht entfernen).
+    @MainActor static var demoBatchDone = false
+}
+#endif
+
+/// Ein Eintrag der Mehrfachauswahl: Foto aus der Mediathek oder (für Screenshots) eine Datei.
+private enum BatchSource {
+    case photo(PhotosPickerItem)
+    case file(URL)
 }
 
 /// Startwert für das Formular; identifiziert über eine eigene ID.

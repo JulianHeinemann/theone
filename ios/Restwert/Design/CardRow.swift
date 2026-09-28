@@ -91,11 +91,6 @@ struct CardRow: View {
             HStack(spacing: 6) {
                 Text(card.name).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
                     .lineLimit(1).truncationMode(.tail).layoutPriority(1)
-                if card.issuedByMe {
-                    Text("ausgegeben").font(.scaled(12, weight: .semibold)).foregroundStyle(Color.ink2)
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(Color.fill, in: .capsule)
-                }
                 if card.forGifting {
                     Image(systemName: "gift").font(.scaled(13)).foregroundStyle(Color.ink2)
                         .accessibilityLabel("zum Verschenken")
@@ -117,6 +112,10 @@ struct CardRow: View {
     @ViewBuilder
     private func tags(_ due: Due) -> some View {
         // Ruhige Zusätze als Text mit Trennpunkt statt eigener Pillen.
+        // Selbst ausgegeben: in der zweiten Zeile, damit der Ladenname ganz sichtbar bleibt.
+        if card.issuedByMe {
+            Text("· ausgegeben").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.ink2).fixedSize()
+        }
         if due.estimated {
             Text("· geschätzt").font(.scaled(13)).foregroundStyle(Color.muted).fixedSize()
         }

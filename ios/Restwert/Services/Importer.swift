@@ -67,7 +67,8 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
         guard looksLikeVoucher, duplicateID == nil, !hasWarnings, aiFilled.isEmpty, d.merchantID != nil,
               d.value != nil || d.percent != nil, displayCode != nil, d.expires != nil, !d.expiresIsEstimate,
               let format = resolvedFormat else { return false }
-        return format.origin != .merchant || format.format == .text
+        // Nur mit wirklich gelesenem Barcode (oder Online-Code): aus der Nummer abgeleitet kann die Art falsch sein.
+        return format.origin == .scanned || format.format == .text
     }
 
     /// Felder, die nur Apple Intelligence gefunden hat (der Regel-Parser nicht): im Ergebnis markiert.
