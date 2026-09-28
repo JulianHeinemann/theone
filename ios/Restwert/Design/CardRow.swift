@@ -78,7 +78,7 @@ struct CardRow: View {
     /// Ein Satz für VoiceOver, z. B. „Thalia, 12,40 € von 25,00 €, bis 31.12.2028, Datum geschätzt“.
     private func spoken(_ due: Due) -> String {
         let amount = card.kind.isValueBased ? "\(card.headline) von \(card.value.euro)" : card.headline == card.kind.label ? card.kind.label : "\(card.headline) \(card.kind.label)"
-        let who = card.owner.isEmpty ? "" : ", für \(card.owner)"
+        let who = card.forWhom.isEmpty ? "" : ", für \(card.forWhom)"
         let open = card.pendingSince != nil && card.isActive ? ", Betrag offen" : ""
         let urgent = due.level == .urgent ? ", dringend" : ""
         let estimated = due.estimated ? ", Datum geschätzt" : ""
@@ -95,9 +95,9 @@ struct CardRow: View {
                     Image(systemName: "gift").font(.scaled(13)).foregroundStyle(Color.ink2)
                         .accessibilityLabel("zum Verschenken")
                 }
-                if !card.owner.isEmpty {
+                if !card.forWhom.isEmpty {
                     // „für Mia“ bekommt zuerst Platz, lieber kürzt sich der Ladenname.
-                    Text("für \(card.owner)").font(.scaled(13)).foregroundStyle(Color.ink2).lineLimit(1)
+                    Text("für \(card.forWhom)").font(.scaled(13)).foregroundStyle(Color.ink2).lineLimit(1)
                         .layoutPriority(2)
                 }
             }

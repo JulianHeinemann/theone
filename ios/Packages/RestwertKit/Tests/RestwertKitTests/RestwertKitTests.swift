@@ -530,3 +530,31 @@ struct ExpiryFormats {
         #expect(ymd(text) == nil)
     }
 }
+
+// MARK: - Betrugsmuster und Dubletten (dieselben Regeln für Scan und Formular)
+
+@Test func recentHighValueCountsOwnHighCardsWithinSevenDays() {
+    let now = date(2026, 9, 28)
+    func high(daysAgo: Int, value: Double = 120) -> GiftCard {
+        GiftCard(kind: .giftCard, merchantID: "thalia", number: "6300981274561234", format: .code128, value: value,
+                 balance: value, received: now.addingTimeInterval(-Double(daysAgo) * 86400), expires: date(2030, 12, 31), modifiedAt: now)
+    }
+    var example = high(daysAgo: 1); example.isExample = true
+    var issued = high(daysAgo: 1); issued.issuedByMe = true
+    let cards = [high(daysAgo: 6), high(daysAgo: 8), high(daysAgo: 2, value: 99.99), example, issued]
+    #expect(CardQueries.recentHighValueCount(cards, now: now) == 1)
+    #expect(CardQueries.recentHighValueCount([], now: now) == 0)
+}
+
+@Test func duplicateIgnoresSeparatorsCaseExamplesAndIssued() {
+    var saved = card(); saved.number = "ab12-cd34 ef56"
+    var example = card(); example.number = "ZZ99"; example.isExample = true
+    var issued = card(); issued.number = "YY88"; issued.issuedByMe = true
+    let cards = [saved, example, issued]
+    #expect(CardQueries.duplicate(of: "AB12CD34EF56", in: cards)?.id == saved.id)
+    #expect(CardQueries.duplicate(of: "ab12 cd34-ef56", in: cards)?.id == saved.id)
+    #expect(CardQueries.duplicate(of: "ZZ99", in: cards) == nil)
+    #expect(CardQueries.duplicate(of: "YY88", in: cards) == nil)
+    #expect(CardQueries.duplicate(of: "--", in: cards) == nil)
+    #expect(CardQueries.plainCode("ot-7731 5520/9912") == "OT773155209912")
+}

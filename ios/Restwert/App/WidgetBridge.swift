@@ -33,8 +33,8 @@ nonisolated enum WidgetBridge {
     /// und lösen keine zweite Zeitleisten-Aktualisierung aus (Vergleich unten).
     private static let queue = DispatchQueue(label: "de.restwert.widget", qos: .utility)
 
-    /// `total` wird nicht mehr verwendet: Die Summe entsteht aus denselben Karten wie die Liste.
-    static func update(cards: [GiftCard], total: Double = 0) {
+    /// Die Summe entsteht aus denselben Karten wie die Liste.
+    static func update(cards: [GiftCard]) {
         queue.async { write(cards) }
     }
 

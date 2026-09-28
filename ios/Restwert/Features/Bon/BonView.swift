@@ -333,8 +333,7 @@ private struct BonPaper<Content: View>: View {
                     ReceiptOutline().fill(scheme == .dark ? Color.paper : Color.surface)
                     ReceiptOutline().stroke(Color.line, lineWidth: 1)
                 }
-                .compositingGroup()
-                .shadow(color: Color.shade, radius: 10, y: 4)
+                .ticketShadow(radius: 10, y: 4)
             }
     }
 }
