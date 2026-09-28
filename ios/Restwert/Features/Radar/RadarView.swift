@@ -118,7 +118,14 @@ struct RadarView: View {
         if c.isActive {
             Button("An der Kasse zeigen", systemImage: "barcode") { router.homePath.append(.checkout(c.id)) }
         }
-        Button("Bearbeiten", systemImage: "pencil") { router.editing = c }
+        Button("Bearbeiten", systemImage: "pencil") {
+            // Im Formular steht der Code offen: bei Code-Schutz erst entsperren.
+            if DeviceSecurity.codeLockActive {
+                Task { if await DeviceSecurity.revealCode(of: c.name) { router.editing = c } }
+            } else {
+                router.editing = c
+            }
+        }
         Button(c.isArchived ? "Wiederherstellen" : "Archivieren", systemImage: c.isArchived ? "tray.and.arrow.up" : "archivebox") {
             let archive = !c.isArchived
             withAnimation(.snappy) { store.setArchived(c.id, archive) }

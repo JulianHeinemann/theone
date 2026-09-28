@@ -1,4 +1,3 @@
-import crypto from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
@@ -9,7 +8,6 @@ import { query } from './db.js';
 import { hashPassword, verifyPassword, signToken, requireAuth, validateCredentials } from './auth.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const MAX_SNAPSHOT_BYTES = 8 * 1024 * 1024;
 
 
 function publicUser(row) {
@@ -35,7 +33,8 @@ export function createApp() {
     },
   }));
   app.use(cors({ origin: true, credentials: false }));
-  app.use(express.json({ limit: '9mb' }));
+  // Uploads gibt es nicht mehr: kleine Anfragen reichen (Login, Konto löschen).
+  app.use(express.json({ limit: '16kb' }));
 
   const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false,
     message: { error: 'Zu viele Versuche. Bitte in 15 Minuten erneut probieren.' } });
@@ -50,20 +49,10 @@ export function createApp() {
   });
 
   // ---- Auth ----
-  app.post('/api/auth/register', authLimiter, async (req, res, next) => {
-    try {
-      const v = validateCredentials(req.body || {});
-      if (v.error) return res.status(400).json({ error: v.error });
-      const name = typeof req.body.name === 'string' ? req.body.name.trim().slice(0, 80) : '';
-      const exists = await query('SELECT 1 FROM users WHERE email = $1', [v.email]);
-      if (exists.rowCount) return res.status(409).json({ error: 'Für diese E-Mail gibt es schon ein Konto. Melde dich an.' });
-      const { rows } = await query(
-        'INSERT INTO users (id, email, name, password_hash, last_login_at) VALUES ($1, $2, $3, $4, now()) RETURNING *',
-        [crypto.randomUUID(), v.email, name, await hashPassword(v.password)],
-      );
-      res.status(201).json({ token: signToken(rows[0]), user: publicUser(rows[0]) });
-    } catch (e) { next(e); }
-  });
+  // Konten gibt es nicht mehr (die App synchronisiert über iCloud). Neue Konten und neue Kopien nehmen wir nicht an;
+  // Altkonten können sich noch anmelden, ihre Daten abrufen und das Konto löschen.
+  const GONE = 'Neue Konten und neue Kopien gibt es nicht mehr. Für Abruf oder Löschung eines alten Kontos siehe Datenschutzerklärung.';
+  app.post('/api/auth/register', authLimiter, (_req, res) => res.status(410).json({ error: GONE }));
 
   app.post('/api/auth/login', authLimiter, async (req, res, next) => {
     try {
@@ -102,32 +91,7 @@ export function createApp() {
     } catch (e) { next(e); }
   });
 
-  app.put('/api/sync', requireAuth, async (req, res, next) => {
-    try {
-      const { data, baseUpdatedAt, device } = req.body || {};
-      if (!data || typeof data !== 'object' || !Array.isArray(data.cards)) {
-        return res.status(400).json({ error: 'Ungültige Daten.' });
-      }
-      if (Buffer.byteLength(JSON.stringify(data)) > MAX_SNAPSHOT_BYTES) {
-        return res.status(413).json({ error: 'Zu viele Daten. Fotos werden nicht synchronisiert.' });
-      }
-      const current = await query('SELECT data, updated_at FROM snapshots WHERE user_id = $1', [req.userId]);
-      if (current.rows[0] && baseUpdatedAt && new Date(baseUpdatedAt) < current.rows[0].updated_at) {
-        return res.status(409).json({
-          error: 'Auf einem anderen Gerät wurde inzwischen etwas geändert.',
-          data: current.rows[0].data,
-          updatedAt: current.rows[0].updated_at.toISOString(),
-        });
-      }
-      const { rows } = await query(
-        `INSERT INTO snapshots (user_id, data, updated_at, device) VALUES ($1, $2, now(), $3)
-         ON CONFLICT (user_id) DO UPDATE SET data = EXCLUDED.data, updated_at = now(), device = EXCLUDED.device
-         RETURNING updated_at`,
-        [req.userId, data, typeof device === 'string' ? device.slice(0, 60) : ''],
-      );
-      res.json({ updatedAt: rows[0].updated_at.toISOString() });
-    } catch (e) { next(e); }
-  });
+  app.put('/api/sync', requireAuth, (_req, res) => res.status(410).json({ error: GONE }));
 
   // ---- Landingpage, Datenschutz, Impressum ----
   app.use(express.static(path.join(here, '..', 'public'), { extensions: ['html'] }));

@@ -30,8 +30,11 @@ struct WidgetSnapshot: Codable {
 
     var next: [Item] { items }
     var count: Int { items.count }
+    /// Mit App-Sperre schreibt die App keine Beträge („••••“): dann keine Summe von 0 € vortäuschen.
+    var locked: Bool { !items.isEmpty && items.allSatisfy { $0.headline == "••••" } }
     var total: String {
-        items.reduce(0) { $0 + ($1.amount ?? 0) }.formatted(.currency(code: "EUR").locale(Locale(identifier: "de_DE")))
+        if locked { return "Gesperrt" }
+        return items.reduce(0) { $0 + ($1.amount ?? 0) }.formatted(.currency(code: "EUR").locale(Locale(identifier: "de_DE")))
     }
 
     static let groupID = "group.de.restwert.app"

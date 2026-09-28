@@ -13,6 +13,18 @@ extension Color {
                   opacity: 1)
     }
 
+    /// Farbe mit eigenem Wert für den Dunkelmodus und optional kräftigeren Werten bei „Kontrast erhöhen“.
+    nonisolated init(light: UInt32, dark: UInt32, highLight: UInt32, highDark: UInt32) {
+        func ui(_ hex: UInt32) -> UIColor {
+            UIColor(red: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
+                    blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
+        }
+        self.init(uiColor: UIColor { t in
+            let high = t.accessibilityContrast == .high
+            return t.userInterfaceStyle == .dark ? ui(high ? highDark : dark) : ui(high ? highLight : light)
+        })
+    }
+
     /// Farbe mit eigenem Wert für den Dunkelmodus.
     nonisolated init(light: UInt32, dark: UInt32) {
         func ui(_ hex: UInt32) -> UIColor {
@@ -28,9 +40,10 @@ extension Color {
     static let fill = Color(light: 0xEFECE5, dark: 0x2A2926)
     static let ink = Color(light: 0x111111, dark: 0xF2F0EA)
     // Grautöne warm wie das Papier, keine kalten Systemgraus. muted hält ≥ 4,5:1 auch auf `fill`.
-    static let ink2 = Color(light: 0x3A3833, dark: 0xCFCDC6)
-    static let muted = Color(light: 0x5C5953, dark: 0xA9A59C)
-    static let line = Color(light: 0xE6E2D9, dark: 0x34322E)
+    // Bei „Kontrast erhöhen“ (Bedienungshilfen) kräftiger: Nebentexte fast wie Haupttext, Linien sichtbar.
+    static let ink2 = Color(light: 0x3A3833, dark: 0xCFCDC6, highLight: 0x1F1D1A, highDark: 0xEAE8E2)
+    static let muted = Color(light: 0x5C5953, dark: 0xA9A59C, highLight: 0x33312D, highDark: 0xD6D3CB)
+    static let line = Color(light: 0xE6E2D9, dark: 0x34322E, highLight: 0x8C877C, highDark: 0x77736A)
     /// Text auf `ink`-Flächen (Hauptknopf, aktive Chips): weiß im Hellen, Tinte im Dunkeln.
     static let onInk = Color(light: 0xFFFFFF, dark: 0x111111)
     /// Text auf Markengelb: immer Tinte.

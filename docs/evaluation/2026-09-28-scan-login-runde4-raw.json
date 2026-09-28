@@ -1,0 +1,1273 @@
+[
+ {
+  "persona": "Heinz Brandt, 74, Rentner aus Kassel, sammelt handgeschriebene Papiergutscheine von Cafés und seinem Friseur, nutzt ein iPhone SE mit großer Schrift (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Handschriftliche Gutscheine ohne Code fotografieren, Lesbarkeit, einfache Sperre",
+  "scores": {
+   "gesamt": 9,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "scores_runde3": {
+   "gesamt": 8,
+   "scan_erkennung": 8,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Jetzt steht bei meinem Café-Zettel „An der Kasse: Foto zeigen“ – genau das wollte ich, keine leeren Striche mehr. Beim Lesen sehe ich, was gerade passiert, und kann abbrechen. Nur beim Entsperren schiebt sich das Face-ID-Kästchen immer noch über den Text.",
+  "behoben": [
+   "Leere Kacheln „Code –“/„Barcode –“ bei Papiergutschein → eine Kachel „An der Kasse: Foto zeigen“ (scan-v04, ScanResultView.swift:120-122)",
+   "Kein Fortschritt beim Lesen → „Wird gelesen … Barcode und Text werden gesucht …“, Hinweis „Alles läuft auf deinem iPhone …“ und großer „Abbrechen“-Knopf (lesen-fortschritt)",
+   "Symbol „PIN anzeigen“ fest Face ID → richtet sich nach Gerät, Touch ID auf dem SE (CardDetailView.swift:181, CheckoutView.swift:277)",
+   "Hinweise unter den Knöpfen bei meinem Zettel → der wichtige Satz steht jetzt in der Kachel selbst, die Knopfleiste ist deckend mit Trennlinie (scan-v04)",
+   "Drei ähnliche Schutz-Schalter unverständlich → eigener Abschnitt „Schutz“ mit Erklärtext, der alle vier unterscheidet (SettingsView.swift:78-80)"
+  ],
+  "teilweise": [
+   "Schutz-Einstellungen „ganz oben“: Abschnitt „Schutz“ steht erst unter dem großen iCloud-Block (SettingsView.swift:43-47, einstellungen-schutz); mit großer Schrift muss ich weiter scrollen, und der Erklärtext liegt hinter der Tab-Leiste",
+   "Vier Schalter bleiben vier Schalter; die Erklärung hilft, zusammengefasst sind sie nicht",
+   "Lesedauer: Fortschritt jetzt sichtbar, schneller geworden ist es laut Protokoll nicht"
+  ],
+  "offen": [
+   "Face-ID-Fenster verdeckt beim Sperrbildschirm Überschrift und Erklärung („Res…errt“, „Entspe…einem“) (login-faceid)"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "login-faceid",
+    "befund": "Das System-Face-ID-Fenster liegt mittig über Titel und Erklärtext; die App könnte Titel/Text höher setzen, damit sie lesbar bleiben, während Face ID läuft.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kasse-code-geschuetzt",
+    "befund": "Bei verdecktem Code steht trotzdem „Helligkeit automatisch erhöht“ und „Digitale Karte wird vom Handy gescannt“, obwohl noch nichts zu scannen ist – für mich verwirrend, ob ich schon etwas zeigen soll.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Schutz-Abschnitt wirklich ganz oben (vor iCloud) und bei großer Schrift ohne langes Scrollen; Sperrbildschirm-Text über dem Face-ID-Fenster; spürbar kürzere Lesezeit.",
+  "top_wunsch": "Sperrbildschirm so gestalten, dass der Text beim Face-ID-Fenster lesbar bleibt, und „Schutz“ vor iCloud stellen.",
+  "wuerde_nutzen": true,
+  "nps": 9,
+  "zahlbereitschaft": "2–3 € einmalig"
+ },
+ {
+  "persona": "Sandra Kowalski, 41, Mutter von drei Kindern, Schublade voller Plastik-Geschenkkarten (Douglas, Thalia, H&M), will schnell scannen und an der Kasse den Barcode zeigen (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Tempo beim Erfassen vieler Plastikkarten, Barcode an der Kasse, PIN",
+  "scores": {
+   "gesamt": 7,
+   "scan_erkennung": 6,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 7
+  },
+  "scores_runde3": {
+   "gesamt": 7,
+   "scan_erkennung": 6,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 6
+  },
+  "erster_eindruck": "Schön, dass ich beim Lesen jetzt abbrechen kann und die abgelaufene H&M-Karte vor dem Hinzufügen noch mal nachgefragt wird. Aber bei Douglas und Thalia steht immer noch „Code 128 (üblich, prüfen)“, und einen Stapel-Modus für meine zehn Karten gibt es weiter nicht.",
+  "behoben": [
+   "PIN der Thalia-Karte nicht im Ergebnis → eigene Kachel „PIN ••••“ (ScanResultView.swift:118); allerdings erst nach Scrollen unter der Knopfleiste (scan-v02 zeigt sie nicht)",
+   "Kein Hinweis, dass Code-Schutz auch die Kasse betrifft → Erklärtext „Code-Schutz: … auch Kartennummer, Barcode und Foto“ (SettingsView.swift:80)",
+   "Abgelaufene Karte ließ sich ohne Rückfrage hinzufügen → „Trotz Warnung hinzufügen?“ (ScanView.swift:259)"
+  ],
+  "teilweise": [
+   "Lesedauer: Schritt-Anzeige und Abbrechen da (lesen-fortschritt), aber pro Karte weiter einige Sekunden, kein Tempo-Gewinn nachgewiesen",
+   "Schalter-Untertitel „Kartennummer und Code bleiben verdeckt“ nennt die Kasse nicht; nur der Fußtext darunter, hinter der Tab-Leiste (einstellungen-schutz)"
+  ],
+  "offen": [
+   "Douglas/Thalia weiter „Code 128 (üblich, prüfen)“, weil Ladenformat Vorrang hat (Models.swift:116, ScanResultView.swift:169; scan-v01, v02)",
+   "Echte Barcode-Erkennung auf dem iPhone nicht verifiziert (im Simulator nur QR, Protokoll Punkt 12)",
+   "Kein Stapel-Scan für mehrere Karten hintereinander"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "scan-v02 / ScanResultView.swift:118",
+    "befund": "Die neue PIN-Kachel steht als fünfte Kachel unter „Code“ und „Barcode“ und ist ohne Scrollen hinter der Knopfleiste verborgen; ob die PIN richtig gelesen wurde, sehe ich im Ergebnis nicht (nur ••••).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kasse-code-geschuetzt",
+    "befund": "Mit Code-Schutz an der Kasse: Tippen → Face ID → Barcode, dazu separat „PIN anzeigen“. Zwei Entsperr-Schritte, wenn die Kasse auch die PIN will; das Protokoll klärt nicht, ob ein Entsperren beides freigibt.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nachweis auf echtem iPhone, dass der gedruckte Barcode gelesen und an der Douglas/Thalia-Kasse akzeptiert wird (statt „üblich, prüfen“); Stapel-Modus für viele Karten; kürzere Lesezeit.",
+  "top_wunsch": "Stapel-Scan und echter Barcode vom Foto statt „üblich, prüfen“.",
+  "wuerde_nutzen": true,
+  "nps": 7,
+  "zahlbereitschaft": "3 € einmalig, wenn der Barcode im Laden tatsächlich scannt"
+ },
+ {
+  "persona": "Leon Petersen, 22, Student, bekommt Gutscheine fast nur als E-Mail oder PDF (Zalando, Amazon, Steam), kopiert Texte (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Import aus E-Mail-Text und PDF, korrekte Ablaufdaten, Online-Codes",
+  "scores": {
+   "gesamt": 8,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 9,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 7
+  },
+  "scores_runde3": {
+   "gesamt": 8,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Der Code-Schutz ist jetzt dicht: Foto, Bearbeiten, Export und Suche verraten den Code nicht mehr, und ohne Gerätecode tut die App nicht so, als wäre er an. Bei Amazon und Zalando kommt kein Barcode-Gerede mehr. Der Server ist aber weiter nicht umgestellt und das Impressum ist Platzhalter.",
+  "behoben": [
+   "„Die Barcode-Suche lief auf diesem Gerät nicht“ bei reinen Online-Codes → bei Läden mit .codeOnly/Prozent kein Hinweis mehr (ScanResultView.swift:222-224; scan-v14 zeigt „Nur Code“, Check „Code online einlösen“)",
+   "Code-Schutz umgehbar → Original-Foto, Bearbeiten, Sicherung/CSV und Suche verlangen Entsperren bzw. finden den Code nicht (Protokoll 1; papier-foto-geschuetzt)",
+   "Code-Schutz ohne Gerätecode still wirkungslos → wird als AUS gezeigt, authenticate() gibt nicht mehr still true (Protokoll 2, login-ohne-code)",
+   "Abbrechen auch bei PDF-Seiten und „Teilen“-Importen (Protokoll 8)"
+  ],
+  "teilweise": [
+   "Server/„kein Server von uns“: JWT ohne E-Mail, Datenschutztext zu Altkonten klarer – aber weiter NICHT deployt, DB-Tests nicht gelaufen, Impressum/Löschdatum Platzhalter",
+   "Code-Schutz leichter auffindbar: eigener Abschnitt „Schutz“ mit Erklärung, aber weiter kein Angebot beim ersten Online-Code"
+  ],
+  "offen": [
+   "„Kein Gutschein erkannt“ empfiehlt bei einer Einkaufsliste weiter „ein schärferes Foto der Rückseite“ (scan-v11, ScanResultView.swift:51)",
+   "KI-Symbol oben rechts ohne Erklärung, welche Felder von Apple Intelligence stammen; nur VoiceOver-Label „Mit Apple Intelligence gelesen“ (ScanResultView.swift:101-106)"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "scan-v09",
+    "befund": "Die rote Hoher-Wert-Warnung bei 1.250 € enthält jetzt den Betrugssatz, direkt darunter steht der graue Betrugshinweis noch einmal – doppelt, drückt den eigentlichen Gutschein unter die Knopfleiste.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "SettingsView.swift:71-80",
+    "befund": "Untertitel des Schalters sagt „Kartennummer und Code bleiben verdeckt“; dass auch Foto, Export und Kassen-Barcode betroffen sind, steht nur im Fußtext unter der Tab-Leiste.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Server-Umbau deployen und Altkonten mit festem Datum löschen, Impressum/Verantwortlichen ausfüllen; KI-Felder im Ergebnis sichtbar kennzeichnen; „Kein Gutschein“-Text passend zum Bildinhalt; Code-Schutz beim ersten Online-Code anbieten.",
+  "top_wunsch": "Server-Änderungen deployen und Altkonten mit konkretem Löschdatum entfernen.",
+  "wuerde_nutzen": true,
+  "nps": 8,
+  "zahlbereitschaft": "2 € einmalig, kein Abo"
+ },
+ {
+  "persona": "Aylin Demir, 35, Kassiererin bei Douglas, scannt beruflich Geschenkkarten und achtet darauf, ob der Barcode an der Kasse lesbar und korrekt ist (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Korrektheit von Kartennummer und Barcode, Prüfziffer, Tempo an der Kasse",
+  "scores": {
+   "gesamt": 8,
+   "scan_erkennung": 7,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 7,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 6
+  },
+  "scores_runde3": {
+   "gesamt": 7,
+   "scan_erkennung": 7,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 6,
+   "login_sperre": 7,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 6
+  },
+  "erster_eindruck": "Endlich: Bei falscher Prüfziffer malt die App keinen Barcode mehr, und vor dem Hinzufügen fragt sie nach. Der Warntext ist verständlich für Kundinnen. Aber meine Douglas-Karte mit gültiger EAN-13 wird immer noch als Code 128 angelegt.",
+  "behoben": [
+   "Bei ungültiger Prüfziffer automatisch Code-128-Barcode → kein Barcode-Bild mehr (ScanResultView.swift:124-127, scan-v06)",
+   "„Hinzufügen“ ohne Rückfrage bei Warnung → „Trotz Warnung hinzufügen?“ (ScanView.swift:257-263)",
+   "Prüfziffer-Warnung mit Fachjargon → „Die letzte Ziffer der Nummer passt nicht zum Rest (Prüfziffer eines Strichcodes) …“ (scan-v06)",
+   "Kein Hinweis, dass Code-Schutz die Kasse betrifft → Fußtext nennt Barcode und Foto (SettingsView.swift:80)"
+  ],
+  "teilweise": [
+   "Grüner Haken neben Prüfziffer-Warnung: Warnungen stehen jetzt nur oben (Checks filtern .warning, ScanResultView.swift:136); ob „Digitale Karte offiziell möglich“ im Prüfabschnitt weiter grün erscheint, ist im Screenshot unter der Knopfleiste nicht sichtbar",
+   "An der Kasse bei Code-Schutz nur ein Weg (Tippen) und keine Ziffern vorher – gut; dauert aber einen Entsperr-Schritt, während ich warte"
+  ],
+  "offen": [
+   "Douglas: gültige EAN-13 wird stillschweigend „Code 128 (üblich, prüfen)“, Ladenformat hat Vorrang vor der Nummer (Models.swift:116, ScanResultView.swift:169, scan-v01); keine Auswahl beider Formate",
+   "Echter Barcode vom Foto auf iPhone nicht verifiziert; im Simulator nur QR gelesen (scan-v03)"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "ScanView.swift:259-263",
+    "befund": "Die Rückfrage sagt nur allgemein „Oben steht ein Hinweis in Rot“; bei falscher Prüfziffer wäre eine konkrete Aufforderung „Nummer korrigieren“ statt „Hinzufügen und prüfen“ besser, sonst tippt man durch.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kasse-code-geschuetzt",
+    "befund": "„Digitale Karte wird vom Handy gescannt“ steht unter einer verdeckten Fläche ohne Barcode – für die Kundin missverständlich, sie hält das Handy schon hin.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Test auf echtem iPhone an einer echten Kasse; Barcode-Format vom Foto lesen; bei gültiger EAN-13 die EAN-13 vorschlagen oder beide Formate zur Wahl stellen statt Code 128.",
+  "top_wunsch": "Bei gültiger EAN-13 nicht auf das Ladenformat umschalten und den echten Barcode vom Foto übernehmen.",
+  "wuerde_nutzen": true,
+  "nps": 7,
+  "zahlbereitschaft": "3 € einmalig, sobald der Barcode auf echtem iPhone an der Kasse bestätigt ist"
+ },
+ {
+  "persona": "Markus Brandt, 45, Vater von zwei Kindern (9 und 12), das Familien-iPad wird von allen genutzt, will nicht, dass die Kinder Gutscheincodes sehen oder einlösen (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "App-Sperre und Schutz der Codes auf einem geteilten Gerät",
+  "scores": {
+   "gesamt": 8,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 7,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "scores_runde3": {
+   "gesamt": 7,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 7,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Jetzt ist der Code-Schutz endlich dicht: Auch das Original-Foto zeigt nur „Code geschützt – tippen und entsperren“, und die Schalter stehen unter „Schutz“ ganz oben. Aber meine Kinder kennen den iPad-Code – und genau der reicht weiter, um alles aufzudecken.",
+  "behoben": [
+   "„Original-Foto ansehen“ umging den Code-Schutz → Foto im Detail und an der Kasse verdeckt bis Face ID/Code (papier-foto-geschuetzt; CardDetailView.swift:490 über unlockCode, CheckoutView.swift:260-264)",
+   "„Tippen für Vollbild“ unter verdecktem Barcode → bei Code-Schutz entfernt, nur ein Weg (kasse-code-geschuetzt; CheckoutView.swift:258)",
+   "Ohne Gerätecode gab authenticate() still true zurück → gibt jetzt false zurück (RestwertApp.swift:469-472), Code-Schutz gilt ohne Code als aus",
+   "Schutz-Schalter lagen ganz unten hinter der Tab-Leiste → eigener Abschnitt „Schutz“ direkt nach iCloud (einstellungen-schutz)",
+   "Zusätzlich: „Bearbeiten“, Sicherung und CSV-Export verlangen Entsperren; Suche findet Karten nicht mehr über verdeckten Code (laut Protokoll)"
+  ],
+  "teilweise": [
+   "Einstellungen-Abschnitt „Schutz“ steht jetzt oben, aber der vierte Schalter „Code an der Kasse verdecken“ und der Erklärtext liegen im Screenshot noch unter der Tab-Leiste (einstellungen-schutz)",
+   "Code-Schutz und Sperre sind weiter ab Werk aus (SettingsView.swift:20,23) und der Einstieg fragt nicht nach geteilten Geräten (OnboardingView enthält keinen Hinweis auf Code-Schutz/Sperre)"
+  ],
+  "offen": [
+   "Keine eigene App-PIN – deviceOwnerAuthentication (RestwertApp.swift:471) akzeptiert den iPad-Code, den die Kinder kennen",
+   "Kein Einstiegs-Frage „Nutzen mehrere Personen dieses Gerät?“",
+   "PIN im Formular im Klartext (nicht geprüft)"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "App/RestwertApp.swift:391 und :398",
+    "befund": "Die Schonfrist rechnet mit ProcessInfo.systemUptime. Diese Laufzeit steht auf iOS still, solange das Gerät schläft. Liegt das iPad mit Schonfrist „5 Minuten“ eine Stunde gesperrt herum, sind laut Uptime evtl. nur Sekunden vergangen – wer den iPad-Code kennt, öffnet Restwert danach ohne erneute Abfrage. Sicherer: Uptime inkl. Schlaf (clock_gettime CLOCK_MONOTONIC/ CLOCK_BOOTTIME-Äquivalent) oder beim Gerätesperren (protectedDataWillBecomeUnavailable) sofort sperren.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "einstellungen-schutz",
+    "befund": "Vier Schalter (PIN-Schutz, App-Sperre, Code-Schutz, Kasse verdecken) sind für mich immer noch viel; ein einziger Vorschlag „Geteiltes Gerät – alles schützen“ fehlt.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Eine eigene App-PIN unabhängig vom iPad-Code, eine Frage beim ersten Start, die für geteilte Geräte Sperre und Code-Schutz in einem Schritt einschaltet, und eine Schonfrist, die auch bei gesperrtem Gerät weiterläuft.",
+  "top_wunsch": "Eigene App-PIN für geteilte Geräte (nicht der iPad-Code).",
+  "wuerde_nutzen": true,
+  "nps": 7,
+  "zahlbereitschaft": "3 € einmalig; mit eigener App-PIN 4–5 €."
+ },
+ {
+  "persona": "Renate Hofmann, 58, Verwaltungsangestellte, wurde vor zwei Jahren am Telefon um Gutscheincodes im Wert von 300 € betrogen und liest Warnhinweise sehr genau (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Echtheits-Hinweis, Betrugswarnungen, Vertrauen in die Erkennung",
+  "scores": {
+   "gesamt": 9,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 9,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "scores_runde3": {
+   "gesamt": 8,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Da steht es jetzt schwarz auf rot: „Hohe Gutscheine sind ein beliebtes Ziel von Betrügern: Code nie am Telefon oder per Nachricht weitergeben.“ Genau diesen Satz hätte ich damals gebraucht. Und wenn ich trotzdem auf „Hinzufügen“ drücke, fragt die App noch einmal nach.",
+  "behoben": [
+   "Hoher Wert ohne Betrugssatz → roter Kasten mit „… beliebtes Ziel von Betrügern: Code nie am Telefon oder per Nachricht weitergeben“ (scan-v09)",
+   "„Hinzufügen“ ohne Rückfrage trotz Warnung → „Trotz Warnung hinzufügen?“ mit Hinweis auf den roten Kasten (ScanView.swift:259-263)",
+   "Prüfziffer-Warnung mit Fachbegriff „EAN-Prüfziffer“ → verständlich „Die letzte Ziffer der Nummer passt nicht zum Rest …“; bei falscher Prüfziffer kein Barcode-Bild mehr (scan-v06)",
+   "„Guthaben ist 10 Jahre gültig“ wurde nicht mehr als Betrag gelesen; Kopf heißt jetzt „Gelesen – bitte prüfen“ (scan-v09)",
+   "Einkaufsliste/Kassenbon mit bekanntem Laden gilt ohne Gutschein-Wort nicht als Gutschein (laut Protokoll, Unit-Tests)"
+  ],
+  "teilweise": [
+   "Abgelaufen (scan-v07): Rückfrage vor „Hinzufügen“ kommt jetzt, die Kachel „Gültig bis 31.12.2024“ ist aber weiter nicht rot hervorgehoben",
+   "Bei 1.250 € ohne Datum steht weiter „Gültig bis · berechnet“ (scan-v09) – ehrlich beschriftet, aber ich hätte lieber „selbst prüfen“"
+  ],
+  "offen": [
+   "Keine Erinnerung beim „Kopieren“ in der Detailansicht, den Code nie weiterzugeben (CardDetailView.swift:469-486)",
+   "Barcode-Lesen auf echtem iPhone ungetestet; ob Prüfziffer-Warnung bei gescannten Barcodes greift, bleibt offen"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "scan-v07 / scan-v09",
+    "befund": "Roter Warnkasten und grauer Betrugskasten stehen direkt übereinander und sagen bei hohem Wert fast dasselbe zweimal; das ist für mich nicht schlimm, verlängert aber den Weg bis zu den Angaben.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ScanView.swift:67",
+    "befund": "„Zurück“ oben links verwirft das Ergebnis ohne Rückfrage – bei mir unkritisch, aber ein Fehltipp heißt neu scannen.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Ein kurzer Satz beim Kopieren („Diesen Code nie am Telefon weitergeben“), die abgelaufene Datums-Kachel rot und ein bestätigter Test auf einem echten iPhone, dass die Prüfziffer-Warnung dort kommt.",
+  "top_wunsch": "Beim Kopieren des Codes kurz an Betrug erinnern.",
+  "wuerde_nutzen": true,
+  "nps": 9,
+  "zahlbereitschaft": "Etwa 5 € einmalig, kein Abo."
+ },
+ {
+  "persona": "Daniel Özkan, 39, von Geburt an blind, nutzt VoiceOver täglich auf dem iPhone (simulierte Persona; Bewertung nur anhand der Code-Labels und Screen-Struktur, VoiceOver wurde nicht live getestet)",
+  "gruppe": "Alltag",
+  "fokus": "VoiceOver beim Scannen, Ergebnis und Entsperren",
+  "scores": {
+   "gesamt": 8,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 7,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 8
+  },
+  "scores_runde3": {
+   "gesamt": 8,
+   "scan_erkennung": 8,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 7,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Ansage nach dem Lesen wartet jetzt 0,7 Sekunden und Warnungen bekommen hohe Priorität – das war mein Hauptpunkt. Beim Lesen erfahre ich, welcher Schritt gerade läuft, und kann abbrechen. Wenn ich aber im Detail „Zeigen“ drücke und Face ID klappt, sagt mir niemand, dass die Nummer jetzt da ist.",
+  "behoben": [
+   "Ansage ohne Verzögerung/Priorität → 700 ms Wartezeit, bei „Achtung“ accessibilitySpeechAnnouncementPriority = .high (ScanResultView.swift:24-30; nicht live geprüft)",
+   "„Tippen für Vollbild“ wurde bei verdecktem Code vorgelesen → bei Code-Schutz ausgeblendet (CheckoutView.swift:258)",
+   "Lesen ohne Rückmeldung zum Schritt → „Barcode und Text werden gesucht …“ / „Apple Intelligence ordnet …“ mit „Abbrechen“ (lesen-fortschritt)",
+   "Rückfrage „Trotz Warnung hinzufügen?“ als Systemdialog – für VoiceOver gut erreichbar (ScanView.swift:259)"
+  ],
+  "teilweise": [
+   "Kasse: Die „•••• 1234“-Zeile reagiert weiter nur per onTapGesture ohne Button-Trait (CheckoutView.swift:252-256); bei Code-Schutz ist sie immerhin ausgeblendet",
+   "Ansage mit mehreren Warnungen bleibt ein langer Satz (ScanResultView.swift:42-43); jetzt aber mit hoher Priorität"
+  ],
+  "offen": [
+   "Nach erfolgreichem „Zeigen“ im Detail keine Ansage, dass der Code sichtbar ist (CardDetailView.swift:509-516, unlockCode ohne AccessibilityNotification)",
+   "Foto heißt weiter nur „Foto des Gutscheins“, ohne gelesenen Text (ScanResultView.swift:158)",
+   "Keine Zielhilfen in der Kamera („näher ran“, „Gutschein nicht im Bild“); nur „Barcode erkannt“-Ansage (LiveScannerView.swift:75)",
+   "„PIN anzeigen“: Wechsel wird nicht angesagt (CardDetailView.swift:519ff, togglePin ohne Announcement)",
+   "Kein Live-Test mit VoiceOver auf einem iPhone"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "CardDetailView.swift:453-455",
+    "befund": "Das Label der Nummer wechselt nach dem Entsperren von „Code verdeckt“ zur Nummer, aber der Fokus bleibt auf dem nun verschwundenen „Zeigen“-Knopf (er wird durch „Kopieren“ ersetzt) – VoiceOver kann dabei den Fokus verlieren und springt an den Anfang.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "CardDetailView.swift:425 / CheckoutView.swift:329",
+    "befund": "Verdecktes Foto heißt „Foto geschützt. Entsperren“ – gut verständlich; ein Hinweis (accessibilityHint), dass danach das Foto groß öffnet, fehlt.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Ein bestätigter Live-Test mit VoiceOver, Ansagen nach „Zeigen“ und „PIN anzeigen“ inklusive sauberem Fokus, der gelesene Gutscheintext als Bildbeschreibung und Kamera-Zielhilfen.",
+  "top_wunsch": "Nach „Zeigen“/„PIN anzeigen“ die Nummer ansagen und den Fokus darauf setzen.",
+  "wuerde_nutzen": true,
+  "nps": 7,
+  "zahlbereitschaft": "3–4 € einmalig, nach einem Live-Test mit VoiceOver eher 5 €."
+ },
+ {
+  "persona": "Helmut Kraus, 66, pensionierter Elektromeister, Parkinson mit Ruhetremor in der rechten Hand, trifft kleine Knöpfe schlecht und scheitert öfter an Face ID, weil er den Kopf nicht ruhig hält (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Tippziele, Face ID-Wiederholungen, Rückfall auf Gerätecode",
+  "scores": {
+   "gesamt": 8,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 7
+  },
+  "scores_runde3": {
+   "gesamt": 8,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 7,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Der „Zeigen“-Knopf ist jetzt eine richtige Kapsel, die ich treffe, und wenn Face ID mal streikt, sagt mir der Sperrbildschirm, was ich tun soll. Wenn ich aus Versehen „Hinzufügen“ trotz Warnung tippe, fragt die App nach. Aber oben links „Zurück“ wirft mein Ergebnis immer noch ohne Frage weg.",
+  "behoben": [
+   "„Zeigen“ war reiner Textknopf → 44-pt-Kapsel mit Hintergrund (detail-code-geschuetzt; CardDetailView.swift:460-468)",
+   "Face ID vorübergehend nicht verfügbar ohne Erklärung → Sperrbildschirm „… ist gerade nicht verfügbar. Warte kurz oder entsperre dein iPhone einmal mit dem Code …“ (RestwertApp.swift:544-548)",
+   "Schonfrist-Auswahl lag hinter der Tab-Leiste → Abschnitt „Schutz“ steht oben (einstellungen-schutz)"
+  ],
+  "teilweise": [
+   "„Hinzufügen“/„Erneut scannen“: Abstand 8 → 14 pt, Leiste deckend mit Trennlinie (ScanView.swift:252); Fehltipp auf „Hinzufügen“ bei Warnung wird abgefangen, ohne Warnung nicht",
+   "Kasse mit Code-Schutz: nur noch eine große Fläche zum Entsperren (kasse-code-geschuetzt) – leichter zu treffen, aber jede Kasse kostet weiter einen Face-ID-Versuch"
+  ],
+  "offen": [
+   "„Zurück“ oben links verwirft das Ergebnis weiter ohne Rückfrage (ScanView.swift:67, outcome = nil)",
+   "Schmale Segmente und Picker im Formular (nicht geändert, nicht geprüft)"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "CardDetailView.swift:477-486",
+    "befund": "Nach dem Entsperren ersetzt ein reiner Text-Knopf „Kopieren“ (buttonStyle .plain, ohne Mindesthöhe) die große „Zeigen“-Kapsel – genau an der Stelle, auf die ich gerade getippt habe, wird das Ziel wieder klein.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "CardDetailView.swift:490-492",
+    "befund": "„Original-Foto ansehen“ im Detail hat keine Mindesthöhe (an der Kasse schon, CheckoutView.swift:267).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ScanView.swift:67 / scan-v07",
+    "befund": "Der Zurück-Pfeil sitzt als 44-pt-Kreis oben links direkt über der Warnung; mit zittriger Hand löst ein Streifen beim Lesen der Warnung schnell das Verwerfen aus.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Rückfrage vor „Zurück“ im Ergebnis, „Kopieren“ und „Original-Foto ansehen“ ebenso groß wie „Zeigen“, größere Formular-Picker, und an der Kasse die Schonfrist auch für den Code-Schutz.",
+  "top_wunsch": "Rückfrage vor „Zurück“ im Ergebnis.",
+  "wuerde_nutzen": true,
+  "nps": 8,
+  "zahlbereitschaft": "2–3 € einmalig; kein Abo."
+ },
+ {
+  "persona": "Dr. Lena Vogt, 34, Computer-Vision/OCR-Ingenieurin (Vision-API, Barcode-Erkennung, Fehlerbehandlung, Bildvorverarbeitung) (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Erkennungspipeline Importer: Abbrechen bis in analyze, Fehlerzustände, PDF-Pfad, CoreImage-QR, ScanProgress",
+  "scores": {
+   "gesamt": 7,
+   "scan_erkennung": 6,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde3": {
+   "gesamt": 7,
+   "scan_erkennung": 6,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Aufräumarbeiten in der Pipeline stimmen. Der Teilen-Import läuft über read(), der KI-Schritt wird nach einem Abbruch nicht mehr gestartet, Texterkennungsfehler werden geloggt, leere Payloads gefiltert, und im PDF läuft die KI nur noch einmal. Die Fortschrittsanzeige ist eine gute Idee, zeigt aber je nach Weg den falschen Schritt. Und gemessen ist auf echter Hardware weiter nichts, deshalb bleibt es bei der 7.",
+  "behoben": [
+   "Teilen/pendingImport läuft über read() und hängt an readTask, ist also abbrechbar (ScanView.swift:135-142).",
+   "Nach einem Abbruch startet der KI-Schritt nicht mehr (Importer.swift:131); PDF-Schleife prüft Task.isCancelled pro Seite (Importer.swift:234).",
+   "Texterkennungsfehler nicht mehr still per try?, sondern mit Log (Importer.swift:183-186).",
+   "Legacy-Pfad filtert leere Payloads (Importer.swift:170).",
+   "PDF: Seiten mit smart:false, Apple Intelligence einmal über den Gesamttext (Importer.swift:235, 247).",
+   "QR-Codes ohne Vision-Detektor über CoreImage (Importer.swift:121-127, 155-159), im Simulator an v03 nachgewiesen."
+  ],
+  "teilweise": [
+   "Abbrechen im PDF: guard ... else { break } verlässt nur die Schleife, danach läuft SmartExtractor.extract trotzdem über den Teiltext (Importer.swift:234 → 247). Vermutlich wirft FoundationModels im abgebrochenen Task schnell, sauber ist ein return trotzdem.",
+   "Fehlerzustand der Texterkennung wird geloggt, aber nicht an die Oberfläche gemeldet: leeres observations = [] sieht im Ergebnis wie „nichts gefunden“ aus (Importer.swift:183-186).",
+   "Barcode-Lesen auf echtem iPhone weiter ungetestet; Strichcodes, PDF417 und Aztec im Simulator ungelesen."
+  ],
+  "offen": [
+   "Kein Messlauf auf echter Hardware, keine Signposts/Zeitmessung pro Schritt (Text, Barcode, Legacy, KI).",
+   "PDF: barcodeUnavailable weiter per ODER über alle Seiten, auch wenn eine spätere Seite einen Barcode liefert (Importer.swift:236).",
+   "ScanOutcome.draft weiter berechnet (Importer.swift:27); hasWarnings baut dafür zusätzlich eine ganze ScanResultView (ScanResultView.swift, extension ScanOutcome.hasWarnings), pro Render mehrfach merge().",
+   "Unbekannte Symbologien still zu .code128 (Importer.swift:59, 76).",
+   "Barcode-Auswahl weiter „erster 1D-Code“ ohne Größe/Konfidenz, keine Vorverarbeitung oder zweiter Versuch (Importer.swift:112, 171)."
+  ],
+  "neue_befunde": [
+   {
+    "screen": "ios/Restwert/Services/Importer.swift:91-97 / ScanView.swift:78",
+    "befund": "ScanProgress.step wird nie pro Lesevorgang zurückgesetzt und nur in analyze(cgImage:) gesetzt. Folgen: Beim E-Mail-Text steht „Barcode und Text werden gesucht …“, obwohl es keinen Barcode-Schritt gibt. Beim PDF läuft der lange KI-Schritt (Importer.swift:247) unter „Barcode und Text werden gesucht …“, weil die Seiten mit smart:false laufen. Beim nächsten Foto steht zuerst noch der alte „Apple Intelligence …“-Text. Der Screen verspricht „den echten Schritt“, zeigt ihn aber nur beim Einzelbild.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ios/Restwert/Services/Importer.swift:95-97",
+    "befund": "ScanProgress.set springt per unstrukturiertem Task auf den MainActor. Ein abgebrochener oder abgelöster Lauf kann seinen Schritt später noch setzen und die Anzeige des neuen Laufs überschreiben. Der Fortschritt hängt nicht an readID.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ios/Restwert/Services/Importer.swift:120-127",
+    "befund": "CoreImage-Weg: Wird ein QR gefunden, ist barcodeUnavailable false, obwohl Strichcodes gar nicht gesucht wurden. Trägt die Karte einen QR (z. B. mit AGB-URL) und einen Kassen-Strichcode, wird die QR-Nutzlast als Code übernommen und das Format als „gescannt“ gesperrt. Praktisch nur im Simulator relevant, aber die Semantik von „gescannt“ ist hier falsch.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Ein Messlauf der 14 Testgutscheine auf echtem iPhone mit Trefferquote pro Symbologie und Dauer pro Schritt (os_signpost). Dazu Texterkennungsfehler als sichtbarer Zustand, Abbruch im PDF mit return statt break, Fortschritt pro Lauf (an readID gebunden, bei Text und PDF-KI korrekt gesetzt) und eine einfache Vorverarbeitung mit zweitem Versuch.",
+  "top_wunsch": "Echte-Hardware-Messung der Barcode-Erkennung mit den 14 Testgutscheinen, inklusive Zeit pro Schritt.",
+  "wuerde_nutzen": true,
+  "nps": 7,
+  "zahlbereitschaft": "Unverändert einmalig 3-5 €, sobald der Barcode-Scan auf echter Hardware nachgewiesen ist."
+ },
+ {
+  "persona": "Rainer Holtkamp, 50, Experte für Geschenkkarten- und Kassensysteme im Handel (EAN/Code128/PDF417, PIN, Kartennummer vs. Barcode-Inhalt, Prüfziffer) (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Kassentauglichkeit: Barcode bei Prüfziffer-Warnung, PIN-Erkennung, Nummernbildung, Kassenbon-Ausschluss",
+  "scores": {
+   "gesamt": 7,
+   "scan_erkennung": 6,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "scores_runde3": {
+   "gesamt": 7,
+   "scan_erkennung": 6,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 6,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Mein Top-Wunsch Nummer eins ist erledigt: In scan-v06 steht über der roten Prüfziffer-Warnung kein frisch gezeichneter Barcode mehr, und der Warntext ist jetzt verständlich. „PIN-Code:“ und „PIN-Nr.“ werden gelesen, die PIN steht verdeckt als Kachel im Ergebnis. Aber ein Kassenbon mit „GESAMT“ statt „SUMME“ ist weiter ein REWE-Gutschein, und ein Bon mit Rabattzeile wird sogar zum 7-%-Rabattcode. Kartennummer und PIN kleben weiter zusammen.",
+  "behoben": [
+   "Bei falscher 13-stelliger Prüfziffer wird kein Barcode gezeichnet (ScanResultView.swift, Bedingung ScanDraft.retailCheck(code)?.valid != false; sichtbar in scan-v06).",
+   "PIN-Regex versteht „PIN-Code:“, „PIN-Nr.“, „PIN Nummer“ (TextParser.swift:60; Prüfskript: pin=4711).",
+   "PIN wird im Ergebnis als verdeckte Kachel „••••“ angezeigt (ScanResultView.swift, cell(\"PIN\")).",
+   "Kassenbon mit „SUMME/MwSt/Kassenbon“ und ohne Gutschein-Wort gilt nicht mehr als Gutschein (ScanDraft.swift:43, 52; Test ScanDraftTests.swift:88-98).",
+   "„Hinzufügen“ fragt bei roter Warnung einmal nach (ScanView.swift:256-263)."
+  ],
+  "teilweise": [
+   "Kassenbon-Ausschluss hängt an einer Wortliste mit Lücken (ScanDraft.swift:43): „GESAMT“, „Bon-Nr.“, „Kartenzahlung“, „TSE“ fehlen, und beleg\\s?nr trifft „Beleg-Nr.“ mit Bindestrich nicht. Prüfskript: „REWE Markt / Bon-Nr. 4711 / GESAMT EUR 3,68 / TSE-Signatur 20260927“ ergibt REWE, 3,68 €, Code 20260927, Gutschein = ja; „EDEKA / Beleg-Nr. 1234567890 / Gesamtbetrag 12,40 €“ ebenso.",
+   "Unbekannter Laden + zufällig gültige 13-stellige Nummer wird weiter „EAN-13 (aus Nummer)“ und im Formular gesperrt (Importer.swift:39-40; Prüfskript retailCheck(\"2000000000008\") = gültig).",
+   "Bekannter Laden mit 13-stelliger Nicht-GS1-Kartennummer bekommt weiter die rote Prüfziffer-Warnung ganz oben, jetzt immerhin ohne gezeichneten Barcode und mit einmaliger Rückfrage."
+  ],
+  "offen": [
+   "Barcode-Inhalt und aufgedruckte Kartennummer weiter ein Feld, kein Abgleich (ScanResultView.swift: code = outcome.barcode ?? draft.number).",
+   "clean() verklebt Kartennummer und unbeschriftete PIN: „Kartennummer 6280123456789012 4711“ ergibt 62801234567890124711 (TextParser.swift:295-303, Prüfskript).",
+   "KI-PIN aus der Kartennummer, wenn beide in einer Zeile stehen und der Parser die PIN nicht selbst findet: „Karte 6280 1234 5678 9012 PIN (freirubbeln): 4711“ mit KI-PIN 5678 ergibt pin=5678 (ScanDraft.swift:27-28, Prüfskript).",
+   "„Längere Nummer gewinnt“ vergleicht weiter rohe Länge mit Leerzeichen (ScanDraft.swift:33; Prüfskript: KI „4006 3813 3393 1“ verdrängt Parser-Nummer).",
+   "Unbekannte Symbologien still zu Code128 (Importer.swift:59, 76).",
+   "Kein Nachweis mit echtem Kassenscanner."
+  ],
+  "neue_befunde": [
+   {
+    "screen": "RestwertKit/ScanDraft.swift:49-52 + TextParser.swift:100",
+    "befund": "Gutschein-Wörter schlagen den Beleg-Ausschluss immer. Echte Kassenbons enthalten oft „Rabatt“ oder „Coupon“. Prüfskript: „REWE Markt / Bio Milch 1,19 / Rabatt -0,20 / SUMME EUR 3,68 / MwSt 7 % / TSE 20260927“ ergibt Gutschein = ja, und der Parser liest 7 % als Rabatt (MwSt-Ausschluss nur, wenn MwSt HINTER der Zahl steht). Der Bon landet als REWE-Rabattcode 7 % mit Code 20260927 im Formular. „dm / Coupon eingelöst -0,50 / SUMME“ ergibt ebenfalls einen dm-Gutschein über 3,68 €.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "RestwertKit/ScanDraft.swift:40-43",
+    "befund": "Falsch-negativ: Echte Warengutschriften/Umtauschbelege des Handels werden jetzt ausgeschlossen. Prüfskript: „MediaMarkt / Gutschrift Warenrückgabe / Betrag 49,99 € / Summe / Beleg-Nr 4711“ und „Thalia / Warengutschrift / Betrag 12,00 € / Quittung Nr 4711“ ergeben „Kein Gutschein erkannt“. „Gutschrift/Warengutschrift“ fehlt in voucherWords, „Summe/Quittung“ schließen aus. Genau diese Belege piepen an der Kasse.",
+    "schwere": "mittel"
+   }
+  ],
+  "was_fehlt_zur_10": "Kartennummer und Barcode-Inhalt als getrennte Felder mit Abgleich. PIN nur als Token direkt hinter dem PIN-Label, und Ziffernblöcke nicht blind verkleben. Kassenbon-Erkennung über Struktur (mehrere Preiszeilen, Summe/Gesamt, TSE, Zahlungsart), die auch bei „Rabatt/Coupon“ greift, dazu „Gutschrift/Warengutschrift/Umtauschbon“ als Gutschein. Und der Nachweis mit echtem Kassenscanner, dass die gerenderten Barcodes der 14 Testkarten piepen.",
+  "top_wunsch": "Kartennummer getrennt vom Barcode-Inhalt speichern und die PIN nie an die Kartennummer kleben; Kassenbons strukturell statt über eine Wortliste ausschließen.",
+  "wuerde_nutzen": true,
+  "nps": 7,
+  "zahlbereitschaft": "Privat 3 € einmalig. Für Händler weiter nur mit Nachweis „piept an der Kasse“."
+ },
+ {
+  "persona": "Jonas Petersen, 31, LLM-Sicherheits- und Qualitätsforscher (On-Device-Extraktion mit Apple Intelligence, Halluzinationen, Zusammenführung Regel-Parser/KI) (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "ScanDraft.merge: amountAppears/percentAppears, dateAppears, Belegwörter, Validity/baseYear, Label-Beträge im Parser",
+  "scores": {
+   "gesamt": 7,
+   "scan_erkennung": 6,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 9,
+   "barrierefreiheit": 7
+  },
+  "scores_runde3": {
+   "gesamt": 7,
+   "scan_erkennung": 6,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 6,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 9,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Alle meine konkreten Runde-3-Probes sind repariert: „Guthaben ist 10 Jahre gültig“ bleibt 25 €, „3 Jahre ab Ende des Jahres gültig“ wird erkannt, „Ende des Jahres 2026“ gibt 2029, und „Ende Oktober“ oder „ausgestellt 12.01.2025“ belegen kein KI-Datum mehr. Die Fixes sind aber jeweils eng auf mein Beispiel zugeschnitten. „Wert für 2 Personen“ macht aus einem 50-€-Gutschein weiter einen 2-€-Gutschein, „inkl. MwSt. 19 %“ wird zum Rabatt, und ein Personalausweis mit „Gültig bis“ ist weiter ein Gutschein.",
+  "behoben": [
+   "Laufzeit ist kein Betrag: Label-Treffer mit folgendem „Jahre/Monate/Tage/%“ werden verworfen (TextParser.swift:123-124; Prüfskript „Wert gilt 2 Jahre“ ergibt 50 €).",
+   "„3 Jahre ab Ende des (Kalender-)Jahres gültig“ ergibt 31.12.2029 (TextParser.swift:234; Prüfskript).",
+   "„3 Jahre gültig ab Ende des Jahres 2026“ ergibt 31.12.2029 statt 31.12.2026 über baseYear (TextParser.swift:147, 249).",
+   "dateAppears: „Ende Oktober“, „03/2027“ ohne Monatsende, „Filiale 27 Kasse 3“ und der Tag eines anderen Datums belegen kein KI-Datum mehr (ScanDraft.swift:144-165; Prüfskript).",
+   "„19 % MwSt“ bzw. „inkl. 19 % MwSt“ im Prozent-Grounding ausgeschlossen (ScanDraft.swift:139).",
+   "Anlässe „für Weihnachten“, „Für Online-Einkäufe“, „für Geburtstag“ sind keine Beschenkten (TextParser.swift:259-263)."
+  ],
+  "teilweise": [
+   "Jahresende nur „neben“ der Laufzeit, aber „neben“ heißt gleiche ODER nächste Zeile (TextParser.swift:245-248). Mein Runde-3-Beispiel „Gutschein 20 € / 3 Jahre gültig / Aktion nur bis zum Jahresende!“ ergibt weiter 31.12.2029, ebenso im selben Absatz „3 Jahre gültig. Aktion nur bis zum Jahresende!“ (Prüfskript).",
+   "Empfänger: Stoppliste statt Regel. „Für Genießer“, „Für Freunde“, „Für Jedermann“, „Für Einen Einkauf“ werden weiter zu „Für wen“ (TextParser.swift:258-270, Prüfskript).",
+   "Ergebnis zeigt „Gelesen – bitte prüfen“ und „Gültig bis · berechnet“, aber pro Feld weiter keine KI-Herkunft (nur ein Symbol)."
+  ],
+  "offen": [
+   "Label-Grounding der KI mit (?![\\d]) lässt „30.“ zu: „Gutscheinwert gültig bis 30.09.2027“ mit KI-Wert 30 ergibt value=30 (ScanDraft.swift:131, Prüfskript). Der Parser nutzt längst (?![.,]?\\d).",
+   "Kurze Händlernamen: „Hm, lecker! / Gutschein“ mit KI-merchant hm ergibt H&M (ScanDraft.swift:15, Prüfskript).",
+   "Prompt-Injection über Mail-Text: ein im Footer platzierter Code ist „im Text“ und damit belegt.",
+   "Keine Feld-Markierung der KI-Werte."
+  ],
+  "neue_befunde": [
+   {
+    "screen": "RestwertKit/TextParser.swift:123-127",
+    "befund": "Die Label-Regel schließt nur Zeiteinheiten aus, jede andere Einheit gewinnt weiter gegen den Währungsbetrag. Prüfskript: „Gutschein 50 € / Wert für 2 Personen“ ergibt 2 €; „CinemaxX Gutschein / Wert: 2 Kinotickets / 15,00 €“ ergibt 2 €; „Gutschein 25 € / Guthaben 500 Punkte“ ergibt 500 €. Das ist dieselbe Fehlerklasse wie mein Runde-3-Befund, nur mit anderem Wort. Label-Zahlen ohne Währung sollten einen Währungsbetrag nie überstimmen.",
+    "schwere": "hoch"
+   },
+   {
+    "screen": "RestwertKit/ScanDraft.swift:40, 49-52",
+    "befund": "„gültig\\w*“ und „valid“ sind Gutschein-Wörter und schlagen die neue Ausschlussliste. Aber fast jeder ausgeschlossene Dokumenttyp trägt „gültig“: Prüfskript „Personalausweis / Gültig bis 01.02.2031 / L01X00T47“ ergibt Gutschein = ja mit Ausweisnummer als Code; „Deutsche Bahn / Fahrkarte … / gültig am 28.09.2026“ ergibt DB-Gutschein 49,90 €; „Parkschein 3,50 € / gültig bis 14:30“ und „BahnCard 25 … gültig bis 30.06.2027“ ebenfalls. Die Tests (ScanDraftTests.swift:88-98) lassen „gültig“ genau in diesen Fällen weg.",
+    "schwere": "hoch"
+   },
+   {
+    "screen": "RestwertKit/ScanDraft.swift:139",
+    "befund": "Der MwSt-Ausschluss im Prozent-Grounding greift nur, wenn MwSt HINTER dem % steht. Prüfskript: „inkl. MwSt. 19 %“, „MwSt 19 %“, „enthaltene USt. 7%“, „Enthaltene MwSt: 19 % = 7,98 €“ mit KI-Prozent ergeben jeweils percent=19 bzw. 7. Der Wertgutschein wird zum Rabattcode, Format „Nur Code“, Rechtshinweis entfällt. „inkl. MwSt. 19 %“ ist die häufigste Schreibweise auf Belegen und Gutscheinen.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "RestwertKit/ScanDraft.swift:155-158",
+    "befund": "dateAppears mit Monatsnamen: Monat, irgendeine freie Zahl gleich dem Tag und das Jahr müssen nur irgendwo in derselben Zeile stehen. Prüfskript: „Filiale 15 März-Aktion 2028“ belegt KI-Datum 15.03.2028 (expiresIsEstimate false). Tag und Monatsname sollten direkt nebeneinander stehen müssen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "RestwertKit/TextParser.swift:147",
+    "befund": "Eine Laufzeit mit Ausstellungsjahr überstimmt ein ausdrücklich gedrucktes Datum. Prüfskript: „3 Jahre gültig ab Ende des Jahres 2025 / gültig bis 31.12.2030“ ergibt 31.12.2028 (geschätzt) statt 31.12.2030. Außerdem sucht baseYear auch in der Folgezeile nach „jahres JJJJ“ („… ab Ende des Jahres / Geschäftsjahres 2019“ ergibt 31.12.2022, abgelaufen). Selten, aber ein gedrucktes „gültig bis“ sollte gewinnen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "RestwertKit/ScanDraft.swift:54",
+    "befund": "Ein beliebiger Barcode reicht weiter für „Gutschein“, ohne Prüfung der Nutzlast. Ein Flyer mit URL-QR („Sommerfest am 12.07. / Mehr Infos online“) ergibt Gutschein = ja, und die URL wird zum Code. Mit dem neuen CoreImage-QR-Weg kommen solche QR-Codes jetzt auch im Simulator durch.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Regeln statt Einzelfallkorrekturen. Label-Zahlen ohne Währung überstimmen nie einen Währungsbetrag. MwSt/USt irgendwo im Satz schließt Prozent aus. „gültig“ ist kein Gutschein-Beweis, wenn ein Ausschlusswort dasteht. Datums-Grounding nur über zusammenhängende Datums-Tokens. Gedrucktes Datum schlägt berechnete Laufzeit. Pro Feld sichtbar machen, ob der Wert von der KI stammt. Und ein adversariales Set von 30+ Nicht-Gutscheinen und Grenzfällen im Repo, das vom Autor nicht auf die Fixes zugeschnitten ist.",
+  "top_wunsch": "Label-Beträge ohne Währung nie über Währungsbeträge stellen und „gültig“ nicht mehr über die Ausschlussliste siegen lassen (Ausweis, Fahrkarte, Parkschein).",
+  "wuerde_nutzen": true,
+  "nps": 7,
+  "zahlbereitschaft": "3 € einmalig jetzt; 5 €, wenn KI-Felder einzeln markiert sind und ein adversarialer Test grün ist."
+ },
+ {
+  "persona": "Sabine Krüger, 43, QA-Lead Testautomatisierung (Testbarkeit, Randfälle, fehlende Tests) (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Testabdeckung Negativfälle über den echten merge-Pfad, Golden-Set, Abbrechen/Teilen-Import, Validity beim Bearbeiten, AppLock-Schonfrist",
+  "scores": {
+   "gesamt": 7,
+   "scan_erkennung": 6,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 6,
+   "login_sperre": 7,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde3": {
+   "gesamt": 7,
+   "scan_erkennung": 6,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 6,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "`swift test` läuft mit 103 Tests grün, und die Nicht-Gutschein-Fälle gehen jetzt wirklich durch ScanDraft.merge. Aber die Testtexte sind so gewählt, dass sie grün werden: Mein Runde-3-Ausweis „Gültig bis 01.02.2031 / L01X00T47“ ist in meiner Kopie weiter ein Gutschein, weil „gültig“ als Gutschein-Wort gewinnt. Im Test steht der Ausweis ohne „gültig“. Dazu misst die neue Schonfrist eine Uhr, die im Standby stehen bleibt.",
+  "behoben": [
+   "Negativtests laufen jetzt über ScanDraft.merge + looksLikeVoucher mit hasBarcode: true (ScanDraftTests.swift:88-98), inklusive Kassenbon, Fahrkarte, Ausweis, Parkschein, Speisekarte.",
+   "Neue Tests für MwSt-Prozent, strenges KI-Datum, „3 Jahre ab Ende des Jahres gültig“, Anlässe, Laufzeit-kein-Betrag, PIN-Code (ScanDraftTests.swift:82-130).",
+   "Teilen-Import läuft über read() und ist abbrechbar; kein zweiter unkontrollierter Lauf mehr (ScanView.swift:135-142).",
+   "Beim Bearbeiten wird ein aus der Laufzeit berechnetes Datum nicht mehr durch die gesetzliche Frist überschrieben (CardFormView.swift:612-618).",
+   "Schonfrist nicht mehr über Date.now (RestwertApp.swift:391, 398)."
+  ],
+  "teilweise": [
+   "Golden-Set weiter feste Strings im Test (GoldenOCRTests.swift:24-48); Kopfkommentar und Protokoll sprechen von „echter Vision-Texterkennung“, im Testlauf findet keine statt. v13 (PDF) und v14 (E-Mail) fehlen, weiter nur ein Nicht-Gutschein im Golden-Set.",
+   "Validity wird weiter nicht gespeichert. Beim Bearbeiten wird „berechnet“ nur geraten (Datum ≠ gesetzliche Frist), validity ist nil, eine Änderung von „Erhalten am“ rechnet dann gar nicht mehr neu (CardFormView.swift:179-185, 612-618). Kein Test, Logik liegt im View.",
+   "Einkaufsliste: customName == \"Milch\" bleibt ausdrücklich erlaubt (ScanDraftTests.swift:26; Prüfskript name=Milch).",
+   "LAContext weiter an 6 Stellen direkt (RestwertApp.swift:458, 471, 476, 594; CardFormView.swift:512; CheckoutView.swift:427; CardDetailView.swift:528; SettingsView.swift:249), AppLock nicht injizierbar, keine Tests für Sperre/Schonfrist."
+  ],
+  "offen": [
+   "Vision weiter ohne Protokoll/Fake; LegacyResult- und CoreImage-Pfad ungetestet.",
+   "Kein App-Test-Target; resolvedFormat, hasWarnings, FormSeed-Übernahme, ScanProgress und Abbrechen ungetestet.",
+   "formSeed = nil zu Beginn jedes run() schließt ein offenes Formular samt Eingaben, wenn ein Teilen-Import kommt (ScanView.swift:211).",
+   "Veralteter Kommentar „… aber nicht bei „Erhalten am“ neu rechnen“ steht weiter und widerspricht :179-185 (CardFormView.swift:597).",
+   "Server-DB-Tests laut Protokoll nicht gelaufen."
+  ],
+  "neue_befunde": [
+   {
+    "screen": "RestwertKit/ScanDraft.swift:40, 49-52 (Prüfskript im Scratchpad)",
+    "befund": "Die Ausschlussliste wirkt nur, wenn kein Gutschein-Wort dasteht, und „gültig\\w*“ ist eines. Prüfskript über merge + looksLikeVoucher: „Personalausweis / Gültig bis 01.02.2031 / L01X00T47“ ergibt voucher=true mit Ausweisnummer als Code (datenschutzrelevant, exakt mein Runde-3-Fall); „Konzert Ticket / gültig am 28.09.2026“, „Fahrkarte … gültig am …“, „Parkschein … gültig bis 14:30“, „BahnCard 25 … gültig bis“ ergeben ebenfalls Gutscheine. Die Testargumente (ScanDraftTests.swift:88-94) enthalten „gültig“ in keinem Fall. Die Tests beweisen damit weniger, als ihr Titel verspricht.",
+    "schwere": "hoch"
+   },
+   {
+    "screen": "RestwertKit/ScanDraft.swift:43, 53-54",
+    "befund": "Weitere Nicht-Gutscheine ohne Ausschlusswort werden über Betrag + Nummer zum Gutschein. Prüfskript: Handyrechnung „Vodafone / Kundennummer … / Betrag 39,99 € / Vertragsnummer 88812345“, Kontoauszug „Sparkasse / Kontoauszug / Saldo 1.234,56 € / Konto 12345678“, Tankbeleg „ARAL / Super E10 45,12 € / Trans.-Nr. 88123456“, Kassenbon mit „GESAMT“ statt „SUMME“ ergeben alle voucher=true. Eine Wortliste skaliert nicht; ohne ein größeres adversariales Set bleibt das Ratespiel.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "ios/Restwert/App/RestwertApp.swift:391, 398",
+    "befund": "Die Schonfrist misst jetzt ProcessInfo.systemUptime. Das ist laut Apple die Zeit, die das System wach war: Während das iPhone im Standby schläft, läuft sie kaum weiter. Szenario: Schonfrist 1 Minute, App in den Hintergrund, iPhone zwei Stunden gesperrt in der Tasche, danach von jemandem mit dem iPhone-Code entsperrt. Die gemessene Differenz kann unter 60 s liegen, und Restwert öffnet ohne Face ID. Richtig wäre eine monotone Uhr, die im Schlaf weiterläuft (ContinuousClock bzw. mach_continuous_time / CLOCK_MONOTONIC). Nicht testbar, weil AppLock keine Uhr injiziert bekommt.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "RestwertKit/Tests (fehlend)",
+    "befund": "Für die neue Logik fehlen die Grenzfälle, die in meiner Kopie scheitern: „inkl. MwSt. 19 %“ (percent=19), „Wert für 2 Personen“ (2 € statt 50 €), Jahresende in der Folgezeile, Kartennummer + unbeschriftete PIN (verklebt), Kassenbon mit „Rabatt“ und „MwSt 7 %“ (7-%-Rabattcode), Warengutschrift (falsch negativ).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "ios/Restwert/Services/Importer.swift:91-97",
+    "befund": "ScanProgress ist ein globaler Singleton, wird pro Lauf nicht zurückgesetzt und per fire-and-forget-Task gesetzt. Bei E-Mail-Text und PDF-KI zeigt die Anzeige den falschen Schritt, ein abgelöster Lauf kann den Schritt des neuen überschreiben. Nicht testbar, da nicht an readID gebunden.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Ein adversariales Set, das nicht vom selben Autor passend zu den Fixes geschrieben ist: 30+ echte Nicht-Gutscheine (Ausweis, Fahrkarte, Ticket jeweils MIT „gültig“, Kassenbons mit Rabatt/Coupon, Rechnungen, Kontoauszug) und Grenzfälle über merge. Golden-Set wirklich aus Vision (macOS-Test oder Fixture mit Herkunft), inklusive v13/v14. Vision hinter einem Protokoll mit Fake, Lese-Koordinator und Formular-Seeding als testbare Typen, Validity am GiftCard gespeichert, AppLock mit injizierbarer, im Schlaf weiterlaufender Uhr und Tests für Schonfrist.",
+  "top_wunsch": "Die Belegfälle mit „gültig“ in die Tests aufnehmen und looksLikeVoucher so bauen, dass sie grün werden; dazu die Schonfrist auf eine im Standby weiterlaufende Uhr umstellen.",
+  "wuerde_nutzen": true,
+  "nps": 7,
+  "zahlbereitschaft": "Einmalig 4 € oder 1 €/Monat; unverändert, bis die Negativfälle mit „gültig“ im echten Pfad abgesichert sind."
+ },
+ {
+  "persona": "Timo Brandt, 37, iOS-Security-Engineer (LocalAuthentication, Keychain, App-Härtung) – simulierte Persona",
+  "gruppe": "Fachleute",
+  "fokus": "Nachtest Runde 4: Code-Schutz (codeLock) und alle Wege zum Code, Schonfrist mit Systemlaufzeit, .unavailable-Meldung, authenticate() ohne stilles true",
+  "scores": {
+   "gesamt": 7,
+   "scan_erkennung": 7,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 7
+  },
+  "scores_runde3": {
+   "gesamt": 7,
+   "scan_erkennung": 7,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Die vier Lücken aus Runde 3 sind im Detail zu: Bearbeiten, Original-Foto, Export und Suche gehen jetzt über Face ID, und authenticate() gibt nicht mehr still true zurück. Aber ich komme trotzdem ohne Face ID an den Code: lange auf die Karte drücken, ‚Bearbeiten‘ – oder an der Online-Kasse einfach ‚Code kopieren‘. Solange es mehr als eine Tür gibt, ist das ein Schloss an einer von dreien.",
+  "behoben": [
+   "Bearbeiten aus der Detailansicht verlangt Entsperren (CardDetailView.swift:114 unlockCode)",
+   "Original-Foto verdeckt, inline und über ‚Original-Foto ansehen/zeigen‘ sowie Papiergutschein an der Kasse (CardDetailView.swift:420-426, 484; CheckoutView.swift:272-277, 312-320; papier-foto-geschuetzt)",
+   "Sicherung/CSV-Export hinter Face ID, wenn PIN-Schutz, App-Sperre oder Code-Schutz an ist (SettingsView.swift:284-288)",
+   "Suche matcht bei aktivem Code-Schutz nicht mehr auf die Kartennummer (HomeView.swift:346) – Orakel geschlossen",
+   "authenticate() gibt ohne Prüfmöglichkeit false zurück; codeLock gilt ohne Gerätecode als aus (RestwertApp.swift:465-472)",
+   "Schonfrist misst ProcessInfo.systemUptime statt Date.now – Uhr zurückstellen hilft nicht mehr (RestwertApp.swift:388-399)",
+   ".unavailable am Sperrbildschirm wird jetzt angesagt statt still ignoriert (RestwertApp.swift:586-589)",
+   "Barcode wird bei Code-Schutz gar nicht gezeichnet (BarcodeView concealed), also nicht abscannbar (BarcodeView.swift:77-94, kasse-code-geschuetzt)",
+   "Schalter in eigenem Abschnitt ‚Schutz‘ ganz oben, Touch-ID/Face-ID-Symbole je nach Gerät (SettingsView.swift:47-82, einstellungen-schutz)"
+  ],
+  "teilweise": [
+   "codeLock-Umgehungen nur in Detail/Kasse/Einstellungen geschlossen, nicht in den Kontextmenüs der Listen (siehe neue Befunde)",
+   "Schonfrist: systemUptime ist monoton, läuft aber im Ruhezustand des Geräts nicht weiter (mach-Zeit ohne Sleep). ‚Nach 5 Minuten‘ kann real deutlich länger werden. Da das iPhone dann selbst gesperrt ist, geringes Risiko; sauberer wäre ContinuousClock / clock_gettime(CLOCK_MONOTONIC) (RestwertApp.swift:390, 397)",
+   "Ausschalten eines Schutzschalters: guarded() schaltet bei canEvaluatePolicy == false weiter OHNE Prüfung aus (SettingsView.swift:251); Kommentar Z. 239 ist veraltet. Sollte wie DeviceSecurity nur bei .noPasscode ohne Prüfung gehen",
+   "Nach ‚Sperre ausschalten und öffnen‘ weiter kein Merker, die Sperre nach Einrichtung eines Codes wieder anzubieten"
+  ],
+  "offen": [
+   "PINs (und Codes) im Klartext in der App-Datei bzw. im iCloud-Schlüsselbund ohne SecAccessControl(.userPresence) – der Schutz bleibt UI-Schranke (Protokoll: weiterhin offen)",
+   "appLock/codeLock/lockDelay in UserDefaults (RestwertApp.swift:376, 411, 465; AppIntents.swift:62)",
+   "evaluatedPolicyDomainState ungenutzt, Entscheidung nicht dokumentiert"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "HomeView.swift:165 / RadarView.swift:121 (Kontextmenü ‚Bearbeiten‘)",
+    "befund": "codeLock-Umgehung besteht weiter: Langes Drücken auf eine Karte in Start oder Radar → ‚Bearbeiten‘ setzt router.editing direkt, ohne unlockCode. Das Formular zeigt die Kartennummer (und PIN-Feld) im Klartext. Der Fix wurde nur im Detail-Toolbar-Knopf gemacht; besser zentral im Sheet (RestwertApp.swift:242) prüfen.",
+    "schwere": "hoch"
+   },
+   {
+    "screen": "CheckoutView.swift:357-358 (Online einlösen)",
+    "befund": "codeLock-Umgehung: ‚Code kopieren‘ ist auch bei verdecktem Code aktiv und legt card.number ohne Face ID für 10 Minuten in die Zwischenablage. Einfügen in Notizen zeigt den kompletten Online-Code (Amazon, Zalando). Knopf erst nach revealCode oder copy hinter authenticate legen.",
+    "schwere": "hoch"
+   },
+   {
+    "screen": "RestwertApp.swift:471, 594",
+    "befund": "Alles nutzt .deviceOwnerAuthentication, d. h. der iPhone-Code reicht. Für die beworbene Zielgruppe ‚geteilte Geräte‘ (Familien-iPad, Partner kennt den Code) schützt ‚Codes erst nach Face ID zeigen‘ damit gar nichts. Entweder Option ‚nur Face ID‘ (.deviceOwnerAuthenticationWithBiometrics) oder den Text ehrlich machen (‚nach Face ID oder iPhone-Code‘).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "CardDetailView.swift:46-48 / CheckoutView.swift:122-129",
+    "befund": "Einmal aufgedeckt bleibt der Code sichtbar: codeVisible bzw. numberShown werden beim Wechsel in den Hintergrund nicht zurückgesetzt (nur pinVisible). Ohne App-Sperre gibt es auch keinen Sichtschutz (shielded nur bei appLock), der Code steht dann im App-Umschalter-Snapshot und beim Zurückkehren offen.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "SettingsView.swift:284",
+    "befund": "Export ist fail-open: Bedingung ‚&& DeviceSecurity.canAuthenticate‘ lässt den Export bei .unavailable ohne Prüfung durch. Richtig wäre: nur bei .noPasscode ohne Prüfung, bei .unavailable abbrechen und melden.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "CardDetailView.swift:505-514 / CheckoutView.swift:42-45",
+    "befund": "unlockCode/revealCode geben bei .unavailable oder Abbruch keinerlei Rückmeldung – ‚Zeigen‘ tut dann still nichts. Denselben Hinweis wie am Sperrbildschirm zeigen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz",
+    "befund": "‚Code an der Kasse verdecken‘ und der Erklärtext liegen im Screenshot wieder unter der schwebenden Tab-Leiste; scrollbar, aber der Unterschied der vier Schalter ist beim ersten Blick nicht lesbar.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Ein einziger Prüfpunkt für alle Wege zum Code (Sheet ‚Bearbeiten‘ zentral, ‚Code kopieren‘, Kontextmenüs), Aufdecken beim Hintergrundwechsel zurücksetzen, ehrliche Beschriftung ‚Face ID oder iPhone-Code‘ bzw. biometrie-only-Option, fail-closed bei .unavailable überall, und PINs/Codes im Schlüsselbund mit SecAccessControl(.userPresence).",
+  "top_wunsch": "Die Prüfung aus den Views herausnehmen und zentral machen (z. B. ein CodeAccess-Gate, das Router.editing, copy und Foto kapselt) – dann gibt es keine vergessene Tür mehr.",
+  "wuerde_nutzen": true,
+  "nps": 7,
+  "zahlbereitschaft": "2–4 € einmalig; den Code-Schutz empfehle ich erst, wenn Kontextmenü-Bearbeiten und ‚Code kopieren‘ zu sind."
+ },
+ {
+  "persona": "Dr. Claudia Wendt, 46, Rechtsanwältin für Datenschutzrecht (DSGVO, TTDSG/TDDDG) – simulierte Persona",
+  "gruppe": "Fachleute",
+  "fokus": "Nachtest Runde 4: Datenschutzerklärung (Altkonten, Auskunft/Löschung), Widerspruch ‚Kurz gesagt‘, Transparenz des Code-Schutzes, JWT ohne E-Mail",
+  "scores": {
+   "gesamt": 6,
+   "scan_erkennung": 7,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 7,
+   "datenschutz_gefuehl": 6,
+   "barrierefreiheit": 6
+  },
+  "scores_runde3": {
+   "gesamt": 6,
+   "scan_erkennung": 7,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 7,
+   "datenschutz_gefuehl": 6,
+   "barrierefreiheit": 6
+  },
+  "erster_eindruck": "Der Widerspruch im ‚Kurz gesagt‘ ist sauber aufgelöst, und für Altkonten gibt es jetzt einen Weg per E-Mail statt eines Logins ins Leere. Nur: Die E-Mail-Adresse, auf die verwiesen wird, ist selbst noch ein gelber Platzhalter, ebenso Verantwortlicher, Löschdatum und Hosting. Inhaltlich besser, veröffentlichungsreif weiterhin nicht.",
+  "behoben": [
+   "Widerspruch ‚kein eigener Server‘ aufgelöst: ‚die App schickt nichts an einen Server von uns‘ (datenschutz.html:26)",
+   "Weg für Auskunft/Löschung für Altkonten benannt: Anfrage per E-Mail, Kopie oder Löschung (datenschutz.html:28) – statt des nicht existierenden Logins",
+   "E-Mail nicht mehr im JWT (server/src/auth.js:30) – Datenminimierung",
+   "Code-Schutz: Export, Bearbeiten im Detail und Original-Foto jetzt hinter Face ID (SettingsView.swift:284; CardDetailView.swift:114, 420-426)"
+  ],
+  "teilweise": [
+   "Altdaten-Transparenz: Kategorien und Kontaktweg da, aber Löschdatum weiter Platzhalter, keine Rechtsgrundlage (Art. 6) und keine Speicherdauer i. S. v. Art. 13 Abs. 2 lit. a (datenschutz.html:28)",
+   "Kontaktweg für Art. 15/17 verweist auf ‚die oben genannte E-Mail-Adresse‘ – die ist [E-Mail]-Platzhalter (datenschutz.html:23)",
+   "Transparenz Code-Schutz: Die Zusage ‚Kartennummer und Code bleiben verdeckt‘ (SettingsView.swift:72) stimmt noch nicht vollständig (Kontextmenü ‚Bearbeiten‘, Online ‚Code kopieren‘) und ‚nach Face ID‘ verschweigt, dass der iPhone-Code genügt",
+   "Server-Stilllegung weiter nur im Branch, nicht deployt"
+  ],
+  "offen": [
+   "Verantwortlicher/Impressum Platzhalter (impressum.html:21-25, datenschutz.html:23)",
+   "Hosting-Anbieter, Region, Log-Speicherdauer Platzhalter (datenschutz.html:65)",
+   "Zwischenablage: Web-Fassung nennt nur zwei Minuten (datenschutz.html:56), die Online-Kasse legt den Code zehn Minuten ab (CheckoutView.swift:398)",
+   "server/src/db.js:15 rejectUnauthorized:false",
+   "Namen Dritter (‚Für wen‘, aus dem Scan befüllt) nicht in der Erklärung"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "server/src/app.js:54 vs. datenschutz.html:28",
+    "befund": "Die 410-Meldung sagt weiter ‚Bestehende Konten können sich noch anmelden, ihre Daten abrufen und das Konto löschen‘, die Erklärung sagt jetzt ‚Die App kann darauf nicht mehr zugreifen. Schreib uns …‘. Zwei verschiedene Aussagen zum selben Recht; die Serverseite sollte auf den E-Mail-Weg verweisen.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "HomeView.swift:165 / CheckoutView.swift:357-358",
+    "befund": "Die in der App beworbene Schutzfunktion ist über Kontextmenü ‚Bearbeiten‘ und ‚Code kopieren‘ weiter umgehbar – Transparenzgebot: entweder schließen oder die Zusage einschränken.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "datenschutz.html:28",
+    "befund": "Positiv: Kategorien der Altdaten (E-Mail, Name, scrypt-Hash, letzte Kopie) klar benannt und ein realer Weg statt eines API-only-Rechts.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Echter Verantwortlicher mit echter E-Mail, Hosting/Region/Logs, festes Löschdatum mit Rechtsgrundlage, Server deployt und Altdaten nachweislich gelöscht, eine einheitliche Aussage zum Altkonten-Weg (Server-Meldung = Erklärung), Zwischenablage-Zeiten konsistent und eine Code-Schutz-Zusage, die technisch vollständig stimmt.",
+  "top_wunsch": "Platzhalter füllen und das Löschdatum festlegen – ohne echten Verantwortlichen hilft der beste Text nicht.",
+  "wuerde_nutzen": true,
+  "nps": 6,
+  "zahlbereitschaft": "Privat bis 3 € einmalig; beruflich empfehlen erst nach Impressum und dokumentierter Altdaten-Löschung."
+ },
+ {
+  "persona": "Kerem Aydın, 29, Pentester Web/Backend (OWASP ASVS, API-Security) – simulierte Persona",
+  "gruppe": "Fachleute",
+  "fokus": "Nachtest Runde 4: JWT ohne E-Mail, verbleibende Server-Angriffsfläche, App-seitige codeLock-Umgehungen und Schonfrist. Reine Code-Durchsicht, nichts gegen den Live-Server ausgeführt.",
+  "scores": {
+   "gesamt": 6,
+   "scan_erkennung": 7,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 6,
+   "login_sperre": 7,
+   "datenschutz_gefuehl": 5,
+   "barrierefreiheit": 6
+  },
+  "scores_runde3": {
+   "gesamt": 6,
+   "scan_erkennung": 7,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 6,
+   "login_sperre": 6,
+   "datenschutz_gefuehl": 5,
+   "barrierefreiheit": 6
+  },
+  "erster_eindruck": "App-seitig haben sie ernsthaft nachgezogen: Export, Detail-Bearbeiten, Foto und Suche sind zu, die Schonfrist lässt sich nicht mehr per Uhr verlängern. Zehn Minuten Suche nach weiteren Pfaden bringen trotzdem zwei neue Bypässe. Und auf dem Server hat sich live nichts geändert – nicht deployt, Login-Endpunkt ohne Client steht noch.",
+  "behoben": [
+   "E-Mail aus dem JWT-Payload entfernt (server/src/auth.js:30)",
+   "Schonfrist nicht mehr per Systemzeit manipulierbar – systemUptime (RestwertApp.swift:390, 397)",
+   "codeLock-Bypass über CSV-Export/Sicherung geschlossen (SettingsView.swift:284-288)",
+   "codeLock-Bypass über Bearbeiten aus der Detailansicht geschlossen (CardDetailView.swift:114)",
+   "Such-Orakel auf verdeckte Nummern geschlossen (HomeView.swift:346)"
+  ],
+  "teilweise": [
+   "codeLock: Bypass-Klasse ‚Bearbeiten‘ nur an einer von drei Stellen geschlossen (Kontextmenüs HomeView.swift:165, RadarView.swift:121 offen)",
+   "Export-Gate fail-open bei DeviceSecurity.status == .unavailable (SettingsView.swift:284: ‚&& canAuthenticate‘)",
+   "Angriffsfläche im Code reduziert (410 für register/PUT sync, 16 KB Body), live unverändert: nicht deployt, DB-Suite nicht gelaufen",
+   "JWT: 30 Tage, weiter kein jti/Widerruf, keine Nutzerprüfung in requireAuth (auth.js:33-44)"
+  ],
+  "offen": [
+   "Login-Rate-Limit nur pro IP, kein Limit pro Konto (app.js:39)",
+   "requireAuth vor dem 410 bei PUT /api/sync (app.js:94)",
+   "CORS origin:true (app.js:35), CSP mit unsafe-inline",
+   "db.js:15 rejectUnauthorized:false",
+   "Kein fester Abschalttermin für Login/GET/DELETE und die Tabellen; die Datenschutzerklärung verweist Altnutzer jetzt auf E-Mail – damit hat der Login-Endpunkt offiziell gar keinen Zweck mehr"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "CheckoutView.swift:357-358",
+    "befund": "Bypass: ‚Code kopieren‘ an der Online-Kasse kopiert card.number bei verdecktem Code ohne Authentifizierung (10 min Zwischenablage). Reproduktion: Code-Schutz an → Online-Gutschein → An der Kasse → Code kopieren → in Notizen einfügen.",
+    "schwere": "hoch"
+   },
+   {
+    "screen": "HomeView.swift:165 / RadarView.swift:121",
+    "befund": "Bypass: Kontextmenü ‚Bearbeiten‘ öffnet CardFormView mit Klartext-Nummer ohne unlockCode. Die Gate-Logik liegt pro Knopf statt am Sheet (RestwertApp.swift:242) – typischer ‚missing function-level access control‘-Fehler.",
+    "schwere": "hoch"
+   },
+   {
+    "screen": "RestwertApp.swift:471",
+    "befund": ".deviceOwnerAuthentication: Wer den Gerätecode kennt (genau das Szenario ‚geteiltes Gerät‘), besteht jede Prüfung. Bedrohungsmodell im UI-Text klarstellen.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "SettingsView.swift:251",
+    "befund": "Ausschalten von PIN-Schutz/App-Sperre/Code-Schutz ohne Prüfung, wenn canEvaluatePolicy aus einem anderen Grund als passcodeNotSet fehlschlägt – fail-open.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "server/src/app.js:54",
+    "befund": "410-Text wirbt weiter mit ‚können sich noch anmelden‘ – lädt geradezu zum Testen des Login-Endpunkts ein, während die Erklärung auf E-Mail umgestellt ist.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Deploy mit Nachweis und Abschalttermin (danach Login/GET/DELETE und Tabellen weg); bis dahin Widerruf/Nutzerprüfung, Konto-Limit, CORS eng, TLS-Prüfung zur DB. App-seitig: zentrales Gate für jeden Code-Zugriff (Sheet, Kopieren, Kontextmenü), überall fail-closed bei .unavailable.",
+  "top_wunsch": "Login-Endpunkt abschalten – seit dem E-Mail-Weg gibt es keinen legitimen Aufrufer mehr.",
+  "wuerde_nutzen": true,
+  "nps": 6,
+  "zahlbereitschaft": "App 1–2 €; für den Server nichts – er soll verschwinden."
+ },
+ {
+  "persona": "Hans-Jürgen Koller, 55, Verbraucherrechtler (Verbraucherzentrale, Schwerpunkt Gutscheine und AGB) – simulierte Persona",
+  "gruppe": "Fachleute",
+  "fokus": "Nachtest Runde 4: Fristbeginn/Jahresende-Regel, Laufzeit-Erkennung im Parser, Ablaufwarnung (scan-v07), berechnetes Datum (scan-v14), Rechtshinweis",
+  "scores": {
+   "gesamt": 7,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "scores_runde3": {
+   "gesamt": 7,
+   "scan_erkennung": 7,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Die Jahresende-Regel greift jetzt nur noch neben der Laufzeit, ‚3 Jahre ab Ende des Jahres 2025‘ wird korrekt zum 31.12.2028, und ‚Guthaben ist 10 Jahre gültig‘ wird nicht mehr als Betrag gelesen – das ist juristisch sauberer. Beim Kern meiner Kritik hat sich nichts bewegt: Ohne ‚Erhalten am‘ rechnet die App weiter ab dem Scan-Tag, und der abgelaufene H&M-Gutschein zeigt in der Kachel nur neutral ‚31.12.2024‘.",
+  "behoben": [
+   "Jahresende-Regel nur noch in der Nähe des Laufzeit-Satzes, nicht mehr bei ‚Aktion bis Jahresende‘ irgendwo im Text (TextParser.swift:242-244)",
+   "Ausstellungsjahr aus ‚ab Ende des Jahres 2025‘ wird genommen (→ 31.12.2028) statt Scan-Jahr (TextParser.swift:37, 146)",
+   "‚Guthaben ist 10 Jahre gültig‘ wird kein Betrag mehr; Anlässe (‚für Weihnachten‘) keine Beschenkten (Testprotokoll Punkt 10)",
+   "Beim Bearbeiten bleibt ‚Gültig bis · berechnet‘ erhalten statt zur gesetzlichen Frist zu werden (Testprotokoll Punkt 13)",
+   "‚Hinzufügen‘ fragt bei roter Warnung (abgelaufen) einmal nach (ScanResultView.swift:272)"
+  ],
+  "teilweise": [
+   "Fristbeginn: weiter nur über ‚Erhalten am‘ korrigierbar, keine aktive Frage ‚Wann gekauft?‘ im Scan-Ergebnis; Hinweis steht als Info unter der Falz (scan-v14, ScanResultView.swift:256)",
+   "scan-v07: rote Warnung oben, aber die Kachel ‚Gültig bis 31.12.2024‘ bleibt neutral, ‚Oft trotzdem nicht verloren‘ (ScanResultView.swift:253) liegt unter der Falz"
+  ],
+  "offen": [
+   "Gesetzliche Frist ohne Datum weiter ab heute gerechnet (ScanResultView.swift:261 GiftCard.legalExpiry(from: .now))",
+   "Keine Unterscheidung gekaufter vs. unentgeltlicher Wertgutschein – Rechtshinweis hängt nur an percent == nil (ScanResultView.swift:252)",
+   "Geschenk über den Jahreswechsel (Kauf Dezember, Übergabe Januar): Jahresende-Regel ab ‚Erhalten am‘ ein Jahr zu spät"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "scan-v14 / ScanResultView.swift:256",
+    "befund": "Zalando 50 €: ‚Gültig bis · berechnet 31.12.2029‘ – bei einem älteren Gutschein bis zu einem Jahr zu spät, und der erklärende Satz ist auf dem ersten Bildschirm abgeschnitten. Ohne aktive Frage übernehmen die meisten das Datum ungeprüft.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v07",
+    "befund": "Die Nachfrage ‚Trotz Warnung hinzufügen?‘ ist gut, darf aber nicht den Eindruck erwecken, abgelaufene Gutscheine seien wertlos – der Dialog sollte den ‚Oft trotzdem nicht verloren‘-Satz wiederholen.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Im Scan-Ergebnis bei berechnetem Datum aktiv ‚Wann gekauft?‘ fragen und Laufzeit wie gesetzliche Frist davon rechnen; Ablaufkachel mit Status ‚abgelaufen – oft noch einlösbar‘; Aktionsgutscheine (‚10 € geschenkt‘) vom Rechtshinweis ausnehmen.",
+  "top_wunsch": "Ein Feld ‚Wann gekauft?‘ direkt im Scan-Ergebnis, wenn das Datum berechnet ist.",
+  "wuerde_nutzen": true,
+  "nps": 8,
+  "zahlbereitschaft": "Bis 5 € einmalig; in Beratungen aktiv empfehlen, sobald der Fristbeginn standardmäßig am Kaufdatum hängt."
+ },
+ {
+  "persona": "Lea Brandt, 33, UX-Writerin in einer Agentur für Banking-Apps, prüft Tonalität, Mikrotexte und Begriffskonsistenz (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Texte im Scan-Ergebnis, Prüf-Abschnitt, Sperrbildschirm, Fehlermeldungen, Glossar Karte/Gutschein/Code/Barcode",
+  "scores": {
+   "gesamt": 8,
+   "scan_erkennung": 7,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 9,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "scores_runde3": {
+   "gesamt": 8,
+   "scan_erkennung": 7,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 9,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "‚Gelesen – bitte prüfen‘ ist genau die Kopfzeile, die ich wollte, und der Prüfziffer-Satz ist jetzt in Menschensprache. Beim Papiergutschein steht endlich ‚An der Kasse: Foto zeigen‘ statt zwei Strichen. Aber bei CinemaxX steht unter einem sichtbaren 2D-Code weiter ‚Code 128 (üblich, prüfen)‘, und das Glossar ist noch nicht festgezogen.",
+  "behoben": [
+   "Kopfzeile ‚Erkannter Gutschein‘ ersetzt durch ‚Gelesen – bitte prüfen‘ (ScanResultView.swift:94, alle scan-v*)",
+   "Prüfziffer-Warnung ohne EAN-Jargon als Hauptaussage: ‚Die letzte Ziffer der Nummer passt nicht zum Rest … bitte Ziffer für Ziffer mit dem Gutschein vergleichen‘ (scan-v06)",
+   "MediaMarkt: kein widersprechendes ‚Code 128‘ plus Barcode-Bild mehr bei falscher Prüfziffer (scan-v06, ScanResultView.swift:127-130)",
+   "IKEA: Kachel sagt jetzt ‚QR-Code‘ ohne Vorbehalt, passend zum Foto (scan-v03)",
+   "Papiergutschein ohne Code: ‚An der Kasse – Foto zeigen‘ statt ‚–‘-Kacheln (scan-v04)",
+   "Sperrbildschirm ohne Code: Erwartung und Ziel passen jetzt – Text erklärt, dass die Einstellungen-App öffnet und wie man zu ‚Face ID & Code‘ zurückgeht (login-ohne-code)",
+   "Einstellungen: eigener Abschnitt ‚Schutz‘ mit Fußtext, der PIN-Schutz, App-Sperre, Code-Schutz und Verdecken unterscheidet (SettingsView.swift:80)"
+  ],
+  "teilweise": [
+   "Barcode-Kachel gegen Foto: IKEA gelöst, aber CinemaxX zeigt über ‚Code 128 (üblich, prüfen)‘ einen 2D-Stapelcode (scan-v10), Kassel zeigt über ‚QR-Code (üblich, prüfen)‘ ein Aztec-artiges Muster ohne QR-Ecken (scan-v12)",
+   "Leere Werte: Code-Fall gelöst, aber ‚Wert‘ und ‚Barcode an der Kasse‘ fallen weiter auf ‚–‘ zurück (ScanResultView.swift:113 und :164); ‚Gültig bis‘ sagt dagegen ‚nicht gefunden‘ – zwei Muster nebeneinander",
+   "Glossar: Detail-Überschrift ‚Kartennummer‘, VoiceOver-Label ‚Code verdeckt‘ (CardDetailView.swift:455), Kasse ‚Code geschützt‘, Einstellungen ‚Kartennummer und Code‘ – weiter mehrere Wörter für ein Ding",
+   "Prüfziffer-Satz hat noch den Klammerzusatz ‚(Prüfziffer eines Strichcodes)‘ – harmlos, aber verzichtbar"
+  ],
+  "offen": [
+   "Schalter heißt weiter ‚App mit Face ID sperren‘, obwohl auch der Code entsperrt (SettingsView.swift:60); beim PIN-Schalter steht dagegen ‚Face ID oder Code‘",
+   "Picker-Beschriftung weiter ‚Sperren – Wie lange Restwert im Hintergrund offen bleibt‘ mit Optionen ‚Nach 1 Minute‘ (SettingsView.swift:68); ‚Wieder sperren nach‘ wäre eindeutig",
+   "Abgelaufen-Kachel sagt weiter nur ‚Gültig bis 31.12.2024‘ ohne Wort oder Farbe (scan-v07)",
+   "Stadtgutschein: Laden heißt ‚Stadtgutschein‘, das Foto sagt ‚Kassel Stadtgutschein‘ (scan-v12)",
+   "‚Nur Code‘ bleibt Fachsprache (scan-v05, v13)"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "Detail Papiergutschein (papier-foto-geschuetzt)",
+    "befund": "Über dem verdeckten Original-Foto steht ‚Code geschützt – tippen und entsperren‘. Verdeckt ist aber ein Foto, kein Code; besser ‚Foto geschützt – tippen und entsperren‘ (das VoiceOver-Label sagt es schon so, CardDetailView.swift:425).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Ergebnis IKEA/Otto (scan-v03, v13)",
+    "befund": "Die umbrechende Code-Kachel trennt mitten in einer Zifferngruppe: ‚IK-9934-2281-44 / 10‘, ‚OT-7731-5520-99 / 12‘. Beim Abgleich mit dem Original liest man leicht ‚44‘ als eigene Gruppe; Umbruch nur an Bindestrichen/Leerzeichen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ScanResultView.swift:262",
+    "befund": "‚Kein Ablaufdatum gefunden‘ ist eine rote Warnung auf gleicher Stufe wie ‚abgelaufen‘ oder ‚Betrugsverdacht‘ und löst damit auch ‚Trotz Warnung hinzufügen?‘ aus (ScanView.swift:259). Ein fehlendes Datum ist ein Hinweis, keine Gefahr – die Tonalität eskaliert hier zu stark.",
+    "schwere": "mittel"
+   }
+  ],
+  "was_fehlt_zur_10": "Ein festes Glossar (Code / Kartennummer / PIN / Barcode) in Ergebnis, Detail, Kasse, Einstellungen und VoiceOver; keine Barcode-Art mehr nennen, die dem Foto widerspricht (CinemaxX, Kassel) – lieber ‚Art nicht erkannt‘; ‚–‘ überall durch ‚nicht gefunden‘; ‚App mit Face ID oder Code sperren‘ und ‚Wieder sperren nach‘; fehlendes Datum als Hinweis statt roter Warnung. Dann zeige ich die App Kolleginnen als Vorbild.",
+  "top_wunsch": "Glossar festziehen und bei ungelesenem Barcode keine Art mehr behaupten – auch nicht mit ‚(üblich, prüfen)‘, wenn das Foto etwas anderes zeigt.",
+  "wuerde_nutzen": true,
+  "nps": 8,
+  "zahlbereitschaft": "Einmalig 4–5 €, unverändert. Abo nein."
+ },
+ {
+  "persona": "Dr. Sabine Okafor, 40, Accessibility-Auditorin (BITV/WCAG), nutzt privat große Schrift und testet mit VoiceOver (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "VoiceOver, Dynamic Type, Tippziele, Sichtbarkeit von Warnungen, Sperrbildschirm bei großer Schrift, Reduce Motion",
+  "scores": {
+   "gesamt": 8,
+   "scan_erkennung": 7,
+   "scan_bedienung": 9,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 9
+  },
+  "scores_runde3": {
+   "gesamt": 8,
+   "scan_erkennung": 7,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 8,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Mein Top-Wunsch ist erfüllt: Die Knopfleiste ist deckend mit klarer Trennlinie, nichts schimmert mehr durch, und die Kacheln brechen um statt auf 60 % zu schrumpfen. Die Kasse hat bei geschütztem Code nur noch eine große Entsperr-Fläche ohne irreführendes ‚Tippen für Vollbild‘. Offen bleiben die unmarkierte Abgelaufen-Kachel und ein dokumentierter Test auf echtem Gerät.",
+  "behoben": [
+   "Keine halbtransparente Ausblendung mehr unter den angehefteten Knöpfen: deckende Leiste mit Trennlinie (scan-v03, v04, v05, v13)",
+   "Kacheln brechen um (lineLimit 2, bei AX-Größen unbegrenzt) statt auf 60 % zu schrumpfen; ‚Code 128 (üblich, prüfen)‘ steht zweizeilig in normaler Größe (scan-v10, ScanResultView.swift:178)",
+   "Bounce am Apple-Intelligence-Symbol an Reduce Motion gebunden (ScanResultView.swift:105)",
+   "Kasse mit Code-Schutz: kein ‚Tippen für Vollbild‘ mehr vor dem Entsperren (CheckoutView.swift:259, kasse-code-geschuetzt)",
+   "Leere ‚–‘-Kacheln beim Papiergutschein ersetzt durch ‚An der Kasse: Foto zeigen‘ (scan-v04)",
+   "Lesen hat jetzt einen benannten Schritt und einen großen ‚Abbrechen‘-Knopf; VoiceOver kündigt ‚Wird gelesen‘ an (lesen-fortschritt, ScanView.swift:98)",
+   "Face ID vorübergehend gesperrt: Sperrbildschirm sagt es und nennt den Ausweg (laut Protokoll, login-faceid)"
+  ],
+  "teilweise": [
+   "Verdeckte Nummer im Detail: VoiceOver sagt jetzt ‚Code verdeckt‘ statt ‚Punkt Punkt Punkt‘, aber ohne die sichtbaren Endziffern ‚1234‘ und mit anderem Wort als die sichtbare Überschrift ‚Kartennummer‘ (CardDetailView.swift:455)",
+   "Kacheln verkleinern weiter leicht (minimumScaleFactor 0.85, ScanResultView.swift:178) – vertretbar, aber nicht null",
+   "‚–‘ bleibt Fallback für Wert und Barcode-Art (ScanResultView.swift:113, :164); VoiceOver liest dort weiter ‚Strich‘",
+   "MediaMarkt (scan-v06): Warnkasten plus Betrugskasten schieben Wert und Datum weiter unter die Knopfleiste; immerhin fehlt jetzt das falsche Barcode-Bild"
+  ],
+  "offen": [
+   "Abgelaufen-Kachel ‚Gültig bis 31.12.2024‘ ohne Wort, Farbe oder Symbol (scan-v07) – Information nur im Kasten oben, nicht am Datum selbst",
+   "Kasse: ‚PIN anzeigen‘ bleibt hellgrau auf Weiß neben der verdeckten Fläche – zwei Entsperr-Wege auf einem Screen (kasse-code-geschuetzt)",
+   "Kein dokumentierter Durchlauf mit AX5 und VoiceOver auf echtem Gerät"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "Ergebnis IKEA/Otto (scan-v03, v13)",
+    "befund": "Durch das neue Umbrechen wird der Code mitten in einer Zifferngruppe getrennt (‚…-44‘ / ‚10‘). Für Menschen mit Leseschwäche oder Vergrößerung erschwert das den Ziffernabgleich; VoiceOver liest es korrekt, visuell nicht.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Detail Papiergutschein (papier-foto-geschuetzt)",
+    "befund": "Sichtbarer Text ‚Code geschützt‘, VoiceOver-Label ‚Foto geschützt. Entsperren‘ (CardDetailView.swift:425) – sichtbarer und gesprochener Name weichen ab (WCAG 2.5.3 Label in Name).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Einstellungen Schutz (einstellungen-schutz)",
+    "befund": "Die Zeile ‚Code an der Kasse verdecken‘ und der Fußtext liegen im ersten Bildschirm weiter unter der schwebenden Tab-Leiste; der Abschnitt ‚Schutz‘ steht nicht ‚ganz oben‘, sondern unter dem langen iCloud-Block.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Abgelaufen direkt an der Datumskachel kennzeichnen (Wort + Symbol, nicht nur Farbe); ‚–‘ durch ‚nicht gefunden‘; sichtbarer und gesprochener Name gleich (‚Kartennummer verdeckt, endet auf 1234‘, ‚Foto geschützt‘); an der Kasse ein Entsperren für Code und PIN zusammen; Code nur an Gruppengrenzen umbrechen. Und ein dokumentierter Test mit AX5 und VoiceOver auf echtem iPhone.",
+  "top_wunsch": "Ein dokumentierter Durchlauf auf echtem Gerät (AX5, VoiceOver, Reduce Motion) und die Abgelaufen-Kennzeichnung an der Kachel selbst.",
+  "wuerde_nutzen": true,
+  "nps": 8,
+  "zahlbereitschaft": "Privat 4,99 € einmalig. Beruflich zeige ich Warnkasten oben, deckende Knopfleiste und Umbruch statt Schrumpfen als gutes Beispiel."
+ },
+ {
+  "persona": "Timo Keller, 36, Produktmanager Growth bei einem Fintech-Start-up, denkt in Funnels, Aktivierung und Vertrauen (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Aktivierung, Abbruchstellen, Vertrauen im Kassenmoment, Kernnutzen Barcode",
+  "scores": {
+   "gesamt": 7,
+   "scan_erkennung": 7,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde3": {
+   "gesamt": 7,
+   "scan_erkennung": 7,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Gut: IKEA ist jetzt tatsächlich als QR gelesen, bei falscher Prüfziffer wird kein Barcode mehr gezeichnet, und das Lesen zeigt Schritt und Abbrechen. Mein Top-Risiko ist aber nur halb weg: CinemaxX zeigt einen 2D-Code und die App sagt ‚Code 128 (üblich, prüfen)‘, Kassel sagt ‚QR-Code (üblich, prüfen)‘ zu etwas, das kein QR ist. Und auf echter Hardware ist weiter nichts belegt.",
+  "behoben": [
+   "Lesefortschritt mit echtem Schritt (‚Barcode und Text werden gesucht …‘ → ‚Apple Intelligence ordnet …‘), ‚läuft auf deinem iPhone‘ und Abbrechen (lesen-fortschritt)",
+   "IKEA-QR wird im Simulator über CoreImage wirklich gelesen, Kachel ‚QR-Code‘ ohne Vorbehalt (scan-v03)",
+   "Falsche Prüfziffer: kein Barcode-Bild mehr, das an der Kasse garantiert scheitert (scan-v06, ScanResultView.swift:127-130)",
+   "Code-Schutz-Umgehungen (Foto, Bearbeiten, Export, Suche) geschlossen – das Opt-in hält jetzt, was es verspricht (papier-foto-geschuetzt)",
+   "Schonfrist über Systemlaufzeit statt Uhrzeit (RestwertApp.swift:384-385)"
+  ],
+  "teilweise": [
+   "Format-Raten: IKEA gelöst, aber CinemaxX (sichtbarer 2D-Stapelcode) bekommt weiter ‚Code 128 (üblich, prüfen)‘ und Kassel (Aztec-artig) ‚QR-Code (üblich, prüfen)‘ (scan-v10, v12, ScanResultView.swift:169); Otto mit sichtbarem Strichcode dagegen ‚Nur Code‘ (scan-v13) – das Verhalten wirkt für Nutzer weiter zufällig",
+   "Lesedauer: jetzt transparent und abbrechbar, gefühlt aber nicht kürzer; keine Messwerte im Protokoll",
+   "Schonfrist-Zeile ist in den Abschnitt ‚Schutz‘ gewandert, erscheint aber nur bei aktiver App-Sperre und der Default bleibt ‚Sofort‘ (SettingsView.swift:22)"
+  ],
+  "offen": [
+   "Barcode-Lesen auf echtem iPhone ungetestet – der Kernnutzen im Kassenmoment bleibt unbewiesen",
+   "Kein Ein-Tipp-Speichern bei eindeutigem Treffer; Formular nach ‚Hinzufügen‘ bleibt Pflicht",
+   "Betrugskasten steht bei jedem Ergebnis über dem Treffer (alle scan-v*)",
+   "Server-Fix (JWT ohne E-Mail, Datenschutztext) nicht deployt; Impressum/Löschdatum Platzhalter"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "ScanResultView.swift:262 / ScanView.swift:259",
+    "befund": "‚Kein Ablaufdatum gefunden‘ ist eine rote Warnung und löst damit den neuen Dialog ‚Trotz Warnung hinzufügen?‘ aus. Fehlendes Datum ist bei Screenshots und Papiergutscheinen häufig – das baut für einen harmlosen Fall eine zusätzliche Hürde direkt vor der Aktivierung und stumpft die Warnung für echte Fälle (abgelaufen, 1.250 €) ab.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "Kasse mit Code-Schutz (kasse-code-geschuetzt)",
+    "befund": "Mit Code-Schutz braucht der Kassenmoment zwei getrennte Entsperrungen (Fläche für den Code, ‚PIN anzeigen‘ für die PIN), obwohl ein Face-ID-Vorgang beides freigeben könnte. Genau im zeitkritischsten Moment doppelte Reibung.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Messwerte von echter Hardware, dass die Barcode-Suche an der Kasse funktioniert, und bis dahin bei ungelesenem Code keine Barcode-Art behaupten (CinemaxX, Kassel); Ein-Tipp-Speichern bei eindeutigen Treffern; Betrugshinweis einmalig; Schonfrist-Default 1 Minute; fehlendes Datum ohne Bestätigungsdialog; Server deployt mit festem Löschdatum.",
+  "top_wunsch": "Echte-Hardware-Nachweis für die Barcode-Suche und bei ausgefallener Suche konsequent ‚Nur Code‘ statt raten – das bleibt der Schritt von 7 zu 9.",
+  "wuerde_nutzen": true,
+  "nps": 7,
+  "zahlbereitschaft": "Als Nutzer einmalig bis 5 €. Als PM Freemium erst testen, wenn der Kassenmoment auf echter Hardware belegt ist."
+ },
+ {
+  "persona": "Mira Yilmaz, 16, Schülerin, bekommt Gutscheine als Screenshots aus Instagram-Gewinnspielen und Apps, will alles in Sekunden und entsperrt alles per Face ID (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Screenshot-Import, Tempo, Face-ID-Sperre",
+  "scores": {
+   "gesamt": 8,
+   "scan_erkennung": 8,
+   "scan_bedienung": 8,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 8
+  },
+  "scores_runde3": {
+   "gesamt": 8,
+   "scan_erkennung": 8,
+   "scan_bedienung": 7,
+   "vertrauen_echtheit": 7,
+   "login_sperre": 8,
+   "datenschutz_gefuehl": 7,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Beim Lesen sieht man jetzt wenigstens, was passiert, und ich kann abbrechen. Unten schimmert nichts mehr durch, sieht sauberer aus. Aber schneller ist es nicht, ich muss immer noch durchs Formular, und oben steht jedes Mal wieder der Betrugs-Text.",
+  "behoben": [
+   "Lesen zeigt, was gerade passiert, plus ‚Abbrechen‘ (lesen-fortschritt) – fühlt sich nicht mehr wie Hängen an",
+   "Kein grauer Text mehr unter den Knöpfen (scan-v05, v13)",
+   "Der rote Kasten bei MediaMarkt ist jetzt verständlich: ‚eine Ziffer wurde falsch gelesen, vergleich sie‘ (scan-v06)",
+   "Rabattcode ZAL15SOMMER26 weiter sofort richtig (scan-v05)"
+  ],
+  "teilweise": [
+   "Schonfrist steht jetzt im Abschnitt ‚Schutz‘ weiter oben, taucht aber erst auf, wenn die App-Sperre an ist, und steht am Anfang auf ‚Sofort‘ (SettingsView.swift:22, :62)",
+   "‚Nur Code‘ ist noch da, aber zusammen mit dem Rabattcode verstehe ich es inzwischen"
+  ],
+  "offen": [
+   "Warten gefühlt immer noch rund 10 Sekunden",
+   "Kein ‚Direkt speichern‘ ohne Formular",
+   "Betrugs-Text bei jedem Ergebnis ganz oben (alle scan-v*)",
+   "Kasse mit ‚Codes erst nach Face ID‘: nochmal tippen und entsperren, obwohl die App gerade offen ist (kasse-code-geschuetzt)",
+   "Insta-Story-Screenshots mit Emojis weiter nicht getestet"
+  ],
+  "neue_befunde": [
+   {
+    "screen": "ScanResultView.swift:262 / ScanView.swift:259",
+    "befund": "Bei Screenshots ohne Datum kommt ein roter Kasten ‚Kein Ablaufdatum gefunden‘ und beim Hinzufügen nochmal ‚Trotz Warnung hinzufügen?‘. Bei den meisten Insta-Gutscheinen steht kein Datum – das ist dann jedes Mal ein Extra-Tipp, ich drück es einfach weg.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "Ergebnis IKEA/Otto (scan-v03, v13)",
+    "befund": "Der Code wird mitten drin umgebrochen (‚…-99‘ und dann ‚12‘ in der nächsten Zeile). Wenn ich den abtippe oder vergleiche, verwirrt das.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Schneller lesen (unter 3 Sekunden), ‚Direkt speichern‘ ohne Formular, wenn alles erkannt ist, Schonfrist standardmäßig auf 1 Minute, Betrugs-Text nur einmal, kein Extra-Dialog wenn nur das Datum fehlt, und dass Insta-Screenshots mit Emojis klappen. Dann teil ich es in der Klassengruppe.",
+  "top_wunsch": "‚Direkt speichern‘ in einem Tipp und schneller lesen.",
+  "wuerde_nutzen": true,
+  "nps": 8,
+  "zahlbereitschaft": "Höchstens 0,99–1,99 € einmalig, wenn Speichern in einem Tipp geht. Abo nein."
+ }
+]

@@ -17,6 +17,11 @@ struct ScanView: View {
     @State private var photoItem: PhotosPickerItem?
     @State private var formSeed: FormSeed?
     @State private var importError: String?
+    /// Zählt Lesevorgänge; ein abgebrochener oder überholter Vorgang zeigt sein Ergebnis nicht mehr.
+    @State private var readID = 0
+    @State private var readTask: Task<Void, Never>?
+    @State private var confirmAddWithWarning = false
+    @State private var confirmDiscard = false
     /// Nur ob Text in der Zwischenablage liegt; gelesen wird erst nach einem Tipp.
     @State private var clipboardHasText = UIPasteboard.general.hasStrings
 
@@ -34,12 +39,7 @@ struct ScanView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 if let outcome {
-                    ScanResultView(outcome: outcome,
-                                   onAdd: { formSeed = FormSeed(outcome: outcome) },
-                                   onRescan: {
-                                       withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
-                                       showScanner = true
-                                   })
+                    ScanResultView(outcome: outcome) { date in self.outcome?.received = date }
                     .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
                                             removal: .move(edge: .leading).combined(with: .opacity)))
                 } else {
@@ -49,17 +49,29 @@ struct ScanView: View {
                 }
             }
             // Reichlich Luft unten: im Hinzufügen-Tab (Suchrolle) lag das Ende sonst unter der schwebenden Tab-Leiste.
-            .padding(.horizontal, Layout.page).padding(.bottom, Layout.tap * 2)
+            .padding(.horizontal, Layout.page).padding(.bottom, outcome == nil ? Layout.tap * 2 : Layout.group)
         }
         .scrollIndicators(.hidden)
         .pageBackground()
+        // Aktionen fest unten statt am Ende der Liste unter der schwebenden Tab-Leiste.
+        .safeAreaInset(edge: .bottom) {
+            if let outcome { resultActions(outcome) }
+        }
+        // Im Ergebnis keine Tab-Leiste: sie verdeckte „Hinzufügen“, Zurück geht oben links.
+        .toolbar(outcome == nil ? .automatic : .hidden, for: .tabBar)
         .onAppear(perform: consumeIntent)
         .onChange(of: router.scanIntent != nil) { _, _ in consumeIntent() }
         .navigationTitle(outcome == nil ? "Hinzufügen" : "Ergebnis")
         .toolbar {
             if outcome != nil {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Zurück", systemImage: "chevron.left") { withAnimation(reduceMotion ? nil : .smooth) { outcome = nil } }
+                    // Zurück verwirft das Gelesene: einmal nachfragen (versehentliche Tipps, Tremor).
+                    Button("Zurück", systemImage: "chevron.left") { confirmDiscard = true }
+                        .confirmationDialog("Ergebnis verwerfen?", isPresented: $confirmDiscard, titleVisibility: .visible) {
+                            Button("Verwerfen", role: .destructive) { withAnimation(reduceMotion ? nil : .smooth) { outcome = nil } }
+                        } message: {
+                            Text("Der gelesene Gutschein wird nicht gespeichert.")
+                        }
                 }
             }
         }
@@ -67,11 +79,25 @@ struct ScanView: View {
             if busy {
                 VStack(spacing: 12) {
                     ProgressView().controlSize(.large)
-                    Text("Wird gelesen …")
-                        .font(.scaled(15, weight: .semibold))
+                    VStack(spacing: 4) {
+                        Text("Wird gelesen …")
+                            .font(.scaled(15, weight: .semibold))
+                        Text(ScanProgress.shared.step)
+                            .font(.scaled(13, weight: .medium)).foregroundStyle(Color.ink)
+                            .contentTransition(.opacity)
+                        Text("Alles läuft auf deinem iPhone und dauert ein paar Sekunden.")
+                            .font(.scaled(13)).foregroundStyle(Color.ink2)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .accessibilityElement(children: .combine)
+                    Button("Abbrechen") { cancelReading() }
+                        .buttonStyle(.quiet)
                 }
-                .accessibilityElement(children: .combine)
+                .frame(maxWidth: 280)
                 .padding(28)
+                // Für VoiceOver modal: nichts dahinter ist bedienbar, solange gelesen wird.
+                .accessibilityAddTraits(.isModal)
                 .glassEffect(.regular, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
                 .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
@@ -91,36 +117,41 @@ struct ScanView: View {
                 formSeed = nil
                 outcome = nil
                 router.showCard(saved.id)
+                // Mehrere Gutscheine hintereinander: direkt den nächsten scannen.
+                router.toast = Toast(message: "„\(saved.name)“ gespeichert", undo: { [router] in
+                    router.scanIntent = .camera
+                    router.tab = .scan
+                }, actionTitle: "Nächsten scannen")
             }
         }
         .fullScreenCover(isPresented: $showScanner) {
-            LiveScannerView { live in Task { await finishLive(live) } }
+            LiveScannerView { live in read { await finishLive(live) } }
         }
         .fileImporter(isPresented: $showFiles, allowedContentTypes: [.pdf, .image, .plainText, .text]) { result in
             switch result {
-            case .success(let url): Task { await run { await Importer.analyze(url: url) } }
+            case .success(let url): read { await Importer.analyze(url: url) }
             case .failure: importError = "Datei konnte nicht geöffnet werden."
             }
         }
         .sheet(isPresented: $showEmail) {
-            EmailImportSheet(hasClipboard: clipboardHasText) { text in Task { await run { await Importer.analyze(text: text) } } }
+            EmailImportSheet(hasClipboard: clipboardHasText) { text in read { await Importer.analyze(text: text) } }
         }
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
             photoItem = nil
-            Task {
-                await run {
-                    guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
-                        return ScanOutcome()
-                    }
-                    return await Importer.analyze(image: image)
+            read {
+                guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
+                    return ScanOutcome()
                 }
+                return await Importer.analyze(image: image)
             }
         }
         .task(id: router.pendingImport) {
             // Erst nach der Analyse zurücksetzen: eine neue task-id würde diesen Task sonst abbrechen.
             guard let url = router.pendingImport else { return }
-            await run { await Importer.analyze(url: url) }
+            // Über read(), damit auch „Teilen“-Importe abbrechbar sind.
+            read { await Importer.analyze(url: url) }
+            await readTask?.value
             if router.pendingImport == url { router.pendingImport = nil }
         }
         .alert("Import fehlgeschlagen", isPresented: Binding(get: { importError != nil }, set: { if !$0 { importError = nil } })) {
@@ -192,8 +223,13 @@ struct ScanView: View {
     private func run(_ work: () async -> ScanOutcome) async {
         // Offenes Formular schließen, damit das neue Ergebnis sichtbar wird
         formSeed = nil
+        readID += 1
+        let id = readID
         busy = true
         let result = await work()
+        guard !Task.isCancelled else { return }
+        // Inzwischen abgebrochen oder von einem neueren Lesevorgang abgelöst: Ergebnis verwerfen.
+        guard id == readID else { return }
         busy = false
         if result.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && result.barcode == nil && result.photo == nil {
             importError = "Datei oder Foto konnte nicht gelesen werden. Versuch ein anderes Format oder gib den Gutschein von Hand ein."
@@ -203,19 +239,67 @@ struct ScanView: View {
     }
 
     /// Live-Scan liefert Barcode und Text; Apple Intelligence strukturiert den Text danach.
-    private func finishLive(_ live: ScanOutcome) async {
-        await run {
-            var result = live
-            if let smart = await SmartExtractor.extract(from: live.text) {
-                result.smart = smart
-                result.usedAppleIntelligence = true
-            }
-            return result
+    private func finishLive(_ live: ScanOutcome) async -> ScanOutcome {
+        var result = live
+        if let smart = await SmartExtractor.extract(from: live.text) {
+            result.smart = smart
+            result.usedAppleIntelligence = true
         }
+        return result
+    }
+
+    /// Lesen als eigener Task, damit „Abbrechen“ die laufende Arbeit wirklich stoppt.
+    private func read(_ work: @escaping @MainActor () async -> ScanOutcome) {
+        readTask?.cancel()
+        readTask = Task { await run(work) }
+    }
+
+    private func cancelReading() {
+        readID += 1
+        readTask?.cancel()
+        readTask = nil
+        busy = false
+    }
+
+    /// „Hinzufügen“ bzw. bei Nicht-Gutscheinen „Erneut scannen“ als Hauptaktion.
+    private func resultActions(_ outcome: ScanOutcome) -> some View {
+        VStack(spacing: 14) {
+            if outcome.looksLikeVoucher {
+                Button("Hinzufügen") {
+                    // Mit Warnung (abgelaufen, hoher Wert, Prüfziffer) einmal nachfragen.
+                    if outcome.hasWarnings { confirmAddWithWarning = true } else { formSeed = FormSeed(outcome: outcome) }
+                }
+                .buttonStyle(.primary)
+                .confirmationDialog("Trotz Warnung hinzufügen?", isPresented: $confirmAddWithWarning, titleVisibility: .visible) {
+                    Button("Hinzufügen und prüfen") { formSeed = FormSeed(outcome: outcome) }
+                } message: {
+                    let expired = outcome.warningTexts.contains { $0.contains("abgelaufen") }
+                    Text(outcome.warningTexts.joined(separator: "\n\n")
+                         + (expired ? "\n\nOft trotzdem nicht verloren: Frag beim Laden nach Einlösung oder Erstattung." : "")
+                         + "\n\nDu kannst alles im nächsten Schritt korrigieren.")
+                }
+                Button("Erneut scannen") { rescan() }.buttonStyle(.quiet)
+            } else {
+                Button("Erneut scannen") { rescan() }.buttonStyle(.primary)
+                Button("Trotzdem von Hand eintragen") { formSeed = FormSeed(outcome: nil) }.buttonStyle(.quiet)
+            }
+        }
+        .padding(.horizontal, Layout.page).padding(.top, 10).padding(.bottom, 8)
+        .background(Color.page.ignoresSafeArea(edges: .bottom))
+        .overlay(alignment: .top) { Divider() }
+    }
+
+    private func rescan() {
+        // Altes Ergebnis bleibt stehen, bis ein neues da ist: Abbrechen im Scanner verliert nichts.
+        showScanner = true
     }
 
     private func show(_ result: ScanOutcome) {
         withAnimation(reduceMotion ? nil : .smooth) { outcome = result }
+        #if DEBUG
+        // Nur für Screenshots: `-demoOpenForm YES` öffnet nach dem Lesen gleich das Formular.
+        if UserDefaults.standard.bool(forKey: "demoOpenForm") { formSeed = FormSeed(outcome: result) }
+        #endif
     }
 
     /// Erst hier wird die Zwischenablage gelesen (iOS fragt dann ggf. nach Erlaubnis).
@@ -224,7 +308,7 @@ struct ScanView: View {
             importError = "In der Zwischenablage ist kein Text. Kopier zuerst den Text der Gutschein-E-Mail."
             return
         }
-        Task { await run { await Importer.analyze(text: text) } }
+        read { await Importer.analyze(text: text) }
     }
 }
 

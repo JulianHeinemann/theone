@@ -51,7 +51,7 @@ struct PrivacyPolicyView: View {
             "Die Sicherung enthält PINs und Fotos und ist nicht zusätzlich verschlüsselt. Die Tabelle enthält keine PINs.",
         ]),
         LegalSection(title: "Zwischenablage", paragraphs: [
-            "Kopierst du in der Gutschein-Ansicht einen Code, bleibt er nur auf diesem Gerät (nicht auf anderen Apple-Geräten) und verschwindet nach zwei Minuten. Kopierst du ihn an der Kasse, verschwindet er nach zehn Minuten.",
+            "Kopierst du in der Gutschein-Ansicht einen Code, bleibt er nur auf diesem Gerät (nicht auf anderen Apple-Geräten) und verschwindet nach zwei Minuten. Kopierst du ihn an der Kasse zum Online-Einlösen, bleibt er ebenfalls nur auf diesem Gerät und verschwindet nach zehn Minuten.",
         ]),
         LegalSection(title: "Links zu Läden", paragraphs: [
             "Links zum Guthaben-Check öffnen die Website des Ladens. Restwert gibt dabei keine Gutscheindaten weiter. Auf der Website gelten die Datenschutzregeln des Ladens.",

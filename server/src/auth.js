@@ -27,7 +27,7 @@ export async function verifyPassword(password, stored) {
 }
 
 export function signToken(user) {
-  return jwt.sign({ sub: user.id, email: user.email }, secret(), { expiresIn: '180d', issuer: 'restwert' });
+  return jwt.sign({ sub: user.id }, secret(), { expiresIn: '30d', issuer: 'restwert', algorithm: 'HS256' });
 }
 
 export function requireAuth(req, res, next) {
@@ -35,7 +35,7 @@ export function requireAuth(req, res, next) {
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) return res.status(401).json({ error: 'Nicht angemeldet.' });
   try {
-    const payload = jwt.verify(token, secret(), { issuer: 'restwert' });
+    const payload = jwt.verify(token, secret(), { issuer: 'restwert', algorithms: ['HS256'] });
     req.userId = payload.sub;
     next();
   } catch {

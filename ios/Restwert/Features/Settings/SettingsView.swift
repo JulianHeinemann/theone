@@ -18,6 +18,11 @@ struct SettingsView: View {
     @AppStorage("pinLock") private var pinLock = true
     @AppStorage("maskNumber") private var maskNumber = false
     @AppStorage("appLock") private var appLock = false
+    @State private var showNoPasscode = false
+    @AppStorage("lockDelay") private var lockDelay = 0
+    @AppStorage("codeLock") private var codeLock = false
+    @State private var hasPasscode = DeviceSecurity.status != .noPasscode
+    private let method = DeviceSecurity.methodName
     @AppStorage("onboarded") private var onboarded = true
     @AppStorage("sortOrder") private var sortRaw = CardSortOrder.expiry.rawValue
     @AppStorage("warnDays") private var warnDays = 30
@@ -35,6 +40,63 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section {
+                if !hasPasscode {
+                    // In der Liste statt als Fußzeile: die lag unter der schwebenden Tab-Leiste.
+                    Label("Auf diesem iPhone ist kein iPhone-Code eingerichtet. Der Schutz wirkt erst, wenn du in den iPhone-Einstellungen einen Code festlegst.",
+                          systemImage: "exclamationmark.triangle")
+                        .font(.scaled(14)).foregroundStyle(Color.warn)
+                }
+                if hasPasscode && !(pinLock && codeLock && appLock) {
+                    // Ein Tipp statt vier Schalter: für iPhones und iPads, die mehrere Personen nutzen.
+                    Button {
+                        Task {
+                            guard await DeviceSecurity.guardSensitive("Schutz für geteiltes Gerät einschalten") else { return }
+                            pinLock = true; codeLock = true; appLock = true
+                            if lockDelay > 60 { lockDelay = 60 }
+                        }
+                    } label: {
+                        HStack {
+                            settingLabel("Mehrere nutzen dieses Gerät", "Schaltet die drei Schalter darunter auf einmal ein", "person.2")
+                            Spacer(minLength: 8)
+                            Text("Einschalten").font(.scaled(15, weight: .semibold))
+                                .padding(.horizontal, 12).padding(.vertical, 6)
+                                .background(Color.fill, in: .capsule)
+                        }
+                    }
+                    .foregroundStyle(Color.ink)
+                }
+                // Ohne Code als „aus“ zeigen: ein grüner Schalter würde Schutz versprechen, den es nicht gibt.
+                Toggle(isOn: guarded($pinLock, reason: "PIN-Schutz ausschalten")) {
+                    settingLabel("PIN mit \(method) schützen", "PIN erst nach \(method == "Code" ? "dem iPhone-Code" : "\(method) oder iPhone-Code") anzeigen",
+                                 method == "Touch ID" ? "touchid" : "faceid")
+                }
+                Toggle(isOn: guarded($appLock, reason: "App-Sperre ausschalten")) {
+                    settingLabel("App mit \(method) sperren", "Beim Öffnen entsperren", "lock.app.dashed")
+                }
+                if appLock && hasPasscode {
+                    Picker(selection: $lockDelay) {
+                        Text("Sofort").tag(0)
+                        Text("Nach 1 Minute").tag(60)
+                        Text("Nach 5 Minuten").tag(300)
+                    } label: {
+                        settingLabel("Sperren", "Wie lange Restwert im Hintergrund offen bleibt", "timer")
+                    }
+                }
+                Toggle(isOn: guarded($codeLock, reason: "Code-Schutz ausschalten")) {
+                    settingLabel("Gutscheincodes erst nach \(method) zeigen", "Für geteilte Geräte: Code, Barcode und Foto bleiben verdeckt", "rectangle.and.hand.point.up.left")
+                }
+                Toggle(isOn: $maskNumber) {
+                    settingLabel("Code an der Kasse verdecken", "Nur die Ziffern, Tippen zeigt sie", "eye.slash")
+                }
+            } header: {
+                Text("Schutz")
+            } footer: {
+                Text("App-Sperre schützt die ganze App. Die anderen Schalter schützen einzelne Dinge: die PIN, den Gutscheincode (für Geräte, die mehrere nutzen) oder nur die Ziffern an der Kasse. „iPhone-Code“ meint den Code, mit dem du dein iPhone entsperrst.")
+                    .foregroundStyle(Color.ink2)
+            }
+            .tint(Color.toggleOn)
+
             Section { accountSection } footer: {
                 Text("Ohne eigenes Konto und ohne unseren Server: Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deinem eigenen iCloud. Den Schlüssel hat nur dein iCloud-Schlüsselbund – diese Sync-Daten können weder wir noch Apple lesen. Das iCloud-Backup deines iPhones kann Apple dagegen öffnen, solange „Erweiterter Datenschutz“ aus ist.")
             }
@@ -58,17 +120,8 @@ struct SettingsView: View {
                         settingLabel("Wann erinnern?", ReminderPrefs.describe(days: ReminderPrefs.days, hour: reminderHour), "clock")
                     }
                 }
-                Toggle(isOn: guarded($pinLock, reason: "PIN-Schutz ausschalten")) {
-                    settingLabel("PIN mit Face ID schützen", "PIN erst nach Face ID oder Code anzeigen", "faceid")
-                }
-                Toggle(isOn: guarded($appLock, reason: "App-Sperre ausschalten")) {
-                    settingLabel("App mit Face ID sperren", "Beim Öffnen entsperren", "lock.app.dashed")
-                }
-                Toggle(isOn: $maskNumber) {
-                    settingLabel("Code an der Kasse verdecken", "Tippen zeigt ihn ganz", "eye.slash")
-                }
             } header: {
-                Text("Sicherheit & Erinnerungen")
+                Text("Erinnerungen")
             }
             .tint(Color.toggleOn)
 
@@ -148,6 +201,8 @@ struct SettingsView: View {
             .foregroundStyle(Color.ink)
         }
         .scrollContentBackground(.hidden)
+        // Luft unter dem letzten Abschnitt, damit die schwebende Tab-Leiste keinen Text verdeckt.
+        .contentMargins(.bottom, 88, for: .scrollContent)
         .pageBackground()
         .navigationTitle("Einstellungen")
         .fileImporter(isPresented: $showRestore, allowedContentTypes: [.json]) { result in
@@ -165,7 +220,15 @@ struct SettingsView: View {
             await checkNotifications()
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await checkNotifications() } }
+            if phase == .active {
+                hasPasscode = DeviceSecurity.status != .noPasscode
+                Task { await checkNotifications() }
+            }
+        }
+        .alert("Kein iPhone-Code eingerichtet", isPresented: $showNoPasscode) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Ohne Code kann iOS nichts sperren. Leg in den iPhone-Einstellungen einen Code fest und schalte den Schutz dann hier ein.")
         }
         .onChange(of: reminders) { _, on in
             Task {
@@ -174,6 +237,9 @@ struct SettingsView: View {
             }
         }
         .onChange(of: warnDays) { _, _ in Task { await store.scheduleReminders() } }
+        // Widget sofort anpassen: mit App-Sperre ohne Beträge.
+        .onChange(of: appLock) { _, _ in WidgetBridge.update(cards: store.cards, total: store.total) }
+        .onChange(of: codeLock) { _, _ in WidgetBridge.update(cards: store.cards, total: store.total) }
         .onChange(of: reminderDays) { _, _ in Task { await store.scheduleReminders() } }
         .onChange(of: reminderHour) { _, _ in Task { await store.scheduleReminders() } }
         .confirmationDialog("Alle Restwert-Daten aus deinem iCloud löschen?", isPresented: $confirmDeleteCloud, titleVisibility: .visible) {
@@ -197,15 +263,18 @@ struct SettingsView: View {
 
     /// Einschalten sofort, Ausschalten erst nach Face ID oder Gerätecode. Ohne Gerätecode wie in der Detailansicht: direkt.
     private func guarded(_ value: Binding<Bool>, reason: String) -> Binding<Bool> {
-        Binding(get: { value.wrappedValue }, set: { new in
-            guard !new else { value.wrappedValue = true; return }
+        Binding(get: { value.wrappedValue && hasPasscode }, set: { new in
+            if new {
+                // Ohne iPhone-Code wirkt keine Sperre: nicht still einschalten, sondern erklären.
+                guard DeviceSecurity.status != .noPasscode else { showNoPasscode = true; return }
+                value.wrappedValue = true
+                return
+            }
             Task { @MainActor in
-                let context = LAContext()
-                var error: NSError?
-                guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { value.wrappedValue = false; return }
-                if (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason)) == true {
-                    value.wrappedValue = false
-                }
+                // Ohne Gerätecode ist der Schutz ohnehin wirkungslos: dann direkt aus. Sonst nur nach Prüfung,
+                // auch wenn Face ID gerade nicht verfügbar ist (kein stilles Ausschalten).
+                if DeviceSecurity.status == .noPasscode { value.wrappedValue = false; return }
+                if await DeviceSecurity.guardSensitive(reason) { value.wrappedValue = false }
             }
         })
     }
@@ -234,6 +303,13 @@ struct SettingsView: View {
         guard exporting == nil else { return }
         exporting = kind
         Task {
+            // Sicherung und Tabelle enthalten alle Codes und PINs: bei aktivem Schutz erst entsperren.
+            // Nur ohne Gerätecode (Schutz wirkungslos) ohne Prüfung; ist Face ID gerade nicht verfügbar, nicht exportieren.
+            if (DeviceSecurity.codeLockActive || pinLock || appLock) && DeviceSecurity.status != .noPasscode,
+               !(await DeviceSecurity.guardSensitive("Alle Gutscheine mit Codes exportieren")) {
+                exporting = nil
+                return
+            }
             await Task.yield()  // Fortschritt zuerst zeigen
             let url: URL? = switch kind {
             case .backup: store.backupFile()
@@ -275,14 +351,17 @@ struct SettingsView: View {
         notifDenied = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .denied
     }
 
+    @ViewBuilder
     private func settingLabel(_ title: String, _ subtitle: String?, _ icon: String) -> some View {
-        Label {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.scaled(16, weight: .semibold))
-                if let subtitle { Text(subtitle).font(.scaled(13)).foregroundStyle(Color.muted) }
-            }
-        } icon: {
-            Image(systemName: icon).foregroundStyle(Color.ink)
+        let text = VStack(alignment: .leading, spacing: 2) {
+            Text(title).font(.scaled(16, weight: .semibold)).fixedSize(horizontal: false, vertical: true)
+            if let subtitle { Text(subtitle).font(.scaled(13)).foregroundStyle(Color.muted).fixedSize(horizontal: false, vertical: true) }
+        }
+        if typeSize.isAccessibilitySize {
+            // Sehr große Schrift: Symbol weglassen, damit Titel und Untertitel die ganze Breite haben und zusammenbleiben.
+            text
+        } else {
+            Label { text } icon: { Image(systemName: icon).foregroundStyle(Color.ink) }
         }
     }
 
@@ -384,7 +463,7 @@ struct PrivacyExplainer: View {
         ("iphone", "Auf deinem iPhone", "Gutscheine, Fotos, PINs und Verlauf liegen in einer Datei, die iOS verschlüsselt, solange das iPhone gesperrt ist."),
         ("person.crop.circle.badge.xmark", "Kein Konto, kein Server von uns", "Es gibt keine Anmeldung und keine Datenbank bei uns. Wir sehen nicht, welche Gutscheine du hast."),
         ("lock.icloud", "iCloud-Sync (freiwillig)", "Jeder Gutschein wird auf dem iPhone mit AES-256 verschlüsselt, bevor er in dein eigenes iCloud geht. Der Schlüssel liegt nur in deinem iCloud-Schlüsselbund. Diese Sync-Daten können weder wir noch Apple lesen. Fotos werden nicht synchronisiert."),
-        ("key", "PINs", "PINs liegen lokal in der geschützten Datei. Mit iCloud-Sync gehen sie zusätzlich nur in deinen iCloud-Schlüsselbund, nie in eine Datenbank. Angezeigt werden sie nur nach Face ID."),
+        ("key", "PINs", "PINs liegen lokal in der geschützten Datei. Mit iCloud-Sync gehen sie zusätzlich nur in deinen iCloud-Schlüsselbund, nie in eine Datenbank. Angezeigt werden sie nur nach Face ID, Touch ID oder iPhone-Code."),
         ("externaldrive.badge.icloud", "iCloud-Backup des iPhones", "Wie alle App-Daten ist die Datei im iCloud-Backup deines iPhones enthalten. Ohne „Erweiterten Datenschutz“ kann Apple dieses Backup öffnen; mit ihm ist es Ende-zu-Ende verschlüsselt."),
         ("text.viewfinder", "Scannen", "Barcode- und Texterkennung laufen auf dem iPhone. Fotos werden nirgendwohin geschickt."),
         ("chart.bar.xaxis", "Keine Tracker, keine Werbung", "Die App enthält keine Analyse- oder Werbe-Software."),

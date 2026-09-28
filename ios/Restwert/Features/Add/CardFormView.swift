@@ -38,6 +38,8 @@ struct CardFormView: View {
     @State private var formatLocked = false
     /// „Gültig bis“ ist nur der gesetzliche Vorschlag und darf „Erhalten am“ folgen.
     @State private var expiresIsSuggestion = true
+    /// „Gültig bis“ aus einer Laufzeit berechnet („3 Jahre gültig“): fest, aber als berechnet markiert.
+    @State private var expiresFromDuration = false
     /// Formular kam aus Scan oder Import: dann ist ein fehlendes Datum ein Befund, kein Normalfall.
     @State private var fromScan = false
     /// Beim Bearbeiten war schon eine PIN gespeichert: nur die bleibt verdeckt.
@@ -52,6 +54,11 @@ struct CardFormView: View {
     @State private var shake = 0
     @State private var showMore = false
     @State private var pinRevealed = false
+    @State private var confirmUnprotectedPin = false
+    /// Barcode im Scan nicht gelesen: Barcode-Art hervorheben, bis der Nutzer sie wählt.
+    @State private var formatNeedsChoice = false
+    /// Gelesene Laufzeit („3 Jahre gültig“): bei geändertem „Erhalten am“ neu rechnen.
+    @State private var validity: Validity?
     @State private var shopText = ""
     @State private var photoItem: PhotosPickerItem?
     @State private var showCamera = false
@@ -171,7 +178,14 @@ struct CardFormView: View {
         .fullScreenCover(isPresented: $showPhoto) {
             if let photoImage { PhotoViewer(image: photoImage) }
         }
-        .onChange(of: received) { _, new in if expiresIsSuggestion { expires = GiftCard.legalExpiry(from: new) } }
+        .onChange(of: received) { _, new in
+            if expiresIsSuggestion {
+                expires = GiftCard.legalExpiry(from: new)
+            } else if expiresFromDuration, let validity, let e = validity.expiry(from: new) {
+                expires = e
+            }
+        }
+        .unprotectedPinConfirmation(isPresented: $confirmUnprotectedPin) { pinRevealed = true }
         .onChange(of: merchantID) { _, _ in
             if !formatLocked { format = autoFormat }
         }
@@ -182,11 +196,7 @@ struct CardFormView: View {
     }
 
     /// Format ohne Scan oder Nutzerwahl: Codes und reine Online-Händler als Text, sonst das Händlerformat.
-    private var autoFormat: CodeFormat {
-        guard kind.isValueBased else { return .text }
-        guard let m = Merchant.byID[merchantID] else { return .code128 }
-        return m.category == .codeOnly ? .text : m.format
-    }
+    private var autoFormat: CodeFormat { .automatic(kind: kind, merchantID: merchantID) }
 
     // MARK: Felder
 
@@ -351,13 +361,15 @@ struct CardFormView: View {
                     FormField(label: "oder Wert in €", prompt: "z.\u{00A0}B. 5,00", text: $valueText, keyboard: .decimalPad)
                 }
             }
-            dateBox(expiresIsSuggestion ? "Gültig bis · geschätzt" : "Gültig bis",
-                    Binding(get: { expires }, set: { expires = $0; expiresIsSuggestion = false }))
+            dateBox(expiresIsSuggestion ? "Gültig bis · geschätzt" : expiresFromDuration ? "Gültig bis · berechnet" : "Gültig bis",
+                    Binding(get: { expires }, set: { expires = $0; expiresIsSuggestion = false; expiresFromDuration = false; validity = nil }))
             if expiresIsSuggestion { estimateHint }
-            FormField(label: kind == .discountCode ? "Rabattcode" : "Code oder Kartennummer",
+            FormField(label: kind == .discountCode ? "Rabattcode" : "Code",
                       note: kind == .discountCode ? nil : "Falls vorhanden. Beim Scannen wird er automatisch ausgefüllt.",
                       prompt: kind == .discountCode ? "z.\u{00A0}B. SOMMER15" : "z.\u{00A0}B. 6300 9812 7456 1234",
                       text: $number, code: true)
+            // Barcode im Scan nicht gelesen: Auswahl gleich unter dem Code, nicht versteckt unter „Mehr“.
+            if formatNeedsChoice && !number.isEmpty { formatPicker }
             ownerSection
             moreButton
             if showMore {
@@ -367,12 +379,7 @@ struct CardFormView: View {
                               prompt: "z.\u{00A0}B. 12,40", text: $balanceText, keyboard: .decimalPad)
                 }
                 if kind == .giftCard { pinField }
-                LabeledBox(label: "Barcode-Typ (wird meist automatisch erkannt)") {
-                    Picker("Barcode-Typ", selection: Binding(get: { format }, set: { format = $0; formatLocked = true })) {
-                        ForEach(CodeFormat.allCases) { Text($0.label).tag($0) }
-                    }
-                    .labelsHidden().tint(Color.ink)
-                }
+                if !formatNeedsChoice { formatPicker }
                 dateBox("Erhalten am", $received)
                 LabeledBox(label: "Aufbewahrungsort") {
                     Picker("Aufbewahrungsort", selection: $location) {
@@ -502,9 +509,26 @@ struct CardFormView: View {
         if pinRevealed { pinRevealed = false; return }
         guard pinLock else { pinRevealed = true; return }
         let context = LAContext()
-        var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { pinRevealed = true; return }
-        pinRevealed = (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "PIN anzeigen")) ?? false
+        guard DeviceSecurity.canAuthenticate else { confirmUnprotectedPin = true; return }
+        _ = context
+        pinRevealed = await DeviceSecurity.guardSensitive("PIN anzeigen")
+    }
+
+    private var formatPicker: some View {
+        LabeledBox(label: formatNeedsChoice ? "Barcode-Art: nicht gelesen – bitte wählen, wie auf dem Gutschein" : "Barcode-Art (wird meist automatisch erkannt)") {
+            // Nicht gelesen: nichts vorauswählen, sonst ließe sich die schon gewählte Art nicht bestätigen.
+            Picker("Barcode-Art", selection: Binding<CodeFormat?>(get: { formatNeedsChoice ? nil : format },
+                                                                set: { if let f = $0 { format = f; formatLocked = true; formatNeedsChoice = false } })) {
+                if formatNeedsChoice { Text("Bitte wählen").tag(CodeFormat?.none) }
+                ForEach(CodeFormat.allCases) { Text(ScanResultView.friendly($0)).tag(Optional($0)) }
+            }
+            .labelsHidden().tint(Color.ink)
+        }
+        .overlay {
+            if formatNeedsChoice {
+                RoundedRectangle(cornerRadius: Layout.buttonRadius, style: .continuous).strokeBorder(Color.soon, lineWidth: 1.5)
+            }
+        }
     }
 
     /// Hinweis, dass „Gültig bis“ nur die gesetzliche Frist ist. Nach einem Scan deutlich, sonst leise.
@@ -555,6 +579,7 @@ struct CardFormView: View {
     private func apply(_ o: ScanOutcome) {
         let d = o.draft
         fromScan = true
+        if let r = o.received { received = r }
         if let id = d.merchantID {
             merchantID = id
         } else if let name = d.customName {
@@ -565,18 +590,37 @@ struct CardFormView: View {
             kind = .discountCode
             percentText = p.formatted()
         }
-        if let code = o.barcode {
+        let online = Merchant.byID[merchantID]?.category == .codeOnly
+        if d.percent == nil, online || o.source == .text {
+            // Online-Code aus Mail oder von einem reinen Online-Laden: kein Plastik, liegt im Postfach.
+            kind = .valueVoucher
+        }
+        if o.source == .text || o.source == .document || online { location = .inbox }
+        if o.barcode != nil, let code = o.displayCode {
             number = code.grouped
-            format = o.format ?? Merchant.byID[merchantID]?.format ?? format
+            // Online-Code: an der Kasse gibt es keinen Barcode, nur den Code zum Eintippen.
+            format = online ? .text : (o.format ?? Merchant.byID[merchantID]?.format ?? format)
             formatLocked = true
         } else {
             if let n = d.number { number = n.grouped }
-            // Ohne Barcode automatisch; onChange(merchantID) rechnet später mit derselben Regel (Rabattcode bleibt Text)
-            format = autoFormat
+            // Dieselbe Regel wie im Scan-Ergebnis: gültige EAN aus der Nummer, sonst automatisch nach Laden.
+            if let resolved = o.resolvedFormat, resolved.origin == .number {
+                format = resolved.format
+                formatLocked = true
+            } else {
+                format = autoFormat
+                // Barcode nicht gelesen: Barcode-Art sichtbar machen und aktiv fragen statt still vorzubelegen.
+                if o.photo != nil, d.number != nil, format != .text { formatNeedsChoice = true }
+            }
         }
         if let p = d.pin { pin = p }
         if let v = d.value { valueText = Self.money(v) }
-        if let e = d.expires { expires = e; expiresIsSuggestion = false }
+        // Aus einer Laufzeit berechnet: als „geschätzt“ zeigen, aber nicht bei „Erhalten am“ neu rechnen.
+        if let e = d.expires {
+            expires = e; expiresIsSuggestion = false; expiresFromDuration = d.expiresIsEstimate
+            validity = d.validity
+        }
+        if let r = d.recipient { owner = r }
         photo = o.photo
     }
 
@@ -590,7 +634,11 @@ struct CardFormView: View {
         hadStoredPin = !c.pin.isEmpty
         received = c.received
         expires = c.expires
-        expiresIsSuggestion = c.expiresEstimated
+        // Geschätzt ist entweder der gesetzliche Vorschlag oder ein aus der Laufzeit berechnetes Datum;
+        // Letzteres nicht beim Ändern von „Erhalten am“ durch die gesetzliche Frist ersetzen.
+        let legal = Calendar.current.isDate(c.expires, inSameDayAs: GiftCard.legalExpiry(from: c.received))
+        expiresIsSuggestion = c.expiresEstimated && legal
+        expiresFromDuration = c.expiresEstimated && !legal
         location = c.location
         locationNote = c.locationNote
         owner = c.owner
@@ -616,6 +664,9 @@ struct CardFormView: View {
     private func validate() -> [String] {
         var e: [String] = []
         if shopText.trimmingCharacters(in: .whitespaces).isEmpty { e.append("Gib den Laden ein.") }
+        if formatNeedsChoice && !number.isEmpty {
+            e.append("Wähl die Barcode-Art, die auf dem Gutschein zu sehen ist (oder „Nur Code“, wenn es keinen Barcode gibt).")
+        }
         if number.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && photo == nil {
             e.append("Fotografier den Gutschein oder tipp den Code ab.")
         }
@@ -670,7 +721,7 @@ struct CardFormView: View {
         card.percent = kind.isValueBased ? nil : parseMoney(percentText)
         card.received = received
         card.expires = expires
-        card.expiresEstimated = expiresIsSuggestion
+        card.expiresEstimated = expiresIsSuggestion || expiresFromDuration
         card.location = location
         card.locationNote = locationNote.trimmingCharacters(in: .whitespaces)
         card.owner = owner.trimmingCharacters(in: .whitespaces)

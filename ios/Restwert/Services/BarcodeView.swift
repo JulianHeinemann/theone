@@ -5,7 +5,7 @@ import CoreImage.CIFilterBuiltins
 import RestwertKit
 
 /// Baut den Barcode im Originalformat der Karte nach.
-/// EAN, UPC, ITF und Code 39 kodiert RestwertKit; Code 128, QR, PDF417 und Aztec kommen aus Core Image.
+/// EAN, UPC, ITF, Code 39 und Data Matrix kodiert RestwertKit; Code 128, QR, PDF417 und Aztec kommen aus Core Image.
 enum BarcodeRenderer {
     enum Output {
         case bars([Bool])
@@ -31,8 +31,12 @@ enum BarcodeRenderer {
     }
 
     static func render(_ raw: String, format: CodeFormat) -> Output? {
-        let value = raw.replacingOccurrences(of: " ", with: "")
+        // Ziffern ohne Anzeige-Leerzeichen, andere Codes unverändert (Leerzeichen gehört dann zum Code).
+        let value = BarcodeEncoder.payload(raw)
         guard !value.isEmpty else { return nil }
+        if format == .dataMatrix {
+            return BarcodeEncoder.dataMatrix(value).map { .image(matrixImage($0)) }
+        }
         if let modules = BarcodeEncoder.modules(for: value, format: format) { return .bars(modules) }
         switch format {
         case .qr:
@@ -59,6 +63,19 @@ enum BarcodeRenderer {
         }
     }
 
+    /// Data-Matrix-Module als scharfes Bild (8 px je Modul, ohne Glätten).
+    private static func matrixImage(_ m: [[Bool]]) -> UIImage {
+        let module: CGFloat = 8, n = CGFloat(m.count)
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: CGSize(width: n * module, height: n * module), format: format).image { ctx in
+            UIColor.white.setFill(); ctx.fill(CGRect(x: 0, y: 0, width: n * module, height: n * module))
+            UIColor.black.setFill()
+            for (y, row) in m.enumerated() { for (x, on) in row.enumerated() where on {
+                ctx.fill(CGRect(x: CGFloat(x) * module, y: CGFloat(y) * module, width: module, height: module)) } }
+        }
+    }
+
     private static func image(_ ci: CIImage?) -> Output? {
         guard let ci else { return nil }
         let scaled = ci.transformed(by: CGAffineTransform(scaleX: 8, y: 8))
@@ -74,15 +91,40 @@ struct BarcodeView: View {
     var height: CGFloat = 90
     /// Nur für den Text-Rückfall: Nummer als „•••• 1234“ zeigen.
     var masked = false
+    /// „Codes erst nach Face ID zeigen“: auch den Barcode selbst nicht zeichnen (er ließe sich sonst abscannen).
+    var concealed = false
 
     var body: some View {
+        if concealed {
+            VStack(spacing: 8) {
+                Image(systemName: "lock.fill").font(.scaled(22))
+                Text("Geschützt – tippen und entsperren").font(.scaled(15, weight: .semibold))
+                    .multilineTextAlignment(.center)
+            }
+            .foregroundStyle(Color.ink2)
+            .frame(maxWidth: .infinity, minHeight: height)
+            .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Geschützt. Tippen und entsperren")
+        } else {
+            rendered
+        }
+    }
+
+    @ViewBuilder private var rendered: some View {
         switch BarcodeRenderer.cached(number, format: format) {
         case .bars(let modules)?:
             let padded = Array(repeating: false, count: 10) + modules + Array(repeating: false, count: 10)
             Canvas { ctx, size in
+                // Zusammenhängende Striche als ein Rechteck zeichnen: exakte Strichbreiten, keine Haarlinien dazwischen.
                 let w = size.width / CGFloat(padded.count)
-                for (i, on) in padded.enumerated() where on {
-                    ctx.fill(Path(CGRect(x: CGFloat(i) * w, y: 0, width: w + 0.35, height: size.height)), with: .color(.black))
+                var i = 0
+                while i < padded.count {
+                    guard padded[i] else { i += 1; continue }
+                    var j = i
+                    while j < padded.count && padded[j] { j += 1 }
+                    ctx.fill(Path(CGRect(x: CGFloat(i) * w, y: 0, width: CGFloat(j - i) * w, height: size.height)), with: .color(.black))
+                    i = j
                 }
             }
             .frame(height: height)
@@ -93,7 +135,7 @@ struct BarcodeView: View {
                 .interpolation(.none)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(maxHeight: format == .qr || format == .aztec ? height * 2.4 : height)
+                .frame(maxHeight: format.isTwoDimensional && format != .pdf417 ? height * 2.4 : height)
                 .whitePlate()
                 .accessibilityLabel("Barcode \(format.label)")
         case nil:

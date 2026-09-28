@@ -12,6 +12,12 @@ public struct CardDraft: Sendable, Equatable {
     public var percent: Double?
     /// Shopname, der in keiner Händlerliste steht (z. B. von Apple Intelligence gelesen).
     public var customName: String?
+    /// Beschenkte Person aus einer eigenen Zeile wie „für Oma Gisela“.
+    public var recipient: String?
+    /// Ablaufdatum aus einer Laufzeit berechnet („3 Jahre gültig“), nicht wörtlich gelesen.
+    public var expiresIsEstimate = false
+    /// Die gelesene Laufzeit, damit das Formular bei geändertem „Erhalten am“ neu rechnen kann.
+    public var validity: Validity?
 
     public init(merchantID: String? = nil, number: String? = nil, pin: String? = nil, value: Double? = nil, expires: Date? = nil, percent: Double? = nil, customName: String? = nil) {
         self.merchantID = merchantID; self.number = number; self.pin = pin; self.value = value; self.expires = expires; self.percent = percent
@@ -22,15 +28,44 @@ public struct CardDraft: Sendable, Equatable {
     public var isDiscount: Bool { percent != nil }
 }
 
+/// Laufzeit eines Gutscheins, z. B. „3 Jahre ab Ende des Jahres“.
+public struct Validity: Sendable, Equatable {
+    public var months: Int
+    /// Frist beginnt am Ende des Ausstellungsjahres (wie §§ 195, 199 BGB), nicht am Ausstellungstag.
+    public var fromYearEnd: Bool
+
+    /// Ausstellungsjahr, falls genannt („ab Ende des Jahres 2026“).
+    public var baseYear: Int?
+
+    public init(months: Int, fromYearEnd: Bool, baseYear: Int? = nil) {
+        self.months = months; self.fromYearEnd = fromYearEnd; self.baseYear = baseYear
+    }
+
+    /// Ablaufdatum für einen Gutschein, der an `start` ausgestellt oder erhalten wurde.
+    public func expiry(from start: Date) -> Date? {
+        let cal = Calendar.current
+        var base = cal.startOfDay(for: start)
+        if fromYearEnd, let end = cal.date(from: DateComponents(year: baseYear ?? cal.component(.year, from: start), month: 12, day: 31)) {
+            base = end
+        }
+        return cal.date(byAdding: .month, value: months, to: base)
+    }
+}
+
 public enum TextParser {
     public static func parse(_ text: String, now: Date = .now) -> CardDraft {
         var d = CardDraft()
         let t = text.replacingOccurrences(of: "\u{00A0}", with: " ")
         d.merchantID = merchant(in: t)
-        d.pin = firstMatch(#"(?i)\bPIN\s*[:#]?\s*([0-9]{3,8})\b"#, in: t)
+        d.pin = firstMatch(#"(?i)\bPIN(?:[-\s]?(?:Code|Nr\.?|Nummer))?\s*[:#]?\s*([0-9]{3,8})\b"#, in: t)
         d.value = amount(in: t)
-        d.expires = expiry(in: t, now: now)
+        if let e = expiryDetail(in: t, now: now) {
+            d.expires = e.date
+            d.expiresIsEstimate = e.estimated
+            if e.estimated { d.validity = validity(in: t) }
+        }
         d.percent = percent(in: t)
+        d.recipient = recipient(in: t)
         d.number = code(in: t, excluding: d.pin)
         return d
     }
@@ -60,14 +95,25 @@ public enum TextParser {
         return nil
     }
 
+    /// Text ohne Steuerangaben („inkl. 19 % MwSt“, „MwSt. 19 %“): Prozent darin ist kein Rabatt.
+    static func withoutTax(_ s: String) -> String {
+        // „19 % MwSt“, „7 % ermäßigte MwSt“, „MwSt. 19 %“, „Enthaltene MwSt: 19 %“, „USt (19%)“, „inkl. 19 % USt.“
+        let tax = #"\b(?:MwSt|USt|Mehrwertsteuer|Umsatzsteuer|VAT)\b\.?"#
+        let pct = #"\d{1,2}(?:[.,]\d{1,2})?\s?%"#
+        let adj = #"(?:(?:ermäßigte|ermaessigte|reduzierte|volle|enthaltene|gesetzliche|inkl\.?|zzgl\.?)\s+)*"#
+        return s.replacingOccurrences(of: "(?i)" + pct + #"\s*"# + adj + tax, with: " ", options: .regularExpression)
+            .replacingOccurrences(of: "(?i)" + adj + tax + #"[\s:(]*"# + pct + #"\)?"#, with: " ", options: .regularExpression)
+    }
+
     public static func percent(in s: String) -> Double? {
-        // Steuersätze („19 % MwSt“) sind kein Rabatt
-        let hits = matches(#"(?i)(\d{1,2}(?:[.,]\d)?)\s?%(?!\s*(?:MwSt|USt|Mehrwertsteuer|Umsatzsteuer))"#, in: s)
+        // Steuersätze („19 % MwSt“, „inkl. MwSt. 19 %“) sind kein Rabatt: ganze Steuerzeilen überspringen.
+        let untaxed = withoutTax(s)
+        let hits = matches(#"(?i)(\d{1,2}(?:[.,]\d)?)\s?%"#, in: untaxed)
             .compactMap { parseMoney($0[1]) }.filter { $0 > 0 && $0 <= 90 }
         guard let first = hits.first else { return nil }
         // Nur mit Rabatt-Kontext; „Code“ steht in fast jedem Gutscheintext und zählt nicht
         let signal = #"(?i)\b(?:rabatt\w*|nachlass|sparen|spare|off|reduziert)\b"#
-        return matches(signal, in: s).isEmpty ? nil : first
+        return matches(signal, in: untaxed).isEmpty ? nil : first
     }
 
     /// Zahl mit optionalen Tausenderpunkten und Nachkommastellen, z. B. 1.234,56 oder 12,5 oder 20.
@@ -75,16 +121,21 @@ public enum TextParser {
 
     public static func amount(in text: String) -> Double? {
         // Mindestbestellwerte („ab 50 €“, „Mindestbestellwert 50 €“) sind nicht der Gutscheinwert
-        let s = text.replacingOccurrences(of: #"(?i)\b(?:ab|Mindestbestellwert|MBW)\s*:?\s*(?:von\s*)?(?:€|EUR)?\s?\d[\d.,]*\s?(?:€|EUR|Euro)?"#,
+        let s = text.replacingOccurrences(of: #"(?i)\b(?:ab|Mindest\w*wert|MBW|(?:Einkauf|Bestellung|Einkaufswert|Bestellwert)\s+(?:ab|über|von))\s*:?\s*(?:von\s*)?(?:€|EUR)?\s?\d[\d.,]*\s?(?:€|EUR|Euro)?"#,
                                           with: " ", options: .regularExpression)
-        let p = #"(?i)(?:€|EUR)\s?"# + number + #"|"# + number + #"\s?(?:€|EUR\b|Euro\b)"#
+        // „30,– Euro“ und „30, - Euro“ (Handschrift-Erkennung) zählen wie „30 Euro“.
+        let p = #"(?i)(?:€|EUR)\s?"# + number + #"|"# + number + #"(?:\s?,\s?[-–])?\s?(?:€|EUR\b|Euro\b)"#
         let values = matches(p, in: s).compactMap { g -> Double? in
             let raw = g[1].isEmpty ? g[2] : g[1]
             return parseMoney(raw)
         }.filter { $0 > 0 && $0 <= 5000 }
         // Beträge nahe „Wert“, „Betrag“, „Guthaben“ bevorzugen; nur ganze Wörter, keine Datumsteile
-        let labeled = #"(?i)\b(?:Wert|Betrag|Guthaben|Gutscheinwert|Value)\b[^\d\n]{0,20}"# + number + #"(?![.,]?\d)"#
-        if let hit = matches(labeled, in: s).compactMap({ parseMoney($0[1]) }).first(where: { $0 > 0 && $0 <= 5000 }) {
+        // Keine Laufzeiten („Guthaben ist 10 Jahre gültig“) und keine Prozente.
+        let labeled = #"(?i)\b(?:Wert|Betrag|Guthaben|Gutscheinwert|Value)\b[^\d\n]{0,20}"# + number
+            + #"(?![.,]?\d)(?!\s*(?:Jahre?n?|Monate?n?|Tage?n?|Wochen?|years?|months?|days?|%|Prozent|Personen|Person|Pers\.?|Stück|Stk\.?|x|mal)\b)"#
+        // Steht irgendwo ein Betrag mit Währung, gewinnt eine Beschriftung nur, wenn sie auch einer davon ist.
+        if let hit = matches(labeled, in: s).compactMap({ parseMoney($0[1]) }).first(where: { $0 > 0 && $0 <= 5000 }),
+           values.isEmpty || values.contains(hit) {
             return hit
         }
         return values.max()
@@ -98,8 +149,15 @@ public enum TextParser {
     /// - „3 Jahre gültig“, „Gültigkeit: 24 Monate“ → ab heute gerechnet
     /// Beschriftete Daten („gültig bis …“) gewinnen; bei „vom … bis …“ das spätere. Sonst das späteste künftige Datum.
     public static func expiry(in s: String, now: Date = .now) -> Date? {
+        expiryDetail(in: s, now: now)?.date
+    }
+
+    /// Wie ``expiry(in:now:)``; `estimated` ist wahr, wenn das Datum aus einer Laufzeit berechnet wurde.
+    public static func expiryDetail(in s: String, now: Date = .now) -> (date: Date, estimated: Bool)? {
         let label = #"(?:gültig|gueltig|bis|ablauf|verfällt|verfaellt|einlösbar|einloesbar|valid|expires?|expiry|exp\.?|thru)"#
         let lead = label + #"[^\d\n]{0,25}?"#
+        // „3 Jahre gültig ab Ende des Jahres 2026“: 2026 ist das Ausstellungsjahr, nicht das Ablaufdatum.
+        if let v = validity(in: s), v.baseYear != nil, let date = v.expiry(from: now) { return (date, true) }
         var labeled: [Date] = []
         for (pattern, make) in fullDatePatterns {
             labeled += matches("(?i)" + lead + pattern, in: s).compactMap { make(Array($0.dropFirst())) }
@@ -114,14 +172,14 @@ public enum TextParser {
         labeled += matches(#"(?i)\bEnde\s+(?:des\s+Jahres\s+)?(\d{4})\b"#, in: s).compactMap {
             monthEnd(month: 12, year: Int($0[1]))
         }
-        if let latest = labeled.filter(plausible).max() { return latest }
-        if let relative = relativeExpiry(in: s, now: now) { return relative }
+        if let latest = labeled.filter(plausible).max() { return (latest, false) }
+        if let relative = relativeExpiry(in: s, now: now) { return (relative, true) }
         // Ohne Beschriftung: das späteste vollständige Datum in der Zukunft.
         var all: [Date] = []
         for (pattern, make) in fullDatePatterns {
             all += matches(#"(?i)(?<![\d.])"# + pattern, in: s).compactMap { make(Array($0.dropFirst())) }
         }
-        return all.filter { $0 > now && plausible($0) }.max()
+        return all.filter { $0 > now && plausible($0) }.max().map { ($0, false) }
     }
 
     /// Vollständige Daten in allen üblichen Schreibweisen, jeweils mit Umrechnung der Gruppen.
@@ -178,10 +236,15 @@ public enum TextParser {
 
     /// „3 Jahre gültig“, „gültig für drei Jahre“, „Gültigkeit: 24 Monate“ – ab heute gerechnet.
     private static func relativeExpiry(in s: String, now: Date) -> Date? {
+        validity(in: s)?.expiry(from: now)
+    }
+
+    /// „3 Jahre gültig“, „Gültigkeit: 24 Monate“, „3 Jahre ab Ende des Jahres“ als Laufzeit.
+    public static func validity(in s: String) -> Validity? {
         let number = #"(\d{1,2}|ein|einem|eins|zwei|drei|vier|fünf|fuenf|one|two|three|four|five)"#
         let unit = #"(Jahre?n?|Monate?n?|years?|months?)"#
         let valid = #"(?:gültig|gueltig|einlösbar|einloesbar|valid|Gültigkeit|Gueltigkeit)"#
-        let found = matches("(?i)" + number + #"\s+"# + unit + #"\s+(?:lang\s+|ab\s+\S+\s+)?"# + valid, in: s).first
+        let found = matches("(?i)" + number + #"\s+"# + unit + #"\s+(?:lang\s+|ab\s+[^\n]{1,40}?\s+)?"# + valid, in: s).first
             ?? matches("(?i)" + valid + #"[:\s]+(?:für|fuer|for|von)?\s*"# + number + #"\s+"# + unit, in: s).first
         guard let g = found else { return nil }
         let words = ["ein": 1, "einem": 1, "eins": 1, "one": 1, "zwei": 2, "two": 2, "drei": 3, "three": 3,
@@ -189,7 +252,37 @@ public enum TextParser {
         let raw = g[1].lowercased()
         guard let n = Int(raw) ?? words[raw], n > 0 else { return nil }
         let years = g[2].lowercased().hasPrefix("j") || g[2].lowercased().hasPrefix("y")
-        return Calendar.current.date(byAdding: years ? .year : .month, value: n, to: Calendar.current.startOfDay(for: now))
+        // „ab Ende des (Kalender-/Kauf-/Ausstellungs-)Jahres“, „zum Jahresende“, „Schluss des Jahres“.
+        let yearEnd = #"(?i)\b(?:(?:Ende|Schluss)\s+(?:des|eines)\s+(?:\w+\s+)?\w*jahres|\w*jahres(?:ende|schluss)|end\s+of\s+(?:the\s+)?(?:calendar\s+)?year)\b"#
+        // Nur neben der Laufzeit (gleiche oder nächste Zeile), nicht irgendwo im Text (z. B. „Aktion bis Jahresende“).
+        let lines = s.components(separatedBy: .newlines)
+        let at = lines.firstIndex { $0.contains(g[0]) } ?? lines.firstIndex { $0.localizedCaseInsensitiveContains(g[1] + " " + g[2]) }
+        let near = at.map { lines[$0...min($0 + 1, lines.count - 1)].joined(separator: " ") } ?? s
+        let fromYearEnd = !matches(yearEnd, in: near).isEmpty
+        let base = fromYearEnd ? matches(#"(?i)jahres\s+(20\d{2})\b"#, in: near).first.flatMap { Int($0[1]) } : nil
+        return Validity(months: years ? n * 12 : n, fromYearEnd: fromYearEnd, baseYear: base)
+    }
+
+    /// „für Oma Gisela“ als eigene Zeile. Anreden wie „für dich“ oder „für alle“ zählen nicht.
+    public static func recipient(in s: String) -> String? {
+        let name = #"[A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜ][a-zäöüß]+)?"#
+        // Verwandtschaft auch klein geschrieben („für oma Gisela“ aus der Handschrift-Erkennung).
+        let relation = #"(?:[Oo]ma|[Oo]pa|[Mm]ama|[Pp]apa|[Tt]ante|[Oo]nkel|[Bb]ruder|[Ss]chwester|[Nn]ichte|[Nn]effe|[Pp]ate|[Pp]atin)"#
+        let hits = matches(#"(?m)^\s*[Ff](?:ü|ue)r\s+((?:"# + relation + "|" + name + #")(?:\s+"# + name + #"){0,2})\s*[!.]?\s*$"#, in: s)
+        let stop: Set<String> = ["dich", "mich", "ihn", "sie", "euch", "uns", "alle", "alles", "jeden", "jede", "den", "die", "das",
+                                 "dein", "deine", "deinen", "ihr", "ihre", "ihren", "mein", "meine", "meinen", "unser", "unsere",
+                                 "kinder", "erwachsene", "personen", "einkäufe", "einkauf", "zwei", "drei", "vier",
+                                 "weihnachten", "ostern", "geburtstag", "muttertag", "vatertag", "hochzeit", "jubiläum",
+                                 "valentinstag", "online", "online-einkäufe", "zuhause", "unterwegs", "später", "sie!"]
+        for h in hits {
+            let first = h[1].split(separator: " ").first.map { $0.lowercased() } ?? ""
+            if first.split(separator: "-").contains(where: { stop.contains(String($0)) }) { continue }
+            if !stop.contains(first) {
+                // Erstes Wort groß: „oma Gisela“ → „Oma Gisela“.
+                return h[1].prefix(1).uppercased() + h[1].dropFirst()
+            }
+        }
+        return nil
     }
 
     public static func code(in s: String, excluding pin: String?) -> String? {
@@ -217,6 +310,10 @@ public enum TextParser {
         let parts = firstLine.split(separator: " ")
         var kept: [Substring] = []
         for p in parts {
+            // „PIN“ beendet die Nummer; Kartennummern haben höchstens 19 Ziffern (sonst klebte eine PIN daran).
+            if p.range(of: #"(?i)^PIN"#, options: .regularExpression) != nil { break }
+            let digits = (kept.map(String.init).joined() + p).filter(\.isNumber).count
+            if digits > 19 && kept.contains(where: { $0.contains(where: \.isNumber) }) { break }
             if p.contains(where: \.isNumber) || (p.count >= 3 && p.uppercased() == p && p.contains("-")) { kept.append(p) } else { break }
         }
         let joined = kept.joined(separator: kept.allSatisfy { $0.allSatisfy(\.isNumber) } ? "" : " ")

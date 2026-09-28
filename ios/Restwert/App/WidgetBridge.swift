@@ -41,14 +41,17 @@ nonisolated enum WidgetBridge {
             Logger(subsystem: "de.restwert.app", category: "widget").error("App Group nicht verfügbar")
             return
         }
+        // App-Sperre oder Schutz für geteilte Geräte: keine Beträge auf Home- oder Sperrbildschirm.
+        let locked = UserDefaults.standard.bool(forKey: "appLock") || UserDefaults.standard.bool(forKey: "codeLock")
         // Beispielkarten nur, solange es noch keine eigenen gibt.
         let own = cards.filter { !$0.isExample }
         let active = (own.isEmpty ? cards : own).filter { $0.isActive && !$0.forGifting }.sorted { $0.expires < $1.expires }
         let snap = Snapshot(items: active.prefix(200).map {
                                 // Kalendertag als 12:00 Ortszeit: Das Widget rechnet Tage mit Calendar.current.
-                                .init(id: $0.id.uuidString, name: $0.name, headline: $0.headline,
+                                // Mit App-Sperre keine Beträge auf Home- oder Sperrbildschirm, nur Laden und Frist.
+                                .init(id: $0.id.uuidString, name: $0.name, headline: locked ? "••••" : $0.headline,
                                       expires: CalendarDay.local($0.expires),
-                                      amount: $0.kind.isValueBased ? $0.balance : nil, color: brandHex($0))
+                                      amount: locked || !$0.kind.isValueBased ? nil : $0.balance, color: brandHex($0))
                             },
                             updated: .now)
         guard let data = try? JSONEncoder().encode(snap) else { return }

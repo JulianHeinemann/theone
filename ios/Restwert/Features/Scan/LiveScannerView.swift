@@ -155,7 +155,7 @@ struct LiveScannerView: View {
                 Task {
                     let photo = await model.capturePhoto()
                     onDone(ScanOutcome(barcode: model.barcode, format: model.format,
-                                       text: model.orderedText, photo: photo))
+                                       text: model.orderedText, photo: photo, source: .camera))
                     dismiss()
                 }
             } label: {

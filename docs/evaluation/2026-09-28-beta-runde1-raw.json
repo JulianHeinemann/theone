@@ -1,0 +1,989 @@
+[
+ {
+  "persona": "Sabine K., 38, Grundschullehrerin, bekommt Gutscheine von Eltern (Papier, Stadtgutschein, handgeschrieben) und sammelt sie im Portemonnaie (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Papiergutscheine per Foto scannen, Übersicht was noch drauf ist und bald abläuft",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 8,
+   "login_sperre": 8,
+   "verstaendlichkeit": 7,
+   "vertrauen": 9,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Endlich landen die Gutscheine aus dem Portemonnaie an einem Ort. Der handgeschriebene Café-Gutschein von Oma Gisela wurde komplett richtig gelesen, und dass die App bei der Einkaufsliste ehrlich 'Kein Gutschein erkannt' sagt, gefällt mir. Bei den Barcode-Angaben verstehe ich aber nur Bahnhof.",
+  "lob": [
+   "v04 Café handschriftlich: Laden, 30,00 €, 31.12.2027 richtig, an der Kasse 'Foto zeigen' ist genau richtig",
+   "v11 Einkaufsliste: klare Meldung 'Kein Gutschein erkannt' mit 'Trotzdem von Hand eintragen'",
+   "v12 Stadtgutschein '24 Monate': Gültig bis wird berechnet und als 'berechnet' gekennzeichnet",
+   "v07 abgelaufen: rote Warnung, aber 'oft noch einlösbar' statt Panik",
+   "Start: 'Noch drauf' und 'Läuft bald ab' sofort verständlich"
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v12 / Models.swift:129",
+    "befund": "Stadtgutschein trägt sichtbar einen Aztec-Code, vorgeschlagen wird aber 'QR-Code' (Ladenstandard). Wer einfach 'Hinzufügen' tippt, zeigt an der Kasse ein anderes Symbol als auf dem Papier. Der Hinweis dazu steht erst weiter unten in 'Was wir geprüft haben' (ScanResultView.swift:285).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v02, v08, v10, v12 / ScanResultView.swift:191",
+    "befund": "'nicht gelesen · Vorschlag Code 128' ist Fachsprache; für mich unklar, ob ich etwas tun muss und ob der Gutschein trotzdem an der Kasse funktioniert.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v03 / ScanResultView.swift:221",
+    "befund": "Code 'IK-9934-2281-4410' bricht mitten in der Gruppe um ('…-44' / '10'). unbreakableGroups ersetzt alle Bindestriche durch geschützte Bindestriche, damit wird der ganze Code ein Wort und SwiftUI bricht zeichenweise – das Gegenteil der Absicht im Kommentar Zeile 204.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v04",
+    "befund": "Fußnote '✦ von Apple Intelligence ergänzt, bitte besonders prüfen' ist sichtbar, aber in den Kacheln Wert/Gültig bis steht kein ✦ – unklar, welches Feld gemeint ist (vermutlich der Ladenname).",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Bei nicht gelesenem Barcode statt 'Vorschlag Code 128' ein einfacher Satz ('Barcode nicht erkannt – an der Kasse zeigen wir …, sieht dein Gutschein anders aus, hier ändern'), und kein falsches Format vorschlagen, wenn das Foto sichtbar einen 2D-Code zeigt (Aztec/PDF417). Codes an Gruppengrenzen umbrechen.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Helga und Werner B., 70 und 72, Rentnerpaar, teilen sich ein iPhone, mittlere Schriftgröße (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Geteiltes Gerät mit 'Codes erst nach Face ID zeigen', einfache Kasse, verständliche Sprache",
+  "scores": {
+   "gesamt": 7,
+   "scan": 6,
+   "barcode_kasse": 8,
+   "login_sperre": 8,
+   "verstaendlichkeit": 6,
+   "vertrauen": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "An der Kasse ist alles groß und deutlich, und der Knopf 'Bezahlt – Einkauf abziehen' ist klar. Beim Einscannen stehen aber Wörter wie 'EAN-13 (aus Nummer)' und ein buntes Symbol ohne Erklärung. Gut finden wir, dass vor Betrügern gewarnt wird.",
+  "lob": [
+   "kasse / barcode-kasse-*: großer Barcode, Ziffern darunter, 'Helligkeit automatisch erhöht' als Bestätigung",
+   "kasse-code-geschuetzt: 'Code geschützt – tippen und entsperren' ist verständlich",
+   "login-ohne-code: erklärt Schritt für Schritt, wo man den iPhone-Code einrichtet",
+   "scan-v09: bei 1.250 € ausführliche Frage 'Hat dich jemand gebeten …?' – genau die Masche, vor der uns der Enkel warnt",
+   "einstellungen-schutz: 'Schutz' ganz oben, Schalter mit Erklärtext"
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v01 / ScanResultView.swift:189",
+    "befund": "Kachel 'Barcode an der Kasse: EAN-13 (aus Nummer)' – Fachbegriff ohne Erklärung; für uns zählt nur 'funktioniert an der Kasse: ja/nein'.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v01…v14 / ScanResultView.swift:112",
+    "befund": "Buntes Apple-Intelligence-Symbol oben rechts ohne Beschriftung; nur VoiceOver bekommt 'Mit Apple Intelligence gelesen'. Sehende Nutzer wissen nicht, was es bedeutet oder ob sie antippen sollen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kasse",
+    "befund": "'Nicht angenommen' und 'Später eintragen' sind reine Textlinks ohne Knopf-Form; bei zittriger Hand an der Kasse schwer zu treffen und nicht als Knopf erkennbar.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz",
+    "befund": "Vier Schutz-Schalter mit ähnlichen Namen ('PIN mit Face ID schützen', 'Codes erst nach Face ID zeigen', 'Code an der Kasse verdecken'); der Sammel-Erklärtext darunter ist klein und dicht. Für ein geteiltes Gerät fehlt ein einfacher Vorschlag 'Für geteiltes iPhone empfohlen'.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "Protokoll / Screenshots",
+    "befund": "Kein Screenshot mit vergrößerter Schrift (Dynamic Type) im Beta-Paket; ob Ergebnis-Kacheln und Kasse bei größerer Schrift lesbar bleiben, ist für uns hier nicht prüfbar (Code nutzt .scaled und isAccessibilitySize, ScanResultView.swift:208).",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Alltagssprache statt Barcode-Namen im Scan-Ergebnis, ein erklärtes (oder beschriftetes) Apple-Intelligence-Symbol, ein Ein-Schalter-Modus 'Geteiltes iPhone' und nachgewiesene Screenshots in größerer Schrift.",
+  "wuerde_nutzen": true,
+  "nps": 7
+ },
+ {
+  "persona": "Leon M., 19, Azubi im Einzelhandel, steht täglich an der Kasse mit Handscanner (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Barcode-Qualität an der Kasse, richtige Symbologie, Prüfziffern",
+  "scores": {
+   "gesamt": 8,
+   "scan": 7,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Codes an der Kasse sind sauber: schwarz auf weiß, Ruhezone, Klartext drunter, 2D-Codes quadratisch groß – das würde unser Scanner schlucken. Dass bei falscher Prüfziffer gar kein Barcode gezeichnet wird, ist richtig mitgedacht. Nervig ist, dass die App beim Kino-Gutschein Code 128 vorschlägt, obwohl man den PDF417 auf dem Foto sieht.",
+  "lob": [
+   "barcode-kasse-1/3/5/9/11: klare Balken, genug Ruhezone, Klartext; laut Nachweis 12/12 von Vision zurückgelesen",
+   "scan-v06: falsche EAN-Prüfziffer wird erkannt, kein Barcode gezeichnet (ScanResultView.swift:146-148)",
+   "scan-v01: EAN-13 aus gültiger Prüfziffer abgeleitet und als 'aus Nummer' gekennzeichnet",
+   "Ehrlich im Simulator: 'nicht gelesen · Vorschlag' statt vorgetäuschter Erkennung",
+   "Tippen für Vollbild + Helligkeit hoch – genau das, was an der Kasse fehlt, wenn Kunden Screenshots zeigen"
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v10 / Models.swift:124, Importer.swift:57",
+    "befund": "CinemaxX-Karte zeigt sichtbar PDF417, resolvedFormat fällt aber auf den Ladenstandard Code 128 zurück; ScanResultView.swift:149 zeichnet dann direkt einen Code 128 als Vorschau. Wer ohne Prüfen übernimmt, zeigt an der Kasse ein anderes Symbol.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v12 / Models.swift:129",
+    "befund": "Aztec auf dem Stadtgutschein, Vorschlag QR-Code. Viele Kassen-Apps lesen beides, aber nicht garantiert; das Format sollte bei 'nicht gelesen' nicht als Barcode vorgezeichnet werden.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "ios/build/beta-shots/barcode-cases.txt",
+    "befund": "barcode-cases.txt listet 12 Fälle, im Ordner liegen aber nur 8 Kassen-Screenshots (fehlen: 2 EAN-8, 4 ITF, 7 Code 128 alphanumerisch, 12 Data Matrix mit Leerzeichen). Für diese vier kann ich die Darstellung nicht selbst ansehen, nur dem Nachweis im Protokoll glauben.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v13",
+    "befund": "OTTO-PDF enthält einen Strichcode, Ergebnis sagt 'Nur Code' (Ladenstandard .text, Models.swift:101). Für Online ok, aber der gedruckte Barcode wird stillschweigend ignoriert, ohne Hinweis.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Bei nicht gelesenem Barcode keine Barcode-Vorschau im Ladenstandard zeichnen oder das Format aus der sichtbaren Form (1D/2D) ableiten; alle 12 Kassen-Screenshots im Beta-Paket.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Thomas R., 45, Pendler, bekommt fast nur Online-Codes per Mail (Zalando, Amazon, OTTO) (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Import aus Mail-Text und PDF-Anhang, Fristen, Code online einlösen",
+  "scores": {
+   "gesamt": 7,
+   "scan": 8,
+   "barcode_kasse": 7,
+   "login_sperre": 8,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Mail-Text rein, und Wert, Code, PIN und das Ablaufdatum (3 Jahre ab Jahresende) stimmen – das rechne ich sonst nie aus. Der OTTO-Anhang als PDF klappt auch. Für den Rabattcode fehlt mir aber der Mindestbestellwert, und wie das Einlösen online aussieht, sehe ich in den Bildern nicht.",
+  "lob": [
+   "scan-v14 Zalando-Mail: 50,00 €, Code 7GHK 2M9P XQ41, PIN verdeckt, Gültig bis 31.12.2029 korrekt berechnet mit 'Wann gekauft oder bekommen?'",
+   "scan-v13 OTTO-PDF: Wert, Code, Datum 28.02.2029 richtig, 'Nur Code'",
+   "scan-v09 Amazon: 10 Jahre ab heute berechnet, Warnung bei hohem Wert",
+   "scan-v05: Rabatt als '15 %' getrennt von Geldwert, auf Start nicht in der Summe",
+   "hinzufuegen: erklärt den Weg für Mail-Anhänge ('lange drücken, Teilen, Restwert')"
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v05 / Packages/RestwertKit/Sources/RestwertKit/Models.swift",
+    "befund": "'ab 50 € Mindestbestellwert' steht auf dem Gutschein, wird aber nirgends übernommen (kein Feld dafür im Modell, grep 'mindest' ohne Treffer). Beim Einlösen online genau die Info, die man braucht.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "Protokoll / Screenshots",
+    "befund": "Kein Kassen-Screenshot für einen Online-Code (Code kopieren, 10 min, Betrugshinweis, CheckoutView.swift:376-383); der für mich wichtigste Ablauf ist im Beta-Paket nicht zu sehen.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v13 / ScanResultView.swift:221",
+    "befund": "Code 'OT-7731-5520-9912' bricht als '…-99' / '12' um – beim Abtippen am Laptop verwirrend.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "hinzufuegen",
+    "befund": "'Aus dem Text einer E-Mail: Text kopieren und hier einfügen' ist ein Umweg (Mail öffnen, markieren, kopieren, App wechseln); ein Teilen-Weg direkt aus Mail für den Text wird nicht angeboten.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Mindestbestellwert und Bedingungen bei Rabattcodes übernehmen, Online-Einlöse-Ansicht im Beta-Paket zeigen, Codes sauber an Gruppengrenzen umbrechen, einfacherer Weg Mail→App ohne Kopieren.",
+  "wuerde_nutzen": true,
+  "nps": 7
+ },
+ {
+  "persona": "Sandra K., 34, alleinerziehend, ein iPad wird von zwei Kindern (7 und 11) mitgenutzt (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Geteiltes Gerät: Codes vor Kindern verstecken, Schutz nicht aus Versehen abschaltbar",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 8,
+   "login_sperre": 8,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Genau das hab ich gesucht: die Kinder sehen den Betrag, aber nicht den Code und nicht das Foto vom Gutschein. Gut, dass man den Schutz nur mit Face ID wieder ausschalten kann. Aber die App redet überall vom iPhone, und wir haben ein iPad.",
+  "lob": [
+   "„Codes erst nach Face ID zeigen“ verdeckt Code, Barcode an der Kasse und das Original-Foto (detail-code-geschuetzt, kasse-code-geschuetzt, papier-foto-geschuetzt)",
+   "Ausschalten der Schutz-Schalter verlangt Face ID/Code (SettingsView.swift:240-254), ein Kind kann ihn nicht einfach umlegen",
+   "Ohne Gerätecode keine stille Freigabe, sondern klare Erklärung (login-ohne-code)",
+   "Kasse: großer Barcode, Helligkeit automatisch hoch, „Bezahlt – Einkauf abziehen“ ist eindeutig"
+  ],
+  "befunde": [
+   {
+    "screen": "ios/project.yml:27",
+    "befund": "TARGETED_DEVICE_FAMILY: 1: die App ist nur für das iPhone gebaut. Auf dem Familien-iPad läuft sie im Kompatibilitätsmodus, und die Texte sprechen von „iPhone-Code“ und „Nur auf diesem iPhone“ (einstellungen-schutz, login-ohne-code).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "login-ohne-code / RestwertApp.swift:590",
+    "befund": "Ohne Gerätecode kann jeder mit einer Rückfrage „Sperre ausschalten und öffnen“. Technisch ehrlich, aber für Eltern fehlt der klare Satz, dass die Kinder dann alles sehen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "detail-code-geschuetzt",
+    "befund": "Die letzten 4 Ziffern der Kartennummer (•••• 1234) bleiben trotz Code-Schutz sichtbar. Für Kinder unkritisch, aber es ist nicht erklärt, warum.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz",
+    "befund": "Vier Schalter mit ähnlichen Namen (PIN-Schutz, App-Sperre, Code-Schutz, Verdecken). Ein Hinweis wie „Für Familien-Geräte: diesen Schalter einschalten“ würde die Wahl erleichtern.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Texte, die auf dem iPad passen (oder eine iPad-Version), und eine klare Empfehlung „Geteiltes Gerät“ in den Einstellungen, die die richtigen Schalter auf einmal setzt.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Helga M., 61, Sehschwäche, nutzt große Schrift (Dynamic Type) und „Kontrast erhöhen“ (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Lesbarkeit, Kontrast, Größe der Warnungen und Knöpfe",
+  "scores": {
+   "gesamt": 7,
+   "scan": 7,
+   "barcode_kasse": 8,
+   "login_sperre": 8,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 6
+  },
+  "erster_eindruck": "Die roten Warnkästen und die großen schwarzen Knöpfe kann ich gut lesen, und die Kartennummer an der Kasse ist schön groß. Aber vieles Wichtige steht in kleiner grauer Schrift, und wenn ich am iPhone „Kontrast erhöhen“ einschalte, ändert sich in der App nichts.",
+  "lob": [
+   "Warnungen stehen ganz oben mit großer Schrift und rotem Rahmen (scan-v06, v07, v09)",
+   "Große, volle Knöpfe „Hinzufügen“/„Erneut scannen“ unten fest",
+   "Kasse: Nummer groß in Vierergruppen, „Tippen für Vollbild“",
+   "Schriften sind überwiegend skalierbar (Font.scaled)"
+  ],
+  "befunde": [
+   {
+    "screen": "Design/Theme.swift:26-52",
+    "befund": "Keine Anpassung an „Kontrast erhöhen“: im Projekt gibt es kein colorSchemeContrast. Grau auf Beige (muted #5C5953 auf #F6F4EF) und die hellen Kachelflächen bleiben gleich.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v06/ScanResultView.swift:105",
+    "befund": "„Gelesen – bitte prüfen“ ist nur 13 pt und grau. Gerade diese Aufforderung zum Prüfen ist klein.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "kasse / kasse-code-geschuetzt",
+    "befund": "„PIN anzeigen“ ist ein hellgrauer Knopf mit grauer Schrift. Er sieht deaktiviert aus.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start (login-entsperrt)",
+    "befund": "Die Beträge im Verfallsradar („15 %“, „50 €“) und die Monatsnamen sind klein, und die Schrift ist gedeckelt (ExpiryRadar.swift:95).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "login-faceid",
+    "befund": "Das Face-ID-Fenster verdeckt den Knopf „Entsperren“. Das ist Systemverhalten, bei Lupen-Nutzung aber verwirrend.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Ein Modus für „Kontrast erhöhen“ mit dunkleren Grautönen und Rändern um Kacheln, größere Hinweise zum Prüfen und ein deutlich aktiv aussehender Knopf „PIN anzeigen“.",
+  "wuerde_nutzen": true,
+  "nps": 7
+ },
+ {
+  "persona": "Werner B., 67, pensionierter Kriminalhauptkommissar, früher Betrugsprävention für Senioren (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Gutscheinbetrug (Enkeltrick, falsche Behörden), Warnungen, Schutz der Codes",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 8,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Der Satz „Hat dich jemand gebeten, diesen Gutschein zu kaufen und den Code durchzugeben?“ ist genau die Frage, die wir in den Vorträgen stellen. Gut gemacht. Die Warnung kommt aber erst ab 500 €, und die meisten Fälle, die ich gesehen habe, liegen darunter und bestehen aus mehreren Karten.",
+  "lob": [
+   "Ausführlicher Betrugshinweis bei hohem Wert, konkret formuliert (scan-v09)",
+   "Falsche Prüfziffer: kein Barcode gezeichnet, der an der Kasse scheitert (ScanResultView.swift:146)",
+   "Die Sperre lässt sich nicht still umgehen, Ausschalten nur mit Face ID/Code (SettingsView.swift:240-254)",
+   "„Code kopieren“ nur 10 Minuten mit Betrugshinweis"
+  ],
+  "befunde": [
+   {
+    "screen": "ScanResultView.swift:315",
+    "befund": "Hoher Wert erst ab > 500 €. Typische Betrugsfälle: mehrere Karten zu 100–250 € am selben Tag. Es gibt keine Warnung für mehrere frische Gutscheine desselben Anbieters in kurzer Zeit.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "ScanResultView.swift:92",
+    "befund": "„Echte Läden … fragen nie nach Gutscheincodes“ ist ungenau: der Onlineshop fragt beim Einlösen sehr wohl danach. Besser: „Niemand darf dich am Telefon oder per Nachricht nach dem Code fragen.“",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v09",
+    "befund": "Nach dem Betrugshinweis fehlt ein nächster Schritt: „Schon passiert? Anbieter sofort anrufen (Karte sperren lassen), Polizei 110 oder Anzeige online“.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v09",
+    "befund": "Bei der Betrugswarnung ist „Hinzufügen“ weiter der schwarze Hauptknopf. Die Rückfrage mit den Warnungen gibt es, aber optisch gibt die App weiter Grün.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Warnung auch bei mehreren Gutscheinen desselben Anbieters an einem Tag, ein „Was tun, wenn ich schon Codes weitergegeben habe?“ mit Sperr-Hotline des Anbieters, und eine präzisere Betrugsformulierung.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Tarek A., 29, Deutsch als Zweitsprache (B1), Lagerlogistiker (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Verständlichkeit der Warnungen und Schutztexte",
+  "scores": {
+   "gesamt": 7,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 7,
+   "verstaendlichkeit": 6,
+   "vertrauen": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Scannen und an der Kasse zeigen ist einfach, die großen Knöpfe verstehe ich sofort. Aber manche Sätze muss ich zweimal lesen, zum Beispiel „Prüfziffer eines Strichcodes“ oder „oft noch einlösbar“. Und in den Einstellungen gibt es vier Schalter, die fast gleich klingen.",
+  "lob": [
+   "„Kein Gutschein erkannt“ ist klar und bietet zwei eindeutige Wege (scan-v11)",
+   "„Laut Gutschein abgelaufen am 31.12.2024.“ ist kurz und klar (scan-v07)",
+   "Kasse: „Bezahlt – Einkauf abziehen“, „Nicht angenommen“ sind gut verständlich",
+   "Kurzer Betrugshinweis „Codes nie am Telefon oder per Nachricht weitergeben.“ ist einfach"
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v06/ScanResultView.swift:283",
+    "befund": "Die Prüfziffer-Warnung ist ein langer Satz mit Fachwort und Klammer. Einfacher: „Eine Zahl ist vielleicht falsch gelesen. Vergleiche die Nummer mit dem Gutschein.“",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "einstellungen-schutz/SettingsView.swift:76",
+    "befund": "Die Fußzeile „PIN-Schutz: … App-Sperre: … Code-Schutz: … „Verdecken“ …“ ist kompakt, aber für B1 schwer: PIN, Code, Kartennummer und iPhone-Code werden nicht klar unterschieden.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v07/ScanResultView.swift:127",
+    "befund": "„oft noch einlösbar“ erklärt nicht, was ich tun soll (im Laden fragen? Gesetz?). Ein Satz „Frag im Laden, oft geht es trotzdem“ fehlt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v06, v07, v09",
+    "befund": "Das bunte Apple-Intelligence-Symbol neben dem Laden ist ohne Text nicht verständlich (der VoiceOver-Name ist gesetzt, ScanResultView.swift:117, sichtbar ist aber nur das Symbol).",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Warnungen in einfacher Sprache (kurze Sätze, keine Fachwörter wie Prüfziffer) und eine klarere Trennung von „PIN“, „Code“ und „iPhone-Code“ in den Einstellungen.",
+  "wuerde_nutzen": true,
+  "nps": 7
+ },
+ {
+  "persona": "Timo Brandt, 31, iOS-Entwickler und erfahrener TestFlight-Beta-Tester (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Codequalität, Tests, Scan-Pipeline (Vision/Fallbacks), Sperrlogik",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Sauberer Diff, gut kommentiert, und `swift test` läuft bei mir mit 116 Tests in 18 Suites grün durch. Der eigene Data-Matrix-Encoder hat mich skeptisch gemacht, aber mein eigener Rücklesetest mit Vision ging 25 von 25 durch, sogar mit UTF-8 per ECI (€, 日本, Emoji). Die Fallback-Kette im Importer ist ehrlich gebaut, nur der Formatvorschlag im Simulator liegt manchmal daneben.",
+  "lob": [
+   "swift test: 116 Tests in 18 Suites grün, darunter Golden-Set (12 Fälle) und Barcode-Rücklesetest mit Vision",
+   "BarcodeEncoder.swift:155-212 Data Matrix ECC 200 mit korrektem 253-Füllalgorithmus, RS über GF(256)/301 und Platzierung nach Anhang F; eigener Test: 25/25 Symbole von 10×10 bis 48×48 gelesen, >174 Datenwörter liefern sauber nil (Textrückfall)",
+   "Importer.swift:130-145 unterscheidet 'Suche fehlgeschlagen' von 'kein Barcode', mit Legacy-Vision- und CoreImage-QR-Fallback, und setzt barcodeUnavailable",
+   "RestwertApp.swift AppLock: Schonfrist mit ContinuousClock statt Wanduhr, keine stille Freigabe mehr bei fehlendem Gerätecode",
+   "ScanDraft.merge lässt die KI nur Lücken füllen, die wörtlich im Text stehen: Halluzinationen werden gut abgefangen"
+  ],
+  "befunde": [
+   {
+    "screen": "Importer.swift:30/35 (draft, aiFilled)",
+    "befund": "draft ist eine berechnete Eigenschaft und parst bei jedem Zugriff neu; aiFilled parst zweimal. In SwiftUI-Bodies mehrfach aufgerufen, das ist unnötige Arbeit (Regex-lastiger Parser).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "BarcodeView.swift:58-62 und :126",
+    "befund": "Scheitert der EAN-/ITF-/Code-39-Encoder (z. B. EAN-13 mit falscher Prüfziffer), zeichnet der default-Zweig still Code 128. Das accessibilityLabel sagt aber weiter 'Barcode EAN-13'.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Importer.swift:192-203",
+    "befund": "Scheitert die Texterkennung, wird das nur geloggt und leerer Text zurückgegeben. Die Nutzerin sieht dann 'Kein Gutschein erkannt' statt 'Lesen fehlgeschlagen'.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v10 / scan-v12 (ScanResultView.swift:191, Models.swift:124/129)",
+    "befund": "Im Simulator schlägt die App für die PDF417-Karte (CinemaxX) 'Code 128' und für die Aztec-Karte (Stadtgutschein) 'QR-Code' vor, weil sie den Standard des Ladens nimmt. Es ist zwar als Vorschlag gekennzeichnet, übernimmt man es aber unbesehen, zeigt die Kasse das falsche Format.",
+    "schwere": "mittel"
+   }
+  ],
+  "was_fehlt_zur_10": "Formatvorschlag im Simulator nicht blind vom Laden übernehmen (bei sichtbarem 2D-Code nachfragen oder 'Foto zeigen' vorschlagen), draft einmal cachen, und den E2E-Kassen-Rücklesetest (barcode-kasse-test.sh) als automatisierten UI-Test statt als Shell-Skript mit sleep 4.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Rainer Köhler, 48, Kassen- und Scanner-Techniker (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Barcode-Darstellung an der Kasse: Symbologien, Ruhezonen, Kontrast, Rücklesbarkeit",
+  "scores": {
+   "gesamt": 8,
+   "scan": 7,
+   "barcode_kasse": 9,
+   "login_sperre": 7,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Ich habe alle 12 Kassen-Screenshots selbst mit Vision nachgelesen: 12 von 12 exakt, und das 1:1-Format passt, auch Code 39 mit Leerzeichen und Data Matrix. Schwarz auf weißer Platte, auch im Dunkelmodus, mit ausreichender Ruhezone, so muss das sein. Was mir fehlt, sind die Exoten, die es in der Praxis gibt: Codabar, Code 93, GS1 DataBar und GS1-128 mit FNC1.",
+  "lob": [
+   "Selbst nachgeprüft: ios/build/barcode-shots/kasse-1…12.png lese ich mit Vision zu 12/12 exakt zurück (UPC-A wie üblich als EAN-13 mit führender 0, ITF als ITF-14)",
+   "BarcodeEncoder.payload trennt Anzeige-Leerzeichen bei Ziffern ab, lässt aber Leerzeichen in 'GUTSCHEIN 42' stehen (Code 39 korrekt gelesen)",
+   "BarcodeView.swift:117 plus whitePlate: 10 Module Ruhezone plus 8 pt weiße Platte, Schwarz auf Weiß auch im Dunkelmodus",
+   "Data-Matrix-Bild ohne Glättung (interpolation .none), 2D-Codes größer als 1D gezeichnet",
+   "Falsche EAN-Prüfziffer (v06) wird rot gewarnt und nicht als EAN übernommen"
+  ],
+  "befunde": [
+   {
+    "screen": "Importer.swift:75 und :92 (default → .code128), Models.swift:6",
+    "befund": "CodeFormat kennt kein Codabar, Code 93 und GS1 DataBar. Solche Scans werden als 'Code 128' gespeichert und an der Kasse als Code 128 neu gezeichnet. Kassen mit fest eingestellten Symbologien lesen das nicht.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "BarcodeView.swift:59-62",
+    "befund": "Code 128 wird aus dem reinen Payload-String neu erzeugt. Bei GS1-128-Coupons geht FNC1 bzw. die AI-Struktur dabei vermutlich verloren (nicht im Simulator geprüft, Hinweis).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "BarcodeEncoder.swift:109",
+    "befund": "ITF mit ungerader Stellenzahl bekommt still eine führende 0 und kodiert damit einen anderen Inhalt als gespeichert. Das Anzeigefeld zeigt aber die Originalnummer.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "BarcodeView.swift:121",
+    "befund": "Balken werden um 0,35 pt verbreitert und nicht am Pixelraster ausgerichtet. Bei EAN-13 mit ~3 pt Modulbreite sind das ~12 % Strichzuwachs. Vision liest es, schwache Laserscanner an älteren Kassen reagieren darauf empfindlicher.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v10 / scan-v12",
+    "befund": "Im Simulator: Für PDF417 wird 'Code 128' vorgeschlagen, für Aztec 'QR-Code'. Das ist genau die Verwechslung, die an der Kasse scheitert.",
+    "schwere": "mittel"
+   }
+  ],
+  "was_fehlt_zur_10": "Codabar, Code 93 und GS1 DataBar/GS1-128 (mit FNC1) als eigene Formate, ITF nicht still auffüllen, Balken am Pixelraster ausrichten, und im Simulator beim Formatvorschlag eine sichtbare 2D-Karte nicht als Code 128 vorschlagen.",
+  "wuerde_nutzen": true,
+  "nps": 7
+ },
+ {
+  "persona": "Svenja Albrecht, 36, QA-Testerin, testet systematisch im Simulator (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Nachweise gegen Protokoll abgleichen, Testfälle v01–v14, Konsistenz von Texten und Zuständen",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Ich bin die 14 Testgutscheine gegen die Screenshots durchgegangen: Wert, Datum, Code, Warnungen und 'Kein Gutschein erkannt' stimmen, auch die berechneten Fristen sind als 'berechnet' gekennzeichnet. Kleine Inkonsistenzen gibt es trotzdem: Im Nachweisordner fehlen vier Kassen-Screenshots, und die Zwischenablage läuft je nach Screen unterschiedlich lange.",
+  "lob": [
+   "v06 MediaMarkt: klare rote Prüfziffer-Warnung. v07 H&M: 'abgelaufen · oft noch einlösbar'. v09 Amazon 1.250 €: ausführlicher Betrugshinweis",
+   "v11 Einkaufsliste: 'Kein Gutschein erkannt' mit 'Trotzdem von Hand eintragen'",
+   "v03/v12/v14: aus Laufzeiten berechnete Daten als 'Gültig bis · berechnet' markiert, dazu 'Wann gekauft oder bekommen?'",
+   "Lesefortschritt mit Schritt ('Apple Intelligence ordnet die Angaben …') und 'Abbrechen'",
+   "Code-Schutz verdeckt Barcode, Kartennummer und Papierfoto konsistent (kasse-code-geschuetzt, detail-code-geschuetzt, papier-foto-geschuetzt); Vision findet im geschützten Kassen-Screenshot keinen Barcode"
+  ],
+  "befunde": [
+   {
+    "screen": "ios/build/beta-shots/barcode-kasse-*.png",
+    "befund": "Im Beta-Ordner liegen nur 8 der 12 laut barcode-cases.txt erwarteten Screenshots (2, 4, 7 und 12 fehlen: EAN-8, ITF, Code 128 alphanumerisch, Data Matrix mit Leerzeichen). Vollständig sind sie in ios/build/barcode-shots/, dort alle 12/12 gelesen. Der Nachweis ist korrekt, aber unvollständig abgelegt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "CheckoutView.swift:419-420 vs. CardDetailView.swift:477-478",
+    "befund": "'Code kopieren' läuft an der Kasse nach 600 s ab, in der Detailansicht nach 120 s. Das Protokoll nennt 10 min. Für Nutzer ist das unerwartetes, uneinheitliches Verhalten.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v03, scan-v10, scan-v13 (Code-Kachel)",
+    "befund": "Lange Codes brechen mitten in der Gruppe um ('IK-9934-2281-44 / 10', 'OT-7731-5520-99 / 12'). Beim Abtippen oder Vorlesen an der Kasse führt das zu Fehlern.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v10 / scan-v12",
+    "befund": "Formatvorschlag im Simulator: PDF417 → 'Code 128', Aztec → 'QR-Code'. Das ist reproduzierbar und nicht nur ein Simulator-Artefakt der Anzeige: gespeichert wird das vorgeschlagene Format.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "login-faceid",
+    "befund": "Der Kommentar (RestwertApp.swift:609-610) sagt, die Karte stehe oben, damit das Face-ID-Fenster nicht verdeckt. Im Screenshot verdeckt das System-Face-ID-Fenster trotzdem den 'Entsperren'-Knopf.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Vollständiger, reproduzierbarer Nachweisordner (alle 12 Kassen-Shots plus das Rücklese-Ergebnis als Datei), einheitliche Ablaufzeit der Zwischenablage, Codes nur an Gruppengrenzen umbrechen, und Formatvorschlag nicht blind vom Laden.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Markus Weidner, 42, IT-Administrator, datenschutzbewusst (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Datenfluss, Speicherung, Zwischenablage, Logs, App-Sperre und Code-Schutz",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 8,
+   "login_sperre": 8,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Im App-Code finde ich keine eigenen Netzwerkaufrufe. Die Daten werden mit completeFileProtection geschrieben, die Zwischenablage ist localOnly mit Ablaufzeit, und die Logs enthalten nur Fehlertexte, keine Codes. Dass die Sperre ohne Gerätecode nicht mehr still aufgeht, sondern erklärt, finde ich richtig. Ein paar Stellen geben trotzdem mehr preis, als ich bei aktivem Schutz erwarten würde.",
+  "lob": [
+   "Store.swift:230 schreibt mit [.atomic, .completeFileProtection]",
+   "CheckoutView.swift:419-420 Zwischenablage mit .localOnly und Ablaufzeit (kein Universal Clipboard)",
+   "Importer.swift:164/183/200 loggt mit privacy .public nur Fehlerbeschreibungen, keine Payloads; FoundationModels läuft auf dem Gerät",
+   "DeviceSecurity: ohne Gerätecode keine stille Freigabe; bei 'Codes erst nach Face ID' zuerst nur Biometrie (RestwertApp.swift:488), der in der Familie bekannte iPhone-Code reicht nicht",
+   "Test-Schalter -simulateNoPasscode und applyDemoScreen/-demoBarcode nur hinter #if DEBUG"
+  ],
+  "befunde": [
+   {
+    "screen": "WidgetBridge.swift:45-52",
+    "befund": "Das Widget bekommt Namen, Beträge und Ablaufdaten auch bei aktiver App-Sperre bzw. aktivem Code-Schutz. Auf dem Home-/Sperrbildschirm sieht man so, wie viel Guthaben wo liegt. Es gibt keine Option, das Widget bei Sperre zu leeren.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "RestwertApp.swift:505",
+    "befund": "Nach dem Entsperren sagt VoiceOver den vollen Code laut an ('Code: …'). In der Öffentlichkeit ohne Kopfhörer ist das ein Leck. Besser: nur 'Code sichtbar' ansagen und den Code auf Wunsch vorlesen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "RestwertApp.swift:590 (login-ohne-code)",
+    "befund": "Ohne Gerätecode kann jeder mit dem Gerät in der Hand die Sperre per 'Sperre ausschalten und öffnen' abschalten. Konsequent, weil iOS ohne Code nichts schützt, aber ohne eigene App-PIN (bekannte Grenze) ist die Sperre dort rein kosmetisch.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "CardDetailView.swift:477-478 vs. CheckoutView.swift:419-420",
+    "befund": "Unterschiedliche Ablaufzeiten der Zwischenablage (120 s vs. 600 s). Für eine Datenschutz-Dokumentation ist ein einheitlicher, kurzer Wert besser.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "CloudSync.swift:284-298",
+    "befund": "PINs landen bei aktivem iCloud-Sync im synchronisierten Schlüsselbund mit kSecAttrAccessibleAfterFirstUnlock. Das ist vertretbar, wird aber in einstellungen-schutz nur als Fließtext unter dem Tab-Balken erklärt.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Widget-Inhalte bei aktiver Sperre bzw. aktivem Code-Schutz ausblenden (oder als Option), Codes nicht ungefragt per VoiceOver vorlesen, eine einheitliche Ablaufzeit der Zwischenablage, und eine kurze, prüfbare Datenfluss-Übersicht (was wohin, was nie) in den Einstellungen.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Mara Lindqvist, 33, UX-Designerin in einer Hamburger Produktagentur, achtet auf Hierarchie und Konsistenz (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Visuelle Hierarchie, Ergebnis-Screen, Konsistenz zwischen Scan, Detail und Kasse",
+  "scores": {
+   "gesamt": 8,
+   "scan": 7,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 7,
+   "vertrauen": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Das Ticket-Motiv ist stark und zieht sich sauber von Einstieg über Start bis zur Kasse durch. Der Kassen-Screen ist das Beste an der App: ein Ding, groß, klar. Auf dem Ergebnis-Screen konkurriert aber zu viel um Aufmerksamkeit, bevor ich überhaupt sehe, was gelesen wurde.",
+  "lob": [
+   "Kasse (kasse.png, barcode-kasse-8.png): Barcode/QR füllt die Breite, Nummer groß in Monospace, eine primäre Aktion unten – vorbildliche Hierarchie",
+   "Abgelaufen-Zustand direkt an der Kachel in Rot mit 'oft noch einlösbar' (scan-v07) statt nur im Warnkasten",
+   "'Kein Gutschein erkannt' (scan-v11) mit klaren nächsten Schritten statt leerem Formular",
+   "Beispieldaten auf Start klar als 'Nur Beispiele – dein erster Gutschein ersetzt sie' markiert"
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v01/v02/v09 Ergebnis",
+    "befund": "Über dem eigentlichen Ergebnis stehen Warnkasten und Betrugshinweis; bei v09 beginnen die Kacheln Wert/Gültig erst am unteren Rand und werden von der festen Knopfleiste angeschnitten. Die wichtigste Information (was wurde gelesen) liegt unter der Falz.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v02, scan-v10 Kachel 'Barcode an der Kasse'",
+    "befund": "Wert 'nicht gelesen · Vorschlag Code 128' bricht auf 3 Zeilen und wird von der Knopfleiste abgeschnitten; die Kachel ist die höchste im Raster und bricht den Rhythmus.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "ios/Restwert/Features/Scan/ScanResultView.swift:112",
+    "befund": "Apple-Intelligence-Symbol erscheint oben rechts auf jedem Ergebnis (v01, v05, v10 …), unabhängig davon, ob Felder ergänzt wurden. Es wird zum dekorativen Rauschen und entwertet den eigentlichen Hinweis ✦.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v04 Café Sonnenschein",
+    "befund": "Unter den Kacheln steht '✦ von Apple Intelligence ergänzt, bitte besonders prüfen', aber keine sichtbare Kachel trägt ein ✦. Ich weiß nicht, welches Feld ich prüfen soll.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "Glossar Scan/Detail/Kasse",
+    "befund": "Derselbe Betrag heißt 'Wert' (Scan), 'Noch drauf' (Detail) und 'Guthaben' (Kasse); dieselbe Nummer heißt 'Code' (Scan) und 'Kartennummer' (Detail). Für mich als Designerin ein Glossar-Bruch.",
+    "schwere": "mittel"
+   }
+  ],
+  "was_fehlt_zur_10": "Ergebnis-Screen umsortieren: Laden + Kacheln zuerst, Betrugshinweis kompakt darunter; 'Barcode an der Kasse'-Kachel kürzer ('Code 128 · Vorschlag'); Apple-Intelligence-Symbol nur, wenn Felder ✦ tragen; ein festes Glossar für Wert/Guthaben und Code/Kartennummer.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Jule Okafor, 30, Community-Managerin für Beta-Programme bei einem Fintech, liest Feedback von Hunderten Testern (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Was Beta-Tester typischerweise melden würden: Verwirrung, Vertrauen, Erklärtexte, Support-Last",
+  "scores": {
+   "gesamt": 8,
+   "scan": 7,
+   "barcode_kasse": 8,
+   "login_sperre": 8,
+   "verstaendlichkeit": 7,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Das ist ehrlicher als die meisten Betas, die ich betreue: die App sagt 'nicht gelesen' statt zu raten, und der Betrugshinweis bei 1.250 € ist genau richtig. Aber ich sehe schon die Tickets kommen: 'Welcher Schalter macht was?' bei den vier Schutz-Optionen.",
+  "lob": [
+   "Betrugshinweis skaliert mit dem Risiko: bei 1.250 € die ausführliche Frage 'Hat dich jemand gebeten …' (scan-v09), sonst einzeilig",
+   "Sperrbildschirm ohne iPhone-Code (login-ohne-code) erklärt Ursache und Weg Schritt für Schritt – das spart Support-Anfragen",
+   "Falsche Prüfziffer (scan-v06) wird in Alltagssprache erklärt ('Ziffer für Ziffer vergleichen')",
+   "'Nicht angenommen' und 'Später eintragen' an der Kasse decken genau die realen Randfälle ab"
+  ],
+  "befunde": [
+   {
+    "screen": "einstellungen-schutz / ios/Restwert/Features/Settings/SettingsView.swift:51-76",
+    "befund": "Vier Schalter, drei davon mit 'Code' im Namen, aber 'Code' bedeutet mal iPhone-Code ('PIN erst nach Face ID oder Code anzeigen'), mal Gutscheincode ('Codes erst nach Face ID zeigen', 'Code an der Kasse verdecken'). Das ist die Top-Verwirrung, die ich in Feedback erwarten würde.",
+    "schwere": "hoch"
+   },
+   {
+    "screen": "ios/Restwert/Features/Settings/SettingsView.swift:68 vs. :76",
+    "befund": "Untertitel sagt 'Kartennummer und Code bleiben verdeckt', die Fußnote sagt 'auch Kartennummer, Barcode und Foto'. Der Schalter heißt 'Codes erst nach Face ID zeigen', die Fußnote nennt ihn 'Code-Schutz'. Zwei Beschreibungen für eine Funktion.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v12 Stadtgutschein (Aztec)",
+    "befund": "Vorschlag 'QR-Code' für einen Gutschein, der sichtbar einen Aztec-Code trägt. Ein Tester, der das übernimmt, zeigt an der Kasse ein anderes Symbol als das Original – das wird als 'App kaputt' gemeldet. (Im Simulator ohne Neural Engine erklärbar, aber der Vorschlag selbst ist falsch.)",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "kasse.png",
+    "befund": "'Digitale Karte wird vom Handy gescannt. Für online brauchst du Kartennummer und PIN.' klingt, als würde das eigene Handy scannen. Missverständlich.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Schutz-Einstellungen mit eindeutigem Glossar (iPhone-Code vs. Gutscheincode, ein Name pro Schalter, Untertitel = Fußnote); Aztec-Vorschlag aus Ladenwissen korrigieren oder 'Art unbekannt' sagen; Kassen-Hinweistext umformulieren ('Die Kasse scannt den Code auf deinem Handy').",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Tobias Brandt, 40, Accessibility-Beta-Tester, stark sehbehindert, nutzt VoiceOver und große Schrift, prüft mit dem Accessibility Inspector im Simulator (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "VoiceOver-Labels, Überschriften-Struktur, Dynamic Type, Tippziele, Ansagen",
+  "scores": {
+   "gesamt": 7,
+   "scan": 7,
+   "barcode_kasse": 8,
+   "login_sperre": 8,
+   "verstaendlichkeit": 7,
+   "vertrauen": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Man sieht, dass hier jemand an VoiceOver gedacht hat: Ergebnis-Ansage, 'Achtung:'-Präfix bei Warnungen, Kacheln mit sinnvollen Labels und eine Ein-Spalten-Ansicht bei großer Schrift. Ein paar Stellen würde ich im Inspector aber sofort markieren.",
+  "lob": [
+   "ScanResultView.swift:204-213: Kacheln werden zu einem Element zusammengefasst, Label 'Wert: 50,00 €' plus 'von Apple Intelligence ergänzt' wird mitgesprochen",
+   "ScanResultView.swift:120: bei Accessibility-Schriftgrößen wird das Raster einspaltig, Codes brechen nur an Gruppengrenzen",
+   "Warnungen mit hoher Ansagepriorität und 'Achtung:'-Präfix (ScanResultView.swift:35, :86-87)",
+   "CheckoutView.swift:187/:196: auch die Textknöpfe 'Nicht angenommen'/'Später eintragen' haben minHeight Layout.tap; gesperrte Codes haben ein Label 'Code geschützt. Tippen zum Entsperren' (CheckoutView.swift:340)"
+  ],
+  "befunde": [
+   {
+    "screen": "ios/Restwert/Features/Scan/ScanResultView.swift:213-214 und :86-87",
+    "befund": ".accessibilityLabel steht vor .accessibilityElement(children: .combine). Je nach SwiftUI-Version kann das kombinierte Element das eigene Label durch die zusammengesetzten Kindtexte ersetzen, dann fehlt z. B. 'von Apple Intelligence ergänzt'. Reihenfolge umdrehen und im Inspector gegenprüfen.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v04 / ScanResultView.swift:139-141",
+    "befund": "Der ✦-Hinweis ist ein eigenes 12-pt-Element in Sekundärfarbe; welches Feld ergänzt wurde, erfährt VoiceOver nur, wenn eine Kachel betroffen ist. Ist der Laden ergänzt, gibt es keinen Hinweis am Laden-Header.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "einstellungen-schutz",
+    "befund": "Die Fußnote unter 'Schutz' ist kleine, hellgraue Schrift auf beigem Grund und trägt die eigentliche Unterscheidung der vier Schalter; für Sehbehinderte schwer lesbar. Unten scheint Text durch die halbtransparente Tab-Leiste – schlecht lesbar hinter den Tabs.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v01…v14 Ergebnis",
+    "befund": "Die feste Knopfleiste ('Hinzufügen'/'Erneut scannen') nimmt rund ein Fünftel der Höhe ein; bei großer Schrift bleibt für das Ergebnis wenig Platz, Kacheln werden unter der Leiste angeschnitten (v02, v09, v10).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "lesen-fortschritt",
+    "befund": "Das Fortschritts-Overlay legt sich über den Inhalt, dahinter bleibt Text sichtbar/verwischt. Ob VoiceOver den Hintergrund während des Lesens ausblendet (accessibilityViewIsModal), ist aus dem Screenshot nicht erkennbar; bitte im Inspector prüfen.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Label-Reihenfolge korrigieren und mit Inspector/VoiceOver dokumentiert durchgehen; ✦-Herkunft auch am Laden-Header; Fußnote in Schutz-Einstellungen in normale Schriftgröße und kontrastreicher; Fortschritts-Overlay als modal kennzeichnen; bei großer Schrift Knopfleiste einspaltig mitscrollen lassen.",
+  "wuerde_nutzen": true,
+  "nps": 7
+ },
+ {
+  "persona": "Sabine Roth, 44, freie Texterin und Lektorin für Produkt- und Banking-Apps (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Mikrotexte, Glossar, Tonalität, Konsistenz der Begriffe",
+  "scores": {
+   "gesamt": 7,
+   "scan": 7,
+   "barcode_kasse": 8,
+   "login_sperre": 8,
+   "verstaendlichkeit": 7,
+   "vertrauen": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Der Ton ist warm, direkt und angenehm unaufgeregt – 'Noch drauf' ist ein wunderbarer Begriff. Aber das Glossar wackelt: Code, PIN, Kartennummer, Wert, Guthaben – ich müsste jedes Mal überlegen, ob dasselbe gemeint ist.",
+  "lob": [
+   "'Kein Gutschein verfällt mehr.' – knapper, nutzenorientierter Einstieg",
+   "'Laut Gutschein abgelaufen … oft noch einlösbar' ist juristisch vorsichtig und trotzdem hilfreich",
+   "Sperrbildschirm ohne Code: Anleitung mit exakten iOS-Menübegriffen ('Face ID & Code')",
+   "'Kein Gutschein erkannt' benennt, was fehlt ('kein Laden, kein Betrag, kein Code')"
+  ],
+  "befunde": [
+   {
+    "screen": "Glossar gesamt (scan-v01, detail, kasse)",
+    "befund": "Betrag: 'Wert' / 'Noch drauf' / 'Guthaben'. Nummer: 'Code' / 'Kartennummer'. Bei Zalando (scan-v05) steht '15 %' unter 'Wert', obwohl es ein Rabatt ist (ScanResultView.swift:124).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "ios/Restwert/Features/Settings/SettingsView.swift:52, :68, :71, :76",
+    "befund": "'Code' heißt in derselben Liste iPhone-Code und Gutscheincode. Vorschlag: konsequent 'iPhone-Code' vs. 'Gutscheincode/Kartennummer'; Schalter 'Codes erst nach Face ID zeigen' und Fußnoten-Name 'Code-Schutz' vereinheitlichen.",
+    "schwere": "hoch"
+   },
+   {
+    "screen": "papier-foto-geschuetzt",
+    "befund": "Über einem geschützten Foto steht 'Code geschützt – tippen und entsperren'. Es ist kein Code, sondern das Foto; außerdem 'tippen und entsperren' statt 'Tippen zum Entsperren' (so lautet sogar das VoiceOver-Label, CheckoutView.swift:340).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v01 vs. scan-v06",
+    "befund": "Zwei Betrugshinweise in unterschiedlicher Formulierung ('Echte Läden fragen nie …' vs. 'Codes nie am Telefon oder per Nachricht weitergeben.'); der Kurzsatz ist ohne Verb-Subjekt etwas schroff.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v02 Kachel",
+    "befund": "'nicht gelesen · Vorschlag Code 128' – klein geschrieben am Satzanfang, Fachbegriff ohne Erklärung; für Laien besser 'Barcode-Art geschätzt: Code 128'.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kasse.png",
+    "befund": "'Digitale Karte wird vom Handy gescannt' ist grammatisch mehrdeutig (wer scannt wen?).",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Ein festes Glossar in der ganzen App (Guthaben/Wert, Kartennummer/Gutscheincode, iPhone-Code), einheitlicher Betrugshinweis in zwei Längen, 'Rabatt' statt 'Wert' bei Prozenten, Schutz-Texte so, dass Schaltername, Untertitel und Fußnote dasselbe sagen.",
+  "wuerde_nutzen": true,
+  "nps": 7
+ },
+ {
+  "persona": "Rüdiger, 52, Schnäppchenjäger mit über 40 Gutscheinen aus Aktionen, Cashback und Geschenken (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Überblick bei vielen Karten, Verfallsradar, schnelles Erfassen, Kasse",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Endlich sehe ich auf einen Blick, was noch drauf ist und was bald verfällt – das Verfallsradar ist genau mein Ding. Die Kasse sieht sauber aus, der Barcode ist groß. Aber bei 40 Karten will ich nicht jeden Gutschein einzeln abfotografieren und bestätigen.",
+  "lob": [
+   "Startseite: Summe 'Noch drauf' plus 'Läuft bald ab' mit Tagen in Rot/Orange",
+   "Verfallsradar mit Zeitachse bis 2029",
+   "'Abgelaufen · oft noch einlösbar' bei H&M (scan-v07) – das weiß kaum jemand",
+   "Rabattcodes getrennt von der Summe ('+ 1 Rabattcode, nicht in der Summe')",
+   "Kasse: 'Bezahlt – Einkauf abziehen' pflegt den Restwert direkt"
+  ],
+  "befunde": [
+   {
+    "screen": "start",
+    "befund": "Die schwebende Tab-Leiste überdeckt die untere Kante des Verfallsradars; hinter der Leiste scheint ein weiteres Element durch (links unten).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "Hinzufügen / Bekannte Grenzen",
+    "befund": "Kein Stapel-Scan: 40 Karten bedeuten 40 einzelne Durchläufe mit Ergebnisseite und Hinzufügen.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v03, scan-v13 / ScanResultView.swift:204",
+    "befund": "Code bricht mitten in einer Gruppe um ('IK-9934-2281-44' / '10', 'OT-7731-5520-99' / '12'), obwohl der Kommentar Umbruch nur an Gruppengrenzen verspricht; beim Abgleich mit der Karte irritierend.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v12 / Models.swift:129",
+    "befund": "Stadtgutschein wird nur 'Stadtgutschein' genannt, die Stadt (Kassel) geht verloren – bei mehreren Stadtgutscheinen nicht unterscheidbar.",
+    "schwere": "mittel"
+   }
+  ],
+  "was_fehlt_zur_10": "Stapel-Import mehrerer Fotos auf einmal, Tab-Leiste darf das Radar nicht überdecken, Stadtname im Titel von Stadtgutscheinen.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Meltem, 41, Besitzerin eines kleinen Cafés, gibt eigene handgeschriebene Papiergutscheine aus und nimmt sie an (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Papiergutscheine ohne Code, Foto an der Kasse, Nutzen für Ladeninhaber",
+  "scores": {
+   "gesamt": 6,
+   "scan": 8,
+   "barcode_kasse": 6,
+   "login_sperre": 7,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Dass die App sogar meine handgeschriebenen Gutscheine liest – Café, 30 Euro, 'Ende 2027' – hat mich überrascht. Für meine Kundschaft ist das nett. Für mich als Café bringt es aber nichts: ausstellen, prüfen oder entwerten kann ich damit nicht.",
+  "lob": [
+   "Handschrift 'Café Sonnenschein, über 30,– Euro, gültig bis Ende 2027' richtig zu 30,00 € und 31.12.2027 (scan-v04)",
+   "Statt leerer Codekacheln 'An der Kasse: Foto zeigen' – ehrlich und passend für Papier",
+   "Foto des Originals bleibt erhalten und lässt sich schützen (papier-foto-geschuetzt)",
+   "Klarer Betrugshinweis, auch für ältere Kundschaft"
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v04 / ScanResultView.swift:112",
+    "befund": "Das Apple-Intelligence-Symbol erscheint auf jedem Ergebnis, auch wenn laut Protokoll der Regel-Parser alles liest; man weiß nicht, welche Felder wirklich von der KI stammen – die Zeile '✦ von Apple Intelligence ergänzt' ist abgeschnitten.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "papier-foto-geschuetzt",
+    "befund": "Bei Papiergutscheinen ist das Foto der einzige Nachweis an der Kasse; mit 'Codes erst nach Face ID zeigen' muss die Kundin erst entsperren, der Knopf 'An der Kasse zeigen' zeigt nicht an, dass danach Face ID kommt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Gesamt",
+    "befund": "Keine Funktion für Aussteller: kein Gutschein erstellen/drucken, keine Entwertung oder Liste ausgegebener Gutscheine – die App ist rein für Endkunden.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "kasse (Papier)",
+    "befund": "Bei Papiergutscheinen kann ich an der Kasse nicht erkennen, ob der Restbetrag in der App stimmt; 'Bezahlt – Einkauf abziehen' ist nur eine Eingabe der Kundin, kein Beleg für mich.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Für mich als Café: einfache Aussteller-Seite (Gutschein mit QR erzeugen, Liste ausgegebener Gutscheine, Entwertung). Als Kundin würde ich eine 8 geben.",
+  "wuerde_nutzen": false,
+  "nps": 6
+ },
+ {
+  "persona": "Lea, 21, Studentin, will alles in Sekunden erledigt haben (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Tempo, wenige Taps, Screenshot/Mail-Import, schnell an die Kasse",
+  "scores": {
+   "gesamt": 7,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Sieht richtig schick aus, und Screenshot rein, Karte fertig – das mag ich. Aber die Ergebnisseite ist mir zu lang: Warnkasten, Betrugshinweis, Foto, Kacheln, 'Was wir geprüft haben' – ich will nur 'Passt' drücken. An der Kasse ist es dafür super schnell.",
+  "lob": [
+   "'Aus Fotos' für Screenshots und Mail-Text-Import (scan-v14) – genau mein Weg",
+   "Zalando-Rabatt aus Screenshot sofort richtig: 15 %, Code, 15.10.2026 (scan-v05)",
+   "Feste Knöpfe 'Hinzufügen'/'Erneut scannen' unten, immer erreichbar",
+   "Kasse: großer Barcode, Helligkeit automatisch, Vollbild per Tipp",
+   "Einstieg mit 'Überspringen'"
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v01 … v14",
+    "befund": "Ergebnisseite ist ohne Scrollen nicht vollständig sichtbar; wichtige Infos wie PIN und 'Was wir geprüft haben' liegen unter der Knopfleiste.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v02, scan-v08, scan-v10 / ScanResultView.swift:191",
+    "befund": "'nicht gelesen · Vorschlag Code 128' belegt drei Zeilen und wird in scan-v02 unten abgeschnitten ('Code 128' kaum lesbar).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "lesen-fortschritt",
+    "befund": "Lese-Overlay ist gut, 'dauert ein paar Sekunden' – ohne Fortschrittsanzeige wirkt es länger.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "hinzufuegen",
+    "befund": "Zwischenablage-Import (laut Protokoll vorhanden) ist auf der Hinzufügen-Seite nicht sichtbar; ich hätte einen 'Einfügen'-Knopf erwartet.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Kompakte Ergebnisansicht (ein Blick, ein Tap), Einfügen aus der Zwischenablage direkt auf 'Hinzufügen', keine abgeschnittenen Kacheln.",
+  "wuerde_nutzen": true,
+  "nps": 7
+ },
+ {
+  "persona": "Tobias, 39, Tech-Journalist, schreibt ein App-Review für ein Online-Magazin (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Gesamtqualität, Ehrlichkeit der Erkennung, Datenschutz, Sicherheitsmodell, Details",
+  "scores": {
+   "gesamt": 8,
+   "scan": 7,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Handwerklich eine der saubersten Gutschein-Apps, die ich gesehen habe: klare Typo, Ticket-Metapher, ehrliche Kennzeichnung, was gelesen und was nur vermutet ist. Das Sicherheitsmodell ist durchdacht. Für ein 'Editor's Choice' fehlen mir aber noch Feinschliff im Layout und ein paar Komfortfunktionen wie Wallet.",
+  "lob": [
+   "Ehrlichkeit: 'nicht gelesen · Vorschlag …' statt geratener Barcode-Art; '· berechnet' bei hergeleiteten Daten",
+   "Prüfziffer-Warnung bei MediaMarkt (scan-v06) mit verständlicher Erklärung",
+   "Nachgewiesene Barcode-Kette: 12/12 Kassen-Barcodes von Vision zurückgelesen, alle 11 Arten (barcode-kasse-*)",
+   "Schutz-Einstellungen feingranular; Sperrbildschirm ohne Gerätecode gibt nicht still frei (login-ohne-code)",
+   "'Kein Gutschein erkannt' bei der Einkaufsliste (scan-v11) statt Müll-Karte",
+   "Lokale Texterkennung und klare Aussage 'Nichts geht an uns'"
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v12 / Models.swift:129",
+    "befund": "Aztec-Stadtgutschein: Vorschlag 'QR-Code', weil der Händler-Standard .qr ist – an der Kasse würde ohne echten Scan der falsche Code-Typ gezeigt. Auf dem iPhone liest Vision Aztec zwar (Protokoll), der Fallback bleibt aber irreführend.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v10",
+    "befund": "PDF417 auf der CinemaxX-Karte, Vorschlag 'Code 128' – gleicher Fallback-Effekt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start, einstellungen-schutz",
+    "befund": "Schwebende Tab-Leiste überlappt Inhalt (Radar-Achse, Fußtext unter iCloud-Sync) ohne ausreichenden Abstand unten.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v01 … v14 / ScanResultView.swift:112",
+    "befund": "Apple-Intelligence-Symbol erscheint bei allen 13 Gutscheinen, auch wo der Regel-Parser nachweislich allein reicht; das schwächt die sonst präzise Kennzeichnung.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v03, scan-v13 / ScanResultView.swift:204",
+    "befund": "Code-Umbruch mitten in der Gruppe trotz 'unbreakableGroups'.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "login-faceid",
+    "befund": "Simulator-Face-ID-Overlay verdeckt den 'Entsperren'-Knopf – System-UI, kein App-Fehler; nur als Hinweis.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Fallback-Barcode-Art aus Kartenbild statt Händler-Standard, sauberer Abstand zur Tab-Leiste, KI-Symbol nur bei echter KI-Ergänzung, Wallet-Pass und Stapel-Scan für den Review-Vergleich mit der Konkurrenz.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ }
+]

@@ -17,6 +17,11 @@ struct CardDetailView: View {
     @AppStorage("warnDays") private var warnDays = 30
 
     @State private var pinVisible = false
+    @State private var confirmUnprotectedPin = false
+    @AppStorage("codeLock") private var codeLockSetting = false
+    /// Nur wirksam mit Gerätecode; sonst stünde der Code hinter einer Abfrage, die nie gelingen kann.
+    private var codeLock: Bool { codeLockSetting && DeviceSecurity.status != .noPasscode }
+    @State private var codeVisible = false
     @State private var confirmDelete = false
     @State private var showLocation = false
     @State private var stampVisible = false
@@ -40,7 +45,12 @@ struct CardDetailView: View {
         .task { await refreshNotifStatus() }
         .onChange(of: scenePhase) { _, phase in
             // PIN schon vor dem Snapshot für den App-Umschalter wieder verbergen.
-            if phase != .active { pinVisible = false } else { Task { await refreshNotifStatus() } }
+            // Ebenso einen per Code-Schutz aufgedeckten Code: danach wieder verdeckt.
+            if phase != .active {
+                pinVisible = false
+                codeVisible = false
+                if codeLock { showPhoto = false }
+            } else { Task { await refreshNotifStatus() } }
         }
     }
 
@@ -105,7 +115,8 @@ struct CardDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Bearbeiten", systemImage: "pencil") { router.editing = card }
+                // Im Formular steht der Code offen: bei Code-Schutz erst entsperren.
+                Button("Bearbeiten", systemImage: "pencil") { unlockCode(card) { router.editing = card } }
             }
         }
         .confirmationDialog("Gutschein endgültig entfernen?", isPresented: $confirmDelete, titleVisibility: .visible) {
@@ -116,6 +127,7 @@ struct CardDetailView: View {
                 router.showUndo("„\(card.name)“ entfernt") { store.undoDelete(card) }
             }
         }
+        .unprotectedPinConfirmation(isPresented: $confirmUnprotectedPin) { withAnimation(.snappy) { pinVisible = true } }
         .sheet(isPresented: $showLocation) {
             LocationSheet(location: card.location, note: card.locationNote) { location, note in
                 store.setLocation(card.id, location, note: note)
@@ -171,7 +183,7 @@ struct CardDetailView: View {
         }
         if hasPin {
             tiles.append(AnyView(Button { Task { await togglePin(card) } } label: {
-                ActionTile(icon: pinVisible ? "lock.open" : "faceid", title: pinVisible ? card.pin : "PIN anzeigen", tint: tint)
+                ActionTile(icon: pinVisible ? "lock.open" : DeviceSecurity.methodName == "Touch ID" ? "touchid" : "faceid", title: pinVisible ? card.pin : "PIN anzeigen", tint: tint)
                     .privacySensitive()
             }
             .buttonStyle(.plain)))
@@ -409,6 +421,13 @@ struct CardDetailView: View {
             if card.photo != nil && photo?.source != card.photo {
                 // Wird gerade dekodiert.
                 ProgressView().frame(maxWidth: .infinity, minHeight: 120)
+            } else if photo?.image != nil, codeLock && !codeVisible {
+                // Auf dem Foto steht der Code: bei Code-Schutz ebenfalls verdeckt.
+                Button { unlockCode(card) } label: {
+                    BarcodeView(number: card.number, format: .text, height: 120, concealed: true)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Geschützt. Tippen und entsperren")
             } else if let image = photo?.image {
                 Button { showPhoto = true } label: {
                     Image(uiImage: image).resizable().scaledToFit()
@@ -433,12 +452,26 @@ struct CardDetailView: View {
     private func barcodeTicket(_ card: GiftCard) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
+                let hidden = codeLock && !codeVisible
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(card.kind == .discountCode ? "Rabattcode" : card.kind == .giftCard ? "Kartennummer" : "Code").font(.scaled(13)).foregroundStyle(Color.muted)
-                    Text(card.number.grouped).font(.scaled(17, weight: .semibold, design: .monospaced))
+                    Text(card.kind == .discountCode ? "Rabattcode" : "Code").font(.scaled(13)).foregroundStyle(Color.muted)
+                    Text(hidden ? card.number.masked : card.number.grouped).font(.scaled(17, weight: .semibold, design: .monospaced))
                         .foregroundStyle(Color.ink).textSelection(.enabled).lineLimit(2).minimumScaleFactor(0.7)
+                        .accessibilityLabel(hidden ? "Code verdeckt" : card.number.grouped)
                 }
                 Spacer(minLength: 8)
+                if hidden {
+                    // „Codes erst nach Face ID zeigen“: erst entsperren, dann kopieren.
+                    Button { unlockCode(card) } label: {
+                        Label("Zeigen", systemImage: "eye").font(.scaled(15, weight: .semibold))
+                            .padding(.horizontal, 12)
+                            .frame(minWidth: Layout.tap, minHeight: Layout.tap)
+                            .background(Color.fill, in: .capsule)
+                            .contentShape(.capsule)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Color.ink)
+                } else {
                 Button {
                     // Nur auf diesem Gerät und nach 2 Minuten wieder weg.
                     UIPasteboard.general.setItems([[UTType.plainText.identifier: card.number]],
@@ -446,19 +479,33 @@ struct CardDetailView: View {
                     copied = true
                     success += 1
                     Task {
-                        try? await Task.sleep(for: .seconds(1.6))
-                        copied = false
+                        try? await Task.sleep(for: .seconds(4))
+                        withAnimation { copied = false }
                     }
                 } label: {
                     Label(copied ? "Kopiert" : "Kopieren", systemImage: copied ? "checkmark" : "doc.on.doc")
                         .font(.scaled(15, weight: .semibold))
                         .contentTransition(.symbolEffect(.replace))
+                        .padding(.horizontal, 12)
+                        .frame(minWidth: Layout.tap, minHeight: Layout.tap)
+                        .background(Color.fill, in: .capsule)
+                        .contentShape(.capsule)
                 }
+                .accessibilityHint("Nur auf diesem iPhone, 2 Minuten lang. Nie am Telefon oder per Nachricht weitergeben.")
                 .buttonStyle(.plain)
                 .foregroundStyle(Color.ink)
+                }
+            }
+            if copied {
+                // Beim Kopieren an den häufigsten Betrug erinnern.
+                Label("Kopiert. Nur im Shop einfügen, nie am Telefon oder per Nachricht weitergeben.", systemImage: "exclamationmark.shield")
+                    .font(.scaled(13)).foregroundStyle(Color.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .transition(.opacity)
             }
             if card.photo != nil {
-                Button("Original-Foto ansehen", systemImage: "photo") { showPhoto = true }
+                Button("Original-Foto ansehen", systemImage: "photo") { unlockCode(card) { showPhoto = true } }
+                    .frame(minHeight: Layout.tap)
                     .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
                     .disabled(photo?.image == nil)
             }
@@ -476,6 +523,17 @@ struct CardDetailView: View {
         }
     }
 
+    /// „Codes erst nach Face ID zeigen“: Code und Foto (auf dem der Code steht) erst nach Face ID oder Code.
+    private func unlockCode(_ card: GiftCard, then action: @escaping () -> Void = {}) {
+        guard codeLock && !codeVisible else { action(); return }
+        Task {
+            if await DeviceSecurity.revealCode(of: card.name, spoken: card.number) {
+                withAnimation(.snappy) { codeVisible = true }
+                action()
+            }
+        }
+    }
+
     private func togglePin(_ card: GiftCard) async {
         if pinVisible {
             withAnimation(.snappy) { pinVisible = false }
@@ -486,13 +544,16 @@ struct CardDetailView: View {
             return
         }
         let context = LAContext()
-        var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            withAnimation(.snappy) { pinVisible = true }
+        guard DeviceSecurity.canAuthenticate else {
+            // Kein iPhone-Code: nicht still zeigen, sondern sagen, dass der Schutz so nicht wirkt.
+            confirmUnprotectedPin = true
             return
         }
-        let ok = (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "PIN von \(card.name) anzeigen")) ?? false
-        if ok { withAnimation(.snappy) { pinVisible = true } }
+        _ = context
+        if await DeviceSecurity.guardSensitive("PIN von \(card.name) anzeigen") {
+            withAnimation(.snappy) { pinVisible = true }
+            AccessibilityNotification.Announcement("PIN: \(card.pin)").post()
+        }
     }
 }
 

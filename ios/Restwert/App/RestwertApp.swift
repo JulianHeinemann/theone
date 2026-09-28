@@ -251,6 +251,41 @@ struct MainTabView: View {
 extension Router {
     /// Nur für Simulator-Screenshots: Start mit `-demoScreen radar` öffnet direkt diesen Bildschirm.
     func applyDemoScreen(store: Store) {
+        // `-demoSavedToast YES`: Hinweis nach dem Speichern mit „Nächsten scannen“ (Screenshot des Stapel-Scans).
+        if UserDefaults.standard.bool(forKey: "demoSavedToast"), let sample = store.cards.first {
+            showCard(sample.id)
+            toast = Toast(message: "„\(sample.name)“ gespeichert", undo: { [weak self] in
+                self?.scanIntent = .camera
+                self?.tab = .scan
+            }, actionTitle: "Nächsten scannen")
+            return
+        }
+        // `-demoImport /pfad/gutschein.jpg` liest die Datei wie „Aus einer Datei“ ein (Scan-Tests im Simulator).
+        if let path = UserDefaults.standard.string(forKey: "demoImport") {
+            openImport(URL(fileURLWithPath: path))
+            return
+        }
+        // `-demoBarcode ean13:4006381333931` legt eine Testkarte in diesem Format an und öffnet die Kasse
+        // (Barcode-Test: Screenshot mit einem echten Barcode-Leser zurücklesen).
+        if let spec = UserDefaults.standard.string(forKey: "demoBarcode"),
+           let colon = spec.firstIndex(of: ":"), let format = CodeFormat(rawValue: String(spec[..<colon])) {
+            // Optional „@laden“ am Ende: z. B. text:AQ7K-2ZPM@amazon für einen Online-Code.
+            var rest = String(spec[spec.index(after: colon)...])
+            var merchantID = Merchant.other.id
+            if let at = rest.lastIndex(of: "@"), Merchant.byID[String(rest[rest.index(after: at)...])] != nil {
+                merchantID = String(rest[rest.index(after: at)...])
+                rest = String(rest[..<at])
+            }
+            let number = rest
+            var card = GiftCard(kind: merchantID == Merchant.other.id ? .giftCard : .valueVoucher, merchantID: merchantID,
+                                customName: merchantID == Merchant.other.id ? "Barcode-Test \(format.label)" : "",
+                                number: number, format: format, value: 25, balance: 25, received: .now,
+                                expires: GiftCard.legalExpiry(from: .now))
+            card.isExample = true
+            store.upsert(card)
+            homePath = [.checkout(card.id)]
+            return
+        }
         guard let screen = UserDefaults.standard.string(forKey: "demoScreen") else { return }
         let sample = store.cards.first { !$0.history.isEmpty } ?? store.cards.first
         switch screen {
@@ -309,6 +344,8 @@ struct Toast: Identifiable {
     let message: String
     let undo: (() -> Void)?
     var isError = false
+    /// Beschriftung der Aktion (Standard „Rückgängig“), z. B. „Nächsten scannen“.
+    var actionTitle = "Rückgängig"
 }
 
 /// Bestätigung mit „Rückgängig“, verschwindet nach 8 Sekunden. Fehler bleiben 15 Sekunden und lassen sich schließen.
@@ -332,7 +369,7 @@ struct ToastView: View {
                     .contentShape(.rect)
             }
             if let undo = toast.undo {
-                Button("Rückgängig") {
+                Button(toast.actionTitle) {
                     undo()
                     onClose()
                 }
@@ -346,12 +383,13 @@ struct ToastView: View {
         .ticketShadow(radius: Shadow.float)
         .task {
             // Vorlesen, und mit VoiceOver ohne Zeitlimit stehen lassen, damit „Rückgängig“ erreichbar bleibt.
-            let spoken = toast.isError ? "Fehler: \(toast.message)" : toast.undo == nil ? toast.message : "\(toast.message). Rückgängig möglich."
+            let spoken = toast.isError ? "Fehler: \(toast.message)" : toast.undo == nil ? toast.message : "\(toast.message). \(toast.actionTitle) möglich."
             var announcement = AttributedString(spoken)
             if toast.isError { announcement.accessibilitySpeechAnnouncementPriority = .high }
             AccessibilityNotification.Announcement(announcement).post()
             guard !UIAccessibility.isVoiceOverRunning else { return }
-            try? await Task.sleep(for: .seconds(toast.isError ? 15 : 8))
+            // Fehler und „Nächsten scannen“ länger stehen lassen (Zeit zum Greifen des nächsten Gutscheins).
+            try? await Task.sleep(for: .seconds(toast.isError || toast.actionTitle != "Rückgängig" ? 15 : 8))
             guard !Task.isCancelled else { return }
             onClose()
         }
@@ -376,12 +414,21 @@ final class AppLock {
     var autoPrompt = true
 
     @ObservationIgnored private var window: UIWindow?
+    /// Wann die App zuletzt in den Hintergrund ging (für die Schonfrist). ContinuousClock zählt auch den
+    /// Ruhezustand des Geräts mit und hängt nicht an der verstellbaren Uhrzeit.
+    @ObservationIgnored private var backgroundAt: ContinuousClock.Instant?
 
     func update(enabled: Bool, phase: ScenePhase) {
         if !enabled { locked = false }
-        if enabled && phase == .background && !locked {
-            locked = true
+        if enabled && phase == .background {
+            if backgroundAt == nil { backgroundAt = .now }
+            // Ohne Schonfrist sofort sperren; auch wenn sie schon gesperrt war: nach der Rückkehr einmal von selbst fragen.
+            if Self.delay == 0 { locked = true }
             autoPrompt = true
+        }
+        if enabled && phase == .active, let since = backgroundAt {
+            backgroundAt = nil
+            if since.duration(to: .now) >= .seconds(Self.delay) { locked = true }
         }
         shielded = enabled && phase != .active
         active = phase == .active
@@ -392,6 +439,9 @@ final class AppLock {
         locked = false
         show(shielded)
     }
+
+    /// Schonfrist in Sekunden („lockDelay“: 0 = sofort, 60, 300).
+    static var delay: TimeInterval { TimeInterval(UserDefaults.standard.integer(forKey: "lockDelay")) }
 
     private func show(_ visible: Bool) {
         guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first else { return }
@@ -427,23 +477,176 @@ private struct LockOverlay: View {
     }
 }
 
-/// Sperrbildschirm, wenn „App mit Face ID sperren“ an ist.
+/// Ob das Gerät überhaupt prüfen kann (Face ID oder iPhone-Code). Ohne Gerätecode kann iOS nichts sperren.
+enum DeviceSecurity {
+    enum Status: Equatable { case ready, noPasscode, unavailable }
+
+    /// Nur „kein Code eingerichtet“ heißt: iOS kann nichts sperren. Andere Fehler sind vorübergehend.
+    static var status: Status {
+        #if DEBUG
+        // Nur für Tests: `-simulateNoPasscode YES` spielt ein iPhone ohne Code durch.
+        if UserDefaults.standard.bool(forKey: "simulateNoPasscode") { return .noPasscode }
+        #endif
+        var error: NSError?
+        if LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) { return .ready }
+        return (error as? LAError)?.code == .passcodeNotSet ? .noPasscode : .unavailable
+    }
+
+    static var canAuthenticate: Bool { status == .ready }
+
+    /// „Codes erst nach Face ID zeigen“ wirkt nur mit Gerätecode (ohne Code zeigen die Einstellungen den Schalter aus und warnen).
+    static var codeLockActive: Bool { UserDefaults.standard.bool(forKey: "codeLock") && status != .noPasscode }
+
+    /// Face ID/Touch ID oder iPhone-Code abfragen. Ohne Prüfmöglichkeit: false (nie still freigeben).
+    @MainActor
+    static func authenticate(reason: String, biometricsFirst: Bool = false) async -> Bool {
+        guard status == .ready else { return false }
+        if biometricsFirst {
+            // Geteilte Geräte: der iPhone-Code ist in der Familie oft bekannt. Daher zuerst nur Face ID/Touch ID;
+            // der Code gilt erst, wenn Biometrie fehlt oder nach Fehlversuchen gesperrt ist.
+            let bio = LAContext()
+            bio.localizedFallbackTitle = ""
+            var error: NSError?
+            if bio.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+                do { return try await bio.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) }
+                catch let e as LAError where e.code == .biometryLockout { /* weiter mit Code */ }
+                catch { return false }
+            }
+        }
+        return (try? await LAContext().evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason)) ?? false
+    }
+
+    /// Code-Schutz entsperren: Biometrie zuerst, danach Ansage für VoiceOver (mit dem Code selbst, falls übergeben).
+    /// Bei Fehlschlag Rückmeldung per Haptik und Ansage statt still nichts zu tun.
+    @MainActor
+    static func revealCode(of name: String, spoken code: String? = nil) async -> Bool {
+        let ok = await authenticate(reason: "Code von \(name) anzeigen", biometricsFirst: true)
+        if ok {
+            // Nicht den ganzen Code laut vorlesen (Umstehende hören mit): nur die letzten Ziffern.
+            AccessibilityNotification.Announcement(code.map { "Code sichtbar, endet auf \(String($0.filter { !$0.isWhitespace }.suffix(4)))" } ?? "Code sichtbar").post()
+        } else {
+            announceFailure()
+        }
+        return ok
+    }
+
+    /// Jede Prüfung, die einen Schutz aufhebt oder Codes/PINs herausgibt. Mit aktivem Code-Schutz Biometrie zuerst,
+    /// damit ein in der Familie bekannter iPhone-Code nicht reicht.
+    @MainActor
+    static func guardSensitive(_ reason: String) async -> Bool {
+        let ok = await authenticate(reason: reason, biometricsFirst: codeLockActive)
+        if !ok { announceFailure() }
+        return ok
+    }
+
+    @MainActor
+    private static func announceFailure() {
+        UINotificationFeedbackGenerator().notificationOccurred(.error)
+        var text = AttributedString("\(methodName) hat nicht geklappt. Nochmal versuchen.")
+        text.accessibilitySpeechAnnouncementPriority = .high
+        AccessibilityNotification.Announcement(text).post()
+    }
+
+    /// „Face ID“, „Touch ID“ oder „Code“ – je nach Gerät, für Beschriftungen.
+    static var methodName: String {
+        let context = LAContext()
+        var error: NSError?
+        _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
+        switch context.biometryType {
+        case .faceID: return "Face ID"
+        case .touchID: return "Touch ID"
+        case .opticID: return "Optic ID"
+        default: return "Code"
+        }
+    }
+}
+
+extension View {
+    /// Rückfrage, bevor eine PIN ohne Schutz gezeigt wird (Gerät ohne iPhone-Code).
+    func unprotectedPinConfirmation(isPresented: Binding<Bool>, onShow: @escaping () -> Void) -> some View {
+        confirmationDialog("PIN ohne Schutz zeigen?", isPresented: isPresented, titleVisibility: .visible) {
+            Button("PIN zeigen", action: onShow)
+        } message: {
+            Text("Auf diesem iPhone ist kein Code eingerichtet, deshalb kann Restwert die PIN nicht schützen. Jeder, der dein iPhone hat, kann sie sehen.")
+        }
+    }
+}
+
+/// Sperrbildschirm, wenn die App-Sperre an ist.
 struct LockScreen: View {
+    @Environment(\.openURL) private var openURL
     @State private var authenticating = false
+    /// Gerät ohne Code: nicht still öffnen, sondern erklären und die Wahl lassen.
+    @State private var noPasscode = false
+    @State private var confirmDisable = false
+    @State private var unavailableHint = false
+    @AppStorage("appLock") private var appLock = false
     private var lock: AppLock { .shared }
 
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "lock.fill").font(.scaled(34)).foregroundStyle(Color.ink)
-            Text("Restwert ist gesperrt").font(.scaled(20, weight: .semibold)).foregroundStyle(Color.ink)
-            Button("Entsperren", systemImage: "faceid") { Task { await unlock() } }
-                .buttonStyle(.primary).padding(.horizontal, 40)
+        // Bei sehr großer Schrift scrollen statt Knöpfe abzuschneiden.
+        ScrollView {
+            VStack(spacing: 16) {
+                Image("AppLogo")
+                    .resizable().interpolation(.high)
+                    .frame(width: 64, height: 64)
+                    .clipShape(.rect(cornerRadius: 15, style: .continuous))
+                    .accessibilityHidden(true)
+                Text("Restwert ist gesperrt").font(.scaled(22, weight: .bold)).foregroundStyle(Color.ink)
+                    .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.isHeader)
+                if noPasscode {
+                    Text("Auf diesem iPhone ist kein Code eingerichtet. Ohne Code kann Restwert nicht sicher sperren. Leg in den iPhone-Einstellungen unter „\(DeviceSecurity.methodName == "Touch ID" ? "Touch ID" : "Face ID") & Code“ einen Code fest.")
+                        .font(.scaled(15)).foregroundStyle(Color.ink2)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("„Einstellungen öffnen“ springt in die Einstellungen-App. Tipp dort oben links auf „Einstellungen“ und dann auf „\(DeviceSecurity.methodName == "Touch ID" ? "Touch ID" : "Face ID") & Code“.")
+                        .font(.scaled(13)).foregroundStyle(Color.muted)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button("Einstellungen öffnen", systemImage: "gear") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
+                    }
+                    .buttonStyle(.primary)
+                    Button("Sperre ausschalten und öffnen") { confirmDisable = true }
+                        .buttonStyle(.quiet)
+                } else {
+                    // Knopf direkt unter dem Titel: das Face-ID-Fenster des Systems liegt in der Mitte darüber.
+                    Button("Entsperren", systemImage: DeviceSecurity.methodName == "Touch ID" ? "touchid" : "faceid") { Task { await unlock() } }
+                        .buttonStyle(.primary)
+                    Text("Entsperre mit \(DeviceSecurity.methodName == "Code" ? "deinem iPhone\u{2011}Code" : "\(DeviceSecurity.methodName) oder deinem iPhone\u{2011}Code").")
+                        .font(.scaled(15)).foregroundStyle(Color.ink2)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if unavailableHint {
+                        Text("\(DeviceSecurity.methodName) ist gerade nicht verfügbar. Warte kurz oder entsperre dein iPhone einmal mit dem Code, dann nochmal versuchen.")
+                            .font(.scaled(14)).foregroundStyle(Color.warn)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .padding(.horizontal, 40).padding(.vertical, 24)
+            .frame(maxWidth: .infinity)
+            // Oben statt mittig: das Face-ID-Fenster des Systems erscheint in der Bildschirmmitte.
+            .padding(.top, 24)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .scrollBounceBehavior(.basedOnSize)
         .background(Color.page.ignoresSafeArea())
+        .confirmationDialog("App-Sperre ausschalten?", isPresented: $confirmDisable, titleVisibility: .visible) {
+            Button("Ausschalten und öffnen", role: .destructive) {
+                appLock = false
+                lock.unlock()
+            }
+        } message: {
+            Text("Restwert öffnet sich dann ohne Prüfung. Jeder mit deinem iPhone sieht Guthaben, Codes und PINs, bis du die Sperre in den Einstellungen wieder einschaltest.")
+        }
         // Face ID erst starten, wenn die App wirklich im Vordergrund ist; im Hintergrund schlägt die Abfrage fehl.
+        // Nach der Rückkehr (z. B. aus den iPhone-Einstellungen) neu prüfen.
         .task(id: lock.active) {
-            guard lock.active, lock.autoPrompt else { return }
+            guard lock.active else { return }
+            if noPasscode { noPasscode = DeviceSecurity.status == .noPasscode }
+            guard lock.autoPrompt else { return }
             lock.autoPrompt = false
             await unlock()
         }
@@ -453,10 +656,20 @@ struct LockScreen: View {
         guard !authenticating else { return }
         authenticating = true
         defer { authenticating = false }
-        let context = LAContext()
-        var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { lock.unlock(); return }
-        if (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Restwert entsperren")) == true {
+        // Früher öffnete die App hier ohne Prüfung. Jetzt bleibt sie zu, bis ein Code eingerichtet ist
+        // oder die Sperre bewusst ausgeschaltet wird. Andere Fehler (z. B. gerade gesperrt) lassen nur „Entsperren“ stehen.
+        switch DeviceSecurity.status {
+        case .noPasscode:
+            withAnimation(.snappy) { noPasscode = true }
+            return
+        case .unavailable:
+            // Z. B. Face ID nach Fehlversuchen gesperrt: sagen statt still nichts tun.
+            withAnimation(.snappy) { unavailableHint = true }
+            return
+        case .ready:
+            noPasscode = false
+        }
+        if (try? await LAContext().evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Restwert entsperren")) == true {
             lock.unlock()
         }
     }

@@ -104,34 +104,34 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         Merchant("spotify", "Spotify", .codeOnly, .text, "https://www.spotify.com/de/account/overview/", check: .account, "PIN auf spotify.com/redeem eingeben."),
         Merchant("netflix", "Netflix", .codeOnly, .text, "https://www.netflix.com/redeem", check: .account, "Unter netflix.com/redeem einlösen."),
         Merchant("db", "Deutsche Bahn", .codeOnly, .text, "https://www.bahn.de/faq/pk/service/gutschein/geschenkkarte", check: .info, "Nur auf bahn.de oder im DB Navigator, nicht im Reisezentrum."),
-        Merchant("lieferando", "Lieferando", .codeOnly, .text, "https://www.lieferando.de/geschenkkarten/saldocheck", check: .form, "Nummer und PIN online eingeben."),
+        Merchant("lieferando", "Lieferando", .codeOnly, .text, "https://www.lieferando.de/geschenkkarten/saldocheck", check: .form, "Code und PIN online eingeben."),
         Merchant("wunschgutschein", "Wunschgutschein", .codeOnly, .text, "https://app.wunschgutschein.de/", check: .form, "Online in einen Partner-Gutschein umtauschen."),
-        Merchant("eventim", "Eventim", .codeOnly, .text, "https://www.eventim.de/helpcenter/?faq=2288", check: .info, "Online mit 16-stelliger Nummer."),
+        Merchant("eventim", "Eventim", .codeOnly, .text, "https://www.eventim.de/helpcenter/?faq=2288", check: .info, "Online mit dem 16-stelligen Code."),
         Merchant("ticketmaster", "Ticketmaster", .codeOnly, .text, "https://sites.prepaytec.com/chopinweb/balanceCheck.do?customerCode=2013119751813114&loc=de&showCvc=1&showExpiryDate=1&brandingCode=bal_enq_tmgermany", check: .form, "Nummer plus 3-stelliger Sicherheitscode."),
-        Merchant("ikea", "IKEA", .official, .code128, "https://www.ikea.com/de/de/gift-cards/", check: .account, "Digitale Karte wird vom Handy gescannt. Guthaben online nur mit Login."),
-        Merchant("thalia", "Thalia", .official, .code128, "https://www.thalia.de/geschenkkarte/", check: .form, "Digitale Karte wird vom Handy gescannt. Für online brauchst du Kartennummer und PIN."),
+        Merchant("ikea", "IKEA", .official, .code128, "https://www.ikea.com/de/de/gift-cards/", check: .account, "Die Kasse scannt die Karte vom Handy. Guthaben online nur mit Login."),
+        Merchant("thalia", "Thalia", .official, .code128, "https://www.thalia.de/geschenkkarte/", check: .form, "Die Kasse scannt die Karte vom Handy. Für online brauchst du Code und PIN."),
         Merchant("zara", "Zara", .official, .code128, "https://www.zara.com/de/de/z-zara-card/balance", check: .form, "E-Karte gilt in Filialen."),
         Merchant("tkmaxx", "TK Maxx", .official, .code128, "https://wbiprod.storedvalue.com/wbir/clients/tkmaxx-de", check: .form, "Digitalen Gutschein an der Kasse vorzeigen."),
         Merchant("decathlon", "Decathlon", .official, .code128, "https://www.decathlon.de/services/giftcard/balance", check: .form, "Offiziell auch digital auf dem Smartphone."),
-        Merchant("douglas", "Douglas", .official, .code128, "https://www.douglas.de/de/cp/helpv2wherecanicheckthebalanceofmygiftcard/help-where-can-i-check-the-balance-of-my-gift-card", check: .info, "eGift digital oder ausgedruckt. Online mit Kartennummer und PIN."),
+        Merchant("douglas", "Douglas", .official, .code128, "https://www.douglas.de/de/cp/helpv2wherecanicheckthebalanceofmygiftcard/help-where-can-i-check-the-balance-of-my-gift-card", check: .info, "eGift digital oder ausgedruckt. Online mit Code und PIN."),
         Merchant("hm", "H&M", .official, .code128, "https://www2.hm.com/de_de/customer-service/geschenkkarten.html", check: .info, "E-Geschenkkarte am Handy zeigen."),
         Merchant("rossmann", "Rossmann", .official, .code128, "https://www.rossmann.de/de/service-und-hilfe/geschenkgutscheine", check: .info, "Digitaler Gutschein am Handy möglich. Guthaben nur an der Kasse."),
-        Merchant("lidl", "Lidl", .official, .code128, "https://www.lidl.de/c/lidl-geschenkkarten/s10007775", check: .form, "PDF-Geschenkkarte am Handy zeigen. Guthaben mit Nummer und PIN."),
+        Merchant("lidl", "Lidl", .official, .code128, "https://www.lidl.de/c/lidl-geschenkkarten/s10007775", check: .form, "PDF-Geschenkkarte am Handy zeigen. Guthaben mit Code und PIN."),
         Merchant("kaufland", "Kaufland", .official, .code128, "https://giftcard.kaufland.com/de_de/faq", check: .info, "Digitale Karte, Barcode am Handy. Nicht im Onlineshop."),
         Merchant("aldi", "Aldi", .official, .code128, "https://www.helaba.com/de/aldi/", check: .form, "Digitale Karte mit Barcode am Handy. Guthaben online oder an jeder Aldi-Kasse."),
         Merchant("mueller", "Müller", .official, .code128, "https://www.mueller.de/service/geschenkgutscheine/", check: .form, "Digitale Karte digital oder ausgedruckt."),
         Merchant("tchibo", "Tchibo", .official, .code128, "https://www.tchibo.de/c/geschenkkarte", check: .info, "Kartennummer vorzeigen reicht laut FAQ. Guthaben im Warenkorb oder in der Filiale."),
         Merchant("cinemaxx", "CinemaxX", .official, .code128, "https://www.cinemaxx.de/kontakt/faq", check: .info, "PDF am Handy an Kino- und Gastro-Kasse."),
-        Merchant("nike", "Nike", .official, .code128, "https://www.nike.com/de/orders/gift-card-lookup", check: .form, "An der Kasse Nummer und PIN nennen."),
+        Merchant("nike", "Nike", .official, .code128, "https://www.nike.com/de/orders/gift-card-lookup", check: .form, "An der Kasse Code und PIN nennen."),
         Merchant("mediamarkt", "MediaMarkt", .official, .code128, "https://www.mediamarkt.de/de/service/giftCard", check: .form, "Barcode vom Handy wird gescannt. Die Kasse fragt eventuell nach der PIN."),
         Merchant("saturn", "Saturn", .official, .code128, "https://www.saturn.de/de/service/giftCard", check: .form, "Wie MediaMarkt. Karte gilt nur bei Saturn."),
         Merchant("rewe", "REWE", .official, .code128, "https://kartenwelt.rewe.de/rewe-geschenkkarte.html#form-guthaben", check: .form, "Nur den Strich-Barcode zeigen. Einen QR-Code hat REWE laut Nutzerbericht abgelehnt."),
         Merchant("stadtgutschein", "Stadtgutschein", .official, .qr, nil, "Die Kasse scannt den QR-Code mit der Kassen-App. Systeme je Stadt verschieden."),
-        Merchant("dm", "dm", .merchantApp, .code128, "https://www.dm.de/services/services-im-markt/geschenkkarten-3480686#abfrage-guthaben", check: .form, "Karte mit Nummer und PIN in die „Mein dm“-App laden und dort bezahlen."),
+        Merchant("dm", "dm", .merchantApp, .code128, "https://www.dm.de/services/services-im-markt/geschenkkarten-3480686#abfrage-guthaben", check: .form, "Karte mit Code und PIN in die „Mein dm“-App laden und dort bezahlen."),
         Merchant("breuninger", "Breuninger", .merchantApp, .code128, "https://hilfe.breuninger.com/hc/de/articles/360016955480-Wo-kann-ich-das-Guthaben-meiner-Geschenkkarte-einsehen", check: .info, "Karte in der Breuninger-App speichern (scannen + PIN) und an der Kasse zeigen."),
         Merchant("ca", "C&A", .untested, .code128, "https://www.c-and-a.com/de/de/shop/geschenkkarten-gutscheine", check: .info, "Nur in Filialen. Guthaben nur an der Kasse oder per Hotline."),
         Merchant("primark", "Primark", .untested, .code128, "https://www.primark.com/de-de/geschenkkarten-guthaben", check: .form, "Quellen widersprüchlich, ob der Barcode vom Handy reicht."),
-        Merchant("deichmann", "Deichmann", .untested, .code128, "https://www.deichmann.com/de-de/faq-coupons", check: .info, "Online mit Nummer und PIN. Guthaben nur Filiale oder Hotline 0800 5020500."),
+        Merchant("deichmann", "Deichmann", .untested, .code128, "https://www.deichmann.com/de-de/faq-coupons", check: .info, "Online mit Code und PIN. Guthaben nur Filiale oder Hotline 0800 5020500."),
         Merchant("edeka", "EDEKA", .untested, .code128, "https://evci.pin-host.com/evci/#/guthabenabfrage", check: .form, "Keine offizielle digitale Karte gefunden."),
         Merchant("netto", "Netto", .untested, .code128, "https://www.netto-online.de/ueber-netto/Bezahlmoeglichkeiten.chtm#Geschenkkarten", check: .info, "Offiziell nur an der Kasse."),
         Merchant("penny", "Penny", .untested, .code128, "https://kartenwelt.penny.de/faq", check: .info, "Barcode nur über Drittanbieter-Apps belegt."),
@@ -485,16 +485,23 @@ extension String {
         return String(prefix(2)).uppercased()
     }
 
-    /// Ziffern in Vierergruppen, andere Codes unverändert.
+    /// Ziffern in Vierergruppen, andere Codes unverändert. Eine einzelne Restziffer hängt an der letzten Gruppe
+    /// („4006 3813 33931“ statt „4006 3813 3393 1“), damit sie beim Umbruch nie allein steht.
     public var grouped: String {
         let s = replacingOccurrences(of: " ", with: "")
         guard !s.isEmpty, s.allSatisfy(\.isNumber) else { return self }
-        var out = ""
-        for (i, ch) in s.enumerated() {
-            if i > 0 && i % 4 == 0 { out.append(" ") }
-            out.append(ch)
+        var groups: [String] = []
+        var i = s.startIndex
+        while i < s.endIndex {
+            let j = s.index(i, offsetBy: 4, limitedBy: s.endIndex) ?? s.endIndex
+            groups.append(String(s[i..<j]))
+            i = j
         }
-        return out
+        if groups.count > 1, groups.last?.count == 1 {
+            let last = groups.removeLast()
+            groups[groups.count - 1] += last
+        }
+        return groups.joined(separator: " ")
     }
 
     public var masked: String {

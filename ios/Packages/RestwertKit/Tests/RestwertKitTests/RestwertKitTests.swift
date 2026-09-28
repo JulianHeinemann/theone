@@ -123,9 +123,10 @@ struct BarcodeTests {
         #expect(BarcodeEncoder.ean8("96385074")?.count == 67)
     }
 
-    @Test("ITF füllt ungerade Länge mit führender 0")
+    @Test("ITF nur mit gerader Ziffernzahl, nie still mit 0 aufgefüllt (der Scanner läse sonst einen anderen Code)")
     func itf() {
-        #expect(BarcodeEncoder.itf("123") == BarcodeEncoder.itf("0123"))
+        #expect(BarcodeEncoder.itf("123") == nil)
+        #expect(BarcodeEncoder.itf("0123") != nil)
         #expect(BarcodeEncoder.itf("12AB") == nil)
     }
 

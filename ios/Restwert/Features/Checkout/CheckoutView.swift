@@ -17,6 +17,7 @@ struct CheckoutView: View {
     @State private var storeName = ""
     @State private var note = ""
     @State private var showPin = false
+    @State private var confirmUnprotectedPin = false
     @State private var oldBrightness: CGFloat?
     @State private var showFull = false
     @State private var showPhotoFull = false
@@ -31,6 +32,17 @@ struct CheckoutView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var numberShown = false
     @AppStorage("maskNumber") private var maskNumber = false
+    @Environment(\.dynamicTypeSize) private var checkoutTypeSize
+    /// „Codes erst nach Face ID zeigen“: verdeckt wie „Code verdecken“, Aufdecken nur nach Face ID oder Code.
+    @AppStorage("codeLock") private var codeLockSetting = false
+    /// Nur wirksam mit Gerätecode; sonst stünde der Code hinter einer Abfrage, die nie gelingen kann.
+    private var codeLock: Bool { codeLockSetting && DeviceSecurity.status != .noPasscode }
+    private var codeHidden: Bool { (maskNumber || codeLock) && !numberShown }
+
+    private func revealCode(_ card: GiftCard) {
+        guard codeLock else { numberShown = true; return }
+        Task { if await DeviceSecurity.revealCode(of: card.name, spoken: card.number) { numberShown = true } }
+    }
     @AppStorage("pinLock") private var pinLock = true
 
     /// Nur-online-Gutschein mit Code: kein Kassenablauf, sondern kopieren und im Shop einlösen.
@@ -76,9 +88,10 @@ struct CheckoutView: View {
         .toolbar(.hidden, for: .tabBar)
         .sensoryFeedback(.impact(weight: .medium), trigger: tearHaptic)
         .sensoryFeedback(.success, trigger: copied)
+        .unprotectedPinConfirmation(isPresented: $confirmUnprotectedPin) { withAnimation(.snappy) { showPin = true } }
         .navigationTitle(online ? "Online einlösen" : "An der Kasse")
         .fullScreenCover(isPresented: $showFull) {
-            if let card = store.card(cardID) { FullBarcode(card: card, masked: maskNumber && !numberShown) }
+            if let card = store.card(cardID) { FullBarcode(card: card, masked: codeHidden) }
         }
         .fullScreenCover(isPresented: $showPhotoFull) {
             if let photoImage { PhotoViewer(image: photoImage) }
@@ -108,6 +121,14 @@ struct CheckoutView: View {
         }
         // Beim Wechsel in eine andere App Helligkeit und Displaysperre sofort zurückgeben.
         .onChange(of: scenePhase) { _, phase in
+            // Mit Code-Schutz beim Verlassen wieder verdecken.
+            if phase != .active && codeLock {
+                numberShown = false
+                showPin = false
+                // Vollbild von Barcode und Foto schließen, sonst läge der Code nach der Rückkehr offen.
+                showFull = false
+                showPhotoFull = false
+            }
             guard !online else { return }
             if phase == .active {
                 UIApplication.shared.isIdleTimerDisabled = true
@@ -119,8 +140,19 @@ struct CheckoutView: View {
     }
 
     @ViewBuilder
+    private func pinButton(_ card: GiftCard) -> some View {
+        Button { Task { await togglePin(card) } } label: {
+            Label(showPin ? "PIN \(card.pin)" : "PIN anzeigen", systemImage: showPin ? "lock.open" : pinLock ? (DeviceSecurity.methodName == "Touch ID" ? "touchid" : "faceid") : "eye")
+                .font(.scaled(15, weight: .semibold))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.large).tint(Color.ink)
+        .frame(minHeight: Layout.tap)
+    }
+
     private func actions(_ card: GiftCard) -> some View {
         VStack(spacing: 4) {
+            if result == nil && !card.pin.isEmpty && checkoutTypeSize.isAccessibilitySize { pinButton(card) }
             if let result {
                 Button(!result ? "Notieren" : "Als eingelöst markieren") { save(card, result) }
                     .buttonStyle(.primary)
@@ -146,7 +178,7 @@ struct CheckoutView: View {
                 // Nebeneinander, bei großer Schrift untereinander – nie abgeschnitten.
                 ViewThatFits(in: .horizontal) {
                     HStack { notAccepted(card); Spacer(); later(card) }
-                    VStack(spacing: 0) { notAccepted(card); later(card) }
+                    VStack(spacing: 8) { notAccepted(card); later(card) }
                 }
                 .padding(.horizontal, 4)
                 .disabled(busy)
@@ -164,6 +196,7 @@ struct CheckoutView: View {
     private func notAccepted(_ card: GiftCard) -> some View {
         Button(isOnline(card) ? "Hat nicht geklappt" : "Nicht angenommen") { withAnimation(.snappy) { result = false } }
             .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
+            .buttonStyle(.bordered).buttonBorderShape(.capsule).tint(Color.ink)
             .frame(minHeight: Layout.tap)
     }
 
@@ -173,6 +206,7 @@ struct CheckoutView: View {
             dismiss()
         }
         .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+        .buttonStyle(.bordered).buttonBorderShape(.capsule).tint(Color.ink2)
         .frame(minHeight: Layout.tap)
     }
 
@@ -227,41 +261,44 @@ struct CheckoutView: View {
                 } else if card.number.isEmpty, card.photo != nil {
                     paper(card)
                 } else {
-                    let textOnly = card.format == .text || card.format == .dataMatrix
-                    let hidden = maskNumber && !numberShown
+                    let textOnly = card.format == .text
+                    let hidden = codeHidden
                     // Textcode verdeckt: erster Tipp deckt auf, erst der zweite öffnet das Vollbild.
-                    Button { if textOnly && hidden { numberShown = true } else { showFull = true } } label: {
-                        BarcodeView(number: card.number, format: card.format, height: 150, masked: hidden)
+                    // Mit Code-Schutz auch den Barcode erst nach Face ID groß zeigen.
+                    Button { if hidden && (textOnly || codeLock) { revealCode(card) } else { showFull = true } } label: {
+                        BarcodeView(number: card.number, format: card.format, height: 150, masked: hidden, concealed: hidden && codeLock)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(textOnly && hidden ? "Code aufdecken" : "Barcode groß anzeigen")
-                    if !textOnly {
+                    .accessibilityLabel(hidden && (textOnly || codeLock) ? "Geschützt. Tippen und entsperren" : "Barcode groß anzeigen")
+                    if !textOnly && !(codeLock && hidden) {
                         Text(hidden ? card.number.masked : card.number.grouped)
                             // Dieselbe Mono-Schrift wie im Detail; bleibt einzeilig statt „1234“ allein umzubrechen.
                             .font(.scaled(20, weight: .bold, design: .monospaced))
                             .lineLimit(1).minimumScaleFactor(0.5)
-                            .onTapGesture { numberShown = true }
+                            .onTapGesture { revealCode(card) }
                     }
-                    Text("Tippen für Vollbild").font(.scaled(12)).foregroundStyle(Color.muted)
+                    // Geschützt: nur ein Weg (auf den Code tippen), kein „Vollbild“-Versprechen vor dem Entsperren.
+                    if !(codeLock && hidden) { Text("Tippen für Vollbild").font(.scaled(12)).foregroundStyle(Color.muted) }
                     if card.photo != nil {
-                        Button("Original-Foto zeigen", systemImage: "photo") { showPhotoFull = true }
+                        Button("Original-Foto zeigen", systemImage: "photo") {
+                            // Auf dem Foto steht der Code: bei Code-Schutz erst entsperren.
+                            if codeLock && !numberShown {
+                                Task { if await DeviceSecurity.revealCode(of: card.name, spoken: card.number) { numberShown = true; showPhotoFull = true } }
+                            } else { showPhotoFull = true }
+                        }
                             .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
                             .frame(minHeight: Layout.tap)
                             .disabled(photoImage == nil)
                     }
-                    Label("Helligkeit automatisch erhöht", systemImage: "checkmark.circle")
-                        .font(.scaled(13)).foregroundStyle(Color.ink2)
-                }
-                // PIN direkt unter dem Code, vor dem Tipp: bei großer Schrift sonst unter der Leiste.
-                if !card.pin.isEmpty {
-                    Button { Task { await togglePin(card) } } label: {
-                        Label(showPin ? "PIN \(card.pin)" : "PIN anzeigen", systemImage: showPin ? "lock.open" : pinLock ? "faceid" : "eye")
-                            .font(.scaled(15, weight: .semibold))
-                            .fixedSize(horizontal: false, vertical: true)
+                    // Vor dem Entsperren nichts versprechen, was noch nicht zu sehen ist.
+                    if !(codeLock && hidden) {
+                        Label("Helligkeit automatisch erhöht", systemImage: "checkmark.circle")
+                            .font(.scaled(13)).foregroundStyle(Color.ink2)
                     }
-                    .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.large).tint(Color.ink)
-                    .frame(minHeight: Layout.tap)
                 }
+                // PIN direkt unter dem Code. Bei sehr großer Schrift steht sie stattdessen in der Leiste unten,
+                // sonst läge sie unter der Leiste.
+                if !card.pin.isEmpty && !checkoutTypeSize.isAccessibilitySize { pinButton(card) }
                 if card.merchantID != Merchant.other.id {
                     Text(card.merchant.tip)
                         .font(.scaled(13)).foregroundStyle(Color.muted)
@@ -290,9 +327,13 @@ struct CheckoutView: View {
             }
             .accessibilityElement(children: .combine)
         }
-        Button { showPhotoFull = true } label: {
+        let concealed = codeLock && !numberShown
+        Button { if concealed { revealCode(card) } else { showPhotoFull = true } } label: {
             Group {
-                if let photoImage {
+                if concealed {
+                    // Auf dem Foto steht der Code: bei Code-Schutz verdeckt.
+                    BarcodeView(number: card.number, format: .text, height: 150, concealed: true)
+                } else if let photoImage {
                     Image(uiImage: photoImage).resizable().scaledToFit()
                 } else {
                     Color.fill.aspectRatio(1.6, contentMode: .fit).overlay(ProgressView())
@@ -303,8 +344,8 @@ struct CheckoutView: View {
         }
         .buttonStyle(.plain)
         .disabled(photoImage == nil)
-        .accessibilityLabel("Foto des Gutscheins groß anzeigen")
-        Text("Tippen zum Vergrößern").font(.scaled(12)).foregroundStyle(Color.muted)
+        .accessibilityLabel(concealed ? "Geschützt. Tippen und entsperren" : "Foto des Gutscheins groß anzeigen")
+        if !concealed { Text("Tippen zum Vergrößern").font(.scaled(12)).foregroundStyle(Color.muted) }
         Label("Manche Läden wollen das Original sehen – nimm es sicherheitshalber mit.", systemImage: "doc.text")
             .font(.scaled(13)).foregroundStyle(Color.ink2)
             .multilineTextAlignment(.center)
@@ -313,13 +354,13 @@ struct CheckoutView: View {
     /// Online-Code: groß zeigen, kopieren, im Shop einlösen.
     @ViewBuilder
     private func onlineCode(_ card: GiftCard) -> some View {
-        let hidden = maskNumber && !numberShown
+        let hidden = codeHidden
         Text("Code").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
         Group {
             if hidden {
-                Button { numberShown = true } label: { Text(card.number.masked) }
+                Button { revealCode(card) } label: { Text(card.number.masked) }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Code aufdecken")
+                    .accessibilityLabel("Geschützt. Tippen und entsperren")
             } else {
                 Text(card.number).textSelection(.enabled)
             }
@@ -332,14 +373,28 @@ struct CheckoutView: View {
         .padding(.vertical, 8)
         .background(Color.fill, in: .rect(cornerRadius: Layout.controlRadius, style: .continuous))
         Button {
-            copy(card.number)
+            // Verdeckter Code: erst entsperren, dann kopieren.
+            if codeLock && !numberShown {
+                Task { if await DeviceSecurity.revealCode(of: card.name, spoken: card.number) { numberShown = true; copy(card.number) } }
+            } else {
+                copy(card.number)
+            }
         } label: {
             Label(copied > 0 ? "Kopiert" : "Code kopieren", systemImage: copied > 0 ? "checkmark" : "doc.on.doc")
                 .font(.scaled(16, weight: .semibold))
+                .foregroundStyle(Color.onInk)
                 .frame(maxWidth: .infinity, minHeight: Layout.tap)
         }
-        .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.large).tint(Color.ink)
-        .accessibilityHint("Legt den Code für 10 Minuten in die Zwischenablage.")
+        .buttonStyle(.borderedProminent).buttonBorderShape(.capsule).controlSize(.large).tint(Color.ink)
+        .accessibilityHint("Legt den Code für 10 Minuten nur auf diesem iPhone in die Zwischenablage. Nie am Telefon oder per Nachricht weitergeben.")
+        Text("Bleibt 10 Minuten nur auf diesem iPhone in der Zwischenablage.")
+            .font(.scaled(12)).foregroundStyle(Color.muted)
+        if copied > 0 {
+            Label("Kopiert. Nur im Shop einfügen, nie am Telefon oder per Nachricht weitergeben.", systemImage: "exclamationmark.shield")
+                .font(.scaled(13)).foregroundStyle(Color.ink2)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
         if let link = Self.redeemLinks[card.merchantID], let url = URL(string: link.url) {
             Link(destination: url) {
                 Label(link.label, systemImage: "arrow.up.right.square")
@@ -372,7 +427,7 @@ struct CheckoutView: View {
     private func copy(_ code: String) {
         // Nicht dauerhaft in der Zwischenablage liegen lassen.
         UIPasteboard.general.setItems([[UTType.plainText.identifier: code]],
-                                      options: [.expirationDate: Date.now.addingTimeInterval(600)])
+                                      options: [.localOnly: true, .expirationDate: Date.now.addingTimeInterval(600)])
         copied += 1
         AccessibilityNotification.Announcement("Code kopiert").post()
     }
@@ -401,14 +456,13 @@ struct CheckoutView: View {
             withAnimation(.snappy) { showPin = true }
             return
         }
-        let context = LAContext()
-        var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            withAnimation(.snappy) { showPin = true }
+        // Schon mit Code-Schutz entsperrt: ein Entsperren reicht für Code und PIN.
+        if codeLock && numberShown { withAnimation(.snappy) { showPin = true }; return }
+        guard DeviceSecurity.canAuthenticate else {
+            confirmUnprotectedPin = true
             return
         }
-        let ok = (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "PIN von \(card.name) anzeigen")) ?? false
-        if ok { withAnimation(.snappy) { showPin = true } }
+        if await DeviceSecurity.guardSensitive("PIN von \(card.name) anzeigen") { withAnimation(.snappy) { showPin = true } }
     }
 
     /// „Später eintragen“: Gutschein als „Betrag offen“ markieren und nach 2 Stunden nachfragen, nie nachts.

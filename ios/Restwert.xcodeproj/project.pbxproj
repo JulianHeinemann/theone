@@ -361,7 +361,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Restwert nutzt die Kamera, um Barcodes und Text von Gutscheinen zu scannen.";
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Restwert schützt die PIN deiner Gutscheinkarten mit Face ID.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Restwert sperrt mit Face ID die App und die PINs deiner Gutscheinkarten.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -400,7 +400,7 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Restwert nutzt die Kamera, um Barcodes und Text von Gutscheinen zu scannen.";
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Restwert schützt die PIN deiner Gutscheinkarten mit Face ID.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Restwert sperrt mit Face ID die App und die PINs deiner Gutscheinkarten.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

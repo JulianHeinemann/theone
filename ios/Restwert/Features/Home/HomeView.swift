@@ -162,7 +162,14 @@ struct HomeView: View {
         if c.isActive {
             Button("An der Kasse zeigen", systemImage: "barcode") { router.homePath.append(.checkout(c.id)) }
         }
-        Button("Bearbeiten", systemImage: "pencil") { router.editing = c }
+        Button("Bearbeiten", systemImage: "pencil") {
+            // Im Formular steht der Code offen: bei Code-Schutz erst entsperren.
+            if DeviceSecurity.codeLockActive {
+                Task { if await DeviceSecurity.revealCode(of: c.name) { router.editing = c } }
+            } else {
+                router.editing = c
+            }
+        }
         Button(c.isArchived ? "Wiederherstellen" : "Archivieren", systemImage: c.isArchived ? "tray.and.arrow.up" : "archivebox") {
             let archive = !c.isArchived
             withAnimation(.snappy) { store.setArchived(c.id, archive) }
@@ -342,7 +349,8 @@ private struct HomeLists {
             // „15 %“ und „15%“ gleich behandeln, ebenso Beträge wie „12,40 €“.
             if c.headline.filter({ !$0.isWhitespace }).localizedCaseInsensitiveContains(compact) { return true }
             // Nummern erst ab drei Zeichen, sonst trifft jede Ziffer fast jede Karte.
-            if compact.count >= 3, c.number.filter({ !$0.isWhitespace && $0 != "-" }).localizedCaseInsensitiveContains(compact.filter { $0 != "-" }) {
+            // Mit Code-Schutz nicht über den verdeckten Code finden (sonst ließe er sich erraten).
+            if compact.count >= 3, !DeviceSecurity.codeLockActive, c.number.filter({ !$0.isWhitespace && $0 != "-" }).localizedCaseInsensitiveContains(compact.filter { $0 != "-" }) {
                 return true
             }
             return false
