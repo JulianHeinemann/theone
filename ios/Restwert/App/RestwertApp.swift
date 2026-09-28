@@ -425,7 +425,8 @@ struct ToastView: View {
                 .foregroundStyle(toast.isError ? Color.warnOnInk : Color.goodOnInk)
                 .accessibilityHidden(true)
             // Fehlertexte sind länger: nicht abschneiden.
-            Text(toast.message).font(.scaled(15, weight: .medium)).lineLimit(toast.isError ? nil : 2)
+            Text(toast.message).font(.scaled(15, weight: .medium)).lineLimit(toast.isError ? nil : 3)
+                .fixedSize(horizontal: false, vertical: true)
                 .fixedSize(horizontal: false, vertical: toast.isError)
             Spacer(minLength: 8)
             if toast.isError || UIAccessibility.isVoiceOverRunning {

@@ -146,12 +146,15 @@ struct CheckoutView: View {
     private func pinButton(_ card: GiftCard) -> some View {
         Button { Task { await togglePin(card) } } label: {
             Label(showPin ? "PIN \(card.pin)" : "PIN anzeigen", systemImage: showPin ? "lock.open" : pinLock ? (DeviceSecurity.methodName == "Touch ID" ? "touchid" : "faceid") : "eye")
-                .font(.scaled(15, weight: .semibold))
+                .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 18).padding(.vertical, 10)
+                // Weiß mit kräftigem Tintenrand statt grauer Füllung (wirkte wie ausgeschaltet).
+                .background(Color.surface, in: .capsule)
+                .overlay(Capsule().strokeBorder(Color.ink, lineWidth: 1.5))
+                .contentShape(.capsule)
         }
-        .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.large).tint(Color.ink)
-        // Kräftiger Rand: grau auf Weiß allein wirkte bei großer Schrift wie ausgeschaltet.
-        .overlay(Capsule().strokeBorder(Color.ink, lineWidth: 1.5))
+        .buttonStyle(.plain)
         .frame(minHeight: Layout.tap)
     }
 

@@ -214,7 +214,7 @@ struct SettingsView: View {
             }
             .foregroundStyle(Color.ink)
         }
-        .scrollContentBackground(.hidden)
+        .settingsCards()
         // Luft unter dem letzten Abschnitt, damit die schwebende Tab-Leiste keinen Text verdeckt.
         .contentMargins(.bottom, 88, for: .scrollContent)
         .pageBackground()
@@ -467,6 +467,9 @@ struct ReminderSettingsView: View {
                 }
             }
         }
+        .settingsCards()
+        .pageBackground()
+        .readableWidth()
         .navigationTitle("Erinnerungen")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -500,7 +503,7 @@ struct PrivacyExplainer: View {
                 .accessibilityElement(children: .combine)
             }
         }
-        .scrollContentBackground(.hidden)
+        .settingsCards()
         .pageBackground()
         .readableWidth()
         .navigationTitle("Deine Daten")
@@ -538,5 +541,17 @@ private enum ExportShare {
             popover.permittedArrowDirections = []
         }
         top.present(sheet, animated: true)
+    }
+}
+
+extension View {
+    /// Einstellungen im Stil der App: Abschnitte als abgerundete weiße Karten mit Abstand zum Rand,
+    /// wie die Karten auf der Startseite (statt Zeilen von Rand zu Rand).
+    func settingsCards() -> some View {
+        listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .listSectionSpacing(Layout.section)
+            .contentMargins(.horizontal, Layout.page, for: .scrollContent)
+            .environment(\.defaultMinListRowHeight, Layout.tap + 8)
     }
 }

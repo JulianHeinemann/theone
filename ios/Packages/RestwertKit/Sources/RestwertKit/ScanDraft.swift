@@ -53,7 +53,7 @@ public enum ScanDraft {
     private static let weakVoucherWords = #"(?i)\b(einlösbar|einloesbar|gültig\w*|gueltig\w*|valid|rabatt\w*|guthaben|coupons?)\b"#
 
     /// Preisschilder, Werbung und Karten: ein einzelner Betrag ist dort ein Preis, kein Gutscheinwert.
-    private static let priceWords = #"(?i)\b(preis\w*|nur|statt|uvp|angebot\w*|aktion\w*|sale|rabatt\w*|sparen|spare|jetzt|kaufen|bestell\w*|je|pro|kg|stück|stk|liter|inkl|zzgl|versand\w*|tageskarte|mittagstisch|menü|gericht|tagesgericht|speise\w*|getränk\w*|eintritt|ticket\w*|miete|monat\w*|jahr\w*|abo\w*)\b"#
+    private static let priceWords = #"(?i)\b(preis\w*|nur|statt|uvp|angebot\w*|aktion\w*|sale|rabatt\w*|sparen|spare|jetzt|kaufen|bestell\w*|je|pro|kg|stück|stk|liter|inkl|zzgl|versand\w*|tageskarte|mittagstisch|menü|gericht|tagesgericht|speise\w*|getränk\w*|eintritt\w*|ticket\w*|konzert\w*|veranstaltung\w*|einlass|reihe|platz|sitzplatz|vorverkauf|abendkasse|miete|abo\w*|monatlich|jährlich)\b"#
 
     /// Belege und Dokumente, die Betrag, Nummer oder Barcode haben, aber kein Gutschein sind.
     private static let otherDocuments = #"(?i)\b(kassenbon|kassenbeleg|quittung|rechnung|beleg\s?nr|summe|zwischensumme|bar\s?gegeben|rückgeld|gesamt|gesamtbetrag|bonnummer|bon-nr|beleg-nr|belegnummer|tse|kartenzahlung|ec-cash|mwst|ust\.?|fahrkarte|fahrschein|ticket|boarding\s?pass|bordkarte|personalausweis|reisepass|ausweis\w*|führerschein|parkschein|parkticket|speisekarte|getränkekarte|visitenkarte|mitgliedsausweis|krankenversicherung|versichertenkarte|iban|bic)\b"#

@@ -48,7 +48,8 @@ struct CardRow: View {
         case .expired: Due(text: "abgelaufen", level: .bad, estimated: false)
         case .redeemed: Due(text: "eingelöst", level: .calm, estimated: false)
         // Geschätzt (gesetzliche Frist): direkt beim Datum sagen, nicht als loses „geschätzt“ daneben.
-        case .valid: Due(text: estimated ? "Ablauf geschätzt: \(card.expires.dayMonthYear)" : "bis \(card.expires.dayMonthYear)",
+        // Geschätzt (gesetzliche Frist): kurz und direkt am Datum, damit es nie abgeschnitten wird.
+        case .valid: Due(text: estimated ? "bis ca. \(card.expires.dayMonthYear)" : "bis \(card.expires.dayMonthYear)",
                          level: .calm, estimated: estimated)
         }
     }
@@ -79,12 +80,12 @@ struct CardRow: View {
 
     /// Ein Satz für VoiceOver, z. B. „Thalia, 12,40 € von 25,00 €, bis 31.12.2028, Datum geschätzt“.
     private func spoken(_ due: Due) -> String {
-        let amount = card.kind.isValueBased ? (card.balance < card.value ? "noch \(card.headline), ursprünglich \(card.value.euro)" : card.headline) : card.headline == card.kind.label ? card.kind.label : "\(card.headline) \(card.kind.label)"
+        let amount = card.kind.isValueBased ? "\(card.headline) von \(card.value.euro)" : card.headline == card.kind.label ? card.kind.label : "\(card.headline) \(card.kind.label)"
         let who = card.owner.isEmpty ? "" : ", für \(card.owner)"
         let open = card.pendingSince != nil && card.isActive ? ", Betrag offen" : ""
         let urgent = due.level == .urgent ? ", dringend" : ""
-        let estimated = due.estimated && due.level != .calm ? ", Ablauf geschätzt" : ""
-        return "\(card.name)\(who)\(open), \(amount), \(due.text)\(urgent)\(estimated)\(card.forGifting ? ", zum Verschenken" : "")\(card.issuedByMe ? ", selbst ausgestellt" : "")"
+        let estimated = due.estimated ? ", Ablaufdatum geschätzt" : ""
+        return "\(card.name)\(who)\(open), \(amount), \(due.text)\(urgent)\(estimated)\(card.forGifting ? ", zum Verschenken" : "")\(card.issuedByMe ? (card.issuedTo.isEmpty ? ", selbst ausgestellt" : ", selbst ausgestellt für \(card.issuedTo)") : "")"
     }
 
     private func nameBlock(_ due: Due) -> some View {
@@ -116,11 +117,12 @@ struct CardRow: View {
         // Ruhige Zusätze als Text mit Trennpunkt statt eigener Pillen.
         // Selbst ausgegeben: in der zweiten Zeile, damit der Ladenname ganz sichtbar bleibt.
         if card.issuedByMe {
-            Text(card.issuedTo.isEmpty ? "· selbst ausgestellt" : "· ausgestellt für \(card.issuedTo)").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.ink2).lineLimit(1)
+            Text(card.issuedTo.isEmpty ? "· selbst ausgestellt" : "· für \(card.issuedTo)").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.ink2)
+                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
         }
         // Nur bei „noch X Tage“ zusätzlich nennen; beim Datum steht es schon im Text.
         if due.estimated && due.level != .calm {
-            Text("· Ablauf geschätzt").font(.scaled(13)).foregroundStyle(Color.muted).fixedSize()
+            Text("· Datum geschätzt").font(.scaled(13)).foregroundStyle(Color.muted).fixedSize()
         }
         if card.pendingSince != nil && card.isActive {
             Text("· Betrag offen").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.warn).fixedSize()
@@ -149,12 +151,10 @@ struct CardRow: View {
                 Text(card.headline).font(.amount(typeSize.isAccessibilitySize ? 16 : 20)).foregroundStyle(Color.ink)
                     .contentTransition(.numericText(value: card.balance))
                     .lineLimit(1).fixedSize()
-                // Ursprungsbetrag nur nach einer Teileinlösung – „25 € von 25 €“ sagt nichts.
-                if card.balance < card.value {
-                    Text("ursprünglich \(card.value.euro)")
-                        .font(.scaled(13)).monospacedDigit().foregroundStyle(Color.muted)
-                        .lineLimit(1).fixedSize()
-                }
+                // Klein und grau wie das Datum: der Ursprungsbetrag.
+                Text("von \(card.value.euro)")
+                    .font(.scaled(13)).monospacedDigit().foregroundStyle(Color.muted)
+                    .lineLimit(1).fixedSize()
             } else {
                 // Rabattcodes sind kein Geld: Etikett-Symbol vor dem Wert, darunter „Rabatt“ statt „von … €“.
                 let hasValue = (card.percent ?? 0) > 0 || card.value > 0

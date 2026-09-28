@@ -28,7 +28,7 @@ struct HomeView: View {
                 } else {
                     // Reihenfolge: Guthaben → Dringendes → Filter und Liste → selbst ausgestellte → Verfallsradar.
                     // Die Liste kommt früh, weil man auf dem Start meist einen bestimmten Gutschein sucht.
-                    section("Läuft bald ab", cards: lists.dueSoon)
+                    if !lists.dueSoon.isEmpty { dueSoonSection(lists.dueSoon) }
                     if lists.showFilters { filterBar(lists) }
                     if lists.searchEmpty {
                         ContentUnavailableView.search(text: lists.query)
@@ -106,7 +106,7 @@ struct HomeView: View {
 
     private func listTitle(_ lists: HomeLists) -> String {
         if lists.activeFilter != .all { return chipTitle(lists.activeFilter) }
-        return lists.dueSoon.isEmpty ? "Deine Gutscheine" : "Weitere"
+        return lists.dueSoon.isEmpty ? "Deine Gutscheine" : "Weitere Gutscheine"
     }
 
     @ViewBuilder
@@ -146,6 +146,29 @@ struct HomeView: View {
             }
             .animation(.snappy, value: cards.map(\.id))
         }
+    }
+
+    /// „Läuft bald ab“: große Überschrift mit Anzahl, jeder Gutschein als eigene Karte mit dem nächsten Schritt.
+    private func dueSoonSection(_ cards: [GiftCard]) -> some View {
+        VStack(alignment: .leading, spacing: Layout.group) {
+            HStack(spacing: 10) {
+                Text("Läuft bald ab").font(.scaled(26, weight: .bold)).foregroundStyle(Color.ink)
+                Text("\(cards.count)").font(.scaled(17, weight: .semibold)).monospacedDigit().foregroundStyle(Color.ink2)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(Color.fill, in: .capsule)
+                    .accessibilityLabel("\(cards.count) Gutscheine")
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            ForEach(cards) { c in
+                DueSoonCard(card: c, zoom: zoom,
+                            open: { router.homePath.append(.card(c.id)) },
+                            act: { router.homePath.append(c.number.isEmpty && c.photo == nil ? .card(c.id) : .checkout(c.id)) }) {
+                    rowMenu(c)
+                }
+            }
+        }
+        .animation(.snappy, value: cards.map(\.id))
     }
 
     private func filterBar(_ lists: HomeLists) -> some View {
@@ -470,5 +493,88 @@ extension HomeView {
         #else
         false
         #endif
+    }
+}
+
+/// Karte in „Läuft bald ab“: Logo, Name, Frist als farbige Pille, Betrag – darunter der nächste Schritt als großer Knopf.
+private struct DueSoonCard<MenuItems: View>: View {
+    let card: GiftCard
+    let zoom: Namespace.ID
+    let open: () -> Void
+    let act: () -> Void
+    @ViewBuilder let menu: () -> MenuItems
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    private var online: Bool { card.merchant.category == .codeOnly && !card.number.isEmpty }
+    private var paper: Bool { card.number.isEmpty && card.photo != nil }
+
+    private var action: (title: String, icon: String) {
+        if online { return ("Code anzeigen", "globe") }
+        if paper { return ("Foto an der Kasse zeigen", "photo") }
+        if card.number.isEmpty { return ("Gutschein öffnen", "chevron.right") }
+        return ("An der Kasse zeigen", "barcode")
+    }
+
+    /// „Noch 12 Tage“ – bis 14 Tage rot getönt, sonst bernsteinfarben.
+    private var due: (text: String, urgent: Bool) {
+        let d = card.daysLeft
+        let text = d <= 0 ? "Läuft heute ab" : d == 1 ? "Läuft morgen ab" : "Noch \(d)\u{00A0}Tage"
+        return (text, d <= 14)
+    }
+
+    var body: some View {
+        let due = due
+        let stacked = typeSize.isAccessibilitySize
+        VStack(spacing: Layout.inset) {
+            HStack(alignment: .top, spacing: 2) {
+                Button(action: open) {
+                    let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
+                    layout {
+                        MerchantMark(card: card, size: 52).matchedTransitionSource(id: card.id, in: zoom)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(card.name).font(.scaled(18, weight: .bold)).foregroundStyle(Color.ink).lineLimit(2)
+                            Label(due.text, systemImage: "clock")
+                                .font(.scaled(14, weight: .semibold))
+                                .foregroundStyle(due.urgent ? Color.warn : Color.soon)
+                                .lineLimit(1)
+                                .padding(.horizontal, 10).padding(.vertical, 5)
+                                .background((due.urgent ? Color.warn : Color.soon).opacity(0.13), in: .capsule)
+                                .fixedSize()
+                        }
+                        .layoutPriority(1)
+                        if !stacked { Spacer(minLength: 8) }
+                        VStack(alignment: stacked ? .leading : .trailing, spacing: 4) {
+                            // Betrag darf etwas kleiner werden, die Frist-Pille nie abgeschnitten.
+                            Text(card.headline).font(.amount(stacked ? 20 : 22)).foregroundStyle(Color.ink)
+                                .lineLimit(1).minimumScaleFactor(0.7)
+                            // Klein und grau wie das Datum in der Liste: Ursprungsbetrag bzw. „Rabatt“.
+                            Text(card.kind.isValueBased ? "von \(card.value.euro)" : "Rabatt")
+                                .font(.scaled(13)).monospacedDigit().foregroundStyle(Color.muted)
+                                .lineLimit(1).fixedSize()
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("\(card.name), \(card.headline)\(card.kind.isValueBased ? " von \(card.value.euro)" : " Rabatt"), \(due.text)")
+                Menu { menu() } label: {
+                    Image(systemName: "ellipsis").font(.scaled(17, weight: .bold)).foregroundStyle(Color.ink2)
+                        .frame(width: 32, height: Layout.tap).contentShape(.rect)
+                }
+                .accessibilityLabel("Aktionen für \(card.name)")
+            }
+            Button(action: act) {
+                Label(action.title, systemImage: action.icon)
+                    .font(.scaled(18, weight: .semibold)).foregroundStyle(Color.onInk)
+                    .frame(maxWidth: .infinity, minHeight: 56)
+                    .background(Color.ink, in: .rect(cornerRadius: 16, style: .continuous))
+                    .contentShape(.rect(cornerRadius: 16))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(action.title): \(card.name)")
+        }
+        .padding(Layout.inset)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
     }
 }

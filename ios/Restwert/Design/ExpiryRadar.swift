@@ -123,7 +123,7 @@ struct ExpiryRadar: View {
             }
             // Stiele von der Kachel zur Achse, damit auch Spur 2 eindeutig auf ihrem Tag steht.
             for m in p.marks where !m.zoneB {
-                let y0 = p.slotTop(m.lane) + p.tile + (m.showCaption ? 1 + p.captionH : 0)
+                let y0 = p.slotTop(m.lane) + p.tile + (m.showCaption ? 3 + p.captionH * CGFloat(m.lines) : 0)
                 ctx.fill(Path(CGRect(x: m.x - 0.5, y: y0, width: 1, height: max(0, axis - y0))),
                          with: .color(Color.ink.opacity(0.3)))
             }
@@ -134,10 +134,10 @@ struct ExpiryRadar: View {
             for t in p.ticks {
                 ctx.fill(Path(roundedRect: CGRect(x: t.x - 1, y: axis - 7, width: 2, height: 7), cornerRadius: 1), with: .color(Color.ink))
             }
-            // Heute: gelber Punkt mit Tintenrand am Achsanfang – Gelb ist die App.
-            let dot = CGRect(x: p.todayX - 5, y: axis - 5, width: 10, height: 10)
-            ctx.fill(Path(ellipseIn: dot), with: .color(Color.brandYellow))
-            ctx.stroke(Path(ellipseIn: dot), with: .color(Color.ink), lineWidth: 1.5)
+            // Heute: schmale gelbe Marke quer zur Achse (statt Punkt) – überdeckt weder Stiel noch Betrag.
+            let mark = Path(roundedRect: CGRect(x: p.todayX - 2.5, y: axis - 9, width: 5, height: 18), cornerRadius: 2.5)
+            ctx.fill(mark, with: .color(Color.brandYellow))
+            ctx.stroke(mark, with: .color(Color.ink), lineWidth: 1.2)
             if !p.columns.isEmpty {
                 // Achsbruch: zwei schräge Striche in der Lücke.
                 let mid = p.zoneAEnd + p.breakW / 2
@@ -217,10 +217,16 @@ struct ExpiryRadar: View {
             }
             .shadow(color: Color.shade, radius: 3, y: 1)
             if m.showCaption, let c = m.caption {
-                Text(c)
-                    .font(.scaled(12, weight: face.urgent ? .heavy : .semibold, design: .rounded)).monospacedDigit()
-                    .foregroundStyle(face.urgent ? Color.warn : Color.ink2)
-                    .lineLimit(1).fixedSize()
+                let parts = c.split(separator: "\n").map(String.init)
+                VStack(spacing: 0) {
+                    Text(parts[0])
+                        .font(.scaled(12, weight: face.urgent ? .heavy : .semibold, design: .rounded)).monospacedDigit()
+                        .foregroundStyle(face.urgent ? Color.warn : Color.ink2)
+                    if parts.count > 1 {
+                        Text(parts[1]).font(.scaled(11, weight: .medium)).foregroundStyle(Color.muted)
+                    }
+                }
+                .lineLimit(1).fixedSize()
             }
             Spacer(minLength: 0)
         }
@@ -295,6 +301,7 @@ private struct RadarPlan {
         var caption: String? = nil
         var captionW: CGFloat = 0
         var showCaption = false
+        var lines = 1
         var id: UUID { items[0].id }
     }
     struct Tick { var x: CGFloat; var label: String? }
@@ -305,11 +312,11 @@ private struct RadarPlan {
     /// Tage der linearen Zone: 90, oder bis Silvester, wenn das nur knapp dahinter liegt
     /// (sonst stünde nach „Nov Dez“ noch eine Spalte „2026“ – im September verwirrend).
     var horizon = 90
-    static let labelGap: CGFloat = 3
+    static let labelGap: CGFloat = 10
     /// Luft über der obersten Spur für Warnring und „!“ (der Rest ragt in den Innenabstand der Hülle).
-    static let topGap: CGFloat = 8
+    static let topGap: CGFloat = 16
     /// Abstand zwischen Betrag der unteren Spur und Achse (sonst klebt „25 €“ am Heute-Punkt).
-    static let axisGap: CGFloat = 6
+    static let axisGap: CGFloat = 14
     static let breakW: CGFloat = 12
 
     let tile: CGFloat
@@ -359,8 +366,8 @@ private struct RadarPlan {
             let y0 = cal.component(.year, from: first.item.expires)
             let y1 = cal.component(.year, from: last.item.expires)
             // Spalten breit genug für Kachel und Betrag („2× 120 €“); passen nicht alle Jahre, fasst die letzte zusammen.
-            let colMin = max(hit, fonts.width("2× 120 €", fonts.caption) + 8, fonts.width("2027+", fonts.label) + 6)
-            let room = W * 0.5 - Self.breakW
+            let colMin = max(hit, fonts.width("3 Gutscheine", fonts.caption) + 2, fonts.width("2027+", fonts.label) + 6)
+            let room = W * 0.56 - Self.breakW
             let fit: Int = max(1, Int(room / colMin))
             let k: Int = Swift.min(y1 - y0 + 1, fit)
             let colW: CGFloat = Swift.max(colMin, Swift.min(84, room / CGFloat(k)))
@@ -412,6 +419,8 @@ private struct RadarPlan {
                 last[lane] = marks.count - 1
             } else if let idx = last.compactMap({ $0 }).max(by: { marks[$0].x < marks[$1].x }) {
                 marks[idx].items.append(item)
+                // Vorne der Gutschein mit dem meisten Guthaben, damit der Betrag darunter zu ihm passt.
+                marks[idx].items.sort { ($0.value ?? -1) > ($1.value ?? -1) }
             }
         }
         // Zone B: je Spalte unten die früheste Kachel, darüber die zweite oder ein Bündel mit dem Rest.
@@ -448,9 +457,14 @@ private struct RadarPlan {
             if its.count == 1, marks[i].zoneB, let v = its[0].value { marks[i].caption = RadarItem.short(v.rounded()) }
             else if its.count == 1 { marks[i].caption = its[0].amount }
             // Bündel: Anzahl und Summe ausgeschrieben („2× 95 €“) statt einer Plakette auf der Kachel.
-            else if sum > 0 { marks[i].caption = "\(its.count)×\u{2009}\(RadarItem.short(sum.rounded()))" }
-            else { marks[i].caption = "\(its.count)×" }
-            if let c = marks[i].caption { marks[i].captionW = fonts.width(c, fonts.caption) }
+            // Bündel in zwei Zeilen: Euro-Summe, darunter „3 Gutscheine“ (kein „3× 95 €“, das wie eine Multiplikation liest).
+            else if sum > 0 { marks[i].caption = "\(RadarItem.short(sum.rounded()))\n\(its.count) Gutscheine" }
+            else { marks[i].caption = "\(its.count) Gutscheine" }
+            if let c = marks[i].caption {
+                let lines = c.split(separator: "\n").map(String.init)
+                marks[i].captionW = lines.map { fonts.width($0, fonts.caption) }.max() ?? 0
+                marks[i].lines = lines.count
+            }
         }
         let upperStems = marks.filter { $0.lane == 1 && !$0.zoneB }.map(\.x)   // schon aufsteigend
         for lane in 0..<2 {
@@ -475,9 +489,9 @@ private struct RadarPlan {
 
         lanes = (marks.map(\.lane).max() ?? 0) + 1
         laneH = (0..<lanes).map { lane in
-            let caps = marks.contains { $0.lane == lane && $0.showCaption }
+            let lines = marks.filter { $0.lane == lane && $0.showCaption }.map(\.lines).max() ?? 0
             // Luft zwischen den Spuren, damit Kachel und Betrag der unteren nie an die obere stoßen.
-            return max(Layout.tap, t + 8 + (caps ? 3 + captionH : 0)) + (lane == 0 ? Self.axisGap : 0)
+            return max(Layout.tap, t + 8 + (lines > 0 ? 3 + captionH * CGFloat(lines) : 0)) + (lane == 0 ? Self.axisGap : 0)
         }
         axisY = Self.topGap + laneH.reduce(0, +)
         // Achse, Abstand, „Heute“-Pille (Zeile + 2 × 2 pt Innenabstand).
@@ -492,9 +506,9 @@ private struct RadarPlan {
         if in30.count > in14.count { s.append("\(in30.count) in 30\u{00A0}Tagen") }
         if sum30 > 0 { s.append("\(sum30.euro) in 30\u{00A0}Tagen betroffen") }
         if let last = dated.last, last.d > horizon {
-            s.append("Zeitachse: nächste 90\u{00A0}Tage, danach Jahre bis \(cal.component(.year, from: last.item.expires))")
+            s.append("Zeitachse: nächste \(horizon)\u{00A0}Tage, danach Jahre bis \(cal.component(.year, from: last.item.expires))")
         } else {
-            s.append("Zeitachse: nächste 90\u{00A0}Tage")
+            s.append("Zeitachse: nächste \(horizon)\u{00A0}Tage")
         }
         summary = s.joined(separator: ", ")
     }
@@ -516,7 +530,7 @@ struct ExpiryRadarSection: View {
 
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var axisY: CGFloat = 94
-    private let top: CGFloat = 8
+    private let top: CGFloat = 12
 
     /// „2 in 30 Tagen · 70 €“ – was bald verfällt und wie viel Geld daran hängt.
     private var soon: (text: String, spoken: String) {
@@ -560,7 +574,7 @@ struct ExpiryRadarSection: View {
             ExpiryRadar(items: items, onSelect: onSelect,
                         onBundle: onBundle ?? onShowAll.map { all in { _ in all() } },
                         animateIn: animateIn, onAxis: { axisY = $0 }, baseTile: tileSize)
-                .padding(.horizontal, Layout.inset).padding(.top, top).padding(.bottom, 6)
+                .padding(.horizontal, Layout.inset).padding(.top, top).padding(.bottom, 14)
                 .background(Color.surface, in: TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchFromTop: top + axisY))
         }
     }
