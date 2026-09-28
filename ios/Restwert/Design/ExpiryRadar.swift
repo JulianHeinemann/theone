@@ -225,6 +225,7 @@ struct ExpiryRadar: View {
                             .offset(x: t * 0.22, y: -t * 0.18)
                     }
                 }
+                .compositingGroup()
                 .shadow(color: Color.shade, radius: 3, y: 1)
             if m.showCaption, let c = m.caption {
                 Text(c)

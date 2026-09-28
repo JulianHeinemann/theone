@@ -718,18 +718,18 @@ struct CardFormView: View {
         return e
     }
 
-    /// Nur bei „Von Hand eingeben“: schon gespeicherter Code oder hoher Wert (Betrugsmuster) – wie beim Scan.
+    /// Beim Neuanlegen: schon gespeicherter Code oder hoher Wert (Betrugsmuster) – dieselben Regeln wie beim Scan.
+    /// Nach einem Scan hat das Ergebnis die Dublette schon geprüft und bei hohem Betrag schon gefragt; fand der Scan
+    /// keinen (hohen) Betrag und tippt man ihn hier ein, fragt das Formular.
     private func manualRisk() -> String? {
-        guard editing == nil, outcome == nil else { return nil }
-        func plain(_ s: String) -> String { s.filter { $0.isLetter || $0.isNumber }.uppercased() }
-        let code = plain(number)
-        if !code.isEmpty, let dup = store.cards.first(where: { !$0.isExample && !$0.issuedByMe && plain($0.number) == code }) {
+        guard editing == nil else { return nil }
+        if outcome == nil, let dup = CardQueries.duplicate(of: number, in: store.cards) {
             return "Diesen Code hast du schon gespeichert („\(dup.name)“)."
         }
+        if let scanned = outcome?.draft.value, scanned >= CardQueries.patternValue { return nil }
         let value = parseMoney(valueText) ?? 0
-        let weekAgo = Date.now.addingTimeInterval(-7 * 24 * 3600)
-        let recent = store.cards.filter { !$0.isExample && !$0.issuedByMe && $0.value >= 100 && $0.addedOrReceived >= weekAgo }.count
-        if value >= ScanResultView.highValue || (value >= 100 && recent >= 1) {
+        let recent = CardQueries.recentHighValueCount(store.cards)
+        if value >= ScanResultView.highValue || (value >= CardQueries.patternValue && recent >= 1) {
             return "Hat dich jemand am Telefon oder per Nachricht gebeten, Gutscheine zu kaufen und die Codes durchzugeben? Dann ist es Betrug. Gib nichts weiter. \(ScanResultView.nextStep)"
         }
         return nil

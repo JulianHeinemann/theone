@@ -46,8 +46,6 @@ struct RestwertApp: App {
             guard phase == .active else { return }
             // Nach dem Entsperren ggf. die Datei nachladen, die vorher gesperrt war.
             store.reloadIfNeeded()
-            // Widget-Zeitleiste auffrischen (Tage und Summe hängen am Datum).
-            WidgetBridge.update(cards: store.cards, total: store.total)
             // Gutscheinnamen für Siri-Phrasen („Öffne Zalando in Restwert“) aktuell halten.
             RestwertShortcuts.updateAppShortcutParameters()
             Task { await cloud.syncNow() }
@@ -251,13 +249,10 @@ struct MainTabView: View {
 extension Router {
     /// Nur für Simulator-Screenshots: Start mit `-demoScreen radar` öffnet direkt diesen Bildschirm.
     func applyDemoScreen(store: Store) {
-        // `-demoSavedToast YES`: Hinweis nach dem Speichern mit „Nächsten scannen“ (Screenshot des Stapel-Scans).
+        // `-demoSavedToast YES`: Hinweis nach dem Speichern, wie ihn der Scan zeigt („Ansehen“ öffnet den Gutschein).
         if UserDefaults.standard.bool(forKey: "demoSavedToast"), let sample = store.cards.first {
-            showCard(sample.id)
-            toast = Toast(message: "„\(sample.name)“ gespeichert", undo: { [weak self] in
-                self?.scanIntent = .camera
-                self?.tab = .scan
-            }, actionTitle: "Nächsten scannen")
+            tab = .scan
+            toast = Toast(message: "„\(sample.name)“ gespeichert", undo: { [weak self] in self?.showCard(sample.id) }, actionTitle: "Ansehen")
             return
         }
         // `-demoImportBatch /a.jpg|/b.jpg` liest mehrere Dateien wie eine Mehrfach-Fotoauswahl ein (ScanView).
@@ -401,7 +396,7 @@ struct ToastView: View {
             if toast.isError { announcement.accessibilitySpeechAnnouncementPriority = .high }
             AccessibilityNotification.Announcement(announcement).post()
             guard !UIAccessibility.isVoiceOverRunning else { return }
-            // Fehler und „Nächsten scannen“ länger stehen lassen (Zeit zum Greifen des nächsten Gutscheins).
+            // Fehler und „Ansehen“ länger stehen lassen (Zeit zum Greifen des nächsten Gutscheins).
             try? await Task.sleep(for: .seconds(toast.isError || toast.actionTitle != "Rückgängig" ? 15 : 8))
             guard !Task.isCancelled else { return }
             onClose()

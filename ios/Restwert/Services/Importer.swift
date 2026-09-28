@@ -14,14 +14,14 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
 
     var barcode: String?
     var format: CodeFormat?
-    var text: String = ""
+    var text: String = "" { didSet { refreshDraft() } }
     var photo: Data?
     /// Von Apple Intelligence aufbereitete Felder, falls verfügbar.
-    var smart: CardDraft?
+    var smart: CardDraft? { didSet { refreshDraft() } }
     var usedAppleIntelligence = false
     var source: Source = .photo
     /// „Wann gekauft/erhalten?“ aus dem Scan-Ergebnis; das Formular rechnet Fristen davon.
-    var received: Date?
+    var received: Date? { didSet { refreshDraft() } }
     /// Die Barcode-Suche selbst ist gescheitert (z. B. Gerät ohne Neural Engine) – nicht dasselbe wie „kein Barcode im Bild“.
     var barcodeUnavailable = false
     /// Wie viele Gutscheine über 100 € in den letzten 7 Tagen schon erfasst wurden (Betrugsmuster „kauf Gutscheine“).
@@ -36,7 +36,26 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
 
     /// Regel-Parser plus KI-Ergebnis; die KI füllt nur Lücken, und nur mit Angaben, die im Text stehen.
     /// Mit „Wann gekauft?“ werden Laufzeit und gesetzliche Frist ab diesem Tag gerechnet.
-    var draft: CardDraft { ScanDraft.merge(text: text, smart: smart, now: received ?? .now) }
+    /// Einmal je Änderung von Text, KI-Ergebnis oder Kaufdatum berechnet, nicht bei jedem Zugriff: Das Ergebnis
+    /// liest ihn dutzende Male je Aufbau, und jeder Lauf schickt alle Laden-Regeln über den ganzen Text.
+    private(set) var draft: CardDraft
+
+    init(barcode: String? = nil, format: CodeFormat? = nil, text: String = "", photo: Data? = nil, smart: CardDraft? = nil,
+         usedAppleIntelligence: Bool = false, source: Source = .photo, received: Date? = nil) {
+        self.barcode = barcode
+        self.format = format
+        self.text = text
+        self.photo = photo
+        self.smart = smart
+        self.usedAppleIntelligence = usedAppleIntelligence
+        self.source = source
+        self.received = received
+        draft = ScanDraft.merge(text: text, smart: smart, now: received ?? .now)
+    }
+
+    private mutating func refreshDraft() {
+        draft = ScanDraft.merge(text: text, smart: smart, now: received ?? .now)
+    }
 
     /// Angezeigter und gespeicherter Code: der gelesene Barcode. Bei reinen Online-Codes ohne Barcode-Anzeige
     /// die gedruckte Schreibweise („OT-7731-5520-9912“), wenn sie bis auf Bindestriche/Leerzeichen dasselbe ist.
@@ -62,8 +81,8 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
     }
 
     /// Sicher genug für „Speichern“ ohne Formular: Gutschein mit bekanntem Laden, Betrag oder Rabatt, Code,
-    /// Ablaufdatum vom Gutschein, gelesener oder am Code erkannter Barcode (oder reiner Online-Code), keine Warnung,
-    /// nichts nur von Apple Intelligence.
+    /// Ablaufdatum vom Gutschein, wirklich gelesener Barcode (oder reiner Online-Code; eine nur aus der Nummer
+    /// abgeleitete Art reicht nicht), keine Warnung, nichts nur von Apple Intelligence.
     @MainActor var canSaveDirectly: Bool {
         let d = draft
         guard looksLikeVoucher, duplicateID == nil, !hasWarnings, aiFilled.isEmpty, d.merchantID != nil,
@@ -83,6 +102,7 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
         if rules.number == nil && d.number != nil { out.insert("Code") }
         if rules.expires == nil && d.expires != nil { out.insert("Gültig bis") }
         if rules.pin == nil && d.pin != nil { out.insert("PIN") }
+        if rules.merchantID == nil && rules.customName == nil && (d.merchantID != nil || d.customName != nil) { out.insert("Laden") }
         return out
     }
 
@@ -139,7 +159,8 @@ nonisolated enum Importer {
 
     @MainActor
     static func analyze(image: UIImage) async -> ScanOutcome {
-        guard let cg = image.normalizedCGImage else { return ScanOutcome() }
+        // Ausrichten zeichnet das ganze Foto neu – im Hintergrund, sonst steht der Spinner pro Foto kurz still.
+        guard let cg = await normalized(image) else { return ScanOutcome() }
         // Vorschaubild parallel zur Erkennung und nicht auf dem Main Thread rechnen.
         async let thumb = thumbnail(cg)
         var out = await analyze(cgImage: cg)
@@ -150,6 +171,31 @@ nonisolated enum Importer {
     @concurrent
     private static func thumbnail(_ cg: CGImage) async -> Data? {
         UIImage(cgImage: cg).thumbnailJPEG()
+    }
+
+    @concurrent
+    private static func normalized(_ image: UIImage) async -> CGImage? {
+        image.normalizedCGImage
+    }
+
+    /// Eine gezeichnete PDF-Seite: Text der Seite, Bild für Barcode und Texterkennung, Vorschau (nur erste Seite).
+    private struct PDFPage: Sendable {
+        let text: String
+        let image: CGImage?
+        let photo: Data?
+    }
+
+    /// Bis zu drei Seiten zeichnen (2600 px Kante) – im Hintergrund, damit Spinner und „Abbrechen“ reagieren.
+    @concurrent
+    private static func renderPDF(at url: URL) async -> [PDFPage] {
+        guard let doc = PDFDocument(url: url) else { return [] }
+        return (0..<min(doc.pageCount, 3)).compactMap { i in
+            guard let page = doc.page(at: i) else { return nil }
+            let box = page.bounds(for: .mediaBox)
+            let scale = 2600 / max(box.width, box.height, 1)   // fein genug für kleine Barcodes auf A4
+            let img = page.thumbnail(of: CGSize(width: box.width * scale, height: box.height * scale), for: .mediaBox)
+            return PDFPage(text: page.string ?? "", image: img.cgImage, photo: i == 0 ? img.thumbnailJPEG() : nil)
+        }
     }
 
     /// E-Mail-Text: nur Parser und Apple Intelligence, kein Bild.
@@ -171,17 +217,14 @@ nonisolated enum Importer {
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         let type = UTType(filenameExtension: url.pathExtension.lowercased())
 
-        if type?.conforms(to: .pdf) == true, let doc = PDFDocument(url: url) {
+        if type?.conforms(to: .pdf) == true {
+            let pages = await renderPDF(at: url)
+            guard !pages.isEmpty, !Task.isCancelled else { return ScanOutcome() }
             var result = ScanOutcome(source: .document)
             var texts: [String] = []
-            for i in 0..<min(doc.pageCount, 3) {
-                guard let page = doc.page(at: i) else { continue }
-                let pageText = page.string ?? ""
-                let box = page.bounds(for: .mediaBox)
-                let scale = 2600 / max(box.width, box.height, 1)   // fein genug für kleine Barcodes auf A4
-                let img = page.thumbnail(of: CGSize(width: box.width * scale, height: box.height * scale), for: .mediaBox)
-                if result.photo == nil { result.photo = img.thumbnailJPEG() }
-                if let cg = img.cgImage {
+            for page in pages {
+                if result.photo == nil { result.photo = page.photo }
+                if let cg = page.image {
                     guard !Task.isCancelled else { break }
                     let o = await analyze(cgImage: cg, smart: false)
                     result.barcodeUnavailable = result.barcodeUnavailable || o.barcodeUnavailable
@@ -189,9 +232,9 @@ nonisolated enum Importer {
                         result.barcode = o.barcode
                         result.format = o.format
                     }
-                    texts.append(pageText.isEmpty ? o.text : pageText)
+                    texts.append(page.text.isEmpty ? o.text : page.text)
                 } else {
-                    texts.append(pageText)
+                    texts.append(page.text)
                 }
             }
             result.text = texts.joined(separator: "\n")
@@ -214,7 +257,8 @@ nonisolated enum Importer {
 
 extension UIImage {
     /// CGImage in korrekter Ausrichtung, damit Vision Fotos vom iPhone richtig liest.
-    var normalizedCGImage: CGImage? {
+    /// Auch abseits des Main Threads nutzbar (UIGraphicsImageRenderer ist threadsicher).
+    nonisolated var normalizedCGImage: CGImage? {
         if imageOrientation == .up, let cg = cgImage { return cg }
         // Originalpixel, nicht Bildschirm-Scale (sonst 3-fache Auflösung)
         let format = UIGraphicsImageRendererFormat.default()
