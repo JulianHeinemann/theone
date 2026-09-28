@@ -82,14 +82,16 @@ struct CheckoutView: View {
         .scrollDismissesKeyboard(.interactively)
         // Entscheidung unten im Daumenbereich, auch wenn das Ticket hoch ist.
         .safeAreaInset(edge: .bottom, spacing: Layout.group) {
-            if let card = store.card(cardID) { actions(card) }
+            // Auf dem iPad nicht über die volle Breite ziehen.
+            if let card = store.card(cardID) { actions(card).frame(maxWidth: 700).frame(maxWidth: .infinity).background(Color.page.ignoresSafeArea()) }
         }
         .pageBackground()
+        .readableWidth()
         .toolbar(.hidden, for: .tabBar)
         .sensoryFeedback(.impact(weight: .medium), trigger: tearHaptic)
         .sensoryFeedback(.success, trigger: copied)
         .unprotectedPinConfirmation(isPresented: $confirmUnprotectedPin) { withAnimation(.snappy) { showPin = true } }
-        .navigationTitle(online ? "Online einlösen" : "An der Kasse")
+        .navigationTitle(online ? "Online einlösen" : store.card(cardID)?.issuedByMe == true ? "Gutschein einlösen" : "An der Kasse")
         .fullScreenCover(isPresented: $showFull) {
             if let card = store.card(cardID) { FullBarcode(card: card, masked: codeHidden) }
         }
@@ -175,13 +177,28 @@ struct CheckoutView: View {
                 }
                 .buttonStyle(.primary)
                 .disabled(busy)
-                // Nebeneinander, bei großer Schrift untereinander – nie abgeschnitten.
-                ViewThatFits(in: .horizontal) {
-                    HStack { notAccepted(card); Spacer(); later(card) }
-                    VStack(spacing: 8) { notAccepted(card); later(card) }
+                // Eigener Gutschein (Laden-Sicht): nur einlösen, kein „nicht angenommen“.
+                if !card.issuedByMe {
+                    if checkoutTypeSize.isAccessibilitySize {
+                        // Sehr große Schrift: beide Nebenwege in einem Menü, damit die Leiste nicht den halben Bildschirm füllt.
+                        Menu {
+                            Button(isOnline(card) ? "Hat nicht geklappt" : "Nicht angenommen") { withAnimation(.snappy) { result = false } }
+                            Button("Später eintragen") { Task { await remindLater(card) }; dismiss() }
+                        } label: {
+                            Label("Andere Möglichkeiten", systemImage: "ellipsis.circle")
+                                .font(.scaled(16, weight: .semibold)).frame(maxWidth: .infinity, minHeight: Layout.tap)
+                        }
+                        .foregroundStyle(Color.ink)
+                    } else {
+                        // Nebeneinander, sonst untereinander – nie abgeschnitten.
+                        ViewThatFits(in: .horizontal) {
+                            HStack { notAccepted(card); Spacer(); later(card) }
+                            VStack(spacing: 8) { notAccepted(card); later(card) }
+                        }
+                        .padding(.horizontal, 4)
+                        .disabled(busy)
+                    }
                 }
-                .padding(.horizontal, 4)
-                .disabled(busy)
             }
         }
         .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, 4)
@@ -189,6 +206,7 @@ struct CheckoutView: View {
     }
 
     private func primaryTitle(_ card: GiftCard) -> String {
+        if card.issuedByMe { return "Einlösen – Betrag abziehen" }
         if isOnline(card) { return card.kind.isValueBased ? "Eingelöst? Einkauf abziehen" : "Als eingelöst markieren" }
         return card.kind.isValueBased ? "Bezahlt – Einkauf abziehen" : "Eingelöst"
     }
@@ -291,7 +309,7 @@ struct CheckoutView: View {
                             .disabled(photoImage == nil)
                     }
                     // Vor dem Entsperren nichts versprechen, was noch nicht zu sehen ist.
-                    if !(codeLock && hidden) {
+                    if !(codeLock && hidden) && !card.issuedByMe {
                         Label("Helligkeit automatisch erhöht", systemImage: "checkmark.circle")
                             .font(.scaled(13)).foregroundStyle(Color.ink2)
                     }
@@ -299,6 +317,11 @@ struct CheckoutView: View {
                 // PIN direkt unter dem Code. Bei sehr großer Schrift steht sie stattdessen in der Leiste unten,
                 // sonst läge sie unter der Leiste.
                 if !card.pin.isEmpty && !checkoutTypeSize.isAccessibilitySize { pinButton(card) }
+                if let m = card.minOrder {
+                    // Rabattcodes: an der Kasse bzw. im Shop sofort sehen, ab welchem Einkauf sie gelten.
+                    Label("Gilt ab \(m.euro) Einkauf", systemImage: "cart")
+                        .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                }
                 if card.merchantID != Merchant.other.id {
                     Text(card.merchant.tip)
                         .font(.scaled(13)).foregroundStyle(Color.muted)
@@ -386,8 +409,8 @@ struct CheckoutView: View {
                 .frame(maxWidth: .infinity, minHeight: Layout.tap)
         }
         .buttonStyle(.borderedProminent).buttonBorderShape(.capsule).controlSize(.large).tint(Color.ink)
-        .accessibilityHint("Legt den Code für 10 Minuten nur auf diesem iPhone in die Zwischenablage. Nie am Telefon oder per Nachricht weitergeben.")
-        Text("Bleibt 10 Minuten nur auf diesem iPhone in der Zwischenablage.")
+        .accessibilityHint("Legt den Code für 10 Minuten nur auf diesem \(Device.name) in die Zwischenablage. Nie am Telefon oder per Nachricht weitergeben.")
+        Text("Bleibt 10 Minuten nur auf diesem \(Device.name) in der Zwischenablage.")
             .font(.scaled(12)).foregroundStyle(Color.muted)
         if copied > 0 {
             Label("Kopiert. Nur im Shop einfügen, nie am Telefon oder per Nachricht weitergeben.", systemImage: "exclamationmark.shield")
@@ -560,6 +583,7 @@ struct KeypadView: View {
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { screenHeight = $0 }
         }
         .pageBackground()
+        .readableWidth()
         .toolbar(.hidden, for: .tabBar)
         .navigationTitle(store.card(cardID)?.name ?? "Einkauf")
         .navigationBarTitleDisplayMode(.inline)

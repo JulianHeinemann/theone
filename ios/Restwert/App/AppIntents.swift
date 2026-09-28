@@ -76,7 +76,7 @@ nonisolated enum IntentError: Error, CustomLocalizedStringResourceConvertible {
 
     var localizedStringResource: LocalizedStringResource {
         switch self {
-        case .locked: "Entsperre dein iPhone, damit Restwert deine Gutscheine lesen kann."
+        case .locked: "Entsperre dein \(Device.name), damit Restwert deine Gutscheine lesen kann."
         case .notFound: "Diesen Gutschein gibt es nicht mehr."
         }
     }

@@ -43,7 +43,7 @@ struct SettingsView: View {
             Section {
                 if !hasPasscode {
                     // In der Liste statt als Fußzeile: die lag unter der schwebenden Tab-Leiste.
-                    Label("Auf diesem iPhone ist kein iPhone-Code eingerichtet. Der Schutz wirkt erst, wenn du in den iPhone-Einstellungen einen Code festlegst.",
+                    Label("Auf diesem \(Device.name) ist kein \(Device.name)-Code eingerichtet. Der Schutz wirkt erst, wenn du in den Einstellungen einen Code festlegst.",
                           systemImage: "exclamationmark.triangle")
                         .font(.scaled(14)).foregroundStyle(Color.warn)
                 }
@@ -68,7 +68,7 @@ struct SettingsView: View {
                 }
                 // Ohne Code als „aus“ zeigen: ein grüner Schalter würde Schutz versprechen, den es nicht gibt.
                 Toggle(isOn: guarded($pinLock, reason: "PIN-Schutz ausschalten")) {
-                    settingLabel("PIN mit \(method) schützen", "PIN erst nach \(method == "Code" ? "dem iPhone-Code" : "\(method) oder iPhone-Code") anzeigen",
+                    settingLabel("PIN mit \(method) schützen", "PIN erst nach \(method == "Code" ? "dem \(Device.name)-Code" : "\(method) oder \(Device.name)-Code") anzeigen",
                                  method == "Touch ID" ? "touchid" : "faceid")
                 }
                 Toggle(isOn: guarded($appLock, reason: "App-Sperre ausschalten")) {
@@ -92,13 +92,13 @@ struct SettingsView: View {
             } header: {
                 Text("Schutz")
             } footer: {
-                Text("App-Sperre schützt die ganze App. Die anderen Schalter schützen einzelne Dinge: die PIN, den Gutscheincode (für Geräte, die mehrere nutzen) oder nur die Ziffern an der Kasse. „iPhone-Code“ meint den Code, mit dem du dein iPhone entsperrst.")
+                Text("App-Sperre schützt die ganze App. Die anderen Schalter schützen einzelne Dinge: die PIN, den Gutscheincode (für Geräte, die mehrere nutzen) oder nur die Ziffern an der Kasse. „\(Device.name)-Code“ meint den Code, mit dem du dein \(Device.name) entsperrst.")
                     .foregroundStyle(Color.ink2)
             }
             .tint(Color.toggleOn)
 
             Section { accountSection } footer: {
-                Text("Ohne eigenes Konto und ohne unseren Server: Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deinem eigenen iCloud. Den Schlüssel hat nur dein iCloud-Schlüsselbund – diese Sync-Daten können weder wir noch Apple lesen. Das iCloud-Backup deines iPhones kann Apple dagegen öffnen, solange „Erweiterter Datenschutz“ aus ist.")
+                Text("Ohne eigenes Konto und ohne unseren Server: Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deinem eigenen iCloud. Den Schlüssel hat nur dein iCloud-Schlüsselbund – diese Sync-Daten können weder wir noch Apple lesen. Das iCloud-Backup deines \(Device.name)s kann Apple dagegen öffnen, solange „Erweiterter Datenschutz“ aus ist.")
             }
 
             Section {
@@ -145,7 +145,7 @@ struct SettingsView: View {
             }
 
             Section {
-                Label("Gespeichert auf diesem iPhone mit Dateischutz des Systems, PINs eingeschlossen. Mit iCloud-Sync zusätzlich Ende-zu-Ende verschlüsselt in deinem eigenen iCloud; PINs gehen dabei nur in den iCloud-Schlüsselbund.", systemImage: "lock")
+                Label("Gespeichert auf diesem \(Device.name) mit Dateischutz des Systems, PINs eingeschlossen. Mit iCloud-Sync zusätzlich Ende-zu-Ende verschlüsselt in deinem eigenen iCloud; PINs gehen dabei nur in den iCloud-Schlüsselbund.", systemImage: "lock")
                 Label("Import: Live-Scan, Foto, PDF, E-Mail-Text oder in Mail „Teilen → Restwert“. Handschrift wird mitgelesen.", systemImage: "square.and.arrow.down")
                 if SmartExtractor.isAvailable {
                     Label("Apple Intelligence liest schwierige Gutscheine direkt auf dem Gerät.", systemImage: "apple.intelligence")
@@ -168,7 +168,7 @@ struct SettingsView: View {
             } header: {
                 Text("Sicherung")
             } footer: {
-                Text("Deine Gutscheine sind im iCloud-Backup deines iPhones enthalten. Zusätzlich kannst du eine Sicherungsdatei speichern, z.\u{00A0}B. in iCloud Drive. Sie enthält PINs und Fotos – bewahre sie sicher auf. Die Tabelle enthält keine PINs.")
+                Text("Deine Gutscheine sind im iCloud-Backup deines \(Device.name)s enthalten. Zusätzlich kannst du eine Sicherungsdatei speichern, z.\u{00A0}B. in iCloud Drive. Sie enthält PINs und Fotos – bewahre sie sicher auf. Die Tabelle enthält keine PINs.")
             }
             .foregroundStyle(Color.ink)
 
@@ -204,6 +204,7 @@ struct SettingsView: View {
         // Luft unter dem letzten Abschnitt, damit die schwebende Tab-Leiste keinen Text verdeckt.
         .contentMargins(.bottom, 88, for: .scrollContent)
         .pageBackground()
+        .readableWidth()
         .navigationTitle("Einstellungen")
         .fileImporter(isPresented: $showRestore, allowedContentTypes: [.json]) { result in
             guard case .success(let url) = result else { return }
@@ -225,10 +226,10 @@ struct SettingsView: View {
                 Task { await checkNotifications() }
             }
         }
-        .alert("Kein iPhone-Code eingerichtet", isPresented: $showNoPasscode) {
+        .alert("Kein \(Device.name)-Code eingerichtet", isPresented: $showNoPasscode) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Ohne Code kann iOS nichts sperren. Leg in den iPhone-Einstellungen einen Code fest und schalte den Schutz dann hier ein.")
+            Text("Ohne Code kann iOS nichts sperren. Leg in den Einstellungen einen Code fest und schalte den Schutz dann hier ein.")
         }
         .onChange(of: reminders) { _, on in
             Task {
@@ -254,7 +255,7 @@ struct SettingsView: View {
                 }
             }
         } message: {
-            Text("Entfernt die Gutscheine aus iCloud sowie Schlüssel und PINs aus dem iCloud-Schlüsselbund. Auf diesem iPhone bleibt alles erhalten. Der Sync wird ausgeschaltet.")
+            Text("Entfernt die Gutscheine aus iCloud sowie Schlüssel und PINs aus dem iCloud-Schlüsselbund. Auf diesem \(Device.name) bleibt alles erhalten. Der Sync wird ausgeschaltet.")
         }
         .confirmationDialog("Alle Gutscheine, Einlösungen und Tests löschen?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("Alles löschen", role: .destructive) { withAnimation(reduceMotion ? nil : .default) { store.resetAll() } }
@@ -377,11 +378,11 @@ struct SettingsView: View {
                 .frame(width: 48, height: 48).background(Color.fill, in: .circle)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(inCloud ? "Sicher in deinem iCloud" : checking ? "iCloud wird geprüft" : syncOn ? "iCloud-Sync wartet" : "Nur auf diesem iPhone")
+                Text(inCloud ? "Sicher in deinem iCloud" : checking ? "iCloud wird geprüft" : syncOn ? "iCloud-Sync wartet" : "Nur auf diesem \(Device.name)")
                     .font(.scaled(16, weight: .semibold))
                 Text(inCloud ? "Ende-zu-Ende verschlüsselt, auf allen deinen Apple-Geräten."
-                     : syncOn ? "Bis iCloud bereit ist, bleibt alles auf diesem iPhone."
-                     : "Nichts geht an uns. Texterkennung läuft auf dem Gerät. Das iCloud-Backup deines iPhones enthält die Gutscheine.")
+                     : syncOn ? "Bis iCloud bereit ist, bleibt alles auf diesem \(Device.name)."
+                     : "Nichts geht an uns. Texterkennung läuft auf dem Gerät. Das iCloud-Backup deines \(Device.name)s enthält die Gutscheine.")
                     .font(.scaled(15)).foregroundStyle(Color.ink2)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -460,12 +461,12 @@ struct ReminderSettingsView: View {
 /// Nachprüfbare Angaben, wo welche Daten liegen – in Alltagssprache.
 struct PrivacyExplainer: View {
     private let rows: [(icon: String, title: String, text: String)] = [
-        ("iphone", "Auf deinem iPhone", "Gutscheine, Fotos, PINs und Verlauf liegen in einer Datei, die iOS verschlüsselt, solange das iPhone gesperrt ist."),
+        ("iphone", "Auf deinem \(Device.name)", "Gutscheine, Fotos, PINs und Verlauf liegen in einer Datei, die iOS verschlüsselt, solange das \(Device.name) gesperrt ist."),
         ("person.crop.circle.badge.xmark", "Kein Konto, kein Server von uns", "Es gibt keine Anmeldung und keine Datenbank bei uns. Wir sehen nicht, welche Gutscheine du hast."),
-        ("lock.icloud", "iCloud-Sync (freiwillig)", "Jeder Gutschein wird auf dem iPhone mit AES-256 verschlüsselt, bevor er in dein eigenes iCloud geht. Der Schlüssel liegt nur in deinem iCloud-Schlüsselbund. Diese Sync-Daten können weder wir noch Apple lesen. Fotos werden nicht synchronisiert."),
-        ("key", "PINs", "PINs liegen lokal in der geschützten Datei. Mit iCloud-Sync gehen sie zusätzlich nur in deinen iCloud-Schlüsselbund, nie in eine Datenbank. Angezeigt werden sie nur nach Face ID, Touch ID oder iPhone-Code."),
-        ("externaldrive.badge.icloud", "iCloud-Backup des iPhones", "Wie alle App-Daten ist die Datei im iCloud-Backup deines iPhones enthalten. Ohne „Erweiterten Datenschutz“ kann Apple dieses Backup öffnen; mit ihm ist es Ende-zu-Ende verschlüsselt."),
-        ("text.viewfinder", "Scannen", "Barcode- und Texterkennung laufen auf dem iPhone. Fotos werden nirgendwohin geschickt."),
+        ("lock.icloud", "iCloud-Sync (freiwillig)", "Jeder Gutschein wird auf dem \(Device.name) mit AES-256 verschlüsselt, bevor er in dein eigenes iCloud geht. Der Schlüssel liegt nur in deinem iCloud-Schlüsselbund. Diese Sync-Daten können weder wir noch Apple lesen. Fotos werden nicht synchronisiert."),
+        ("key", "PINs", "PINs liegen lokal in der geschützten Datei. Mit iCloud-Sync gehen sie zusätzlich nur in deinen iCloud-Schlüsselbund, nie in eine Datenbank. Angezeigt werden sie nur nach Face ID, Touch ID oder \(Device.name)-Code."),
+        ("externaldrive.badge.icloud", "iCloud-Backup des \(Device.name)s", "Wie alle App-Daten ist die Datei im iCloud-Backup deines \(Device.name)s enthalten. Ohne „Erweiterten Datenschutz“ kann Apple dieses Backup öffnen; mit ihm ist es Ende-zu-Ende verschlüsselt."),
+        ("text.viewfinder", "Scannen", "Barcode- und Texterkennung laufen auf dem \(Device.name). Fotos werden nirgendwohin geschickt."),
         ("chart.bar.xaxis", "Keine Tracker, keine Werbung", "Die App enthält keine Analyse- oder Werbe-Software."),
         ("externaldrive", "Sicherung", "Die Sicherungsdatei entsteht erst, wenn du sie speicherst, und enthält PINs und Fotos. Speichere sie nur dort, wo du auch Passwörter aufbewahren würdest."),
     ]
@@ -487,6 +488,7 @@ struct PrivacyExplainer: View {
         }
         .scrollContentBackground(.hidden)
         .pageBackground()
+        .readableWidth()
         .navigationTitle("Deine Daten")
         .navigationBarTitleDisplayMode(.inline)
     }

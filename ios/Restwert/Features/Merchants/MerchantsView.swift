@@ -98,6 +98,7 @@ struct MerchantsView: View {
         }
         .scrollIndicators(.hidden)
         .pageBackground()
+        .readableWidth()
         // Großer Titel wie Verlauf und Einstellungen, damit er beim Tabwechsel nicht springt. Suche bleibt immer sichtbar.
         .navigationTitle("Läden")
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Laden suchen")

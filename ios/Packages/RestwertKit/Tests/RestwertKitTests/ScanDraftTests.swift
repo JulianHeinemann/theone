@@ -198,6 +198,30 @@ struct ScanDraftTests {
         #expect("AQ7K-2ZPM".grouped == "AQ7K-2ZPM")
     }
 
+    @Test("Mindestbestellwert wird erkannt", arguments: [
+        ("15 % Rabatt auf alles - ab 50 € Mindestbestellwert", 50.0), ("Mindestbestellwert: 30,00 EUR", 30),
+        ("MBW 25 €", 25), ("gültig bei einem Einkauf über 100 €", 100), ("Mindesteinkaufswert von 40 €", 40),
+        ("10 % Rabatt ab 1.000 € Einkaufswert", 1000)])
+    func minOrder(_ text: String, _ expected: Double) {
+        #expect(TextParser.parse(text, now: now).minOrder == expected)
+    }
+
+    @Test("Kein Mindestbestellwert ohne Hinweis", arguments: ["Gutschein 50 €", "gültig ab 12.10.2026", "ab sofort einlösbar"])
+    func noMinOrder(_ text: String) {
+        #expect(TextParser.parse(text, now: now).minOrder == nil)
+    }
+
+    @Test("Codes für eigene Gutscheine: Präfix, eindeutig, ohne verwechselbare Zeichen")
+    func issuedCodes() {
+        let a = IssuedVoucher.makeCode(for: "Café am Markt")
+        #expect(a.hasPrefix("CAFE-"))
+        #expect(a.count == 14)
+        #expect(!a.dropFirst(5).contains { "01OIL".contains($0) })
+        var seen: Set<String> = []
+        for _ in 0..<500 { seen.insert(IssuedVoucher.makeCode(for: "X", existing: seen)) }
+        #expect(seen.count == 500)
+    }
+
     @Test("Laufzeit lässt sich ab anderem Erhalt-Datum neu rechnen")
     func validityFromReceived() {
         let v = TextParser.parse("3 Jahre gültig ab Ende des Jahres", now: now).validity

@@ -18,6 +18,8 @@ public struct CardDraft: Sendable, Equatable {
     public var expiresIsEstimate = false
     /// Die gelesene Laufzeit, damit das Formular bei geändertem „Erhalten am“ neu rechnen kann.
     public var validity: Validity?
+    /// Mindestbestellwert („ab 50 € Einkauf“, „Mindestbestellwert 50 €“).
+    public var minOrder: Double?
 
     public init(merchantID: String? = nil, number: String? = nil, pin: String? = nil, value: Double? = nil, expires: Date? = nil, percent: Double? = nil, customName: String? = nil) {
         self.merchantID = merchantID; self.number = number; self.pin = pin; self.value = value; self.expires = expires; self.percent = percent
@@ -66,6 +68,7 @@ public enum TextParser {
         }
         d.percent = percent(in: t)
         d.recipient = recipient(in: t)
+        d.minOrder = minOrder(in: t)
         d.number = code(in: t, excluding: d.pin)
         return d
     }
@@ -114,6 +117,24 @@ public enum TextParser {
         // Nur mit Rabatt-Kontext; „Code“ steht in fast jedem Gutscheintext und zählt nicht
         let signal = #"(?i)\b(?:rabatt\w*|nachlass|sparen|spare|off|reduziert)\b"#
         return matches(signal, in: untaxed).isEmpty ? nil : first
+    }
+
+    /// Mindestbestellwert: „ab 50 €“, „Mindestbestellwert 50 €“, „MBW: 50 EUR“, „Mindesteinkaufswert von 50 €“,
+    /// „bei einem Einkauf ab/über 100 €“. „ab“ zählt nur mit Währung (sonst wäre „ab 12.10.“ ein Betrag).
+    public static func minOrder(in s: String) -> Double? {
+        // Wie bei Beträgen: mit Tausenderpunkt („ab 1.000 €“), sonst läse man 1 €.
+        let n = number
+        let cur = #"\s?(?:€|EUR\b|Euro\b)"#
+        let patterns = [
+            #"(?i)\b(?:Mindest\w*wert|MBW)\s*:?\s*(?:von\s*)?(?:€|EUR)?\s?"# + n,
+            #"(?i)\b(?:Einkauf|Bestellung|Einkaufswert|Bestellwert)\s+(?:ab|über|von)\s*(?:€|EUR)?\s?"# + n,
+            #"(?i)\bab\s+(?:€|EUR)\s?"# + n,
+            #"(?i)\bab\s+"# + n + cur,
+        ]
+        for p in patterns {
+            if let hit = matches(p, in: s).first.flatMap({ parseMoney($0[1]) }), hit > 0, hit <= 5000 { return hit }
+        }
+        return nil
     }
 
     /// Zahl mit optionalen Tausenderpunkten und Nachkommastellen, z. B. 1.234,56 oder 12,5 oder 20.

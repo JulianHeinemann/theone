@@ -25,33 +25,33 @@ struct PrivacyPolicyView: View {
         LegalSection(title: "Kurz gesagt", paragraphs: [
             "Restwert hat kein Konto und keinen eigenen Server. Die App enthält keine Tracker, keine Analyse- und keine Werbe-Software. Wir erfahren nicht, welche Gutscheine du hast.",
         ]),
-        LegalSection(title: "Auf deinem iPhone", paragraphs: [
-            "Gutscheine, Fotos, PINs, Einlösungen und Testergebnisse liegen in einer Datei im Bereich der App. iOS verschlüsselt sie, solange das iPhone gesperrt ist.",
+        LegalSection(title: "Auf deinem \(Device.name)", paragraphs: [
+            "Gutscheine, Fotos, PINs, Einlösungen und Testergebnisse liegen in einer Datei im Bereich der App. iOS verschlüsselt sie, solange das \(Device.name) gesperrt ist.",
             "Für das Widget legt die App eine kurze Übersicht (Name, Betrag, Ablaufdatum – keine Codes, keine PINs) in einem gemeinsamen Ordner von App und Widget auf demselben Gerät ab.",
         ]),
         LegalSection(title: "Scannen und Texterkennung", paragraphs: [
-            "Kamera, Fotos und PDFs werden auf dem iPhone ausgewertet (Barcode-, Text- und Handschrifterkennung von Apple). Wo Apple Intelligence verfügbar ist, läuft auch sie auf dem Gerät. Bilder und Texte werden dafür nirgendwohin geschickt.",
+            "Kamera, Fotos und PDFs werden auf dem \(Device.name) ausgewertet (Barcode-, Text- und Handschrifterkennung von Apple). Wo Apple Intelligence verfügbar ist, läuft auch sie auf dem Gerät. Bilder und Texte werden dafür nirgendwohin geschickt.",
         ]),
         LegalSection(title: "Mitteilungen", paragraphs: [
-            "Erinnerungen plant die App lokal auf dem iPhone. Es gibt keinen Push-Server. Ob Mitteilungen auf dem Sperrbildschirm Inhalte zeigen, stellst du in den iOS-Einstellungen ein.",
+            "Erinnerungen plant die App lokal auf dem \(Device.name). Es gibt keinen Push-Server. Ob Mitteilungen auf dem Sperrbildschirm Inhalte zeigen, stellst du in den iOS-Einstellungen ein.",
         ]),
         LegalSection(title: "iCloud-Sync (freiwillig)", paragraphs: [
             "Der Sync ist anfangs aus. Schaltest du ihn ein, speichert die App deine Gutscheine in der privaten iCloud-Datenbank deines eigenen Apple Accounts (CloudKit).",
-            "Jeder Gutschein wird vorher auf dem iPhone mit AES-GCM (256 Bit) verschlüsselt. Der Schlüssel liegt in deinem iCloud-Schlüsselbund, den Apple Ende-zu-Ende verschlüsselt. Den Inhalt können weder wir noch Apple lesen.",
+            "Jeder Gutschein wird vorher auf dem \(Device.name) mit AES-GCM (256 Bit) verschlüsselt. Der Schlüssel liegt in deinem iCloud-Schlüsselbund, den Apple Ende-zu-Ende verschlüsselt. Den Inhalt können weder wir noch Apple lesen.",
             "PINs gehen nie in die iCloud-Datenbank, sondern einzeln in deinen iCloud-Schlüsselbund. Fotos werden nicht synchronisiert und bleiben auf dem Gerät.",
             "Für Apple sichtbar bleiben technische Angaben wie Anzahl, zufällige Kennungen, Größe und Änderungszeit der Einträge. Für iCloud gelten Apples Datenschutzbestimmungen.",
             "In den Einstellungen löscht „Daten aus iCloud löschen“ alles aus deinem iCloud und aus dem iCloud-Schlüsselbund.",
         ]),
-        LegalSection(title: "iCloud-Backup des iPhones", paragraphs: [
+        LegalSection(title: "iCloud-Backup des \(Device.name)s", paragraphs: [
             "Unabhängig vom Sync sichert iOS die Daten von Apps im iCloud-Backup, wenn es eingeschaltet ist – auch Gutscheine, Fotos und PINs aus Restwert.",
             "Ohne „Erweiterten Datenschutz für iCloud“ hält Apple die Schlüssel zu diesem Backup und kann darauf zugreifen. Mit „Erweitertem Datenschutz“ ist das Backup Ende-zu-Ende verschlüsselt. In den iCloud-Einstellungen kannst du Restwert auch vom Backup ausnehmen.",
         ]),
         LegalSection(title: "Sicherung und Export", paragraphs: [
-            "Eine Sicherungsdatei oder Tabelle (CSV) entsteht nur, wenn du sie anforderst. Wohin sie geht, wählst du selbst. Die Zwischendatei auf dem iPhone wird danach gelöscht.",
+            "Eine Sicherungsdatei oder Tabelle (CSV) entsteht nur, wenn du sie anforderst. Wohin sie geht, wählst du selbst. Die Zwischendatei auf dem \(Device.name) wird danach gelöscht.",
             "Die Sicherung enthält PINs und Fotos und ist nicht zusätzlich verschlüsselt. Die Tabelle enthält keine PINs.",
         ]),
         LegalSection(title: "Zwischenablage", paragraphs: [
-            "Kopierst du in der Gutschein-Ansicht einen Code, bleibt er nur auf diesem Gerät (nicht auf anderen Apple-Geräten) und verschwindet nach zwei Minuten. Kopierst du ihn an der Kasse zum Online-Einlösen, bleibt er ebenfalls nur auf diesem Gerät und verschwindet nach zehn Minuten.",
+            "Kopierst du in der Gutschein-Ansicht einen Code, bleibt er nur auf diesem Gerät (nicht auf anderen Apple-Geräten) und verschwindet nach zehn Minuten – in der Gutschein-Ansicht wie an der Kasse.",
         ]),
         LegalSection(title: "Links zu Läden", paragraphs: [
             "Links zum Guthaben-Check öffnen die Website des Ladens. Restwert gibt dabei keine Gutscheindaten weiter. Auf der Website gelten die Datenschutzregeln des Ladens.",
@@ -124,6 +124,7 @@ private struct LegalPage: View {
         }
         .scrollContentBackground(.hidden)
         .pageBackground()
+        .readableWidth()
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }

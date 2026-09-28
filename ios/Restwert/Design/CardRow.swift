@@ -82,7 +82,7 @@ struct CardRow: View {
         let open = card.pendingSince != nil && card.isActive ? ", Betrag offen" : ""
         let urgent = due.level == .urgent ? ", dringend" : ""
         let estimated = due.estimated ? ", Datum geschätzt" : ""
-        return "\(card.name)\(who)\(open), \(amount), \(due.text)\(urgent)\(estimated)\(card.forGifting ? ", zum Verschenken" : "")"
+        return "\(card.name)\(who)\(open), \(amount), \(due.text)\(urgent)\(estimated)\(card.forGifting ? ", zum Verschenken" : "")\(card.issuedByMe ? ", selbst ausgegeben" : "")"
     }
 
     private func nameBlock(_ due: Due) -> some View {
@@ -91,6 +91,11 @@ struct CardRow: View {
             HStack(spacing: 6) {
                 Text(card.name).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
                     .lineLimit(1).truncationMode(.tail).layoutPriority(1)
+                if card.issuedByMe {
+                    Text("ausgegeben").font(.scaled(12, weight: .semibold)).foregroundStyle(Color.ink2)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Color.fill, in: .capsule)
+                }
                 if card.forGifting {
                     Image(systemName: "gift").font(.scaled(13)).foregroundStyle(Color.ink2)
                         .accessibilityLabel("zum Verschenken")

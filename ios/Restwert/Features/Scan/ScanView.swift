@@ -6,6 +6,7 @@ import RestwertKit
 /// Scannen → Ergebnis prüfen → Formular. Alternativ Foto, E-Mail, Datei oder manuell.
 struct ScanView: View {
     @Environment(Router.self) private var router
+    @Environment(Store.self) private var store
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -22,6 +23,7 @@ struct ScanView: View {
     @State private var readTask: Task<Void, Never>?
     @State private var confirmAddWithWarning = false
     @State private var confirmDiscard = false
+    @State private var showIssue = false
     /// Nur ob Text in der Zwischenablage liegt; gelesen wird erst nach einem Tipp.
     @State private var clipboardHasText = UIPasteboard.general.hasStrings
 
@@ -32,6 +34,7 @@ struct ScanView: View {
         switch intent {
         case .camera: showScanner = true
         case .manual: formSeed = FormSeed(outcome: nil)
+        case .issue: showIssue = true
         }
     }
 
@@ -53,9 +56,10 @@ struct ScanView: View {
         }
         .scrollIndicators(.hidden)
         .pageBackground()
+        .readableWidth()
         // Aktionen fest unten statt am Ende der Liste unter der schwebenden Tab-Leiste.
         .safeAreaInset(edge: .bottom) {
-            if let outcome { resultActions(outcome) }
+            if let outcome { resultActions(outcome).frame(maxWidth: 700).frame(maxWidth: .infinity).background(Color.page.ignoresSafeArea()) }
         }
         // Im Ergebnis keine Tab-Leiste: sie verdeckte „Hinzufügen“, Zurück geht oben links.
         .toolbar(outcome == nil ? .automatic : .hidden, for: .tabBar)
@@ -85,7 +89,7 @@ struct ScanView: View {
                         Text(ScanProgress.shared.step)
                             .font(.scaled(13, weight: .medium)).foregroundStyle(Color.ink)
                             .contentTransition(.opacity)
-                        Text("Alles läuft auf deinem iPhone und dauert ein paar Sekunden.")
+                        Text("Alles läuft auf deinem \(Device.name) und dauert ein paar Sekunden.")
                             .font(.scaled(13)).foregroundStyle(Color.ink2)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
@@ -96,6 +100,10 @@ struct ScanView: View {
                 }
                 .frame(maxWidth: 280)
                 .padding(28)
+                .background {
+                    // Hintergrund sperren, solange gelesen wird (kein versehentliches Tippen).
+                    Color.black.opacity(0.001).frame(width: 4000, height: 4000).contentShape(.rect).onTapGesture {}
+                }
                 // Für VoiceOver modal: nichts dahinter ist bedienbar, solange gelesen wird.
                 .accessibilityAddTraits(.isModal)
                 .glassEffect(.regular, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
@@ -113,9 +121,14 @@ struct ScanView: View {
             if phase == .active { clipboardHasText = UIPasteboard.general.hasStrings }
         }
         .navigationDestination(item: $formSeed) { seed in
-            CardFormView(outcome: seed.outcome) { saved in
+            CardFormView(outcome: seed.outcome, autoSave: seed.autoSave) { saved in
                 formSeed = nil
                 outcome = nil
+                // Mit einem Tipp gespeichert: im Hinzufügen-Tab bleiben (mehrere hintereinander), „Ansehen“ öffnet ihn.
+                if seed.autoSave {
+                    router.toast = Toast(message: "„\(saved.name)“ gespeichert", undo: { [router] in router.showCard(saved.id) }, actionTitle: "Ansehen")
+                    return
+                }
                 router.showCard(saved.id)
                 // Mehrere Gutscheine hintereinander: direkt den nächsten scannen.
                 router.toast = Toast(message: "„\(saved.name)“ gespeichert", undo: { [router] in
@@ -126,6 +139,11 @@ struct ScanView: View {
         }
         .fullScreenCover(isPresented: $showScanner) {
             LiveScannerView { live in read { await finishLive(live) } }
+        }
+        .sheet(isPresented: $showIssue) {
+            NavigationStack {
+                IssueVoucherView { card in router.showCard(card.id) }
+            }
         }
         .fileImporter(isPresented: $showFiles, allowedContentTypes: [.pdf, .image, .plainText, .text]) { result in
             switch result {
@@ -172,7 +190,7 @@ struct ScanView: View {
                     .accessibilityLabel("Gutschein scannen")
                     .accessibilityHint("Öffnet die Kamera. Barcode und Text werden automatisch gelesen.")
                 // Hinweis direkt beim Scannen, nicht als letzte Zeile unter der Tab-Leiste.
-                Label("Texterkennung läuft nur auf deinem iPhone.", systemImage: "lock")
+                Label("Texterkennung läuft nur auf deinem \(Device.name).", systemImage: "lock")
                     .font(.scaled(13)).foregroundStyle(Color.ink2).padding(.horizontal, 4)
             }
             VStack(alignment: .leading, spacing: Layout.group) {
@@ -208,6 +226,11 @@ struct ScanView: View {
                     Divider().padding(.leading, 56)
                     Button { formSeed = FormSeed(outcome: nil) } label: {
                         SourceRow(icon: "keyboard", title: "Von Hand eingeben", subtitle: "Laden, Betrag und Code selbst eintippen")
+                    }
+                    Divider().padding(.leading, 56)
+                    Button { showIssue = true } label: {
+                        SourceRow(icon: "storefront", title: "Eigenen Gutschein ausgeben",
+                                  subtitle: "Für Läden und Cafés: Gutschein mit QR-Code erstellen und teilen")
                     }
                 }
                 .buttonStyle(.plain)
@@ -264,7 +287,25 @@ struct ScanView: View {
     /// „Hinzufügen“ bzw. bei Nicht-Gutscheinen „Erneut scannen“ als Hauptaktion.
     private func resultActions(_ outcome: ScanOutcome) -> some View {
         VStack(spacing: 14) {
-            if outcome.looksLikeVoucher {
+            if let dup = outcome.duplicateID {
+                Button("Gespeicherten Gutschein öffnen") {
+                    withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
+                    router.showCard(dup)
+                }
+                .buttonStyle(.primary)
+                HStack(spacing: 10) {
+                    Button("Trotzdem hinzufügen") { formSeed = FormSeed(outcome: outcome) }.buttonStyle(.quiet)
+                    Button("Erneut scannen") { rescan() }.buttonStyle(.quiet)
+                }
+            } else if outcome.canSaveDirectly {
+                // Alles sicher erkannt: ein Tipp genügt. Wer prüfen will, öffnet das Formular.
+                Button("Speichern") { formSeed = FormSeed(outcome: outcome, autoSave: true) }.buttonStyle(.primary)
+                HStack(spacing: 10) {
+                    Button("Prüfen und ändern") { formSeed = FormSeed(outcome: outcome) }
+                        .buttonStyle(.quiet)
+                    Button("Erneut scannen") { rescan() }.buttonStyle(.quiet)
+                }
+            } else if outcome.looksLikeVoucher {
                 Button("Hinzufügen") {
                     // Mit Warnung (abgelaufen, hoher Wert, Prüfziffer) einmal nachfragen.
                     if outcome.hasWarnings { confirmAddWithWarning = true } else { formSeed = FormSeed(outcome: outcome) }
@@ -295,10 +336,31 @@ struct ScanView: View {
     }
 
     private func show(_ result: ScanOutcome) {
+        // Eigener, selbst ausgegebener Gutschein: gleich zur Kasse zum Abbuchen statt ihn neu anzulegen.
+        func plain(_ s: String) -> String { s.filter { $0.isLetter || $0.isNumber }.uppercased() }
+        if let scanned = result.barcode ?? result.draft.number,
+           let own = store.cards.first(where: { $0.issuedByMe && plain($0.number) == plain(scanned) }) {
+            withAnimation(reduceMotion ? nil : .smooth) { outcome = nil }
+            router.tab = .home
+            router.homePath = [.checkout(own.id)]
+            router.toast = Toast(message: "Dein Gutschein: noch \(own.balance.euro) offen", undo: nil)
+            return
+        }
+        var result = result
+        // Betrugsmuster: mehrere hohe Gutscheine in kurzer Zeit (oft auf Anweisung von Betrügern gekauft).
+        let weekAgo = Date.now.addingTimeInterval(-7 * 24 * 3600)
+        // Schon gespeichert? Dann nicht doppelt anlegen, sondern öffnen anbieten.
+        if let code = result.displayCode, let dup = store.cards.first(where: { !$0.issuedByMe && !$0.isExample && !$0.number.isEmpty && plain($0.number) == plain(code) }) {
+            result.duplicateName = dup.name
+            result.duplicateID = dup.id
+        }
+        result.recentHighValueCount = store.cards.filter { !$0.isExample && !$0.issuedByMe && $0.value >= 100 && $0.received >= weekAgo }.count
         withAnimation(reduceMotion ? nil : .smooth) { outcome = result }
         #if DEBUG
         // Nur für Screenshots: `-demoOpenForm YES` öffnet nach dem Lesen gleich das Formular.
-        if UserDefaults.standard.bool(forKey: "demoOpenForm") { formSeed = FormSeed(outcome: result) }
+        if UserDefaults.standard.bool(forKey: "demoOpenForm") {
+            formSeed = FormSeed(outcome: result, autoSave: UserDefaults.standard.bool(forKey: "demoAutoSave"))
+        }
         #endif
     }
 
@@ -316,6 +378,8 @@ struct ScanView: View {
 struct FormSeed: Identifiable, Hashable {
     let id = UUID()
     let outcome: ScanOutcome?
+    /// Direkt speichern (alles sicher erkannt), Formular nur bei Problemen zeigen.
+    var autoSave = false
 
     static func == (a: FormSeed, b: FormSeed) -> Bool { a.id == b.id }
     func hash(into hasher: inout Hasher) { hasher.combine(id) }

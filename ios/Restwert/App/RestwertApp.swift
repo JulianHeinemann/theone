@@ -59,7 +59,7 @@ struct RestwertApp: App {
 
 enum AppTab: Hashable { case home, history, merchants, settings, scan }
 
-enum ScanIntent { case camera, manual }
+enum ScanIntent { case camera, manual, issue }
 
 enum Route: Hashable {
     case card(UUID)
@@ -301,6 +301,9 @@ extension Router {
         case "merchants": tab = .merchants
         case "settings": tab = .settings
         case "scan": tab = .scan
+        case "issue":
+            tab = .scan
+            scanIntent = .issue
         case "pending":
             if let sample {
                 store.setPending(sample.id, true)
@@ -567,7 +570,7 @@ extension View {
         confirmationDialog("PIN ohne Schutz zeigen?", isPresented: isPresented, titleVisibility: .visible) {
             Button("PIN zeigen", action: onShow)
         } message: {
-            Text("Auf diesem iPhone ist kein Code eingerichtet, deshalb kann Restwert die PIN nicht schützen. Jeder, der dein iPhone hat, kann sie sehen.")
+            Text("Auf diesem \(Device.name) ist kein Code eingerichtet, deshalb kann Restwert die PIN nicht schützen. Jeder, der dein \(Device.name) hat, kann sie sehen.")
         }
     }
 }
@@ -596,7 +599,7 @@ struct LockScreen: View {
                     .multilineTextAlignment(.center)
                     .accessibilityAddTraits(.isHeader)
                 if noPasscode {
-                    Text("Auf diesem iPhone ist kein Code eingerichtet. Ohne Code kann Restwert nicht sicher sperren. Leg in den iPhone-Einstellungen unter „\(DeviceSecurity.methodName == "Touch ID" ? "Touch ID" : "Face ID") & Code“ einen Code fest.")
+                    Text("Auf diesem \(Device.name) ist kein Code eingerichtet. Ohne Code kann Restwert nicht sicher sperren. Leg in den Einstellungen unter „\(DeviceSecurity.methodName == "Touch ID" ? "Touch ID" : "Face ID") & Code“ einen Code fest.")
                         .font(.scaled(15)).foregroundStyle(Color.ink2)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
@@ -608,18 +611,20 @@ struct LockScreen: View {
                         if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
                     }
                     .buttonStyle(.primary)
+                    // Bewusst unscheinbar: der sichere Weg ist, einen Code einzurichten.
                     Button("Sperre ausschalten und öffnen") { confirmDisable = true }
-                        .buttonStyle(.quiet)
+                        .font(.scaled(14)).foregroundStyle(Color.ink2).underline()
+                        .frame(minHeight: Layout.tap)
                 } else {
                     // Knopf direkt unter dem Titel: das Face-ID-Fenster des Systems liegt in der Mitte darüber.
                     Button("Entsperren", systemImage: DeviceSecurity.methodName == "Touch ID" ? "touchid" : "faceid") { Task { await unlock() } }
                         .buttonStyle(.primary)
-                    Text("Entsperre mit \(DeviceSecurity.methodName == "Code" ? "deinem iPhone\u{2011}Code" : "\(DeviceSecurity.methodName) oder deinem iPhone\u{2011}Code").")
+                    Text("Entsperre mit \(DeviceSecurity.methodName == "Code" ? "deinem \(Device.name)\u{2011}Code" : "\(DeviceSecurity.methodName) oder deinem \(Device.name)\u{2011}Code").")
                         .font(.scaled(15)).foregroundStyle(Color.ink2)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                     if unavailableHint {
-                        Text("\(DeviceSecurity.methodName) ist gerade nicht verfügbar. Warte kurz oder entsperre dein iPhone einmal mit dem Code, dann nochmal versuchen.")
+                        Text("\(DeviceSecurity.methodName) ist gerade nicht verfügbar. Warte kurz oder entsperre dein \(Device.name) einmal mit dem Code, dann nochmal versuchen.")
                             .font(.scaled(14)).foregroundStyle(Color.warn)
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
@@ -639,7 +644,7 @@ struct LockScreen: View {
                 lock.unlock()
             }
         } message: {
-            Text("Restwert öffnet sich dann ohne Prüfung. Jeder mit deinem iPhone sieht Guthaben, Codes und PINs, bis du die Sperre in den Einstellungen wieder einschaltest.")
+            Text("Restwert öffnet sich dann ohne Prüfung. Jeder mit deinem \(Device.name) sieht Guthaben, Codes und PINs, bis du die Sperre in den Einstellungen wieder einschaltest.")
         }
         // Face ID erst starten, wenn die App wirklich im Vordergrund ist; im Hintergrund schlägt die Abfrage fehl.
         // Nach der Rückkehr (z. B. aus den iPhone-Einstellungen) neu prüfen.

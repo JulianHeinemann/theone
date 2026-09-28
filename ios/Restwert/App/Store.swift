@@ -239,7 +239,7 @@ final class Store {
                 let encoding = error is EncodingError
                 let failure = encoding
                     ? "Ein Eintrag ließ sich nicht speichern. Prüf die zuletzt eingegebenen Beträge."
-                    : "Speichern hat nicht geklappt. Ist der iPhone-Speicher voll? Restwert versucht es gleich noch einmal."
+                    : "Speichern hat nicht geklappt. Ist der \(Device.name)-Speicher voll? Restwert versucht es gleich noch einmal."
                 // Gleicher Text = kein neuer Wechsel; die App erinnert selbst, solange saveError gesetzt ist.
                 Task { @MainActor [weak self] in
                     self?.saveError = failure
@@ -763,7 +763,8 @@ final class Store {
         let now = Date.now
         var fallbacks: [String: Date] = [:]
         var planned: [(card: GiftCard, id: String, fire: Date, title: String)] = []
-        for c in cards where c.isActive && !c.isExample && !c.forGifting {
+        // Selbst ausgegebene Gutscheine lösen Kunden ein, nicht ich: keine Ablauf-Erinnerung.
+        for c in cards where c.isActive && !c.isExample && !c.forGifting && !c.issuedByMe {
             // Ablauftag als 12:00 Ortszeit (gespeichert ist der Kalendertag in UTC).
             let expiry = CalendarDay.local(c.expires)
             var count = 0

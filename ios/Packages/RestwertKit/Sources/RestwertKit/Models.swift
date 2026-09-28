@@ -107,7 +107,7 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         Merchant("lieferando", "Lieferando", .codeOnly, .text, "https://www.lieferando.de/geschenkkarten/saldocheck", check: .form, "Code und PIN online eingeben."),
         Merchant("wunschgutschein", "Wunschgutschein", .codeOnly, .text, "https://app.wunschgutschein.de/", check: .form, "Online in einen Partner-Gutschein umtauschen."),
         Merchant("eventim", "Eventim", .codeOnly, .text, "https://www.eventim.de/helpcenter/?faq=2288", check: .info, "Online mit dem 16-stelligen Code."),
-        Merchant("ticketmaster", "Ticketmaster", .codeOnly, .text, "https://sites.prepaytec.com/chopinweb/balanceCheck.do?customerCode=2013119751813114&loc=de&showCvc=1&showExpiryDate=1&brandingCode=bal_enq_tmgermany", check: .form, "Nummer plus 3-stelliger Sicherheitscode."),
+        Merchant("ticketmaster", "Ticketmaster", .codeOnly, .text, "https://sites.prepaytec.com/chopinweb/balanceCheck.do?customerCode=2013119751813114&loc=de&showCvc=1&showExpiryDate=1&brandingCode=bal_enq_tmgermany", check: .form, "Code plus 3-stelliger Sicherheitscode."),
         Merchant("ikea", "IKEA", .official, .code128, "https://www.ikea.com/de/de/gift-cards/", check: .account, "Die Kasse scannt die Karte vom Handy. Guthaben online nur mit Login."),
         Merchant("thalia", "Thalia", .official, .code128, "https://www.thalia.de/geschenkkarte/", check: .form, "Die Kasse scannt die Karte vom Handy. Für online brauchst du Code und PIN."),
         Merchant("zara", "Zara", .official, .code128, "https://www.zara.com/de/de/z-zara-card/balance", check: .form, "E-Karte gilt in Filialen."),
@@ -270,6 +270,10 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     public var pendingSince: Date?
     /// Ablaufdatum nicht auf dem Gutschein gefunden, sondern geschätzt (gesetzliche Frist). Zeigt „geschätzt“ an.
     public var expiresEstimated: Bool = false
+    /// Mindestbestellwert in Euro („ab 50 € Einkauf“), vor allem bei Rabattcodes.
+    public var minOrder: Double?
+    /// Selbst ausgegebener Gutschein (z. B. vom eigenen Café): zählt nicht zum eigenen Guthaben, sondern ist offen bei Kunden.
+    public var issuedByMe: Bool = false
 
     public init(id: UUID = UUID(), kind: VoucherKind = .giftCard, merchantID: String, customName: String = "", number: String,
                 format: CodeFormat, pin: String = "", value: Double, balance: Double, percent: Double? = nil,
@@ -303,7 +307,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     /// Zählt zur Guthaben-Summe: wertbasiert, nicht als eingelöst gestempelt (z. B. früherer Rabattcode, der zum
     /// Wertgutschein wurde), nicht abgelaufen, nicht archiviert und nicht zum Verschenken.
     public func countsTowardTotal(now: Date = .now) -> Bool {
-        kind.isValueBased && redeemedAt == nil && daysLeft(now: now) >= 0 && !isArchived && !forGifting
+        kind.isValueBased && redeemedAt == nil && daysLeft(now: now) >= 0 && !isArchived && !forGifting && !issuedByMe
     }
     public var isActive: Bool { isOpen && daysLeft >= 0 && archivedAt == nil }
     public var isArchived: Bool { archivedAt != nil }
@@ -373,6 +377,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id, kind, merchantID, customName, number, format, pin, value, balance, percent, received, expires
         case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt, archivedAt, reminderAt, owner, forGifting, pendingSince, expiresEstimated
+        case minOrder, issuedByMe
     }
 
     /// Tolerantes Dekodieren, damit ältere Speicherstände nach Updates lesbar bleiben.
@@ -403,6 +408,8 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
         forGifting = try c.decodeIfPresent(Bool.self, forKey: .forGifting) ?? false
         pendingSince = try c.decodeIfPresent(Date.self, forKey: .pendingSince)
         expiresEstimated = try c.decodeIfPresent(Bool.self, forKey: .expiresEstimated) ?? false
+        minOrder = try c.decodeIfPresent(Double.self, forKey: .minOrder)
+        issuedByMe = try c.decodeIfPresent(Bool.self, forKey: .issuedByMe) ?? false
     }
 }
 

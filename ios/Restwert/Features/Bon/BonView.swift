@@ -76,6 +76,7 @@ struct BonView: View {
         }
         .scrollIndicators(.hidden)
         .pageBackground()
+        .readableWidth()
         .navigationTitle("Verlauf")
     }
 
@@ -266,6 +267,7 @@ struct TestsView: View {
             .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
         }
         .pageBackground()
+        .readableWidth()
         .navigationTitle("Kassentest")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

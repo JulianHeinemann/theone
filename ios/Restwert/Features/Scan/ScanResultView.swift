@@ -88,12 +88,18 @@ struct ScanResultView: View {
             }
             // Bei hohem Wert gleich oben, sonst unter dem Ergebnis (das Ergebnis zuerst).
             // Bei sehr großer Schrift immer nach dem Ergebnis, sonst sähe man keine einzige Angabe.
-            if (draft.value ?? 0) >= 100 && !typeSize.isAccessibilitySize { fraudBox(draft) }
+            if let existing = outcome.duplicateName {
+                Label("Diesen Gutschein hast du schon gespeichert („\(existing)“).", systemImage: "doc.on.doc")
+                    .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(Layout.group).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+            }
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 14) {
                     MerchantMark(merchantID: draft.merchantID, name: merchant?.name ?? draft.customName ?? "?")
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Gelesen – bitte prüfen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                        Text(outcome.canSaveDirectly ? "Sicher erkannt" : "Gelesen – bitte prüfen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
                         Text((outcome.displayMerchantName ?? "Laden nicht erkannt") + (outcome.aiFilled.contains("Laden") ? " ✦" : ""))
                             .font(.scaled(20, weight: .bold))
                             .fixedSize(horizontal: false, vertical: true)
@@ -124,6 +130,9 @@ struct ScanResultView: View {
                         cell(draft.expiresIsEstimate ? "Gültig bis · berechnet" : "Gültig bis",
                              draft.expires.map(\.dayMonthYear) ?? "nicht gefunden", index: 1)
                     }
+                    if let m = draft.minOrder {
+                        cell("Mindestbestellwert", "ab \(m.euro) Einkauf", index: 2)
+                    }
                     if let code {
                         cell("Code", code, index: 2)
                         cell("Barcode an der Kasse", formatText, index: 3)
@@ -149,7 +158,8 @@ struct ScanResultView: View {
             }
             .padding(Layout.inset).cardSurface(radius: Layout.cardRadius)
 
-            if (draft.value ?? 0) < 100 || typeSize.isAccessibilitySize { fraudBox(draft) }
+            // Ergebnis zuerst; der Betrugshinweis danach (rote Warnungen stehen trotzdem ganz oben).
+            fraudBox(draft)
 
             VStack(alignment: .leading, spacing: 10) {
                 // Kein „Echtheits“-Versprechen: geprüft werden nur Form und Plausibilität.
@@ -174,7 +184,7 @@ struct ScanResultView: View {
     private func fraudBox(_ draft: CardDraft) -> some View {
     // Bei hohem Wert immer ausführlich, sonst nach drei Scans kurz.
     let highValue = (draft.value ?? 0) >= 100
-    Label(highValue ? "Hat dich jemand gebeten, diesen Gutschein zu kaufen und den Code durchzugeben? Dann ist es Betrug. Gib den Code nicht weiter, ruf den Laden an und erstatte Anzeige bei der Polizei."
+    Label(highValue && outcome.recentHighValueCount == 0 ? "Hat dich jemand gebeten, diesen Gutschein zu kaufen und den Code durchzugeben? Dann ist es Betrug. Gib den Code nicht weiter. Ruf den Laden an und melde es der Polizei."
           : fraudHintScans < 3 ? "Kein Laden, keine Behörde und keine Firma lässt sich mit Gutscheincodes bezahlen. Wer am Telefon oder per Nachricht nach dem Code fragt, will betrügen."
           : "Gib Gutscheincodes nie am Telefon oder per Nachricht weiter.",
           systemImage: "exclamationmark.shield")
@@ -198,7 +208,7 @@ struct ScanResultView: View {
     /// Dasselbe Format, das das Formular gleich vorschlägt, mit Herkunft.
     private var formatText: String {
         guard let resolved = outcome.resolvedFormat else { return "nicht gefunden" }
-        if resolved.format == .text { return "Nur Code" }
+        if resolved.format == .text { return outcome.draft.merchantID.flatMap { Merchant.byID[$0] }?.category == .codeOnly ? "Nur Code (online)" : "Nur Code" }
         switch resolved.origin {
         case .scanned: return Self.friendly(resolved.format)
         case .number: return "\(Self.friendly(resolved.format)) · am Code erkannt"
@@ -217,7 +227,7 @@ struct ScanResultView: View {
             }
             .font(.scaled(12, weight: .semibold)).foregroundStyle(alert ? Color.warn : Color.ink2)
             // Codes nur an Gruppengrenzen umbrechen: in Gruppen feste Leerzeichen/Bindestriche.
-            Text(label == "Code" ? Self.unbreakableGroups(value.grouped) : value)
+            Text(label == "Code" ? Self.unbreakableGroups(Self.codeDisplay(value)) : value)
                 .font(label == "Code" ? .scaled(15, weight: .bold, design: .monospaced) : .scaled(15, weight: .bold))
                 .foregroundStyle(alert ? Color.warn : Color.ink)
                 .lineLimit(typeSize.isAccessibilitySize ? nil : 3).minimumScaleFactor(0.85)
@@ -233,15 +243,24 @@ struct ScanResultView: View {
         .animation(reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.3).delay(0.08 * Double(index)), value: revealed)
     }
 
+    /// EAN-13 wie auf der Packung gruppiert (1-6-6: „4 006381 333931“), sonst Vierergruppen.
+    static func codeDisplay(_ code: String) -> String {
+        let c = code.replacingOccurrences(of: " ", with: "")
+        if ScanDraft.retailCheck(c)?.valid == true {
+            return "\(c.prefix(1)) \(c.dropFirst().prefix(6)) \(c.suffix(6))"
+        }
+        return code.grouped
+    }
+
     /// Barcode-Art in Alltagssprache, Fachname in Klammern.
     static func friendly(_ f: CodeFormat) -> String {
         switch f {
         case .qr: "QR-Code"
         case .pdf417: "breiter 2D-Code (PDF417)"
         case .aztec: "Quadrat-Code (Aztec)"
-        case .dataMatrix: "Quadrat-Code (Data Matrix)"
+        case .dataMatrix: "Quadrat-Code (Data\u{00A0}Matrix)"
         case .text: "Nur Code"
-        default: "Strichcode (\(f.label))"
+        default: "Strichcode (\(f.label.replacingOccurrences(of: " ", with: "\u{00A0}")))"
         }
     }
 
@@ -348,6 +367,10 @@ struct ScanResultView: View {
             let legal = GiftCard.legalExpiry(from: outcome.received ?? .now).dayMonthYear
             // Kein Alarm: fehlt ein Datum, gilt meist die gesetzliche Frist. Sie beginnt mit dem Kauf, nicht mit dem Scan.
             out.append(Check(level: .info, text: "Kein Ablaufdatum gefunden. Vorausgefüllt wird die gesetzliche Frist (\(legal)), gerechnet ab dem Kaufdatum oben."))
+        }
+        if let value = draft.value, value >= 100, outcome.recentHighValueCount >= 1 {
+            let n = outcome.recentHighValueCount
+            out.append(Check(level: .warning, text: "Du hast in den letzten 7 Tagen schon \(n == 1 ? "einen Gutschein" : "\(n) Gutscheine") ab 100 € erfasst. Hat dich jemand gebeten, Gutscheine zu kaufen und die Codes durchzugeben? So gehen Betrüger oft vor. Gib nichts weiter. Ruf den Laden an und melde es der Polizei."))
         }
         if let value = draft.value, value > 500 {
             out.append(Check(level: .warning, text: "Ungewöhnlich hoher Wert (\(value.euro)). Bitte prüfen."))

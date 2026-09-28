@@ -21,7 +21,7 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Layout.section) {
                 // Der Kopf beschreibt immer den ganzen Bestand, unabhängig von Filter und Suche.
-                TotalHeader(total: store.total, cards: lists.active.filter { !$0.forGifting }, soon: lists.dueSoonCount,
+                TotalHeader(total: store.total, cards: lists.active.filter { !$0.forGifting && !$0.issuedByMe }, soon: lists.dueSoonCount,
                             saved: lists.saved, examples: lists.examplesOnly && !Self.storeShots)
                 if store.cards.isEmpty {
                     EmptyState { router.tab = .scan }
@@ -62,6 +62,7 @@ struct HomeView: View {
         // Solange der Rückgängig-Hinweis über der Tab-Leiste steht, lässt sich das Listenende darüber schieben.
         .safeAreaPadding(.bottom, router.toast == nil ? 0 : 88)
         .pageBackground()
+        .readableWidth()
         .navigationTitle("Restwert")
         .toolbarTitleDisplayMode(.inline)
         // Wortmarke und Suchfeld stehen fest oben und bleiben beim Scrollen sichtbar.
@@ -153,6 +154,7 @@ struct HomeView: View {
         case .balance: "Guthaben"
         case .codes: "Rabattcodes"
         case .gifts: "Zum Verschenken"
+        case .issued: "Ausgegeben"
         case .owner(let name): "Für \(name)"
         }
     }
@@ -287,17 +289,20 @@ private struct HomeLists {
         active = activeEntries.map(\.card)
 
         // Chips, sobald es mehr als eine Art gibt; bei ganz wenigen Karten wären sie nur Ballast.
-        let owners = Set(cards.map(\.owner).filter { !$0.isEmpty }).sorted()
-        let hasBalance = cards.contains { $0.kind.isValueBased && !$0.forGifting }
+        // Selbst ausgegebene Gutscheine (Café) haben einen eigenen Chip; ihre Empfänger sind keine „für …“-Personen.
+        let owners = Set(cards.filter { !$0.issuedByMe }.map(\.owner).filter { !$0.isEmpty }).sorted()
+        let hasBalance = cards.contains { $0.kind.isValueBased && !$0.forGifting && !$0.issuedByMe }
         let hasCodes = cards.contains { !$0.kind.isValueBased }
         let hasGifts = cards.contains(where: \.forGifting)
-        let kinds = [hasBalance, hasCodes, hasGifts].filter { $0 }.count + owners.count
+        let hasIssued = cards.contains(where: \.issuedByMe)
+        let kinds = [hasBalance, hasCodes, hasGifts, hasIssued].filter { $0 }.count + owners.count
         showFilters = cards.count > 3 && kinds > 1
         if showFilters {
             var f: [CardFilter] = [.all]
             if hasBalance { f.append(.balance) }
             if hasCodes { f.append(.codes) }
             if hasGifts { f.append(.gifts) }
+            if hasIssued { f.append(.issued) }
             offered = f + owners.map { .owner($0) }
         }
         // Verschwindet der Chip des gewählten Filters, gilt wieder „Alle“, sonst bliebe die Liste ohne Ausweg leer.
@@ -308,14 +313,15 @@ private struct HomeLists {
         func passesChip(_ c: GiftCard) -> Bool {
             switch chip {
             case .all: true
-            case .balance: c.kind.isValueBased && !c.forGifting
+            case .balance: c.kind.isValueBased && !c.forGifting && !c.issuedByMe
             case .codes: !c.kind.isValueBased
             case .gifts: c.forGifting
-            case .owner(let name): c.owner == name
+            case .issued: c.issuedByMe
+            case .owner(let name): c.owner == name && !c.issuedByMe
             }
         }
 
-        let due = activeEntries.filter { $0.days <= warnDays && !$0.card.forGifting }
+        let due = activeEntries.filter { $0.days <= warnDays && !$0.card.forGifting && !$0.card.issuedByMe }
         dueSoonCount = due.count
         dueSoon = due.map(\.card).filter(search.matches)
         let dueIDs = Set(dueSoon.map(\.id))
@@ -431,7 +437,7 @@ private struct EmptyState: View {
 }
 
 enum CardFilter: Hashable {
-    case all, balance, codes, gifts
+    case all, balance, codes, gifts, issued
     case owner(String)
 }
 

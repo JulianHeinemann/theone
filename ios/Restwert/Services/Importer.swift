@@ -24,6 +24,11 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
     var received: Date?
     /// Die Barcode-Suche selbst ist gescheitert (z. B. Gerät ohne Neural Engine) – nicht dasselbe wie „kein Barcode im Bild“.
     var barcodeUnavailable = false
+    /// Wie viele Gutscheine über 100 € in den letzten 7 Tagen schon erfasst wurden (Betrugsmuster „kauf Gutscheine“).
+    var recentHighValueCount = 0
+    /// Ein gespeicherter Gutschein mit demselben Code (Name), sonst nil.
+    var duplicateName: String?
+    var duplicateID: UUID?
     /// Gelesene Barcode-Art, die Restwert nicht nachzeichnen kann (z. B. Code 93, Codabar) und als Code 128 zeigt.
     var convertedSymbology: String?
 
@@ -52,6 +57,17 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
             return "\(m.name) \(city)"
         }
         return m.name
+    }
+
+    /// Sicher genug für „Speichern“ ohne Formular: Gutschein mit bekanntem Laden, Betrag oder Rabatt, Code,
+    /// Ablaufdatum vom Gutschein, gelesener oder am Code erkannter Barcode (oder reiner Online-Code), keine Warnung,
+    /// nichts nur von Apple Intelligence.
+    @MainActor var canSaveDirectly: Bool {
+        let d = draft
+        guard looksLikeVoucher, duplicateID == nil, !hasWarnings, aiFilled.isEmpty, d.merchantID != nil,
+              d.value != nil || d.percent != nil, displayCode != nil, d.expires != nil, !d.expiresIsEstimate,
+              let format = resolvedFormat else { return false }
+        return format.origin != .merchant || format.format == .text
     }
 
     /// Felder, die nur Apple Intelligence gefunden hat (der Regel-Parser nicht): im Ergebnis markiert.

@@ -93,7 +93,7 @@ final class CloudSync {
             let status = try await CKContainer(identifier: Self.containerID).accountStatus()
             guard status == .available else {
                 state = .unavailable(status == .noAccount
-                    ? "Auf diesem iPhone ist niemand bei iCloud angemeldet."
+                    ? "Auf diesem \(Device.name) ist niemand bei iCloud angemeldet."
                     : "iCloud ist gerade nicht erreichbar.")
                 return
             }
@@ -259,7 +259,7 @@ final class CloudSync {
         if let ck = error as? CKError {
             switch ck.code {
             case .networkUnavailable, .networkFailure: return "Keine Internetverbindung. Wird später abgeglichen."
-            case .notAuthenticated: return "Bitte in den iPhone-Einstellungen bei iCloud anmelden."
+            case .notAuthenticated: return "Bitte in den Einstellungen bei iCloud anmelden."
             case .quotaExceeded: return "Dein iCloud-Speicher ist voll."
             default: return "iCloud-Fehler (\(ck.code.rawValue)). Wird später erneut versucht."
             }

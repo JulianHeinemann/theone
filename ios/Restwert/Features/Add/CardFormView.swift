@@ -24,6 +24,8 @@ struct CardFormView: View {
     @State private var valueText = ""
     @State private var balanceText = ""
     @State private var percentText = ""
+    /// Mindestbestellwert („ab 50 € Einkauf“), optional.
+    @State private var minOrderText = ""
     @State private var received = Date.now
     @State private var expires = GiftCard.legalExpiry(from: .now)
     @State private var location: StorageLocation = .drawer
@@ -67,9 +69,14 @@ struct CardFormView: View {
     /// Nach dem ersten Speichern einmal mit Erklärung nach Mitteilungen fragen, nicht bei jedem Speichern.
     @AppStorage("askedNotifyAfterSave") private var askedNotify = false
 
-    init(outcome: ScanOutcome? = nil, editing: GiftCard? = nil, onSaved: @escaping (GiftCard) -> Void) {
+    /// „Speichern“ direkt aus dem Scan-Ergebnis: vorbefüllen, prüfen und ohne weiteren Tipp speichern.
+    /// Findet die Prüfung doch etwas, bleibt das Formular mit den Hinweisen offen.
+    var autoSave = false
+
+    init(outcome: ScanOutcome? = nil, editing: GiftCard? = nil, autoSave: Bool = false, onSaved: @escaping (GiftCard) -> Void) {
         self.outcome = outcome
         self.editing = editing
+        self.autoSave = autoSave
         self.onSaved = onSaved
     }
 
@@ -115,6 +122,7 @@ struct CardFormView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .pageBackground()
+        .readableWidth()
         .navigationTitle(editing != nil ? "Bearbeiten" : "Gutschein hinzufügen")
         .navigationBarTitleDisplayMode(.inline)
         // Ungespeicherte Änderungen: Wegwischen und Zurück-Wischen sperren, stattdessen nachfragen.
@@ -146,7 +154,7 @@ struct CardFormView: View {
             }
             Button("Nicht jetzt", role: .cancel) { onSaved(card) }
         } message: { _ in
-            Text("Restwert schickt dir eine Mitteilung, bevor ein Gutschein abläuft. Alles wird nur auf deinem iPhone geplant. In den Einstellungen kannst du das jederzeit ändern.")
+            Text("Restwert schickt dir eine Mitteilung, bevor ein Gutschein abläuft. Alles wird nur auf deinem \(Device.name) geplant. In den Einstellungen kannst du das jederzeit ändern.")
         }
         .sensoryFeedback(.error, trigger: shake)
         .onAppear {
@@ -155,6 +163,7 @@ struct CardFormView: View {
             if let editing { load(editing); showMore = true } else if let outcome { apply(outcome) }
             if shopText.isEmpty, let m = Merchant.byID[merchantID] { shopText = merchantID == "other" ? customName : m.name }
             initial = snapshot
+            if autoSave && validate().isEmpty { save() }
         }
         .onChange(of: shopText) { _, text in matchShop(text) }
         .onChange(of: number) { _, new in
@@ -360,6 +369,10 @@ struct CardFormView: View {
                     FormField(label: "Rabatt in %", prompt: "z.\u{00A0}B. 15", text: $percentText, keyboard: .decimalPad)
                     FormField(label: "oder Wert in €", prompt: "z.\u{00A0}B. 5,00", text: $valueText, keyboard: .decimalPad)
                 }
+            }
+            if !kind.isValueBased || !minOrderText.isEmpty {
+                FormField(label: "Mindestbestellwert in € (optional)", note: "Gilt der Code erst ab einem Einkaufswert? Dann hier eintragen.",
+                          prompt: "z.\u{00A0}B. 50", text: $minOrderText, keyboard: .decimalPad)
             }
             dateBox(expiresIsSuggestion ? "Gültig bis · geschätzt" : expiresFromDuration ? "Gültig bis · berechnet" : "Gültig bis",
                     Binding(get: { expires }, set: { expires = $0; expiresIsSuggestion = false; expiresFromDuration = false; validity = nil }))
@@ -621,6 +634,7 @@ struct CardFormView: View {
             validity = d.validity
         }
         if let r = d.recipient { owner = r }
+        if let m = d.minOrder { minOrderText = Self.money(m) }
         photo = o.photo
     }
 
@@ -649,6 +663,7 @@ struct CardFormView: View {
         valueText = c.value > 0 ? Self.money(c.value) : ""
         balanceText = c.kind.isValueBased ? Self.money(c.balance) : ""
         percentText = c.percent.map { $0.formatted() } ?? ""
+        minOrderText = c.minOrder.map { Self.money($0) } ?? ""
     }
 
     private static func money(_ v: Double) -> String {
@@ -664,6 +679,7 @@ struct CardFormView: View {
     private func validate() -> [String] {
         var e: [String] = []
         if shopText.trimmingCharacters(in: .whitespaces).isEmpty { e.append("Gib den Laden ein.") }
+        if !minOrderText.isEmpty && parseMoney(minOrderText) == nil { e.append("„Mindestbestellwert“ ist keine gültige Zahl.") }
         if formatNeedsChoice && !number.isEmpty {
             e.append("Wähl die Barcode-Art, die auf dem Gutschein zu sehen ist (oder „Nur Code“, wenn es keinen Barcode gibt).")
         }
@@ -719,6 +735,7 @@ struct CardFormView: View {
             card.balance = kind.isValueBased ? balance : value
         }
         card.percent = kind.isValueBased ? nil : parseMoney(percentText)
+        card.minOrder = parseMoney(minOrderText).flatMap { $0 > 0 ? $0 : nil }
         card.received = received
         card.expires = expires
         card.expiresEstimated = expiresIsSuggestion || expiresFromDuration
@@ -743,7 +760,7 @@ struct CardFormView: View {
 }
 
 /// Textfeld mit Beschriftung, Erklärung unter dem Feld (nicht nur im Platzhalter) und gut lesbarem Platzhalter.
-private struct FormField: View {
+struct FormField: View {
     let label: String
     var note: String? = nil
     let prompt: String

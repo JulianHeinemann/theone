@@ -37,7 +37,8 @@ extension Color {
     // Papier statt Systemgrau: warmer Grund, Tinte statt reinem Schwarz.
     static let page = Color(light: 0xF6F4EF, dark: 0x141311)
     static let surface = Color(light: 0xFFFFFF, dark: 0x1E1D1B)
-    static let fill = Color(light: 0xEFECE5, dark: 0x2A2926)
+    // Kacheln: bei „Kontrast erhöhen“ deutlich vom Papier abgesetzt.
+    static let fill = Color(light: 0xEFECE5, dark: 0x2A2926, highLight: 0xDCD7CB, highDark: 0x3D3B37)
     static let ink = Color(light: 0x111111, dark: 0xF2F0EA)
     // Grautöne warm wie das Papier, keine kalten Systemgraus. muted hält ≥ 4,5:1 auch auf `fill`.
     // Bei „Kontrast erhöhen“ (Bedienungshilfen) kräftiger: Nebentexte fast wie Haupttext, Linien sichtbar.
@@ -537,4 +538,36 @@ struct Wordmark: View {
         .accessibilityLabel("Restwert")
         .accessibilityAddTraits(.isHeader)
     }
+}
+
+
+// MARK: - Gerät und Lesebreite
+
+/// „iPhone“ oder „iPad“ – für Texte wie „nur auf diesem iPad“ oder „iPad-Code“.
+nonisolated enum Device {
+    static let name: String = {
+        var id = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? ""
+        if id.isEmpty {
+            var info = utsname()
+            uname(&info)
+            id = withUnsafeBytes(of: &info.machine) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) }
+        }
+        return id.hasPrefix("iPad") ? "iPad" : "iPhone"
+    }()
+}
+
+/// Auf breiten Bildschirmen (iPad, Querformat) Inhalt mittig auf lesbare Breite begrenzen, Scrollbereich bleibt voll.
+struct ReadableWidth: ViewModifier {
+    var maxWidth: CGFloat = 700
+    @State private var width: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            .contentMargins(.horizontal, max(0, (width - maxWidth) / 2), for: .scrollContent)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+    }
+}
+
+extension View {
+    func readableWidth(_ maxWidth: CGFloat = 700) -> some View { modifier(ReadableWidth(maxWidth: maxWidth)) }
 }

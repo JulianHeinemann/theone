@@ -22,6 +22,7 @@ struct CardDetailView: View {
     /// Nur wirksam mit Gerätecode; sonst stünde der Code hinter einer Abfrage, die nie gelingen kann.
     private var codeLock: Bool { codeLockSetting && DeviceSecurity.status != .noPasscode }
     @State private var codeVisible = false
+    @State private var showIssuedShare = false
     @State private var confirmDelete = false
     @State private var showLocation = false
     @State private var stampVisible = false
@@ -41,6 +42,7 @@ struct CardDetailView: View {
             }
         }
         .pageBackground()
+        .readableWidth()
         .sensoryFeedback(.success, trigger: success)
         .task { await refreshNotifStatus() }
         .onChange(of: scenePhase) { _, phase in
@@ -99,10 +101,13 @@ struct CardDetailView: View {
                 // Online-Codes haben keine Kasse; dieselbe Route zeigt dort den Online-Weg.
                 let online = card.merchant.category == .codeOnly
                 NavigationLink(value: Route.checkout(card.id)) {
-                    Label(online ? "Code einlösen" : "An der Kasse zeigen", systemImage: online ? "globe" : "barcode")
+                    Label(card.issuedByMe ? "Einlösen" : online ? "Code einlösen" : "An der Kasse zeigen",
+                          systemImage: card.issuedByMe ? "checkmark.circle" : online ? "globe" : card.number.isEmpty ? "photo" : "barcode")
                 }
                 .buttonStyle(.primary)
+                .frame(maxWidth: 700)
                 .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, 4)
+                .frame(maxWidth: .infinity)
                 .background(Color.page.ignoresSafeArea())
             }
         }
@@ -114,6 +119,12 @@ struct CardDetailView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            if card.issuedByMe {
+                ToolbarItem(placement: .topBarTrailing) {
+                    // Selbst ausgegeben: Gutscheinbild erneut teilen (z. B. wenn der Kunde es verloren hat).
+                    Button("Gutscheinbild teilen", systemImage: "square.and.arrow.up") { unlockCode(card) { showIssuedShare = true } }
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 // Im Formular steht der Code offen: bei Code-Schutz erst entsperren.
                 Button("Bearbeiten", systemImage: "pencil") { unlockCode(card) { router.editing = card } }
@@ -128,6 +139,14 @@ struct CardDetailView: View {
             }
         }
         .unprotectedPinConfirmation(isPresented: $confirmUnprotectedPin) { withAnimation(.snappy) { pinVisible = true } }
+        .sheet(isPresented: $showIssuedShare) {
+            NavigationStack {
+                ScrollView { IssuedVoucherShare(card: card, message: card.locationNote).padding(Layout.page) }
+                    .pageBackground()
+                    .navigationTitle("Gutschein teilen").navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { showIssuedShare = false } } }
+            }
+        }
         .sheet(isPresented: $showLocation) {
             LocationSheet(location: card.location, note: card.locationNote) { location, note in
                 store.setLocation(card.id, location, note: note)
@@ -463,7 +482,7 @@ struct CardDetailView: View {
                 if hidden {
                     // „Codes erst nach Face ID zeigen“: erst entsperren, dann kopieren.
                     Button { unlockCode(card) } label: {
-                        Label("Zeigen", systemImage: "eye").font(.scaled(15, weight: .semibold))
+                        Label("Entsperren", systemImage: "lock.open").font(.scaled(15, weight: .semibold))
                             .padding(.horizontal, 12)
                             .frame(minWidth: Layout.tap, minHeight: Layout.tap)
                             .background(Color.fill, in: .capsule)
@@ -475,7 +494,7 @@ struct CardDetailView: View {
                 Button {
                     // Nur auf diesem Gerät und nach 2 Minuten wieder weg.
                     UIPasteboard.general.setItems([[UTType.plainText.identifier: card.number]],
-                                                  options: [.localOnly: true, .expirationDate: Date.now.addingTimeInterval(120)])
+                                                  options: [.localOnly: true, .expirationDate: Date.now.addingTimeInterval(600)])
                     copied = true
                     success += 1
                     Task {
@@ -491,10 +510,14 @@ struct CardDetailView: View {
                         .background(Color.fill, in: .capsule)
                         .contentShape(.capsule)
                 }
-                .accessibilityHint("Nur auf diesem iPhone, 2 Minuten lang. Nie am Telefon oder per Nachricht weitergeben.")
+                .accessibilityHint("Nur auf diesem \(Device.name), 10 Minuten lang. Nie am Telefon oder per Nachricht weitergeben.")
                 .buttonStyle(.plain)
                 .foregroundStyle(Color.ink)
                 }
+            }
+            if let m = card.minOrder {
+                Label("Gilt ab \(m.euro) Einkauf", systemImage: "cart")
+                    .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
             }
             if copied {
                 // Beim Kopieren an den häufigsten Betrug erinnern.
