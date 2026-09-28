@@ -570,7 +570,7 @@ private struct DueSoonCard<MenuItems: View>: View {
                 .accessibilityLabel("\(card.name), \(card.headline)\(card.kind.isValueBased ? " von \(card.value.euro)" : " Rabatt"), \(due.text)")
                 Menu { menu() } label: {
                     Image(systemName: "ellipsis").font(.scaled(17, weight: .bold)).foregroundStyle(Color.ink2)
-                        .frame(width: 36, height: Layout.tap).contentShape(.rect).padding(.trailing, -4)
+                        .frame(width: Layout.tap, height: Layout.tap).contentShape(.rect).padding(.trailing, -8)
                 }
                 .accessibilityLabel("Aktionen für \(card.name)")
             }

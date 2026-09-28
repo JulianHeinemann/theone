@@ -117,16 +117,23 @@ final class Router {
     }
 
     /// Nach dem Speichern direkt die Detailansicht zeigen.
+    private static let sharedSession = UUID().uuidString
+    private static var cleanedSharedInbox = false
+
     /// Wartende Teilen-Übergaben aus der App Group abholen und im Hinzufügen-Tab einlesen.
     func takeSharedInbox() {
         guard let dir = SharedInbox.directory() else { return }
-        let target = FileManager.default.temporaryDirectory.appending(path: "shared-inbox", directoryHint: .isDirectory)
-        // Liegengebliebene Kopien früherer Starts (z. B. App beendet mitten in einer Reihe) nach einem Tag löschen.
-        let old = Date.now.addingTimeInterval(-24 * 3600)
-        for url in (try? FileManager.default.contentsOfDirectory(at: target, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
-        where ((try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast) < old {
-            try? FileManager.default.removeItem(at: url)
+        let root = FileManager.default.temporaryDirectory.appending(path: "shared-inbox", directoryHint: .isDirectory)
+        // Je App-Start ein eigener Ordner: Reste früherer Starts (App mitten in einer Reihe beendet) werden
+        // gelöscht, laufende Reihen dieses Starts nie – unabhängig vom Dateidatum, das beim Kopieren erhalten bleibt.
+        if !Self.cleanedSharedInbox {
+            Self.cleanedSharedInbox = true
+            for url in (try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)) ?? []
+            where url.lastPathComponent != Self.sharedSession {
+                try? FileManager.default.removeItem(at: url)
+            }
         }
+        let target = root.appending(path: Self.sharedSession, directoryHint: .isDirectory)
         let files = SharedInbox.take(from: dir, to: target)
         guard !files.isEmpty else { return }
         // Die Mitteilung „bereit zum Prüfen“ hat sich damit erledigt.
@@ -348,6 +355,9 @@ extension Router {
             let specs: [(String, String, Double, Double?, Int)] = [
                 ("other", "Stadler", 25, nil, 11), ("other", "KM Kaffee", 25, nil, 400),
                 ("amazon", "", 70, nil, 900), ("other", "Buchladen", 25.15, nil, 1000), ("zalando", "", 0, 20, 820)]
+                // `-demoManyDue YES`: dazu drei weitere bald ablaufende (mehr als drei Karten in „Läuft bald ab“).
+                + (UserDefaults.standard.bool(forKey: "demoManyDue")
+                   ? [("ikea", "", 50, nil, 19), ("douglas", "", 30, nil, 6), ("other", "Kino am Markt", 15, nil, 27)] : [])
             for (id, name, value, percent, d) in specs {
                 var c = GiftCard(kind: percent == nil ? .giftCard : .discountCode, merchantID: id, customName: name, number: "RADAR\(d)",
                                  format: .code128, value: value, balance: value, percent: percent, received: .now, expires: day(d))
@@ -786,8 +796,10 @@ final class NotificationHandler: NSObject, UIApplicationDelegate, UNUserNotifica
             guard let text = Self.snoozeText(id: id, fire: fire, title: content.title, body: content.body,
                                                    name: content.userInfo["name"] as? String, expires: expires) else { return }
             let copy = content.mutableCopy() as? UNMutableNotificationContent ?? UNMutableNotificationContent()
-            copy.title = text.title
-            copy.body = text.body
+            // Mit App-Sperre oder Code-Schutz auch die vertagte Erinnerung ohne Laden und Betrag.
+            let quiet = UserDefaults.standard.bool(forKey: "appLock") || UserDefaults.standard.bool(forKey: "codeLock")
+            copy.title = quiet ? "Ein Gutschein läuft bald ab" : text.title
+            copy.body = quiet ? "Öffne Restwert, um ihn zu sehen." : text.body
             let request = UNNotificationRequest(identifier: "\(raw)-snooze", content: copy,
                                                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: 24 * 3600, repeats: false))
             try? await center.add(request)

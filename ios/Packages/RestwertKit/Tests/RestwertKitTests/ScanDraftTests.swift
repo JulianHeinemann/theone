@@ -262,6 +262,14 @@ struct ScanDraftTests {
         #expect(TextParser.recipient(in: "Gutschein\n\(line)") == nil)
     }
 
+    @Test("KI hält eine Betragszeile für den Code: wird nicht übernommen (Befund Runde 13)")
+    func amountLineIsNoCode() {
+        let text = "GUTSCHEIN\ncafé sonnenschein\nüber30,-Euro\nfür oma Gisela"
+        let d = ScanDraft.merge(text: text, smart: CardDraft(number: "über30,-Euro"), now: now)
+        #expect(d.number == nil)
+        #expect(!ScanDraft.isPlausibleCode("30 €") && ScanDraft.isPlausibleCode("AB12-CD34"))
+    }
+
     @Test("KI-Angaben, die nicht im Text stehen, werden nicht übernommen")
     func ungroundedSmart() {
         let text = "GUTSCHEIN\nCafé Sonnenschein\nüber 30,– Euro"

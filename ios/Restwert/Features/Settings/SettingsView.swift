@@ -218,7 +218,8 @@ struct SettingsView: View {
         // Luft unter dem letzten Abschnitt, damit die schwebende Tab-Leiste keinen Text verdeckt.
         .contentMargins(.bottom, 88, for: .scrollContent)
         .pageBackground()
-        .readableWidth()
+        // iPhone: Karten mit Randabstand; iPad: auf Lesebreite (beides über denselben Rand, sonst überschreibt einer den anderen).
+        .readableWidth(minMargin: Layout.page)
         .tabTitle("Einstellungen")
         .fileImporter(isPresented: $showRestore, allowedContentTypes: [.json]) { result in
             guard case .success(let url) = result else { return }
@@ -470,7 +471,7 @@ struct ReminderSettingsView: View {
         }
         .settingsCards()
         .pageBackground()
-        .readableWidth()
+        .readableWidth(minMargin: Layout.page)
         .navigationTitle("Erinnerungen")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -506,7 +507,7 @@ struct PrivacyExplainer: View {
         }
         .settingsCards()
         .pageBackground()
-        .readableWidth()
+        .readableWidth(minMargin: Layout.page)
         .navigationTitle("Deine Daten")
         .navigationBarTitleDisplayMode(.inline)
     }

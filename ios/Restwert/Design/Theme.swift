@@ -600,15 +600,19 @@ nonisolated enum Device {
 /// Auf breiten Bildschirmen (iPad, Querformat) Inhalt mittig auf lesbare Breite begrenzen, Scrollbereich bleibt voll.
 struct ReadableWidth: ViewModifier {
     var maxWidth: CGFloat = 700
+    /// Mindestrand (Listen/Formulare: Abstand der Karten zum Bildschirmrand auf dem iPhone).
+    var minMargin: CGFloat = 0
     @State private var width: CGFloat = 0
 
     func body(content: Content) -> some View {
         content
-            .contentMargins(.horizontal, max(0, (width - maxWidth) / 2), for: .scrollContent)
+            .contentMargins(.horizontal, max(minMargin, (width - maxWidth) / 2), for: .scrollContent)
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
     }
 }
 
 extension View {
-    func readableWidth(_ maxWidth: CGFloat = 700) -> some View { modifier(ReadableWidth(maxWidth: maxWidth)) }
+    func readableWidth(_ maxWidth: CGFloat = 700, minMargin: CGFloat = 0) -> some View {
+        modifier(ReadableWidth(maxWidth: maxWidth, minMargin: minMargin))
+    }
 }

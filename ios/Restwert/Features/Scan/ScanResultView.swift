@@ -130,7 +130,7 @@ struct ScanResultView: View {
                 if let lone { cell(lone.label, lone.value, index: tiles.count - 1, alert: lone.alert) }
                 if outcome.barcode != nil, outcome.resolvedFormat?.format == .text {
                     // Online-Code mit Strichcode auf dem Beleg (z. B. OTTO-PDF): sagen, wofür der Strichcode nicht ist.
-                    Label("Der Strichcode auf dem Gutschein ist nicht für die Kasse (oft eine Bestellnummer). Den Code gibst du im Shop ein.",
+                    Label("Der Barcode auf dem Gutschein ist nicht für die Kasse (oft eine Bestellnummer). Den Code gibst du im Shop ein.",
                           systemImage: "info.circle")
                         .font(.scaled(13)).foregroundStyle(Color.ink2)
                         .fixedSize(horizontal: false, vertical: true)

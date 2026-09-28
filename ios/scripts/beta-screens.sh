@@ -52,6 +52,10 @@ scripts/barcode-kasse-test.sh "$U" "$O/barcodes" >/dev/null
 xcrun simctl uninstall "$U" $B; xcrun simctl install "$U" "$APP"
 shot start-bestand "${M[@]}" -demoRadar YES
 shot start-bestand-unten "${M[@]}" -demoScrollBottom YES
+xcrun simctl uninstall "$U" $B; xcrun simctl install "$U" "$APP"
+shot start-viele-fristen "${M[@]}" -demoRadar YES -demoManyDue YES
+xcrun simctl uninstall "$U" $B; xcrun simctl install "$U" "$APP"
+shot start-bestand-neu "${M[@]}" -demoRadar YES
 xcrun simctl ui "$U" content_size accessibility-extra-large
 shot gross-start-bestand "${M[@]}"
 shot gross-start-bestand-unten "${M[@]}" -demoScrollBottom YES
