@@ -86,59 +86,6 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
     enum FormatOrigin: Sendable { case scanned, number, merchant }
 }
 
-nonisolated extension CodeFormat {
-    init(_ symbology: BarcodeSymbology) {
-        switch symbology {
-        case .ean13: self = .ean13
-        case .ean8: self = .ean8
-        case .upce: self = .upca          // Wert dazu mit BarcodeEncoder.expandUPCE auf 12 Ziffern bringen
-        case .itf14, .i2of5, .i2of5Checksum: self = .itf
-        case .code39, .code39Checksum, .code39FullASCII, .code39FullASCIIChecksum: self = .code39
-        case .qr, .microQR: self = .qr
-        case .pdf417, .microPDF417: self = .pdf417
-        case .aztec: self = .aztec
-        case .dataMatrix: self = .dataMatrix
-        default: self = .code128
-        }
-    }
-}
-
-nonisolated extension CodeFormat {
-    /// Diese Arten zeichnet Restwert im Original nach; andere (Code 93, Codabar, GS1 DataBar, MSI …) als Code 128.
-    static func nativelyDrawn(_ s: BarcodeSymbology) -> Bool {
-        [.ean13, .ean8, .upce, .itf14, .i2of5, .i2of5Checksum, .code39, .code39Checksum, .code39FullASCII, .code39FullASCIIChecksum,
-         .code128, .qr, .microQR, .pdf417, .microPDF417, .aztec, .dataMatrix].contains(s)
-    }
-
-    static func nativelyDrawn(legacy s: VNBarcodeSymbology) -> Bool {
-        [.ean13, .ean8, .upce, .itf14, .i2of5, .i2of5Checksum, .code39, .code39Checksum, .code39FullASCII, .code39FullASCIIChecksum,
-         .code128, .qr, .microQR, .pdf417, .microPDF417, .aztec, .dataMatrix].contains(s)
-    }
-
-    init(legacy symbology: VNBarcodeSymbology) {
-        switch symbology {
-        case .ean13: self = .ean13
-        case .ean8: self = .ean8
-        case .upce: self = .upca
-        case .itf14, .i2of5, .i2of5Checksum: self = .itf
-        case .code39, .code39Checksum, .code39FullASCII, .code39FullASCIIChecksum: self = .code39
-        case .qr, .microQR: self = .qr
-        case .pdf417, .microPDF417: self = .pdf417
-        case .aztec: self = .aztec
-        case .dataMatrix: self = .dataMatrix
-        default: self = .code128
-        }
-    }
-}
-
-nonisolated extension BarcodeObservation {
-    /// Nutzlast passend zu CodeFormat: UPC-E auf die 12 Ziffern von UPC-A erweitert.
-    var normalizedPayload: String? {
-        guard symbology == .upce, let p = payloadString else { return payloadString }
-        return BarcodeEncoder.expandUPCE(p) ?? p
-    }
-}
-
 /// Welcher Schritt beim Lesen gerade läuft – für die Anzeige „Wird gelesen …“.
 @MainActor @Observable
 final class ScanProgress {
@@ -151,104 +98,24 @@ final class ScanProgress {
 }
 
 nonisolated enum Importer {
-    private static let log = Logger(subsystem: "de.restwert.app", category: "Scan")
-
-    /// Barcode und Text (inkl. Handschrift) mit der Vision-Swift-API lesen, danach optional mit Apple Intelligence strukturieren.
+    /// Barcode und Text (inkl. Handschrift) lesen – gestuft über `VoucherScanner` (ganzes Bild, Kontrast, Ausschnitte,
+    /// Ersatzwege ohne Neural Engine) –, danach optional mit Apple Intelligence strukturieren.
     /// `smart: false` für einzelne PDF-Seiten: Apple Intelligence läuft dann einmal über den ganzen Text.
     @concurrent
     static func analyze(cgImage: CGImage, smart: Bool = true) async -> ScanOutcome {
         ScanProgress.set("Barcode und Text werden gesucht …")
-        async let codes = detectBarcodes(cgImage)
-        async let lines = recognizeText(cgImage)
-        let (found, text) = await (codes, lines)
-        // Strichcodes vor 2D-Codes bevorzugen: Gutscheinkarten tragen an der Kasse meist den Strichcode.
-        let best = found.codes.first { !CodeFormat($0.symbology).isTwoDimensional } ?? found.codes.first
-        var outcome = ScanOutcome(barcode: best?.normalizedPayload, format: best.map { CodeFormat($0.symbology) }, text: text)
-        if let s = best?.symbology, !CodeFormat.nativelyDrawn(s) { outcome.convertedSymbology = "\(s)".uppercased() }
-        if found.failed {
-            switch await legacyBarcodes(cgImage) {
-            case .found(let payload, let symbology):
-                outcome.barcode = symbology == .upce ? (BarcodeEncoder.expandUPCE(payload) ?? payload) : payload
-                outcome.format = CodeFormat(legacy: symbology)
-                if !CodeFormat.nativelyDrawn(legacy: symbology) {
-                    outcome.convertedSymbology = symbology.rawValue.replacingOccurrences(of: "VNBarcodeSymbology", with: "").uppercased()
-                }
-            case .none: break          // Suche lief, nur kein Barcode im Bild
-            case .failed:
-                // Letzter Weg ohne Neural Engine: CoreImage liest wenigstens QR-Codes.
-                if let qr = qrWithCoreImage(cgImage) {
-                    outcome.barcode = qr
-                    outcome.format = .qr
-                } else {
-                    outcome.barcodeUnavailable = true
-                }
-            }
-        }
+        let reading = await VoucherScanner.read(cgImage)
+        var outcome = ScanOutcome(barcode: reading.best?.payload, format: reading.best?.format, text: reading.text)
+        outcome.convertedSymbology = reading.best?.converted
+        outcome.barcodeUnavailable = reading.detectorFailed
         // Abgebrochen: die teure KI-Auswertung nicht mehr starten.
         guard smart, !Task.isCancelled else { return outcome }
         if SmartExtractor.isAvailable { ScanProgress.set("Apple Intelligence ordnet die Angaben …") }
-        if let smart = await SmartExtractor.extract(from: text) {
+        if let smart = await SmartExtractor.extract(from: reading.text) {
             outcome.smart = smart
             outcome.usedAppleIntelligence = true
         }
         return outcome
-    }
-
-    /// Gefundene Codes; `failed`, wenn die Suche selbst nicht lief (sonst sähe das aus wie „kein Barcode im Bild“).
-    @concurrent
-    private static func detectBarcodes(_ image: CGImage) async -> (codes: [BarcodeObservation], failed: Bool) {
-        let request = DetectBarcodesRequest()
-        do {
-            let results = try await request.perform(on: image)
-            return (results.filter { !($0.payloadString ?? "").isEmpty }, false)
-        } catch {
-            log.error("Barcode-Suche fehlgeschlagen: \(String(describing: error), privacy: .public)")
-            return ([], true)
-        }
-    }
-
-    /// Ältere Vision-Schnittstelle als Ersatz, wenn die neue keinen Detektor anlegen kann.
-    /// QR-Code mit CoreImage (läuft auch ohne Neural Engine, z. B. im Simulator).
-    private static func qrWithCoreImage(_ image: CGImage) -> String? {
-        let detector = CIDetector(ofType: CIDetectorTypeQRCode, context: nil, options: [CIDetectorAccuracy: CIDetectorAccuracyHigh])
-        let features = detector?.features(in: CIImage(cgImage: image)) ?? []
-        return features.compactMap { ($0 as? CIQRCodeFeature)?.messageString }.first { !$0.isEmpty }
-    }
-
-    private enum LegacyResult { case found(String, VNBarcodeSymbology), none, failed }
-
-    @concurrent
-    private static func legacyBarcodes(_ image: CGImage) async -> LegacyResult {
-        // Erst die aktuelle Revision, dann Revision 1: ältere, nicht KI-basierte Erkennung, die auch ohne
-        // Neural Engine läuft (Simulator, sehr alte Geräte).
-        var request = VNDetectBarcodesRequest()
-        do { try VNImageRequestHandler(cgImage: image).perform([request]) } catch {
-            log.error("Ersatz-Barcode-Suche fehlgeschlagen: \(String(describing: error), privacy: .public)")
-            let r1 = VNDetectBarcodesRequest()
-            r1.revision = VNDetectBarcodesRequestRevision1
-            do { try VNImageRequestHandler(cgImage: image).perform([r1]); request = r1 } catch {
-                log.error("Barcode-Suche Revision 1 fehlgeschlagen: \(String(describing: error), privacy: .public)")
-                return .failed
-            }
-        }
-        let found = (request.results ?? []).compactMap { r in r.payloadStringValue.flatMap { $0.isEmpty ? nil : ($0, r.symbology) } }
-        guard let best = found.first(where: { !CodeFormat(legacy: $0.1).isTwoDimensional }) ?? found.first else { return .none }
-        return .found(best.0, best.1)
-    }
-
-    @concurrent
-    private static func recognizeText(_ image: CGImage) async -> String {
-        var request = RecognizeTextRequest()
-        request.recognitionLevel = .accurate          // erkennt auch Handschrift
-        request.usesLanguageCorrection = true
-        request.automaticallyDetectsLanguage = true
-        request.recognitionLanguages = [Locale.Language(identifier: "de-DE"), Locale.Language(identifier: "en-US")]
-        let observations: [RecognizedTextObservation]
-        do { observations = try await request.perform(on: image) } catch {
-            log.error("Texterkennung fehlgeschlagen: \(String(describing: error), privacy: .public)")
-            observations = []
-        }
-        return observations.compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n")
     }
 
     @MainActor
@@ -292,7 +159,7 @@ nonisolated enum Importer {
                 guard let page = doc.page(at: i) else { continue }
                 let pageText = page.string ?? ""
                 let box = page.bounds(for: .mediaBox)
-                let scale = 1800 / max(box.width, box.height, 1)
+                let scale = 2600 / max(box.width, box.height, 1)   // fein genug für kleine Barcodes auf A4
                 let img = page.thumbnail(of: CGSize(width: box.width * scale, height: box.height * scale), for: .mediaBox)
                 if result.photo == nil { result.photo = img.thumbnailJPEG() }
                 if let cg = img.cgImage {

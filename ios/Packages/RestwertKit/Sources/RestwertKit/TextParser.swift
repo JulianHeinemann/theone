@@ -120,6 +120,8 @@ public enum TextParser {
     private static let number = #"(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{1,4}(?:[.,]\d{1,2})?)"#
 
     public static func amount(in text: String) -> Double? {
+        // Kurzschreibweise auf Papiergutscheinen: „20,-“, „20,–“, „20.- EUR“ bedeutet 20,00.
+        let text = text.replacingOccurrences(of: #"(\d)[.,]\s?[-–—]{1,2}(?!\d)"#, with: "$1,00", options: .regularExpression)
         // Mindestbestellwerte („ab 50 €“, „Mindestbestellwert 50 €“) sind nicht der Gutscheinwert
         let s = text.replacingOccurrences(of: #"(?i)\b(?:ab|Mindest\w*wert|MBW|(?:Einkauf|Bestellung|Einkaufswert|Bestellwert)\s+(?:ab|über|von))\s*:?\s*(?:von\s*)?(?:€|EUR)?\s?\d[\d.,]*\s?(?:€|EUR|Euro)?"#,
                                           with: " ", options: .regularExpression)
