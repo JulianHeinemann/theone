@@ -282,6 +282,9 @@ extension Router {
                                 number: number, format: format, value: 25, balance: 25, received: .now,
                                 expires: GiftCard.legalExpiry(from: .now))
             card.isExample = true
+            // `-demoMinOrder 50`: Mindestbestellwert zeigen (Online-Kasse).
+            let minOrder = UserDefaults.standard.double(forKey: "demoMinOrder")
+            if minOrder > 0 { card.minOrder = minOrder }
             store.upsert(card)
             homePath = [.checkout(card.id)]
             return

@@ -60,15 +60,15 @@ struct BonView: View {
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Kassentests").font(.scaled(16, weight: .semibold))
-                            Text(store.tests.isEmpty ? "Noch kein Kassentest – teste, ob die Kasse das Handy nimmt"
-                                 : "\(store.tests.filter(\.success).count) von \(store.tests.count) Kassen haben das Handy akzeptiert")
+                            Text(store.tests.isEmpty ? "Noch kein Kassentest – teste, ob die Kasse das \(Device.name) nimmt"
+                                 : "\(store.tests.filter(\.success).count) von \(store.tests.count) Kassen haben das \(Device.name) akzeptiert")
                                 .font(.scaled(13)).foregroundStyle(Color.muted)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer()
                         Image(systemName: "chevron.right").foregroundStyle(Color.muted).accessibilityHidden(true)
                     }
-                    .foregroundStyle(Color.ink).padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                    .foregroundStyle(Color.ink).padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
                 }
                 .buttonStyle(.plain)
             }
@@ -77,7 +77,7 @@ struct BonView: View {
         .scrollIndicators(.hidden)
         .pageBackground()
         .readableWidth()
-        .navigationTitle("Verlauf")
+        .tabTitle("Verlauf")
     }
 
     private func receipt(_ lines: [BonLine]) -> some View {
@@ -225,10 +225,10 @@ struct TestsView: View {
                     Text(all.isEmpty ? "Noch nicht getestet" : all.count < 5 ? "\(ok) von \(all.count) Mal" : "\(ok * 100 / all.count) %")
                         .font(.display(40))
                         .contentTransition(.numericText())
-                    Text("Wie oft Kassen den Barcode vom Handy genommen haben").font(.scaled(13)).foregroundStyle(Color.ink2)
+                    Text("Wie oft Kassen den Barcode vom \(Device.name) genommen haben").font(.scaled(13)).foregroundStyle(Color.ink2)
                 }
                 .padding(Layout.ticketInset).frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
                 ScrollView(.horizontal) {
                     HStack(spacing: 8) {
                         ForEach([(0, "Alle"), (1, "Geklappt"), (2, "Abgelehnt")], id: \.0) { tag, title in
@@ -260,7 +260,7 @@ struct TestsView: View {
                         }
                         Spacer()
                     }
-                    .padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                    .padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
                     .transition(.scale(scale: 0.95).combined(with: .opacity))
                 }
             }

@@ -19,8 +19,11 @@ struct RadarView: View {
         return cal.date(from: cal.dateComponents([.year, .month], from: d)) ?? d
     }
 
+    /// Eigene Fristen: selbst ausgegebene Gutscheine (Café) laufen beim Kunden ab, nicht hier.
+    private var own: [GiftCard] { store.activeCards.filter { !$0.issuedByMe } }
+
     private var months: [(key: Date, cards: [GiftCard])] {
-        let groups = Dictionary(grouping: store.activeCards) { Self.monthKey($0.expires) }
+        let groups = Dictionary(grouping: own) { Self.monthKey($0.expires) }
         return groups.keys.sorted().map { key in (key, (groups[key] ?? []).sorted { $0.expires < $1.expires }) }
     }
 
@@ -28,8 +31,8 @@ struct RadarView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: Layout.section) {
-                    if !store.activeCards.isEmpty {
-                        ExpiryRadarSection(items: store.activeCards.map { RadarItem(card: $0) },
+                    if !own.isEmpty {
+                        ExpiryRadarSection(items: own.map { RadarItem(card: $0) },
                                            onSelect: { router.homePath.append(.card($0.id)) },
                                            onBundle: { items in
                                                // Bündel: zum Monat des frühesten Termins springen.
@@ -108,7 +111,7 @@ struct RadarView: View {
                     .contextMenu { rowMenu(card) }
                 }
             }
-            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
         }
         .animation(.snappy, value: cards.map(\.id))
     }

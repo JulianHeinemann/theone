@@ -63,6 +63,17 @@ enum BarcodeRenderer {
         }
     }
 
+    /// Kann das gewählte Format den Inhalt nicht darstellen, zeichnet Restwert Code 128 mit demselben Inhalt.
+    /// Die Kasse zeigt das dann unter dem Barcode an.
+    static func drawnAsCode128(_ raw: String, format: CodeFormat) -> Bool {
+        switch format {
+        case .code128, .qr, .pdf417, .aztec, .dataMatrix, .text: return false
+        default:
+            let value = BarcodeEncoder.payload(raw)
+            return !value.isEmpty && BarcodeEncoder.modules(for: value, format: format) == nil
+        }
+    }
+
     /// Data-Matrix-Module als scharfes Bild (8 px je Modul, ohne Glätten).
     private static func matrixImage(_ m: [[Bool]]) -> UIImage {
         let module: CGFloat = 8, n = CGFloat(m.count)
@@ -93,6 +104,12 @@ struct BarcodeView: View {
     var masked = false
     /// „Codes erst nach Face ID zeigen“: auch den Barcode selbst nicht zeichnen (er ließe sich sonst abscannen).
     var concealed = false
+    @Environment(\.displayScale) private var displayScale
+
+    /// Wird der Inhalt als Code 128 statt im Originalformat gezeichnet (z. B. ungerades ITF), sagt VoiceOver das.
+    private var accessibilityName: String {
+        BarcodeRenderer.drawnAsCode128(number, format: format) ? "Barcode als Code 128" : "Barcode \(format.label)"
+    }
 
     var body: some View {
         if concealed {
@@ -116,28 +133,44 @@ struct BarcodeView: View {
         case .bars(let modules)?:
             let padded = Array(repeating: false, count: 10) + modules + Array(repeating: false, count: 10)
             Canvas { ctx, size in
-                // Zusammenhängende Striche als ein Rechteck zeichnen: exakte Strichbreiten, keine Haarlinien dazwischen.
-                let w = size.width / CGFloat(padded.count)
+                // Modulbreite auf ganze Bildschirmpixel gerundet: jede Strichkante liegt auf einem Pixel,
+                // alle Module sind exakt gleich breit (wichtig für ältere Laserscanner). Mittig in der Fläche.
+                let px = 1 / displayScale
+                let w = max(px, (size.width / CGFloat(padded.count) / px).rounded(.down) * px)
+                let x0 = ((size.width - w * CGFloat(padded.count)) / 2 / px).rounded(.down) * px
                 var i = 0
                 while i < padded.count {
                     guard padded[i] else { i += 1; continue }
                     var j = i
                     while j < padded.count && padded[j] { j += 1 }
-                    ctx.fill(Path(CGRect(x: CGFloat(i) * w, y: 0, width: CGFloat(j - i) * w, height: size.height)), with: .color(.black))
+                    ctx.fill(Path(CGRect(x: x0 + CGFloat(i) * w, y: 0, width: CGFloat(j - i) * w, height: size.height)), with: .color(.black))
                     i = j
                 }
             }
+            .frame(maxWidth: 640)
             .frame(height: height)
             .whitePlate()
-            .accessibilityLabel("Barcode \(format.label)")
-        case .image(let img)?:
+            .frame(maxWidth: .infinity)
+            .accessibilityLabel(accessibilityName)
+        case .image(let img)? where format.isTwoDimensional:
             Image(uiImage: img)
                 .interpolation(.none)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(maxHeight: format.isTwoDimensional && format != .pdf417 ? height * 2.4 : height)
+                .frame(maxHeight: format != .pdf417 ? height * 2.4 : height)
                 .whitePlate()
-                .accessibilityLabel("Barcode \(format.label)")
+                .frame(maxWidth: .infinity)
+                .accessibilityLabel(accessibilityName)
+        case .image(let img)?:
+            // Strichcode (Code 128): in der Breite strecken, so breit wie Platz ist – auf dem iPad nicht als schmaler Streifen.
+            Image(uiImage: img)
+                .interpolation(.none)
+                .resizable()
+                .frame(maxWidth: 640)
+                .frame(height: height)
+                .whitePlate()
+                .frame(maxWidth: .infinity)
+                .accessibilityLabel(accessibilityName)
         case nil:
             Group {
                 if masked {

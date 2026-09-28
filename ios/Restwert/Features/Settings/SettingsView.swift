@@ -47,21 +47,30 @@ struct SettingsView: View {
                           systemImage: "exclamationmark.triangle")
                         .font(.scaled(14)).foregroundStyle(Color.warn)
                 }
-                if hasPasscode && !(pinLock && codeLock && appLock) {
-                    // Ein Tipp statt vier Schalter: für iPhones und iPads, die mehrere Personen nutzen.
+                if hasPasscode && pinLock && codeLock && appLock {
+                    // Rückmeldung statt verschwindender Zeile: man sieht, dass der Schutz an ist.
+                    Label("Schutz für geteiltes Gerät ist an", systemImage: "checkmark.shield.fill")
+                        .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.good)
+                } else if hasPasscode {
+                    // Ein Tipp statt drei Schalter: für iPhones und iPads, die mehrere Personen nutzen.
                     Button {
                         Task {
                             guard await DeviceSecurity.guardSensitive("Schutz für geteiltes Gerät einschalten") else { return }
-                            pinLock = true; codeLock = true; appLock = true
+                            withAnimation(.snappy) { pinLock = true; codeLock = true; appLock = true }
                             if lockDelay > 60 { lockDelay = 60 }
+                            AccessibilityNotification.Announcement("Schutz für geteiltes Gerät ist an").post()
                         }
                     } label: {
-                        HStack {
-                            settingLabel("Mehrere nutzen dieses Gerät", "Schaltet die drei Schalter darunter auf einmal ein", "person.2")
-                            Spacer(minLength: 8)
-                            Text("Einschalten").font(.scaled(15, weight: .semibold))
-                                .padding(.horizontal, 12).padding(.vertical, 6)
-                                .background(Color.fill, in: .capsule)
+                        let label = settingLabel("Mehrere nutzen dieses Gerät", "Schaltet PIN-Schutz, App-Sperre und Code-Schutz auf einmal ein", "person.2")
+                        let pill = Text("Einschalten").font(.scaled(15, weight: .semibold))
+                            .lineLimit(1).fixedSize()
+                            .padding(.horizontal, 12).padding(.vertical, 6)
+                            .background(Color.fill, in: .capsule)
+                        // Sehr große Schrift: Knopf unter den Text, damit „Einschalten“ nicht getrennt wird.
+                        if typeSize.isAccessibilitySize {
+                            VStack(alignment: .leading, spacing: 8) { label; pill }
+                        } else {
+                            HStack { label; Spacer(minLength: 8); pill }
                         }
                     }
                     .foregroundStyle(Color.ink)
@@ -92,7 +101,7 @@ struct SettingsView: View {
             } header: {
                 Text("Schutz")
             } footer: {
-                Text("App-Sperre schützt die ganze App. Die anderen Schalter schützen einzelne Dinge: die PIN, den Gutscheincode (für Geräte, die mehrere nutzen) oder nur die Ziffern an der Kasse. „\(Device.name)-Code“ meint den Code, mit dem du dein \(Device.name) entsperrst.")
+                Text("Die App-Sperre schützt die ganze App. Die anderen Schalter schützen nur die PIN, den Code oder die Ziffern an der Kasse. \(Device.name)-Code ist der Code, mit dem du dein \(Device.name) entsperrst.")
                     .foregroundStyle(Color.ink2)
             }
             .tint(Color.toggleOn)
@@ -205,7 +214,7 @@ struct SettingsView: View {
         .contentMargins(.bottom, 88, for: .scrollContent)
         .pageBackground()
         .readableWidth()
-        .navigationTitle("Einstellungen")
+        .tabTitle("Einstellungen")
         .fileImporter(isPresented: $showRestore, allowedContentTypes: [.json]) { result in
             guard case .success(let url) = result else { return }
             do {
@@ -374,7 +383,7 @@ struct SettingsView: View {
             // „Sicher in deinem iCloud“ erst nach einem erfolgreichen Abgleich; vorher und währenddessen neutral.
             let inCloud = syncOn && cloud.state == .idle && cloud.lastSync != nil
             let checking = syncOn && cloud.state == .syncing
-            Image(systemName: inCloud ? "lock.icloud" : syncOn ? "icloud" : "iphone").font(.scaled(20, weight: .semibold))
+            Image(systemName: inCloud ? "lock.icloud" : syncOn ? "icloud" : Device.name == "iPad" ? "ipad" : "iphone").font(.scaled(20, weight: .semibold))
                 .frame(width: 48, height: 48).background(Color.fill, in: .circle)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
@@ -461,7 +470,7 @@ struct ReminderSettingsView: View {
 /// Nachprüfbare Angaben, wo welche Daten liegen – in Alltagssprache.
 struct PrivacyExplainer: View {
     private let rows: [(icon: String, title: String, text: String)] = [
-        ("iphone", "Auf deinem \(Device.name)", "Gutscheine, Fotos, PINs und Verlauf liegen in einer Datei, die iOS verschlüsselt, solange das \(Device.name) gesperrt ist."),
+        (Device.name == "iPad" ? "ipad" : "iphone", "Auf deinem \(Device.name)", "Gutscheine, Fotos, PINs und Verlauf liegen in einer Datei, die iOS verschlüsselt, solange das \(Device.name) gesperrt ist."),
         ("person.crop.circle.badge.xmark", "Kein Konto, kein Server von uns", "Es gibt keine Anmeldung und keine Datenbank bei uns. Wir sehen nicht, welche Gutscheine du hast."),
         ("lock.icloud", "iCloud-Sync (freiwillig)", "Jeder Gutschein wird auf dem \(Device.name) mit AES-256 verschlüsselt, bevor er in dein eigenes iCloud geht. Der Schlüssel liegt nur in deinem iCloud-Schlüsselbund. Diese Sync-Daten können weder wir noch Apple lesen. Fotos werden nicht synchronisiert."),
         ("key", "PINs", "PINs liegen lokal in der geschützten Datei. Mit iCloud-Sync gehen sie zusätzlich nur in deinen iCloud-Schlüsselbund, nie in eine Datenbank. Angezeigt werden sie nur nach Face ID, Touch ID oder \(Device.name)-Code."),

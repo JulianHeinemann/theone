@@ -35,8 +35,9 @@ extension Color {
     }
 
     // Papier statt Systemgrau: warmer Grund, Tinte statt reinem Schwarz.
-    static let page = Color(light: 0xF6F4EF, dark: 0x141311)
-    static let surface = Color(light: 0xFFFFFF, dark: 0x1E1D1B)
+    // Bei „Kontrast erhöhen“ dunkleres Papier (hell) bzw. schwarzes (dunkel), damit weiße Karten klar abstehen.
+    static let page = Color(light: 0xF6F4EF, dark: 0x141311, highLight: 0xE6E1D6, highDark: 0x000000)
+    static let surface = Color(light: 0xFFFFFF, dark: 0x1E1D1B, highLight: 0xFFFFFF, highDark: 0x262421)
     // Kacheln: bei „Kontrast erhöhen“ deutlich vom Papier abgesetzt.
     static let fill = Color(light: 0xEFECE5, dark: 0x2A2926, highLight: 0xDCD7CB, highDark: 0x3D3B37)
     static let ink = Color(light: 0x111111, dark: 0xF2F0EA)
@@ -358,7 +359,18 @@ extension View {
 
     func cardSurface(radius: CGFloat = Layout.cardRadius) -> some View {
         background(Color.surface, in: .rect(cornerRadius: radius, style: .continuous))
+            .modifier(ContrastEdge(radius: radius))
             .ticketShadow()
+    }
+
+    /// Feste Knopfleiste unten: deckendes Papier, darüber ein kurzer Verlauf, damit Inhalt weich ausläuft
+    /// statt mitten im Satz an einer harten Kante abgeschnitten zu wirken.
+    func fadingBar() -> some View {
+        background(Color.page.ignoresSafeArea(edges: .bottom))
+            .background(alignment: .top) {
+                LinearGradient(colors: [Color.page.opacity(0), Color.page], startPoint: .top, endPoint: .bottom)
+                    .frame(height: 36).offset(y: -36).allowsHitTesting(false).accessibilityHidden(true)
+            }
     }
 
     /// Einheitlicher Seitenhintergrund mit weicher Scroll-Kante oben auf allen Screens.
@@ -369,6 +381,20 @@ extension View {
             // Die schwebende Tab-Leiste steckt schon in der Safe Area; nur ein Abschnittsabstand Luft dazu.
             .contentMargins(.bottom, Layout.section, for: .scrollContent)
             .background(Color.page.ignoresSafeArea())
+    }
+}
+
+/// Bei „Kontrast erhöhen“ ein sichtbarer Rand um Karten; sonst trennt nur ein weicher Schatten.
+struct ContrastEdge: ViewModifier {
+    var radius: CGFloat = Layout.cardRadius
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            if contrast == .increased {
+                RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Color.line, lineWidth: 1)
+            }
+        }
     }
 }
 
@@ -544,6 +570,14 @@ struct Wordmark: View {
 // MARK: - Gerät und Lesebreite
 
 /// „iPhone“ oder „iPad“ – für Texte wie „nur auf diesem iPad“ oder „iPad-Code“.
+extension View {
+    /// Hauptseiten: auf dem iPad kleiner Titel in der Mitte, damit er nicht links außerhalb der Lesespalte steht.
+    func tabTitle(_ title: String) -> some View {
+        navigationTitle(title)
+            .toolbarTitleDisplayMode(Device.name == "iPad" ? .inline : .automatic)
+    }
+}
+
 nonisolated enum Device {
     static let name: String = {
         var id = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? ""

@@ -201,18 +201,21 @@ struct ScanDraftTests {
     @Test("Mindestbestellwert wird erkannt", arguments: [
         ("15 % Rabatt auf alles - ab 50 € Mindestbestellwert", 50.0), ("Mindestbestellwert: 30,00 EUR", 30),
         ("MBW 25 €", 25), ("gültig bei einem Einkauf über 100 €", 100), ("Mindesteinkaufswert von 40 €", 40),
-        ("10 % Rabatt ab 1.000 € Einkaufswert", 1000)])
+        ("10 % Rabatt ab 1.000 € Einkaufswert", 1000), ("5 € Rabatt ab 40,- € Einkauf", 40),
+        ("Versandkostenfrei ab 29 €. 10 % Rabatt ab 60 € Bestellwert", 60)])
     func minOrder(_ text: String, _ expected: Double) {
         #expect(TextParser.parse(text, now: now).minOrder == expected)
     }
 
-    @Test("Kein Mindestbestellwert ohne Hinweis", arguments: ["Gutschein 50 €", "gültig ab 12.10.2026", "ab sofort einlösbar"])
+    @Test("Kein Mindestbestellwert ohne Hinweis", arguments: ["Gutschein 50 €", "gültig ab 12.10.2026", "ab sofort einlösbar",
+                                                               "Versandkostenfrei ab 29 €", "Kostenlose Lieferung ab 20 Euro"])
     func noMinOrder(_ text: String) {
         #expect(TextParser.parse(text, now: now).minOrder == nil)
     }
 
     @Test("Codes für eigene Gutscheine: Präfix, eindeutig, ohne verwechselbare Zeichen")
     func issuedCodes() {
+        #expect(IssuedVoucher.makeCode(for: "Bio Laden").hasPrefix("BADE-"))
         let a = IssuedVoucher.makeCode(for: "Café am Markt")
         #expect(a.hasPrefix("CAFE-"))
         #expect(a.count == 14)
@@ -220,6 +223,20 @@ struct ScanDraftTests {
         var seen: Set<String> = []
         for _ in 0..<500 { seen.insert(IssuedVoucher.makeCode(for: "X", existing: seen)) }
         #expect(seen.count == 500)
+    }
+
+    @Test("Ältere ausgegebene Gutscheine: Empfänger und Gruß ziehen in eigene Felder um")
+    func issuedMigration() throws {
+        let old = #"{"merchantID":"other","customName":"Café","number":"CAFE-AAAA-BBBB","format":"qr","value":25,"balance":25,"owner":"Familie Weber","locationNote":"Alles Gute!","issuedByMe":true}"#
+        let card = try JSONDecoder().decode(GiftCard.self, from: Data(old.utf8))
+        #expect(card.issuedTo == "Familie Weber" && card.greeting == "Alles Gute!")
+        #expect(card.owner.isEmpty && card.locationNote.isEmpty)
+        // Neu gespeichert bleibt es beim Umzug; normale Gutscheine behalten „für …“ und Notiz.
+        let again = try JSONDecoder().decode(GiftCard.self, from: JSONEncoder().encode(card))
+        #expect(again.issuedTo == "Familie Weber" && again.owner.isEmpty)
+        let normal = #"{"merchantID":"other","number":"1","format":"code128","value":5,"owner":"Oma","locationNote":"Schublade"}"#
+        let n = try JSONDecoder().decode(GiftCard.self, from: Data(normal.utf8))
+        #expect(n.owner == "Oma" && n.locationNote == "Schublade" && n.addedAt == nil)
     }
 
     @Test("Laufzeit lässt sich ab anderem Erhalt-Datum neu rechnen")

@@ -108,8 +108,8 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         Merchant("wunschgutschein", "Wunschgutschein", .codeOnly, .text, "https://app.wunschgutschein.de/", check: .form, "Online in einen Partner-Gutschein umtauschen."),
         Merchant("eventim", "Eventim", .codeOnly, .text, "https://www.eventim.de/helpcenter/?faq=2288", check: .info, "Online mit dem 16-stelligen Code."),
         Merchant("ticketmaster", "Ticketmaster", .codeOnly, .text, "https://sites.prepaytec.com/chopinweb/balanceCheck.do?customerCode=2013119751813114&loc=de&showCvc=1&showExpiryDate=1&brandingCode=bal_enq_tmgermany", check: .form, "Code plus 3-stelliger Sicherheitscode."),
-        Merchant("ikea", "IKEA", .official, .code128, "https://www.ikea.com/de/de/gift-cards/", check: .account, "Die Kasse scannt die Karte vom Handy. Guthaben online nur mit Login."),
-        Merchant("thalia", "Thalia", .official, .code128, "https://www.thalia.de/geschenkkarte/", check: .form, "Die Kasse scannt die Karte vom Handy. Für online brauchst du Code und PIN."),
+        Merchant("ikea", "IKEA", .official, .code128, "https://www.ikea.com/de/de/gift-cards/", check: .account, "Die Kasse scannt den Barcode auf dem Bildschirm. Guthaben online nur mit Login."),
+        Merchant("thalia", "Thalia", .official, .code128, "https://www.thalia.de/geschenkkarte/", check: .form, "Die Kasse scannt den Barcode auf dem Bildschirm. Für online brauchst du Code und PIN."),
         Merchant("zara", "Zara", .official, .code128, "https://www.zara.com/de/de/z-zara-card/balance", check: .form, "E-Karte gilt in Filialen."),
         Merchant("tkmaxx", "TK Maxx", .official, .code128, "https://wbiprod.storedvalue.com/wbir/clients/tkmaxx-de", check: .form, "Digitalen Gutschein an der Kasse vorzeigen."),
         Merchant("decathlon", "Decathlon", .official, .code128, "https://www.decathlon.de/services/giftcard/balance", check: .form, "Offiziell auch digital auf dem Smartphone."),
@@ -123,14 +123,14 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         Merchant("tchibo", "Tchibo", .official, .code128, "https://www.tchibo.de/c/geschenkkarte", check: .info, "Kartennummer vorzeigen reicht laut FAQ. Guthaben im Warenkorb oder in der Filiale."),
         Merchant("cinemaxx", "CinemaxX", .official, .code128, "https://www.cinemaxx.de/kontakt/faq", check: .info, "PDF am Handy an Kino- und Gastro-Kasse."),
         Merchant("nike", "Nike", .official, .code128, "https://www.nike.com/de/orders/gift-card-lookup", check: .form, "An der Kasse Code und PIN nennen."),
-        Merchant("mediamarkt", "MediaMarkt", .official, .code128, "https://www.mediamarkt.de/de/service/giftCard", check: .form, "Barcode vom Handy wird gescannt. Die Kasse fragt eventuell nach der PIN."),
+        Merchant("mediamarkt", "MediaMarkt", .official, .code128, "https://www.mediamarkt.de/de/service/giftCard", check: .form, "Die Kasse scannt den Barcode auf dem Bildschirm. Die Kasse fragt eventuell nach der PIN."),
         Merchant("saturn", "Saturn", .official, .code128, "https://www.saturn.de/de/service/giftCard", check: .form, "Wie MediaMarkt. Karte gilt nur bei Saturn."),
         Merchant("rewe", "REWE", .official, .code128, "https://kartenwelt.rewe.de/rewe-geschenkkarte.html#form-guthaben", check: .form, "Nur den Strich-Barcode zeigen. Einen QR-Code hat REWE laut Nutzerbericht abgelehnt."),
         Merchant("stadtgutschein", "Stadtgutschein", .official, .qr, nil, "Die Kasse scannt den QR-Code mit der Kassen-App. Systeme je Stadt verschieden."),
         Merchant("dm", "dm", .merchantApp, .code128, "https://www.dm.de/services/services-im-markt/geschenkkarten-3480686#abfrage-guthaben", check: .form, "Karte mit Code und PIN in die „Mein dm“-App laden und dort bezahlen."),
         Merchant("breuninger", "Breuninger", .merchantApp, .code128, "https://hilfe.breuninger.com/hc/de/articles/360016955480-Wo-kann-ich-das-Guthaben-meiner-Geschenkkarte-einsehen", check: .info, "Karte in der Breuninger-App speichern (scannen + PIN) und an der Kasse zeigen."),
         Merchant("ca", "C&A", .untested, .code128, "https://www.c-and-a.com/de/de/shop/geschenkkarten-gutscheine", check: .info, "Nur in Filialen. Guthaben nur an der Kasse oder per Hotline."),
-        Merchant("primark", "Primark", .untested, .code128, "https://www.primark.com/de-de/geschenkkarten-guthaben", check: .form, "Quellen widersprüchlich, ob der Barcode vom Handy reicht."),
+        Merchant("primark", "Primark", .untested, .code128, "https://www.primark.com/de-de/geschenkkarten-guthaben", check: .form, "Quellen widersprüchlich, ob der Barcode auf dem Bildschirm reicht."),
         Merchant("deichmann", "Deichmann", .untested, .code128, "https://www.deichmann.com/de-de/faq-coupons", check: .info, "Online mit Code und PIN. Guthaben nur Filiale oder Hotline 0800 5020500."),
         Merchant("edeka", "EDEKA", .untested, .code128, "https://evci.pin-host.com/evci/#/guthabenabfrage", check: .form, "Keine offizielle digitale Karte gefunden."),
         Merchant("netto", "Netto", .untested, .code128, "https://www.netto-online.de/ueber-netto/Bezahlmoeglichkeiten.chtm#Geschenkkarten", check: .info, "Offiziell nur an der Kasse."),
@@ -274,6 +274,14 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     public var minOrder: Double?
     /// Selbst ausgegebener Gutschein (z. B. vom eigenen Café): zählt nicht zum eigenen Guthaben, sondern ist offen bei Kunden.
     public var issuedByMe: Bool = false
+    /// Nur bei selbst ausgegebenen Gutscheinen: für wen (Kunde) und der Gruß auf dem Gutscheinbild.
+    public var issuedTo: String = ""
+    public var greeting: String = ""
+    /// Wann in Restwert erfasst (nicht wann gekauft): Grundlage für die Betrugsmuster-Warnung. Fehlt bei älteren Ständen.
+    public var addedAt: Date?
+
+    /// Erfasst seit – für Altbestände ohne `addedAt` das Kaufdatum.
+    public var addedOrReceived: Date { addedAt ?? received }
 
     public init(id: UUID = UUID(), kind: VoucherKind = .giftCard, merchantID: String, customName: String = "", number: String,
                 format: CodeFormat, pin: String = "", value: Double, balance: Double, percent: Double? = nil,
@@ -377,7 +385,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id, kind, merchantID, customName, number, format, pin, value, balance, percent, received, expires
         case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt, archivedAt, reminderAt, owner, forGifting, pendingSince, expiresEstimated
-        case minOrder, issuedByMe
+        case minOrder, issuedByMe, issuedTo, greeting, addedAt
     }
 
     /// Tolerantes Dekodieren, damit ältere Speicherstände nach Updates lesbar bleiben.
@@ -410,6 +418,14 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
         expiresEstimated = try c.decodeIfPresent(Bool.self, forKey: .expiresEstimated) ?? false
         minOrder = try c.decodeIfPresent(Double.self, forKey: .minOrder)
         issuedByMe = try c.decodeIfPresent(Bool.self, forKey: .issuedByMe) ?? false
+        issuedTo = try c.decodeIfPresent(String.self, forKey: .issuedTo) ?? ""
+        greeting = try c.decodeIfPresent(String.self, forKey: .greeting) ?? ""
+        addedAt = try c.decodeIfPresent(Date.self, forKey: .addedAt)
+        // Ältere Stände legten Empfänger und Gruß in owner/locationNote ab: einmal umziehen.
+        if issuedByMe && !c.contains(.issuedTo) {
+            issuedTo = owner; greeting = locationNote
+            owner = ""; locationNote = ""
+        }
     }
 }
 

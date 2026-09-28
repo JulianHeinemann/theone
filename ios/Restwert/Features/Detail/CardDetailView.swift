@@ -141,7 +141,7 @@ struct CardDetailView: View {
         .unprotectedPinConfirmation(isPresented: $confirmUnprotectedPin) { withAnimation(.snappy) { pinVisible = true } }
         .sheet(isPresented: $showIssuedShare) {
             NavigationStack {
-                ScrollView { IssuedVoucherShare(card: card, message: card.locationNote).padding(Layout.page) }
+                ScrollView { IssuedVoucherShare(card: card, message: card.greeting).padding(Layout.page) }
                     .pageBackground()
                     .navigationTitle("Gutschein teilen").navigationBarTitleDisplayMode(.inline)
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { showIssuedShare = false } } }
@@ -319,7 +319,7 @@ struct CardDetailView: View {
         }
         .foregroundStyle(Color.ink)
         .padding(14)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
     }
 
     /// Eigene Erinnerung nur für diesen Gutschein.
@@ -360,7 +360,7 @@ struct CardDetailView: View {
         }
         .foregroundStyle(Color.ink)
         .padding(14)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
     }
 
     /// Von jetzt bis zum Ende des Ablauftags; nie ein leerer Bereich, auch nicht am Ablauftag selbst.
@@ -419,7 +419,7 @@ struct CardDetailView: View {
                 Spacer()
                 Text("Ändern").font(.scaled(15, weight: .bold))
             }
-            .foregroundStyle(Color.ink).padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+            .foregroundStyle(Color.ink).padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
         }
         .buttonStyle(.plain)
     }
@@ -464,7 +464,7 @@ struct CardDetailView: View {
         .foregroundStyle(Color.ink)
         .padding(Layout.inset)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
     }
 
     /// Code als Text zum Kopieren; den Barcode gibt es nur an der Kasse, damit er nicht doppelt erscheint.
@@ -474,9 +474,10 @@ struct CardDetailView: View {
                 let hidden = codeLock && !codeVisible
                 VStack(alignment: .leading, spacing: 4) {
                     Text(card.kind == .discountCode ? "Rabattcode" : "Code").font(.scaled(13)).foregroundStyle(Color.muted)
-                    Text(hidden ? card.number.masked : card.number.grouped).font(.scaled(17, weight: .semibold, design: .monospaced))
+                    // Geschützt: gar keine Ziffern, auch nicht die letzten vier (Kinder, Mitbenutzer).
+                    Text(hidden ? "•••• ••••" : ScanResultView.codeDisplay(card.number)).font(.scaled(17, weight: .semibold, design: .monospaced))
                         .foregroundStyle(Color.ink).textSelection(.enabled).lineLimit(2).minimumScaleFactor(0.7)
-                        .accessibilityLabel(hidden ? "Code verdeckt" : card.number.grouped)
+                        .accessibilityLabel(hidden ? "Code verdeckt" : ScanResultView.codeDisplay(card.number))
                 }
                 Spacer(minLength: 8)
                 if hidden {
@@ -492,7 +493,7 @@ struct CardDetailView: View {
                     .foregroundStyle(Color.ink)
                 } else {
                 Button {
-                    // Nur auf diesem Gerät und nach 2 Minuten wieder weg.
+                    // Nur auf diesem Gerät und nach 10 Minuten wieder weg.
                     UIPasteboard.general.setItems([[UTType.plainText.identifier: card.number]],
                                                   options: [.localOnly: true, .expirationDate: Date.now.addingTimeInterval(600)])
                     copied = true
@@ -535,7 +536,7 @@ struct CardDetailView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
     }
 
     /// Stempel zurücknehmen (Store entfernt Einlösedatum und Verlaufseintrag).

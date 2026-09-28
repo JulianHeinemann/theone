@@ -24,6 +24,8 @@ nonisolated enum WidgetBridge {
         }
         var items: [Item]
         var updated: Date
+        /// Sperrzustand ausdrücklich, statt ihn im Widget aus Platzhaltern zu erraten.
+        var isLocked: Bool
     }
 
     /// Eine serielle Queue: Aufrufe kehren sofort zurück (auch vom Main Thread aus, z. B. beim Aktivwerden),
@@ -53,12 +55,12 @@ nonisolated enum WidgetBridge {
                                       expires: CalendarDay.local($0.expires),
                                       amount: locked || !$0.kind.isValueBased ? nil : $0.balance, color: brandHex($0))
                             },
-                            updated: .now)
+                            updated: .now, isLocked: locked)
         guard let data = try? JSONEncoder().encode(snap) else { return }
         let url = dir.appending(path: "widget.json")
         // Unverändert (bis auf den Zeitstempel): Datei und Zeitleiste in Ruhe lassen.
         if let old = try? Data(contentsOf: url), let prev = try? JSONDecoder().decode(Snapshot.self, from: old),
-           prev.items.map(\.fingerprint) == snap.items.map(\.fingerprint),
+           prev.items.map(\.fingerprint) == snap.items.map(\.fingerprint), prev.isLocked == snap.isLocked,
            Calendar.current.isDate(prev.updated, inSameDayAs: snap.updated) {
             return
         }

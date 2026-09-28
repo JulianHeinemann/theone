@@ -121,7 +121,11 @@ public enum TextParser {
 
     /// Mindestbestellwert: „ab 50 €“, „Mindestbestellwert 50 €“, „MBW: 50 EUR“, „Mindesteinkaufswert von 50 €“,
     /// „bei einem Einkauf ab/über 100 €“. „ab“ zählt nur mit Währung (sonst wäre „ab 12.10.“ ein Betrag).
-    public static func minOrder(in s: String) -> Double? {
+    public static func minOrder(in raw: String) -> Double? {
+        // Kurzform „ab 40,- €“ wie 40,00; Versandbedingungen („versandkostenfrei ab 29 €“) sind kein Mindestbestellwert.
+        let s = raw.replacingOccurrences(of: #"(\d)[.,]\s?[-–—]{1,2}(?!\d)"#, with: "$1,00", options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)(?:\b(?:versand\w*|liefer\w*|porto\w*)\s*(?:frei|kostenlos)?|\bkostenlose[rn]?\s+(?:Versand|Lieferung))\s+ab\s*(?:€|EUR)?\s?\d[\d.,]*\s?(?:€|EUR|Euro)?"#,
+                                  with: " ", options: .regularExpression)
         // Wie bei Beträgen: mit Tausenderpunkt („ab 1.000 €“), sonst läse man 1 €.
         let n = number
         let cur = #"\s?(?:€|EUR\b|Euro\b)"#

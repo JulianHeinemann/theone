@@ -22,16 +22,19 @@ struct WidgetSnapshot: Codable {
     }
     var items: [Item]
     var updated: Date
+    /// App-Sperre oder Code-Schutz: die App schreibt dann keine Beträge. Fehlt bei älteren Daten.
+    var isLocked: Bool? = nil
 
     /// Nur, was zum Zeitpunkt noch gültig ist.
     func valid(at date: Date) -> WidgetSnapshot {
-        WidgetSnapshot(items: items.filter { $0.daysLeft(at: date) >= 0 }, updated: updated)
+        WidgetSnapshot(items: items.filter { $0.daysLeft(at: date) >= 0 }, updated: updated, isLocked: isLocked)
     }
 
     var next: [Item] { items }
     var count: Int { items.count }
-    /// Mit App-Sperre schreibt die App keine Beträge („••••“): dann keine Summe von 0 € vortäuschen.
-    var locked: Bool { !items.isEmpty && items.allSatisfy { $0.headline == "••••" } }
+    /// Mit App-Sperre schreibt die App keine Beträge: dann keine Summe von 0 € vortäuschen.
+    /// Eigenes Feld; nur ältere Daten ohne Feld werden noch am Platzhalter „••••“ erkannt.
+    var locked: Bool { isLocked ?? (!items.isEmpty && items.allSatisfy { $0.headline == "••••" }) }
     var total: String {
         if locked { return "Gesperrt" }
         return items.reduce(0) { $0 + ($1.amount ?? 0) }.formatted(.currency(code: "EUR").locale(Locale(identifier: "de_DE")))

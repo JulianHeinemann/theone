@@ -56,7 +56,7 @@ struct IssueVoucherView: View {
             VStack(spacing: 0) {
                 FormField(label: "Dein Laden", prompt: "z.\u{00A0}B. Café am Markt", text: $issuerName)
                 Divider()
-                FormField(label: "Betrag in €", prompt: "z.\u{00A0}B. 25,00", text: $valueText, keyboard: .decimalPad)
+                FormField(label: "Guthaben in €", prompt: "z.\u{00A0}B. 25,00", text: $valueText, keyboard: .decimalPad)
                 Divider()
                 FormField(label: "Für wen? (optional)", prompt: "z.\u{00A0}B. Familie Weber", text: $recipient)
                 Divider()
@@ -70,7 +70,7 @@ struct IssueVoucherView: View {
                 }
             }
             .padding(.horizontal, Layout.inset)
-            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
             if !errors.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(errors, id: \.self) { Label($0, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Color.warn) }
@@ -88,7 +88,7 @@ struct IssueVoucherView: View {
         let name = issuerName.trimmingCharacters(in: .whitespaces)
         if name.isEmpty { e.append("Gib den Namen deines Ladens ein.") }
         guard let value = parseMoney(valueText), value > 0 else {
-            e.append("Gib den Betrag in Euro ein, z.\u{00A0}B. 25,00.")
+            e.append("Gib das Guthaben in Euro ein, z.\u{00A0}B. 25,00.")
             errors = e
             return
         }
@@ -97,9 +97,9 @@ struct IssueVoucherView: View {
         var card = GiftCard(kind: .valueVoucher, merchantID: Merchant.other.id, customName: name,
                             number: IssuedVoucher.makeCode(for: name, existing: existing), format: .qr,
                             value: value, balance: value, received: .now, expires: expires, location: .phone)
-        card.owner = recipient.trimmingCharacters(in: .whitespaces)
+        card.issuedTo = recipient.trimmingCharacters(in: .whitespaces)
         // Gruß mit ablegen, damit er beim erneuten Teilen wieder auf dem Bild steht.
-        card.locationNote = message.trimmingCharacters(in: .whitespaces)
+        card.greeting = message.trimmingCharacters(in: .whitespaces)
         card.issuedByMe = true
         store.upsert(card)
         withAnimation(.snappy) { issued = card }
@@ -123,7 +123,7 @@ struct IssuedVoucherShare: View {
                 }
                 .buttonStyle(.primary)
             }
-            Label("Zum Einlösen: den QR-Code mit Restwert scannen („Hinzufügen“ → „Gutschein scannen“). Restwert erkennt den eigenen Gutschein und öffnet gleich die Kasse zum Abbuchen.",
+            Label("Zum Einlösen: Tipp unten auf „+“ und dann auf „Gutschein scannen“ und scanne den QR-Code. Restwert erkennt den eigenen Gutschein und öffnet gleich „Gutschein einlösen“.",
                   systemImage: "qrcode.viewfinder")
                 .font(.scaled(14)).foregroundStyle(Color.ink2)
                 .fixedSize(horizontal: false, vertical: true)
@@ -147,7 +147,7 @@ struct IssuedVoucherCard: View {
             Text("GUTSCHEIN").font(.system(size: 13, weight: .heavy)).kerning(2).foregroundStyle(Color(hex: 0x5C5953))
             Text(card.name).font(.system(size: 24, weight: .bold)).foregroundStyle(Color(hex: 0x111111))
             Text(card.value.euro).font(.system(size: 40, weight: .heavy, design: .rounded)).foregroundStyle(Color(hex: 0x111111))
-            if !card.owner.isEmpty { Text("für \(card.owner)").font(.system(size: 17)).foregroundStyle(Color(hex: 0x3A3833)) }
+            if !card.issuedTo.isEmpty { Text("für \(card.issuedTo)").font(.system(size: 17)).foregroundStyle(Color(hex: 0x3A3833)) }
             if !message.isEmpty { Text(message).font(.system(size: 16).italic()).foregroundStyle(Color(hex: 0x3A3833)) }
             HStack(alignment: .bottom, spacing: 14) {
                 BarcodeView(number: card.number, format: .qr, height: 60)
@@ -163,6 +163,6 @@ struct IssuedVoucherCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(hex: 0xFFD84D), in: TicketShape(radius: 20, notchRadius: 10, notchY: 0.62))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Gutschein \(card.name), \(card.value.euro)\(card.owner.isEmpty ? "" : ", für \(card.owner)"), Code \(card.number)")
+        .accessibilityLabel("Gutschein \(card.name), \(card.value.euro)\(card.issuedTo.isEmpty ? "" : ", für \(card.issuedTo)"), Code \(card.number)")
     }
 }

@@ -100,7 +100,7 @@ struct MerchantsView: View {
         .pageBackground()
         .readableWidth()
         // Großer Titel wie Verlauf und Einstellungen, damit er beim Tabwechsel nicht springt. Suche bleibt immer sichtbar.
-        .navigationTitle("Läden")
+        .tabTitle("Läden")
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Laden suchen")
     }
 
@@ -176,7 +176,7 @@ struct MerchantsView: View {
         }
         .padding(Layout.inset)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
         .accessibilityElement(children: .contain)
     }
 
@@ -199,7 +199,7 @@ struct MerchantsView: View {
                     .font(.scaled(13, weight: .medium)).foregroundStyle(Color.ink2)
                 Label("Eigener Laden", systemImage: "storefront")
                     .font(.scaled(13, weight: .medium)).foregroundStyle(Color.ink2)
-                Text("Papiergutschein? Nimm das Original mit, viele kleine Läden wollen es sehen. Ob die Kasse das Handy nimmt, zeigt dir ein Kassentest.")
+                Text("Papiergutschein? Nimm das Original mit, viele kleine Läden wollen es sehen. Ob die Kasse das \(Device.name) nimmt, zeigt dir ein Kassentest.")
                     .font(.scaled(15)).foregroundStyle(Color.ink2)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -207,7 +207,7 @@ struct MerchantsView: View {
         }
         .padding(Layout.inset)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
         .accessibilityElement(children: .combine)
     }
 }

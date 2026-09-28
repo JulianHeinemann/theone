@@ -68,7 +68,7 @@ struct CheckoutView: View {
                             LabeledField(label: "Notiz", placeholder: result ? "optional" : "optional, z.\u{00A0}B. Kasse wollte Plastikkarte", text: $note)
                         }
                         .padding(Layout.inset)
-                        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
@@ -81,9 +81,10 @@ struct CheckoutView: View {
         .scrollIndicatorsFlash(onAppear: true)
         .scrollDismissesKeyboard(.interactively)
         // Entscheidung unten im Daumenbereich, auch wenn das Ticket hoch ist.
+        // Deckende Leiste mit Verlauf darüber: Inhalt läuft weich aus, statt mitten im Satz abzubrechen.
         .safeAreaInset(edge: .bottom, spacing: Layout.group) {
             // Auf dem iPad nicht über die volle Breite ziehen.
-            if let card = store.card(cardID) { actions(card).frame(maxWidth: 700).frame(maxWidth: .infinity).background(Color.page.ignoresSafeArea()) }
+            if let card = store.card(cardID) { actions(card).frame(maxWidth: 700).frame(maxWidth: .infinity).fadingBar() }
         }
         .pageBackground()
         .readableWidth()
@@ -202,7 +203,6 @@ struct CheckoutView: View {
             }
         }
         .padding(.horizontal, Layout.page).padding(.top, Layout.group).padding(.bottom, 4)
-        .background(Color.page.ignoresSafeArea())
     }
 
     private func primaryTitle(_ card: GiftCard) -> String {
@@ -223,8 +223,9 @@ struct CheckoutView: View {
             Task { await remindLater(card) }
             dismiss()
         }
-        .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
-        .buttonStyle(.bordered).buttonBorderShape(.capsule).tint(Color.ink2)
+        // Gleich kräftig wie „Nicht angenommen“: grau wirkte er wie ausgeschaltet.
+        .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
+        .buttonStyle(.bordered).buttonBorderShape(.capsule).tint(Color.ink)
         .frame(minHeight: Layout.tap)
     }
 
@@ -284,19 +285,28 @@ struct CheckoutView: View {
                     // Textcode verdeckt: erster Tipp deckt auf, erst der zweite öffnet das Vollbild.
                     // Mit Code-Schutz auch den Barcode erst nach Face ID groß zeigen.
                     Button { if hidden && (textOnly || codeLock) { revealCode(card) } else { showFull = true } } label: {
-                        BarcodeView(number: card.number, format: card.format, height: 150, masked: hidden, concealed: hidden && codeLock)
+                        // Eigener Gutschein (Laden-Sicht): der Laden scannt nicht, er bucht ab – kleiner Code reicht.
+                        BarcodeView(number: card.number, format: card.format, height: card.issuedByMe ? 60 : 150, masked: hidden, concealed: hidden && codeLock)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(hidden && (textOnly || codeLock) ? "Geschützt. Tippen und entsperren" : "Barcode groß anzeigen")
+                    if !textOnly && !(codeLock && hidden) && BarcodeRenderer.drawnAsCode128(card.number, format: card.format) {
+                        // Ersatzformat sichtbar machen: Kassierer und Kunde wissen dann, warum er anders aussieht.
+                        Label("Als Code 128 gezeichnet (\(card.format.label) ließ sich nicht darstellen). Klappt es nicht, zeig das Original.",
+                              systemImage: "info.circle")
+                            .font(.scaled(13)).foregroundStyle(Color.ink2)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     if !textOnly && !(codeLock && hidden) {
-                        Text(hidden ? card.number.masked : card.number.grouped)
+                        Text(hidden ? card.number.masked : ScanResultView.codeDisplay(card.number))
                             // Dieselbe Mono-Schrift wie im Detail; bleibt einzeilig statt „1234“ allein umzubrechen.
                             .font(.scaled(20, weight: .bold, design: .monospaced))
                             .lineLimit(1).minimumScaleFactor(0.5)
                             .onTapGesture { revealCode(card) }
                     }
                     // Geschützt: nur ein Weg (auf den Code tippen), kein „Vollbild“-Versprechen vor dem Entsperren.
-                    if !(codeLock && hidden) { Text("Tippen für Vollbild").font(.scaled(12)).foregroundStyle(Color.muted) }
+                    if !(codeLock && hidden) && !card.issuedByMe { Text("Tippen für Vollbild").font(.scaled(12)).foregroundStyle(Color.muted) }
                     if card.photo != nil {
                         Button("Original-Foto zeigen", systemImage: "photo") {
                             // Auf dem Foto steht der Code: bei Code-Schutz erst entsperren.
@@ -345,7 +355,7 @@ struct CheckoutView: View {
     private func paper(_ card: GiftCard) -> some View {
         if card.kind.isValueBased {
             VStack(spacing: 2) {
-                Text("Noch drauf").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
+                Text("Guthaben").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
                 AmountText(value: card.balance, size: 44).foregroundStyle(Color.ink)
             }
             .accessibilityElement(children: .combine)
@@ -381,7 +391,7 @@ struct CheckoutView: View {
         Text("Code").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.muted)
         Group {
             if hidden {
-                Button { revealCode(card) } label: { Text(card.number.masked) }
+                Button { revealCode(card) } label: { Text(codeLock ? "•••• ••••" : card.number.masked) }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Geschützt. Tippen und entsperren")
             } else {
@@ -962,7 +972,7 @@ private struct FullBarcode: View {
                 BarcodeView(number: card.number, format: card.format, height: min(geo.size.width * 0.5, 220), masked: hidden)
                     .padding(.horizontal, 24)
                     .onTapGesture { if hidden { revealed = true } else { dismiss() } }
-                Text(hidden ? card.number.masked : card.number.grouped)
+                Text(hidden ? card.number.masked : ScanResultView.codeDisplay(card.number))
                     .font(.system(size: 26, weight: .bold, design: .monospaced)).kerning(2)
                     .foregroundStyle(.black)
                     .onTapGesture { if hidden { revealed = true } else { dismiss() } }

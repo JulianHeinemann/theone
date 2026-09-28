@@ -39,6 +39,7 @@ WAIT=16 scripts/scan-tests.sh "$U" "$O/gross" >/dev/null || true
 xcrun simctl ui "$U" content_size large
 # Zuletzt: diese Aufnahmen legen Testkarten an (ersetzen die Beispiele)
 shot kasse-online "${M[@]}" -demoBarcode "text:AQ7K-2ZPM4H-R8TX@amazon"
+shot kasse-online-mindestbestellwert "${M[@]}" -demoBarcode "text:ZAL-SOMMER15-K4@zalando" -demoMinOrder 50
 shot papier-foto-geschuetzt -onboarded YES -appLock NO -codeLock YES -demoScreen paper
 scripts/barcode-kasse-test.sh "$U" "$O/barcodes" >/dev/null
 xcrun simctl terminate "$U" $B 2>/dev/null || true

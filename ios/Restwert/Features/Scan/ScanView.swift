@@ -10,12 +10,19 @@ struct ScanView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    @State private var outcome: ScanOutcome?
+    @State private var outcome: ScanOutcome? {
+        didSet { canSave = outcome?.canSaveDirectly ?? false }
+    }
+    /// „Speichern mit einem Tipp“ möglich – einmal je Ergebnis berechnet, nicht bei jedem Zeichnen.
+    @State private var canSave = false
     @State private var busy = false
     @State private var showScanner = false
     @State private var showFiles = false
     @State private var showEmail = false
-    @State private var photoItem: PhotosPickerItem?
+    @State private var photoItems: [PhotosPickerItem] = []
+    /// Mehrere Fotos auf einmal: werden nacheinander gelesen; nach jedem Speichern kommt das nächste.
+    @State private var batch: [PhotosPickerItem] = []
+    @State private var batchTotal = 0
     @State private var formSeed: FormSeed?
     @State private var importError: String?
     /// Zählt Lesevorgänge; ein abgebrochener oder überholter Vorgang zeigt sein Ergebnis nicht mehr.
@@ -41,8 +48,13 @@ struct ScanView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                if outcome != nil && batchTotal > 1 {
+                    Text("Foto \(batchTotal - batch.count) von \(batchTotal)")
+                        .font(.scaled(13, weight: .semibold)).foregroundStyle(Color.ink2)
+                        .padding(.top, 8)
+                }
                 if let outcome {
-                    ScanResultView(outcome: outcome) { date in self.outcome?.received = date }
+                    ScanResultView(outcome: outcome, canSave: canSave, onReceived: { date in self.outcome?.received = date })
                     .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
                                             removal: .move(edge: .leading).combined(with: .opacity)))
                 } else {
@@ -53,26 +65,35 @@ struct ScanView: View {
             }
             // Reichlich Luft unten: im Hinzufügen-Tab (Suchrolle) lag das Ende sonst unter der schwebenden Tab-Leiste.
             .padding(.horizontal, Layout.page).padding(.bottom, outcome == nil ? Layout.tap * 2 : Layout.group)
+            // Während des Lesens nichts bedienbar – auch nicht per Schaltersteuerung oder Tastatur.
+            .disabled(busy)
         }
         .scrollIndicators(.hidden)
+        // Solange „gespeichert – Ansehen“ steht, lässt sich die letzte Zeile darüber schieben.
+        .safeAreaPadding(.bottom, router.toast == nil || outcome != nil ? 0 : 88)
         .pageBackground()
         .readableWidth()
         // Aktionen fest unten statt am Ende der Liste unter der schwebenden Tab-Leiste.
+        // Deckende Leiste mit Verlauf darüber: Inhalt läuft weich aus, statt mitten im Satz abgeschnitten zu werden.
         .safeAreaInset(edge: .bottom) {
-            if let outcome { resultActions(outcome).frame(maxWidth: 700).frame(maxWidth: .infinity).background(Color.page.ignoresSafeArea()) }
+            if let outcome { resultActions(outcome).frame(maxWidth: 700).frame(maxWidth: .infinity).fadingBar() }
         }
         // Im Ergebnis keine Tab-Leiste: sie verdeckte „Hinzufügen“, Zurück geht oben links.
         .toolbar(outcome == nil ? .automatic : .hidden, for: .tabBar)
         .onAppear(perform: consumeIntent)
         .onChange(of: router.scanIntent != nil) { _, _ in consumeIntent() }
-        .navigationTitle(outcome == nil ? "Hinzufügen" : "Ergebnis")
+        .tabTitle(outcome == nil ? "Hinzufügen" : "Ergebnis")
         .toolbar {
             if outcome != nil {
                 ToolbarItem(placement: .topBarLeading) {
                     // Zurück verwirft das Gelesene: einmal nachfragen (versehentliche Tipps, Tremor).
                     Button("Zurück", systemImage: "chevron.left") { confirmDiscard = true }
                         .confirmationDialog("Ergebnis verwerfen?", isPresented: $confirmDiscard, titleVisibility: .visible) {
-                            Button("Verwerfen", role: .destructive) { withAnimation(reduceMotion ? nil : .smooth) { outcome = nil } }
+                            Button("Verwerfen", role: .destructive) {
+                                withAnimation(reduceMotion ? nil : .smooth) { outcome = nil }
+                                // Mehrere Fotos: mit dem nächsten weitermachen.
+                                nextFromBatch()
+                            }
                         } message: {
                             Text("Der gelesene Gutschein wird nicht gespeichert.")
                         }
@@ -124,17 +145,9 @@ struct ScanView: View {
             CardFormView(outcome: seed.outcome, autoSave: seed.autoSave) { saved in
                 formSeed = nil
                 outcome = nil
-                // Mit einem Tipp gespeichert: im Hinzufügen-Tab bleiben (mehrere hintereinander), „Ansehen“ öffnet ihn.
-                if seed.autoSave {
-                    router.toast = Toast(message: "„\(saved.name)“ gespeichert", undo: { [router] in router.showCard(saved.id) }, actionTitle: "Ansehen")
-                    return
-                }
-                router.showCard(saved.id)
-                // Mehrere Gutscheine hintereinander: direkt den nächsten scannen.
-                router.toast = Toast(message: "„\(saved.name)“ gespeichert", undo: { [router] in
-                    router.scanIntent = .camera
-                    router.tab = .scan
-                }, actionTitle: "Nächsten scannen")
+                // Immer im Hinzufügen-Tab bleiben (mehrere hintereinander, gleich welche Quelle); „Ansehen“ öffnet ihn.
+                router.toast = Toast(message: "„\(saved.name)“ gespeichert", undo: { [router] in router.showCard(saved.id) }, actionTitle: "Ansehen")
+                nextFromBatch()
             }
         }
         .fullScreenCover(isPresented: $showScanner) {
@@ -154,15 +167,12 @@ struct ScanView: View {
         .sheet(isPresented: $showEmail) {
             EmailImportSheet(hasClipboard: clipboardHasText) { text in read { await Importer.analyze(text: text) } }
         }
-        .onChange(of: photoItem) { _, item in
-            guard let item else { return }
-            photoItem = nil
-            read {
-                guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
-                    return ScanOutcome()
-                }
-                return await Importer.analyze(image: image)
-            }
+        .onChange(of: photoItems) { _, items in
+            guard !items.isEmpty else { return }
+            photoItems = []
+            batch = items
+            batchTotal = items.count
+            nextFromBatch()
         }
         .task(id: router.pendingImport) {
             // Erst nach der Analyse zurücksetzen: eine neue task-id würde diesen Task sonst abbrechen.
@@ -197,8 +207,8 @@ struct ScanView: View {
                 Text("Oder anders hinzufügen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
                     .accessibilityAddTraits(.isHeader)
                 VStack(spacing: 0) {
-                    PhotosPicker(selection: $photoItem, matching: .images) {
-                        SourceRow(icon: "photo", title: "Aus Fotos", subtitle: "Foto oder Screenshot eines Gutscheins")
+                    PhotosPicker(selection: $photoItems, maxSelectionCount: 20, selectionBehavior: .ordered, matching: .images) {
+                        SourceRow(icon: "photo", title: "Aus Fotos", subtitle: "Fotos oder Screenshots, auch mehrere auf einmal")
                     }
                     Divider().padding(.leading, 56)
                     Button { showEmail = true } label: {
@@ -234,7 +244,7 @@ struct ScanView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
                 .animation(reduceMotion ? nil : .smooth, value: clipboardHasText)
             }
         }
@@ -255,6 +265,8 @@ struct ScanView: View {
         guard id == readID else { return }
         busy = false
         if result.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && result.barcode == nil && result.photo == nil {
+            // Mehrere Fotos: ein unlesbares überspringen statt die Reihe anzuhalten.
+            if !batch.isEmpty { nextFromBatch(); return }
             importError = "Datei oder Foto konnte nicht gelesen werden. Versuch ein anderes Format oder gib den Gutschein von Hand ein."
             return
         }
@@ -286,18 +298,27 @@ struct ScanView: View {
 
     /// „Hinzufügen“ bzw. bei Nicht-Gutscheinen „Erneut scannen“ als Hauptaktion.
     private func resultActions(_ outcome: ScanOutcome) -> some View {
-        VStack(spacing: 14) {
+        let canSave = self.canSave
+        return VStack(spacing: 14) {
             if let dup = outcome.duplicateID {
-                Button("Gespeicherten Gutschein öffnen") {
-                    withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
-                    router.showCard(dup)
+                if batch.isEmpty {
+                    Button("Gespeicherten Gutschein öffnen") {
+                        withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
+                        router.showCard(dup)
+                    }
+                    .buttonStyle(.primary)
+                } else {
+                    // Mehrere Fotos: die Dublette einfach auslassen.
+                    Button("Überspringen – nächstes Foto") {
+                        withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
+                        nextFromBatch()
+                    }
+                    .buttonStyle(.primary)
                 }
-                .buttonStyle(.primary)
-                HStack(spacing: 10) {
-                    Button("Trotzdem hinzufügen") { formSeed = FormSeed(outcome: outcome) }.buttonStyle(.quiet)
-                    Button("Erneut scannen") { rescan() }.buttonStyle(.quiet)
-                }
-            } else if outcome.canSaveDirectly {
+                // Untereinander: „Trotzdem hinzufügen“ bräche nebeneinander zweizeilig um.
+                Button("Trotzdem hinzufügen") { formSeed = FormSeed(outcome: outcome) }.buttonStyle(.quiet)
+                Button("Erneut scannen") { rescan() }.buttonStyle(.quiet)
+            } else if canSave {
                 // Alles sicher erkannt: ein Tipp genügt. Wer prüfen will, öffnet das Formular.
                 Button("Speichern") { formSeed = FormSeed(outcome: outcome, autoSave: true) }.buttonStyle(.primary)
                 HStack(spacing: 10) {
@@ -326,8 +347,18 @@ struct ScanView: View {
             }
         }
         .padding(.horizontal, Layout.page).padding(.top, 10).padding(.bottom, 8)
-        .background(Color.page.ignoresSafeArea(edges: .bottom))
-        .overlay(alignment: .top) { Divider() }
+    }
+
+    /// Nächstes Foto aus der Mehrfachauswahl lesen; am Ende die Zählung zurücksetzen.
+    private func nextFromBatch() {
+        guard !batch.isEmpty else { batchTotal = 0; return }
+        let item = batch.removeFirst()
+        read {
+            guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
+                return ScanOutcome()
+            }
+            return await Importer.analyze(image: image)
+        }
     }
 
     private func rescan() {
@@ -354,7 +385,7 @@ struct ScanView: View {
             result.duplicateName = dup.name
             result.duplicateID = dup.id
         }
-        result.recentHighValueCount = store.cards.filter { !$0.isExample && !$0.issuedByMe && $0.value >= 100 && $0.received >= weekAgo }.count
+        result.recentHighValueCount = store.cards.filter { !$0.isExample && !$0.issuedByMe && $0.value >= 100 && $0.addedOrReceived >= weekAgo }.count
         withAnimation(reduceMotion ? nil : .smooth) { outcome = result }
         #if DEBUG
         // Nur für Screenshots: `-demoOpenForm YES` öffnet nach dem Lesen gleich das Formular.

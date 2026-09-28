@@ -5,11 +5,11 @@ public enum IssuedVoucher {
     /// Ohne leicht verwechselbare Zeichen (0/O, 1/I/L), damit man den Code auch abtippen kann.
     static let alphabet = Array("ABCDEFGHJKMNPQRSTUVWXYZ23456789")
 
-    /// Code wie „CAFE-7K3M-9QX2“: Präfix aus dem Namen (max. 4 Buchstaben), dann 2×4 Zufallszeichen.
+    /// Code wie „CAFE-7K3M-9QX2“: Präfix aus den Buchstaben des Namens (max. 4, ohne I/L/O), dann 2×4 Zufallszeichen.
     /// `existing` verhindert Doppelungen mit schon ausgegebenen Codes.
     public static func makeCode(for name: String, existing: Set<String> = []) -> String {
         let letters = name.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "de_DE"))
-            .uppercased().filter { $0.isLetter && $0.isASCII }
+            .uppercased().filter { alphabet.contains($0) && $0.isLetter }
         let prefix = letters.isEmpty ? "GS" : String(letters.prefix(4))
         var rng = SystemRandomNumberGenerator()
         while true {

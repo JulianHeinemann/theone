@@ -68,6 +68,9 @@ struct CardFormView: View {
     @AppStorage("pinLock") private var pinLock = true
     /// Nach dem ersten Speichern einmal mit Erklärung nach Mitteilungen fragen, nicht bei jedem Speichern.
     @AppStorage("askedNotifyAfterSave") private var askedNotify = false
+    /// Von Hand eingegeben: Dublette oder Betrugsmuster einmal nachfragen (der Scan fragt selbst).
+    @State private var riskMessage: String?
+    @State private var riskConfirmed = false
 
     /// „Speichern“ direkt aus dem Scan-Ergebnis: vorbefüllen, prüfen und ohne weiteren Tipp speichern.
     /// Findet die Prüfung doch etwas, bleibt das Formular mit den Hinweisen offen.
@@ -144,6 +147,13 @@ struct CardFormView: View {
             Button("Weiter bearbeiten", role: .cancel) {}
         } message: {
             Text("Was du eingegeben hast, ist noch nicht gespeichert.")
+        }
+        .confirmationDialog("Trotzdem speichern?", isPresented: Binding(get: { riskMessage != nil }, set: { if !$0 { riskMessage = nil } }),
+                            titleVisibility: .visible) {
+            Button("Trotzdem speichern") { riskConfirmed = true; riskMessage = nil; save() }
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text(riskMessage ?? "")
         }
         .alert("An den Ablauf erinnern?", isPresented: $askNotify, presenting: savedCard) { card in
             Button("Erinnern") {
@@ -276,7 +286,7 @@ struct CardFormView: View {
             Spacer(minLength: 0)
         }
         .padding(Layout.inset)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
         .padding(.top, 8)
     }
 
@@ -362,7 +372,7 @@ struct CardFormView: View {
                 merchantInfo(m).transition(.opacity)
             }
             if kind.isValueBased {
-                FormField(label: "Betrag in €", prompt: "z.\u{00A0}B. 25,00", text: $valueText, keyboard: .decimalPad)
+                FormField(label: "Guthaben in €", prompt: "z.\u{00A0}B. 25,00", text: $valueText, keyboard: .decimalPad)
             } else {
                 let pair = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 2)) : AnyLayout(HStackLayout(spacing: 16))
                 pair {
@@ -404,7 +414,7 @@ struct CardFormView: View {
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 4)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
         .animation(reduceMotion ? nil : .snappy, value: kind)
         .animation(reduceMotion ? nil : .snappy, value: merchantID)
     }
@@ -690,10 +700,10 @@ struct CardFormView: View {
         let balance = parseMoney(balanceText)
         let percent = parseMoney(percentText)
         if kind.isValueBased {
-            if (value ?? 0) <= 0 { e.append("Gib den Betrag in Euro ein, z.\u{00A0}B. 25,00.") }
+            if (value ?? 0) <= 0 { e.append("Gib das Guthaben in Euro ein, z.\u{00A0}B. 25,00.") }
             if !balanceText.isEmpty && balance == nil { e.append("„Guthaben jetzt“ ist keine gültige Zahl.") }
             if let b = balance, b < 0 { e.append("„Guthaben jetzt“ darf nicht negativ sein.") }
-            if !balanceFollowsValue, let v = value, let b = balance, b > v { e.append("„Guthaben jetzt“ ist größer als der Betrag.") }
+            if !balanceFollowsValue, let v = value, let b = balance, b > v { e.append("„Guthaben jetzt“ ist größer als das Guthaben beim Kauf.") }
         } else {
             if percent == nil && value == nil { e.append("Gib einen Rabatt in % oder einen Wert in € ein.") }
             if let p = percent, p < 1 || p > 100 { e.append("Der Rabatt muss zwischen 1 und 100\u{00A0}% liegen.") }
@@ -705,6 +715,23 @@ struct CardFormView: View {
         return e
     }
 
+    /// Nur bei „Von Hand eingeben“: schon gespeicherter Code oder hoher Wert (Betrugsmuster) – wie beim Scan.
+    private func manualRisk() -> String? {
+        guard editing == nil, outcome == nil else { return nil }
+        func plain(_ s: String) -> String { s.filter { $0.isLetter || $0.isNumber }.uppercased() }
+        let code = plain(number)
+        if !code.isEmpty, let dup = store.cards.first(where: { !$0.isExample && !$0.issuedByMe && plain($0.number) == code }) {
+            return "Diesen Code hast du schon gespeichert („\(dup.name)“)."
+        }
+        let value = parseMoney(valueText) ?? 0
+        let weekAgo = Date.now.addingTimeInterval(-7 * 24 * 3600)
+        let recent = store.cards.filter { !$0.isExample && !$0.issuedByMe && $0.value >= 100 && $0.addedOrReceived >= weekAgo }.count
+        if value >= ScanResultView.highValue || (value >= 100 && recent >= 1) {
+            return "Hat dich jemand am Telefon oder per Nachricht gebeten, Gutscheine zu kaufen und die Codes durchzugeben? Dann ist es Betrug. Gib nichts weiter. \(ScanResultView.nextStep)"
+        }
+        return nil
+    }
+
     private func save() {
         guard !saving else { return }
         let problems = validate()
@@ -712,6 +739,10 @@ struct CardFormView: View {
         guard problems.isEmpty else {
             withAnimation(reduceMotion ? nil : .linear(duration: 0.4)) { shake += 1 }
             AccessibilityNotification.Announcement(problems.joined(separator: " ")).post()
+            return
+        }
+        if let risk = manualRisk(), !riskConfirmed {
+            riskMessage = risk
             return
         }
         saving = true
@@ -744,6 +775,7 @@ struct CardFormView: View {
         card.owner = owner.trimmingCharacters(in: .whitespaces)
         card.forGifting = forGifting
         card.photo = photo
+        if editing == nil { card.addedAt = .now }
         store.upsert(card)
         // Erinnerungen plant der Store beim Speichern. Nur wenn noch nie gefragt wurde: einmal mit Erklärung fragen.
         Task {

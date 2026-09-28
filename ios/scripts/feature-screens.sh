@@ -19,16 +19,23 @@ run mindestbestellwert 16 -demoImport "$(imp v05-zalando-rabatt-mbw.jpg)"
 run gespeichert-im-tab 16 -demoOpenForm YES -demoAutoSave YES -demoImport "$(imp v01-douglas-ean13.jpg)"
 # Dublette: denselben Gutschein noch einmal scannen
 run dublette 16 -demoImport "$(imp v01-douglas-ean13.jpg)"
+xcrun simctl ui "$U" content_size accessibility-extra-large
+run gross-dublette 20 -demoImport "$(imp v01-douglas-ean13.jpg)"
+xcrun simctl ui "$U" content_size large
 # Musterwarnung: erst Amazon (1.250 €) speichern, dann IKEA (100 €) scannen
 run amazon-gespeichert 16 -demoOpenForm YES -demoAutoSave YES -demoImport "$(imp v09-amazon-online.jpg)"
 cp "$SRC"/v03* "$DATA/Documents/scan-tests/"
 run musterwarnung 16 -demoImport "$(imp v03-ikea-qr-rotated.jpg)"
 # Eigenen Gutschein ausgeben, dann seinen QR-Code scannen (Einlösen aus Laden-Sicht)
 run ausgeben-teilen 7 -demoScreen issue -demoIssueAuto YES
+xcrun simctl ui "$U" content_size accessibility-extra-large
+run gross-ausgeben 7 -demoScreen issue -demoIssueAuto YES
+xcrun simctl ui "$U" content_size large
 CODE=$(python3 -c "import json,sys;d=json.load(open(sys.argv[1]));print([c['number'] for c in d['cards'] if c.get('issuedByMe')][-1])" "$DATA/Library/Application Support/restwert.json")
 "$(dirname "$0")/qr-image.sh" "$CODE" "$DATA/Documents/scan-tests/eigener-qr.png"
 run eigener-gutschein-einloesen 14 -demoImport "$DATA/Documents/scan-tests/eigener-qr.png"
 run liste-ausgegeben 5
+run liste-ausgegeben-filter 5 -demoFilter issued
 xcrun simctl terminate "$U" $B 2>/dev/null || true
 # iPad
 xcrun simctl install "$P" "$APP"

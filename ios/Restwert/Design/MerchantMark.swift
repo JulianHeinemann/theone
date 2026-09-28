@@ -179,7 +179,7 @@ struct BalanceCard: View {
                             .environment(\.colorScheme, .light)
                     }
                 }
-                Text(card.kind.isValueBased ? "Noch drauf" : card.kind.label)
+                Text(card.kind.isValueBased ? "Guthaben" : card.kind.label)
                     .font(.scaled(15, weight: .semibold)).lineLimit(1)
                     .padding(.top, 18)
                 Group {

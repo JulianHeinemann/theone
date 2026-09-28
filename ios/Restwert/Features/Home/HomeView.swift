@@ -28,8 +28,10 @@ struct HomeView: View {
                 } else {
                     // Dringendes zuerst, damit es ohne Scrollen sichtbar ist. Die Suche wirkt hier, die Chips erst darunter.
                     section("Läuft bald ab", cards: lists.dueSoon)
-                    if !lists.active.isEmpty {
-                        ExpiryRadarSection(items: lists.active.map { RadarItem(card: $0) },
+                    // Selbst ausgegebene Gutscheine (Café) sind Fristen der Kunden, nicht eigene.
+                    let own = lists.active.filter { !$0.issuedByMe }
+                    if !own.isEmpty {
+                        ExpiryRadarSection(items: own.map { RadarItem(card: $0) },
                                            onSelect: { router.homePath.append(.card($0.id)) },
                                            onShowAll: { router.homePath.append(.radar) })
                     }
@@ -48,7 +50,7 @@ struct HomeView: View {
                         Label("Alle Ablauftermine", systemImage: "calendar")
                             .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
                             .frame(maxWidth: .infinity, minHeight: 56)
-                            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
                     }
                     .buttonStyle(.plain)
                     if !lists.done.isEmpty { doneSection(lists.done) }
@@ -73,6 +75,10 @@ struct HomeView: View {
                 .sharedBackgroundVisibility(.hidden)
         }
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Gutschein, Code oder Notiz")
+        #if DEBUG
+        // Nur für Screenshots: `-demoFilter issued` wählt den Chip „Ausgegeben“.
+        .onAppear { if UserDefaults.standard.string(forKey: "demoFilter") == "issued" { filter = .issued } }
+        #endif
         .onChange(of: lists.offered) { _, offered in
             if !offered.contains(filter) { withAnimation(.snappy) { filter = .all } }
         }
@@ -89,6 +95,11 @@ struct HomeView: View {
     }
 
     private func listTitle(_ lists: HomeLists) -> String {
+        if lists.activeFilter == .issued {
+            // Für Läden: was an eigenen Gutscheinen noch offen ist.
+            let open = lists.list.reduce(0) { $0 + $1.balance }
+            return "Ausgegeben · \(open.euro) noch offen"
+        }
         if lists.activeFilter != .all { return chipTitle(lists.activeFilter) }
         return lists.dueSoon.isEmpty ? "Deine Gutscheine" : "Weitere"
     }
@@ -126,7 +137,7 @@ struct HomeView: View {
                         .contextMenu { rowMenu(c) }
                     }
                 }
-                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
             }
             .animation(.snappy, value: cards.map(\.id))
         }
@@ -214,7 +225,7 @@ struct HomeView: View {
                         .contextMenu { rowMenu(c) }
                     }
                 }
-                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
             }
         }
     }
@@ -296,7 +307,8 @@ private struct HomeLists {
         let hasGifts = cards.contains(where: \.forGifting)
         let hasIssued = cards.contains(where: \.issuedByMe)
         let kinds = [hasBalance, hasCodes, hasGifts, hasIssued].filter { $0 }.count + owners.count
-        showFilters = cards.count > 3 && kinds > 1
+        // Wer selbst Gutscheine ausgibt, braucht den Chip „Ausgegeben“ auch bei wenigen Karten.
+        showFilters = (cards.count > 3 || hasIssued) && kinds > 1
         if showFilters {
             var f: [CardFilter] = [.all]
             if hasBalance { f.append(.balance) }
@@ -395,7 +407,7 @@ private struct TotalHeader: View {
         let big = !typeSize.isAccessibilitySize
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Noch drauf").font(.scaled(15, weight: .semibold)).opacity(0.75)
+                Text("Guthaben").font(.scaled(15, weight: .semibold)).opacity(0.75)
                 AmountText(value: total, size: big ? 60 : 36)
                     .animation(.snappy, value: total)
             }
@@ -432,7 +444,7 @@ private struct EmptyState: View {
             Button("Ersten Gutschein erfassen", action: onScan).buttonStyle(.accent)
         }
         .padding(20)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
     }
 }
 

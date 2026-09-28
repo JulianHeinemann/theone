@@ -286,7 +286,7 @@ private struct WelcomePage: View {
     private var ticket: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Noch drauf").font(.scaled(15, weight: .semibold)).opacity(0.75)
+                Text("Guthaben").font(.scaled(15, weight: .semibold)).opacity(0.75)
                 // Eine durchgehende Zählbewegung pro Bildschirmbild statt vieler Einzelübergänge.
                 TimelineView(.animation(paused: step != 2)) { context in
                     AmountText(value: amount(at: context.date), size: 60)
@@ -357,7 +357,7 @@ private struct CollectPage: View {
                     .motion(.spring(duration: 0.5, bounce: 0.25), value: step)
                 }
             }
-            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
             .compositingGroup()
             .shadow(color: Color.shade, radius: 14, y: 6)
             .scaleEffect(step >= 1 ? 1 : 0.96)
@@ -395,7 +395,7 @@ private struct RemindPage: View {
                     }
                 }
                 .padding(Layout.inset)
-                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
                 .compositingGroup()
                 .shadow(color: Color.shade, radius: 16, y: 8)
                 .offset(y: step >= 1 ? 0 : -120)
@@ -423,7 +423,7 @@ private struct RemindPage: View {
                     }
                 }
                 .padding(.horizontal, Layout.inset).padding(.vertical, Layout.group)
-                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
                 .compositingGroup()
                 .shadow(color: Color.shade, radius: 14, y: 6)
                 .opacity(step >= 2 ? 1 : 0)
@@ -514,7 +514,7 @@ private struct FirstCardPage: View {
                 Image(systemName: "chevron.right").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
             }
             .padding(Layout.inset)
-            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous))
+            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
             .compositingGroup()
             .shadow(color: Color.shade, radius: 14, y: 6)
             .contentShape(.rect)
