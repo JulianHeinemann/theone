@@ -808,8 +808,10 @@ final class Store {
 
     private func add(_ center: UNUserNotificationCenter, _ c: GiftCard, id: String, at date: Date, title: String) async {
         let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = "\(c.headline) gültig bis \(CalendarDay.local(c.expires).dayMonthYear). Jetzt einlösen."
+        // Mit App-Sperre oder Code-Schutz nichts Konkretes auf dem Sperrbildschirm: kein Laden, kein Betrag.
+        let quiet = UserDefaults.standard.bool(forKey: "appLock") || UserDefaults.standard.bool(forKey: "codeLock")
+        content.title = quiet ? "Ein Gutschein läuft bald ab" : title
+        content.body = quiet ? "Öffne Restwert, um ihn zu sehen." : "\(c.headline) gültig bis \(CalendarDay.local(c.expires).dayMonthYear). Jetzt einlösen."
         content.sound = .default
         content.categoryIdentifier = ReminderPrefs.category.identifier
         // Erinnerungen je Gutschein gruppieren; bald ablaufende weiter oben in der Übersicht.

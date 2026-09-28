@@ -103,6 +103,10 @@ struct CheckoutView: View {
         .task(id: store.card(cardID)?.photo?.count) { await decodePhoto() }
         .onAppear {
             busy = false
+            #if DEBUG
+            // Nur für Screenshots: `-demoFull YES` öffnet gleich das Vollbild.
+            if UserDefaults.standard.bool(forKey: "demoFull") { showFull = true }
+            #endif
             // Online-Codes werden nicht gescannt: Helligkeit bleibt, wie sie ist.
             guard !online else { return }
             UIApplication.shared.isIdleTimerDisabled = true

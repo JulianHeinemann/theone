@@ -305,7 +305,7 @@ struct ScanResultView: View {
         case .aztec: "Quadrat-Code (Aztec)"
         case .dataMatrix: "Quadrat-Code (Data\u{00A0}Matrix)"
         case .text: "Nur Code"
-        default: "Strichcode (\(f.label.replacingOccurrences(of: " ", with: "\u{00A0}")))"
+        default: "Barcode (\(f.label.replacingOccurrences(of: " ", with: "\u{00A0}")))"
         }
     }
 

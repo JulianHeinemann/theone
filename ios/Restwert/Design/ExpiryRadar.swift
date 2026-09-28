@@ -366,7 +366,7 @@ private struct RadarPlan {
             let y0 = cal.component(.year, from: first.item.expires)
             let y1 = cal.component(.year, from: last.item.expires)
             // Spalten breit genug für Kachel und Betrag („2× 120 €“); passen nicht alle Jahre, fasst die letzte zusammen.
-            let colMin = max(hit, fonts.width("3 Gutscheine", fonts.caption) + 2, fonts.width("2027+", fonts.label) + 6)
+            let colMin = max(hit, fonts.width("95 € + 20 %", fonts.caption) + 2, fonts.width("2027+", fonts.label) + 6)
             let room = W * 0.56 - Self.breakW
             let fit: Int = max(1, Int(room / colMin))
             let k: Int = Swift.min(y1 - y0 + 1, fit)
@@ -458,8 +458,14 @@ private struct RadarPlan {
             else if its.count == 1 { marks[i].caption = its[0].amount }
             // Bündel: Anzahl und Summe ausgeschrieben („2× 95 €“) statt einer Plakette auf der Kachel.
             // Bündel in zwei Zeilen: Euro-Summe, darunter „3 Gutscheine“ (kein „3× 95 €“, das wie eine Multiplikation liest).
-            else if sum > 0 { marks[i].caption = "\(RadarItem.short(sum.rounded()))\n\(its.count) Gutscheine" }
-            else { marks[i].caption = "\(its.count) Gutscheine" }
+            // Rabattcodes stehen ausdrücklich dabei („95 € + 20 %“ bzw. „+ 2 Codes“), damit Summe und Anzahl zusammenpassen.
+            else {
+                let codes = its.filter { $0.value == nil }
+                var first = sum > 0 ? RadarItem.short(sum.rounded()) : ""
+                if codes.count == 1, let a = codes[0].amount { first += first.isEmpty ? a : " + \(a)" }
+                else if !codes.isEmpty { first += first.isEmpty ? "\(codes.count) Codes" : " + \(codes.count) Codes" }
+                marks[i].caption = "\(first)\n\(its.count) Gutscheine"
+            }
             if let c = marks[i].caption {
                 let lines = c.split(separator: "\n").map(String.init)
                 marks[i].captionW = lines.map { fonts.width($0, fonts.caption) }.max() ?? 0

@@ -43,6 +43,7 @@ xcrun simctl ui "$U" content_size large
 # Zuletzt: diese Aufnahmen legen Testkarten an (ersetzen die Beispiele)
 shot kasse-online "${M[@]}" -demoBarcode "text:AQ7K-2ZPM4H-R8TX@amazon"
 shot kasse-code93 "${M[@]}" -demoBarcode "code128:C93-4471-2208" -demoOriginal "Code 93"
+shot kasse-vollbild-code93 "${M[@]}" -demoBarcode "code128:C93-4471-2208" -demoOriginal "Code 93" -demoFull YES
 shot kasse-online-mindestbestellwert "${M[@]}" -demoBarcode "text:ZAL-SOMMER15-K4@zalando" -demoMinOrder 50
 shot papier-foto-geschuetzt -onboarded YES -appLock NO -codeLock YES -demoScreen paper
 scripts/barcode-kasse-test.sh "$U" "$O/barcodes" >/dev/null

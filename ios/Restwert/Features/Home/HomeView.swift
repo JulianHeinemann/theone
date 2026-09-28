@@ -28,7 +28,7 @@ struct HomeView: View {
                 } else {
                     // Reihenfolge: Guthaben → Dringendes → Filter und Liste → selbst ausgestellte → Verfallsradar.
                     // Die Liste kommt früh, weil man auf dem Start meist einen bestimmten Gutschein sucht.
-                    if !lists.dueSoon.isEmpty { dueSoonSection(lists.dueSoon) }
+                    if !lists.dueSoon.isEmpty { dueSoonSection(lists.dueSoon, more: lists.dueSoonMore) }
                     if lists.showFilters { filterBar(lists) }
                     if lists.searchEmpty {
                         ContentUnavailableView.search(text: lists.query)
@@ -149,14 +149,14 @@ struct HomeView: View {
     }
 
     /// „Läuft bald ab“: große Überschrift mit Anzahl, jeder Gutschein als eigene Karte mit dem nächsten Schritt.
-    private func dueSoonSection(_ cards: [GiftCard]) -> some View {
+    private func dueSoonSection(_ cards: [GiftCard], more: Int) -> some View {
         VStack(alignment: .leading, spacing: Layout.group) {
             HStack(spacing: 10) {
                 Text("Läuft bald ab").font(.scaled(26, weight: .bold)).foregroundStyle(Color.ink)
-                Text("\(cards.count)").font(.scaled(17, weight: .semibold)).monospacedDigit().foregroundStyle(Color.ink2)
+                Text("\(cards.count + more)").font(.scaled(17, weight: .semibold)).monospacedDigit().foregroundStyle(Color.ink2)
                     .padding(.horizontal, 10).padding(.vertical, 4)
                     .background(Color.fill, in: .capsule)
-                    .accessibilityLabel("\(cards.count) Gutscheine")
+                    .accessibilityLabel("\(cards.count + more) Gutscheine")
             }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
@@ -166,6 +166,10 @@ struct HomeView: View {
                             act: { router.homePath.append(c.number.isEmpty && c.photo == nil ? .card(c.id) : .checkout(c.id)) }) {
                     rowMenu(c)
                 }
+            }
+            if more > 0 {
+                Text(more == 1 ? "1 weiterer steht unten in der Liste." : "\(more) weitere stehen unten in der Liste.")
+                    .font(.scaled(14)).foregroundStyle(Color.ink2)
             }
         }
         .animation(.snappy, value: cards.map(\.id))
@@ -289,6 +293,9 @@ private struct HomeLists {
     /// Hauptliste: ohne Filter alles Übrige, mit Filter alles Passende.
     private(set) var list: [GiftCard] = []
     private(set) var done: [GiftCard] = []
+    static let maxDueCards = 3
+    /// Bald ablaufende, die nicht mehr als Karte oben stehen (sie sind in der Liste).
+    private(set) var dueSoonMore = 0
     /// Selbst ausgestellte, noch offene Gutscheine (eigener Bereich).
     private(set) var issued: [GiftCard] = []
     private(set) var offered: [CardFilter] = [.all]
@@ -364,6 +371,9 @@ private struct HomeLists {
         let due = activeEntries.filter { $0.days <= warnDays && !$0.card.forGifting && !$0.card.issuedByMe }
         dueSoonCount = due.count
         dueSoon = due.map(\.card).filter(search.matches)
+        // Höchstens drei Karten oben; weitere bald ablaufende stehen normal in der Liste (dort mit roter Frist).
+        dueSoonMore = max(0, dueSoon.count - Self.maxDueCards)
+        dueSoon = Array(dueSoon.prefix(Self.maxDueCards))
         let dueIDs = Set(dueSoon.map(\.id))
         // Selbst ausgestellte stehen im eigenen Bereich, nie in der eigenen Liste.
         issued = sorted.compactMap { e in e.active && e.card.issuedByMe && search.matches(e.card) ? e.card : nil }
@@ -560,7 +570,7 @@ private struct DueSoonCard<MenuItems: View>: View {
                 .accessibilityLabel("\(card.name), \(card.headline)\(card.kind.isValueBased ? " von \(card.value.euro)" : " Rabatt"), \(due.text)")
                 Menu { menu() } label: {
                     Image(systemName: "ellipsis").font(.scaled(17, weight: .bold)).foregroundStyle(Color.ink2)
-                        .frame(width: 32, height: Layout.tap).contentShape(.rect)
+                        .frame(width: 36, height: Layout.tap).contentShape(.rect).padding(.trailing, -4)
                 }
                 .accessibilityLabel("Aktionen für \(card.name)")
             }

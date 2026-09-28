@@ -121,6 +121,12 @@ final class Router {
     func takeSharedInbox() {
         guard let dir = SharedInbox.directory() else { return }
         let target = FileManager.default.temporaryDirectory.appending(path: "shared-inbox", directoryHint: .isDirectory)
+        // Liegengebliebene Kopien früherer Starts (z. B. App beendet mitten in einer Reihe) nach einem Tag löschen.
+        let old = Date.now.addingTimeInterval(-24 * 3600)
+        for url in (try? FileManager.default.contentsOfDirectory(at: target, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+        where ((try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast) < old {
+            try? FileManager.default.removeItem(at: url)
+        }
         let files = SharedInbox.take(from: dir, to: target)
         guard !files.isEmpty else { return }
         // Die Mitteilung „bereit zum Prüfen“ hat sich damit erledigt.

@@ -253,8 +253,9 @@ struct SettingsView: View {
         }
         .onChange(of: warnDays) { _, _ in Task { await store.scheduleReminders() } }
         // Widget sofort anpassen: mit App-Sperre ohne Beträge.
-        .onChange(of: appLock) { _, _ in WidgetBridge.update(cards: store.cards, total: store.total) }
-        .onChange(of: codeLock) { _, _ in WidgetBridge.update(cards: store.cards, total: store.total) }
+        // Widget und Erinnerungen sofort anpassen: mit Sperre ohne Beträge und ohne Ladennamen.
+        .onChange(of: appLock) { _, _ in WidgetBridge.update(cards: store.cards, total: store.total); Task { await store.scheduleReminders() } }
+        .onChange(of: codeLock) { _, _ in WidgetBridge.update(cards: store.cards, total: store.total); Task { await store.scheduleReminders() } }
         .onChange(of: reminderDays) { _, _ in Task { await store.scheduleReminders() } }
         .onChange(of: reminderHour) { _, _ in Task { await store.scheduleReminders() } }
         .confirmationDialog("Alle Restwert-Daten aus deinem iCloud löschen?", isPresented: $confirmDeleteCloud, titleVisibility: .visible) {
@@ -551,7 +552,6 @@ extension View {
         listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .listSectionSpacing(Layout.section)
-            .contentMargins(.horizontal, Layout.page, for: .scrollContent)
             .environment(\.defaultMinListRowHeight, Layout.tap + 8)
     }
 }

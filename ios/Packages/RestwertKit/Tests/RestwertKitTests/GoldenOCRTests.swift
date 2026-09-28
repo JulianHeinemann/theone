@@ -55,6 +55,7 @@ struct GoldenOCRTests {
         Case(id: "Plakat Eintritt", text: "STADTFEST\nEintritt 10 €", value: 10, voucher: false),
         Case(id: "Konzertkarte", text: "SOMMERKONZERT\nEinlass 19 Uhr\nReihe 4 Platz 12\n35 €", value: 35, voucher: false),
         Case(id: "Neujahrs-Gutschein ohne Gutschein-Wort", text: "BLUMEN MEYER\nFrohes neues Jahr!\n20 €", value: 20),
+        Case(id: "Café am Platz (Name mit „Platz“)", text: "CAFÉ AM PLATZ\nFür eine Auszeit\n25 €", value: 25),
         Case(id: "v12 Stadtgutschein", text: "Kassel Stadtgutschein\nWert 10 Euro\nSeriennummer KS-2026-004711\nGültigkeit: 24 Monate",
              merchant: "stadtgutschein", value: 10, number: "KS-2026-004711", expires: [2028, 9, 27]),
     ]

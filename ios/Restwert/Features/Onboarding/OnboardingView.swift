@@ -333,7 +333,7 @@ private struct CollectPage: View {
 
     var body: some View {
         PageFrame(title: "Alles an einem Ort.",
-                  text: "Egal ob Zalando, IKEA oder der Blumenladen um die Ecke: Gutschein rein, Restbetrag drauf, fertig. An der Kasse zeigst du den Code groß und ziehst ab, was du bezahlt hast.",
+                  text: "Egal ob Zalando, IKEA oder der Blumenladen um die Ecke: Gutschein rein, Guthaben drauf, fertig. An der Kasse zeigst du den Code groß und ziehst ab, was du bezahlt hast.",
                   active: active) {
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
