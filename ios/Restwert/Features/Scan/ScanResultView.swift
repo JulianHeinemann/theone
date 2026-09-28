@@ -128,6 +128,13 @@ struct ScanResultView: View {
                     }
                 }
                 if let lone { cell(lone.label, lone.value, index: tiles.count - 1, alert: lone.alert) }
+                if outcome.barcode != nil, outcome.resolvedFormat?.format == .text {
+                    // Online-Code mit Strichcode auf dem Beleg (z. B. OTTO-PDF): sagen, wofür der Strichcode nicht ist.
+                    Label("Der Strichcode auf dem Gutschein ist nicht für die Kasse (oft eine Bestellnummer). Den Code gibst du im Shop ein.",
+                          systemImage: "info.circle")
+                        .font(.scaled(13)).foregroundStyle(Color.ink2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 // Kaufdatum direkt unter der Datumskachel, von der es abhängt.
                 receivedRow(draft)
                 // Betrugshinweis in der Karte vor dem Foto: so ist er vor „Speichern“ zu sehen, nicht hinter der Leiste.
@@ -255,7 +262,7 @@ struct ScanResultView: View {
             }
             .font(.scaled(12, weight: .semibold)).foregroundStyle(alert ? Color.warn : Color.ink2)
             // Codes nur an Gruppengrenzen umbrechen: in Gruppen feste Leerzeichen/Bindestriche.
-            Text(label == "Code" ? Self.unbreakableGroups(Self.codeDisplay(value)) : value)
+            Text(label == "Code" ? Self.unbreakableGroups(Self.codeDisplay(value, format: outcome.resolvedFormat?.origin == .scanned ? outcome.resolvedFormat?.format : nil)) : value)
                 .font(label == "Code" ? .scaled(15, weight: .bold, design: .monospaced) : .scaled(15, weight: .bold))
                 .foregroundStyle(alert ? Color.warn : Color.ink)
                 .lineLimit(typeSize.isAccessibilitySize ? nil : 3).minimumScaleFactor(0.85)
@@ -273,8 +280,10 @@ struct ScanResultView: View {
 
     /// Handelscodes wie unter dem Strichcode gedruckt: EAN-13 1-6-6 („4 006381 333931“), UPC-A 1-5-5-1
     /// („0 36000 29145 2“), EAN-8 4-4 („9638 5074“); sonst Vierergruppen.
-    static func codeDisplay(_ code: String) -> String {
+    static func codeDisplay(_ code: String, format: CodeFormat? = nil) -> String {
         let c = code.replacingOccurrences(of: " ", with: "")
+        // Mit bekannter Barcode-Art nur Handelscodes so gruppieren (eine 12-stellige Code-128-Nummer ist kein UPC-A).
+        if let format, ![.ean13, .upca, .ean8].contains(format) { return code.grouped }
         if ScanDraft.retailCheck(c)?.valid == true {
             return "\(c.prefix(1)) \(c.dropFirst().prefix(6)) \(c.suffix(6))"
         }
@@ -389,7 +398,7 @@ struct ScanResultView: View {
         }
         if let expires = draft.expires {
             if expires < Calendar.current.startOfDay(for: .now) {
-                out.append(Check(level: .warning, text: "Laut Gutschein abgelaufen am \(expires.dayMonthYear)."))
+                out.append(Check(level: .warning, text: "Laut Gutschein abgelaufen am \(expires.dayMonthYear). Oft trotzdem noch einlösbar – frag im Laden nach."))
                 if draft.percent == nil {
                     out.append(Check(level: .info, text: "Oft trotzdem nicht verloren: Für gekaufte Gutscheine gelten meist 3 Jahre ab Ende des Kaufjahres, kürzere Fristen sind oft unwirksam. Frag beim Laden nach Einlösung oder Erstattung."))
                 }

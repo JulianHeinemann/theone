@@ -26,6 +26,8 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
     var barcodeUnavailable = false
     /// Wie viele Gutscheine über 100 € in den letzten 7 Tagen schon erfasst wurden (Betrugsmuster „kauf Gutscheine“).
     var recentHighValueCount = 0
+    /// „Speichern mit einem Tipp“: einmal berechnet, wenn das Ergebnis feststeht (und nach geändertem Kaufdatum).
+    var canSave = false
     /// Ein gespeicherter Gutschein mit demselben Code (Name), sonst nil.
     var duplicateName: String?
     var duplicateID: UUID?

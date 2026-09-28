@@ -165,7 +165,7 @@ public enum VoucherScanner {
             for r in results {
                 guard let raw = r.normalizedPayload?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else { continue }
                 let code = ScanReading.Code(payload: raw, format: CodeFormat(r.symbology),
-                                            converted: CodeFormat.nativelyDrawn(r.symbology) ? nil : "\(r.symbology)".uppercased())
+                                            converted: CodeFormat.nativelyDrawn(r.symbology) ? nil : readableSymbology("\(r.symbology)"))
                 if !codes.contains(code) { codes.append(code) }
             }
             return (codes, false)
@@ -173,6 +173,17 @@ public enum VoucherScanner {
         if let legacy = legacyDetect(image) { return (legacy, false) }
         if let qr = qrWithCoreImage(image) { return ([ScanReading.Code(payload: qr, format: .qr)], false) }
         return ([], true)
+    }
+
+    /// Lesbarer Name einer Barcode-Art für Hinweise („Code 93“ statt „CODE93“).
+    static func readableSymbology(_ raw: String) -> String {
+        let key = raw.uppercased().filter { $0.isLetter || $0.isNumber }
+        if key.hasPrefix("GS1DATABAR") { return "GS1 DataBar" }
+        if key.hasPrefix("CODE93") { return "Code 93" }
+        if key.hasPrefix("CODE39") { return "Code 39" }
+        let names = ["CODABAR": "Codabar", "UPCE": "UPC-E", "MICROQR": "Micro-QR", "MICROPDF417": "MicroPDF417",
+                     "I2OF5": "ITF", "ITF14": "ITF-14", "MSIPLESSEY": "MSI Plessey"]
+        return names[key] ?? raw
     }
 
     /// Ältere Vision-Schnittstelle; nil, wenn auch sie keinen Detektor anlegen kann.
@@ -185,7 +196,7 @@ public enum VoucherScanner {
             for r in request.results ?? [] {
                 guard var raw = r.payloadStringValue?.trimmingCharacters(in: .whitespacesAndNewlines), !raw.isEmpty else { continue }
                 if r.symbology == .upce { raw = BarcodeEncoder.expandUPCE(raw) ?? raw }
-                let name = r.symbology.rawValue.replacingOccurrences(of: "VNBarcodeSymbology", with: "").uppercased()
+                let name = readableSymbology(r.symbology.rawValue.replacingOccurrences(of: "VNBarcodeSymbology", with: ""))
                 let code = ScanReading.Code(payload: raw, format: CodeFormat(legacy: r.symbology),
                                             converted: CodeFormat.nativelyDrawn(legacy: r.symbology) ? nil : name)
                 if !codes.contains(code) { codes.append(code) }

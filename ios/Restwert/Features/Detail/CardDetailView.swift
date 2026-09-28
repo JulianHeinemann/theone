@@ -475,9 +475,9 @@ struct CardDetailView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(card.kind == .discountCode ? "Rabattcode" : "Code").font(.scaled(13)).foregroundStyle(Color.muted)
                     // Geschützt: gar keine Ziffern, auch nicht die letzten vier (Kinder, Mitbenutzer).
-                    Text(hidden ? "•••• ••••" : ScanResultView.codeDisplay(card.number)).font(.scaled(17, weight: .semibold, design: .monospaced))
+                    Text(hidden ? "•••• ••••" : ScanResultView.codeDisplay(card.number, format: card.format)).font(.scaled(17, weight: .semibold, design: .monospaced))
                         .foregroundStyle(Color.ink).textSelection(.enabled).lineLimit(2).minimumScaleFactor(0.7)
-                        .accessibilityLabel(hidden ? "Code verdeckt" : ScanResultView.codeDisplay(card.number))
+                        .accessibilityLabel(hidden ? "Code verdeckt" : ScanResultView.codeDisplay(card.number, format: card.format))
                 }
                 Spacer(minLength: 8)
                 if hidden {

@@ -87,6 +87,14 @@ public final class PhotoFiles: @unchecked Sendable {
         return out
     }
 
+    /// Auf iPhone/iPad nur bei entsperrtem Gerät lesbar. Auf dem Mac (nur Unit-Tests) ohne Dateischutz:
+    /// macOS verweigert ihn bei gesperrtem Bildschirm, die Tests hingen sonst vom Zustand des Rechners ab.
+    #if os(iOS)
+    static let writeOptions: Data.WritingOptions = [.atomic, .completeFileProtection]
+    #else
+    static let writeOptions: Data.WritingOptions = [.atomic]
+    #endif
+
     /// Geänderte Fotos schreiben. Gibt die IDs zurück, die nicht geschrieben werden konnten
     /// (die bleiben dann eingebettet in der JSON-Datei, damit nichts verloren geht).
     public func write(_ photos: [UUID: Data]) -> Set<UUID> {
@@ -96,7 +104,7 @@ public final class PhotoFiles: @unchecked Sendable {
         }
         for (id, data) in photos where known[id] != data {
             do {
-                try data.write(to: url(for: id), options: [.atomic, .completeFileProtection])
+                try data.write(to: url(for: id), options: Self.writeOptions)
                 known[id] = data
             } catch {
                 failed.insert(id)

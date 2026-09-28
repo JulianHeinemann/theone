@@ -150,6 +150,8 @@ struct CheckoutView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.large).tint(Color.ink)
+        // Kräftiger Rand: grau auf Weiß allein wirkte bei großer Schrift wie ausgeschaltet.
+        .overlay(Capsule().strokeBorder(Color.ink, lineWidth: 1.5))
         .frame(minHeight: Layout.tap)
     }
 
@@ -285,7 +287,9 @@ struct CheckoutView: View {
                     // Mit Code-Schutz auch den Barcode erst nach Face ID groß zeigen.
                     Button { if hidden && (textOnly || codeLock) { revealCode(card) } else { showFull = true } } label: {
                         // Eigener Gutschein (Laden-Sicht): der Laden scannt nicht, er bucht ab – kleiner Code reicht.
-                        BarcodeView(number: card.number, format: card.format, height: card.issuedByMe ? 60 : 150, masked: hidden, concealed: hidden && codeLock)
+                        // Sehr große Schrift: Barcode etwas flacher, damit „PIN anzeigen“ ohne Scrollen über der Leiste steht.
+                        BarcodeView(number: card.number, format: card.format, height: card.issuedByMe ? 60 : checkoutTypeSize.isAccessibilitySize ? 100 : 150,
+                                    masked: hidden, concealed: hidden && codeLock)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(hidden && (textOnly || codeLock) ? "Geschützt. Tippen und entsperren" : "Barcode groß anzeigen")
@@ -299,14 +303,14 @@ struct CheckoutView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if !textOnly && !(codeLock && hidden) {
-                        Text(hidden ? card.number.masked : ScanResultView.codeDisplay(card.number))
+                        Text(hidden ? card.number.masked : ScanResultView.codeDisplay(card.number, format: card.format))
                             // Dieselbe Mono-Schrift wie im Detail; bleibt einzeilig statt „1234“ allein umzubrechen.
                             .font(.scaled(20, weight: .bold, design: .monospaced))
                             .lineLimit(1).minimumScaleFactor(0.5)
                             .onTapGesture { revealCode(card) }
                     }
                     // Geschützt: nur ein Weg (auf den Code tippen), kein „Vollbild“-Versprechen vor dem Entsperren.
-                    if !(codeLock && hidden) && !card.issuedByMe { Text("Tippen für Vollbild").font(.scaled(12)).foregroundStyle(Color.muted) }
+                    if !(codeLock && hidden) && !card.issuedByMe && !checkoutTypeSize.isAccessibilitySize { Text("Tippen für Vollbild").font(.scaled(12)).foregroundStyle(Color.muted) }
                     if card.photo != nil {
                         Button("Original-Foto zeigen", systemImage: "photo") {
                             // Auf dem Foto steht der Code: bei Code-Schutz erst entsperren.
@@ -972,7 +976,7 @@ private struct FullBarcode: View {
                 BarcodeView(number: card.number, format: card.format, height: min(geo.size.width * 0.5, 220), masked: hidden)
                     .padding(.horizontal, 24)
                     .onTapGesture { if hidden { revealed = true } else { dismiss() } }
-                Text(hidden ? card.number.masked : ScanResultView.codeDisplay(card.number))
+                Text(hidden ? card.number.masked : ScanResultView.codeDisplay(card.number, format: card.format))
                     .font(.system(size: 26, weight: .bold, design: .monospaced)).kerning(2)
                     .foregroundStyle(.black)
                     .onTapGesture { if hidden { revealed = true } else { dismiss() } }

@@ -20,6 +20,9 @@ shot kasse-code-geschuetzt -onboarded YES -appLock NO -codeLock YES -demoScreen 
 shot login-ohne-code -onboarded YES -appLock YES -simulateNoPasscode YES -codeLock NO
 shot login-faceid -onboarded YES -appLock YES -simulateNoPasscode NO -codeLock NO
 xcrun simctl spawn "$U" notifyutil -p com.apple.BiometricKit_Sim.pearl.match; sleep 3; xcrun simctl io "$U" screenshot "$O/login-entsperrt.png" >/dev/null 2>&1
+# Schutz für geteilte Geräte ganz an: grüne Bestätigung in den Einstellungen (nach Face ID)
+shot geteiltes-geraet-an -onboarded YES -appLock YES -codeLock YES -pinLock YES -simulateNoPasscode NO -demoScreen settings
+xcrun simctl spawn "$U" notifyutil -p com.apple.BiometricKit_Sim.pearl.match; sleep 3; xcrun simctl io "$U" screenshot "$O/geteiltes-geraet-an.png" >/dev/null 2>&1
 # Große Schrift, Kontrast erhöhen, Dunkelmodus
 xcrun simctl ui "$U" content_size accessibility-extra-large
 shot gross-start "${M[@]}"; shot gross-kasse "${M[@]}" -demoScreen checkout; shot gross-einstellungen "${M[@]}" -demoScreen settings
@@ -39,6 +42,7 @@ WAIT=16 scripts/scan-tests.sh "$U" "$O/gross" >/dev/null || true
 xcrun simctl ui "$U" content_size large
 # Zuletzt: diese Aufnahmen legen Testkarten an (ersetzen die Beispiele)
 shot kasse-online "${M[@]}" -demoBarcode "text:AQ7K-2ZPM4H-R8TX@amazon"
+shot kasse-code93 "${M[@]}" -demoBarcode "code128:C93-4471-2208" -demoOriginal "Code 93"
 shot kasse-online-mindestbestellwert "${M[@]}" -demoBarcode "text:ZAL-SOMMER15-K4@zalando" -demoMinOrder 50
 shot papier-foto-geschuetzt -onboarded YES -appLock NO -codeLock YES -demoScreen paper
 scripts/barcode-kasse-test.sh "$U" "$O/barcodes" >/dev/null

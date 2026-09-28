@@ -10,11 +10,7 @@ struct ScanView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    @State private var outcome: ScanOutcome? {
-        didSet { canSave = outcome?.canSaveDirectly ?? false }
-    }
-    /// „Speichern mit einem Tipp“ möglich – einmal je Ergebnis berechnet, nicht bei jedem Zeichnen.
-    @State private var canSave = false
+    @State private var outcome: ScanOutcome?
     @State private var busy = false
     @State private var showScanner = false
     @State private var showFiles = false
@@ -25,6 +21,8 @@ struct ScanView: View {
     @State private var batchTotal = 0
     /// Fotos der Mehrfachauswahl, die sich nicht lesen ließen – am Ende genannt.
     @State private var batchUnreadable = 0
+    @State private var batchSaved = 0
+    @State private var batchSkipped = 0
     @State private var formSeed: FormSeed?
     @State private var importError: String?
     /// Zählt Lesevorgänge; ein abgebrochener oder überholter Vorgang zeigt sein Ergebnis nicht mehr.
@@ -56,7 +54,11 @@ struct ScanView: View {
                         .padding(.top, 8)
                 }
                 if let outcome {
-                    ScanResultView(outcome: outcome, canSave: canSave, onReceived: { date in self.outcome?.received = date })
+                    ScanResultView(outcome: outcome, canSave: outcome.canSave, onReceived: { date in
+                        // Kaufdatum ändert die Frist – dann einmal neu entscheiden, ob „Speichern“ reicht.
+                        self.outcome?.received = date
+                        if let o = self.outcome { self.outcome?.canSave = o.canSaveDirectly }
+                    })
                     .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
                                             removal: .move(edge: .leading).combined(with: .opacity)))
                 } else {
@@ -103,7 +105,8 @@ struct ScanView: View {
                         .confirmationDialog("Ergebnis verwerfen?", isPresented: $confirmDiscard, titleVisibility: .visible) {
                             Button("Verwerfen", role: .destructive) {
                                 withAnimation(reduceMotion ? nil : .smooth) { outcome = nil }
-                                // Mehrere Fotos: mit dem nächsten weitermachen.
+                                // Mehrere Fotos: als übersprungen zählen und mit dem nächsten weitermachen.
+                                if batchTotal > 1 { batchSkipped += 1 }
                                 nextFromBatch()
                             }
                         } message: {
@@ -159,6 +162,7 @@ struct ScanView: View {
                 outcome = nil
                 // Immer im Hinzufügen-Tab bleiben (mehrere hintereinander, gleich welche Quelle); „Ansehen“ öffnet ihn.
                 router.toast = Toast(message: "„\(saved.name)“ gespeichert", undo: { [router] in router.showCard(saved.id) }, actionTitle: "Ansehen")
+                if batchTotal > 1 { batchSaved += 1 }
                 nextFromBatch()
             }
         }
@@ -310,10 +314,10 @@ struct ScanView: View {
 
     /// „Hinzufügen“ bzw. bei Nicht-Gutscheinen „Erneut scannen“ als Hauptaktion.
     private func resultActions(_ outcome: ScanOutcome) -> some View {
-        let canSave = self.canSave
+        let canSave = outcome.canSave
         return VStack(spacing: 14) {
             if let dup = outcome.duplicateID {
-                if batch.isEmpty {
+                if batchTotal <= 1 {
                     Button("Gespeicherten Gutschein öffnen") {
                         withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
                         router.showCard(dup)
@@ -321,22 +325,18 @@ struct ScanView: View {
                     .buttonStyle(.primary)
                 } else {
                     // Mehrere Fotos: die Dublette einfach auslassen.
-                    Button("Überspringen – nächstes Foto") {
-                        withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
-                        nextFromBatch()
-                    }
-                    .buttonStyle(.primary)
+                    skipButton.buttonStyle(.primary)
                 }
                 // Untereinander: „Trotzdem hinzufügen“ bräche nebeneinander zweizeilig um.
                 Button("Trotzdem hinzufügen") { formSeed = FormSeed(outcome: outcome) }.buttonStyle(.quiet)
-                Button("Erneut scannen") { rescan() }.buttonStyle(.quiet)
+                rescanOrSkip
             } else if canSave {
                 // Alles sicher erkannt: ein Tipp genügt. Wer prüfen will, öffnet das Formular.
                 Button("Speichern") { formSeed = FormSeed(outcome: outcome, autoSave: true) }.buttonStyle(.primary)
                 HStack(spacing: 10) {
                     Button("Prüfen und ändern") { formSeed = FormSeed(outcome: outcome) }
                         .buttonStyle(.quiet)
-                    Button("Erneut scannen") { rescan() }.buttonStyle(.quiet)
+                    rescanOrSkip
                 }
             } else if outcome.looksLikeVoucher {
                 Button("Hinzufügen") {
@@ -352,14 +352,10 @@ struct ScanView: View {
                          + (expired ? "\n\nOft trotzdem nicht verloren: Frag beim Laden nach Einlösung oder Erstattung." : "")
                          + "\n\nDu kannst alles im nächsten Schritt korrigieren.")
                 }
-                Button("Erneut scannen") { rescan() }.buttonStyle(.quiet)
-            } else if !batch.isEmpty {
-                // Mehrere Fotos: Nicht-Gutschein einfach auslassen.
-                Button("Überspringen – nächstes Foto") {
-                    withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
-                    nextFromBatch()
-                }
-                .buttonStyle(.primary)
+                rescanOrSkip
+            } else if batchTotal > 1 {
+                // Mehrere Fotos: Nicht-Gutschein einfach auslassen (auch beim letzten Foto, dann mit Abschlussmeldung).
+                skipButton.buttonStyle(.primary)
                 Button("Trotzdem von Hand eintragen") { formSeed = FormSeed(outcome: nil) }.buttonStyle(.quiet)
             } else {
                 Button("Erneut scannen") { rescan() }.buttonStyle(.primary)
@@ -369,15 +365,35 @@ struct ScanView: View {
         .padding(.horizontal, Layout.page).padding(.top, 10).padding(.bottom, 8)
     }
 
-    /// Nächstes Foto aus der Mehrfachauswahl lesen; am Ende die Zählung zurücksetzen.
+    /// Mehrere Fotos: aktuelles Ergebnis auslassen, weiter mit dem nächsten.
+    private var skipButton: some View {
+        Button(batch.isEmpty ? "Überspringen – fertig" : "Überspringen – nächstes Foto") {
+            batchSkipped += 1
+            withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
+            nextFromBatch()
+        }
+    }
+
+    /// Nebenknopf: einzeln „Erneut scannen“; in einer Mehrfachauswahl „Überspringen“, damit die restlichen Fotos nicht still verloren gehen.
+    @ViewBuilder private var rescanOrSkip: some View {
+        if batchTotal > 1 {
+            skipButton.buttonStyle(.quiet)
+        } else {
+            Button("Erneut scannen") { rescan() }.buttonStyle(.quiet)
+        }
+    }
+
+    /// Nächstes Foto aus der Mehrfachauswahl lesen; am Ende eine ehrliche Bilanz.
     private func nextFromBatch() {
         guard !batch.isEmpty else {
             if batchTotal > 1 {
-                let n = batchUnreadable
-                router.toast = Toast(message: n == 0 ? "Alle \(batchTotal) Fotos bearbeitet"
-                                     : "\(batchTotal) Fotos bearbeitet, \(n == 1 ? "1 war" : "\(n) waren") nicht lesbar", undo: nil)
+                var parts: [String] = []
+                if batchSaved > 0 { parts.append("\(batchSaved) gespeichert") }
+                if batchSkipped > 0 { parts.append("\(batchSkipped) übersprungen") }
+                if batchUnreadable > 0 { parts.append("\(batchUnreadable) nicht lesbar") }
+                router.toast = Toast(message: "\(batchTotal) Fotos: " + parts.joined(separator: ", "), undo: nil)
             }
-            batchTotal = 0; batchUnreadable = 0
+            batchTotal = 0; batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
             return
         }
         let source = batch.removeFirst()
@@ -396,7 +412,7 @@ struct ScanView: View {
     private func rescan() {
         // Altes Ergebnis bleibt stehen, bis ein neues da ist: Abbrechen im Scanner verliert nichts.
         // Eine laufende Mehrfachauswahl endet hier: sonst käme nach dem Kamera-Scan unerwartet das nächste Foto.
-        batch = []; batchTotal = 0; batchUnreadable = 0
+        batch = []; batchTotal = 0; batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
         showScanner = true
     }
 
@@ -420,6 +436,8 @@ struct ScanView: View {
             result.duplicateID = dup.id
         }
         result.recentHighValueCount = store.cards.filter { !$0.isExample && !$0.issuedByMe && $0.value >= 100 && $0.addedOrReceived >= weekAgo }.count
+        // Erst nach Dublette und Betrugsmuster entscheiden: beide schließen „Speichern mit einem Tipp“ aus.
+        result.canSave = result.canSaveDirectly
         withAnimation(reduceMotion ? nil : .smooth) { outcome = result }
         #if DEBUG
         // Nur für Screenshots: `-demoOpenForm YES` öffnet nach dem Lesen gleich das Formular.

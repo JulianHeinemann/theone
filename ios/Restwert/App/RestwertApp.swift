@@ -290,6 +290,8 @@ extension Router {
             // `-demoMinOrder 50`: Mindestbestellwert zeigen (Online-Kasse).
             let minOrder = UserDefaults.standard.double(forKey: "demoMinOrder")
             if minOrder > 0 { card.minOrder = minOrder }
+            // `-demoOriginal "Code 93"`: gescannte Originalart, die als Code 128 gezeigt wird.
+            card.originalSymbology = UserDefaults.standard.string(forKey: "demoOriginal")
             store.upsert(card)
             homePath = [.checkout(card.id)]
             return

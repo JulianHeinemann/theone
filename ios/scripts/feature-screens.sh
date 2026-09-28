@@ -19,6 +19,9 @@ run mindestbestellwert 16 -demoImport "$(imp v05-zalando-rabatt-mbw.jpg)"
 run gespeichert-im-tab 16 -demoOpenForm YES -demoAutoSave YES -demoImport "$(imp v01-douglas-ean13.jpg)"
 # Dublette: denselben Gutschein noch einmal scannen
 # Mehrere Fotos auf einmal (wie Mehrfachauswahl in „Aus Fotos“): erstes Ergebnis mit „Foto 1 von 3“
+cp "$SRC"/v11* "$DATA/Documents/scan-tests/"
+# Reihe mit Nicht-Gutschein zuerst: „Überspringen – nächstes Foto“ statt „Erneut scannen“
+run mehrere-fotos-kein-gutschein 16 -demoImportBatch "$(imp v11-leer-kein-gutschein.jpg)|$(imp v05-zalando-rabatt-mbw.jpg)"
 run mehrere-fotos 16 -demoImportBatch "$(imp v05-zalando-rabatt-mbw.jpg)|$(imp v06-mediamarkt-falsche-pruefziffer.jpg)|$(imp v09-amazon-online.jpg)"
 run dublette 16 -demoImport "$(imp v01-douglas-ean13.jpg)"
 xcrun simctl ui "$U" content_size accessibility-extra-large
