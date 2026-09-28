@@ -73,18 +73,18 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		B10000000000000000000003 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A10000000000000000000003 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000021 /* RestwertKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B10000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -240,14 +240,14 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		B10000000000000000000008 /* Resources */ = {
+		A10000000000000000000008 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A10000000000000000000008 /* Resources */ = {
+		B10000000000000000000008 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -264,14 +264,14 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		B10000000000000000000007 /* Sources */ = {
+		A10000000000000000000007 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A10000000000000000000007 /* Sources */ = {
+		B10000000000000000000007 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -301,130 +301,9 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		B10000000000000000000015 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = RestwertWidget.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "RestwertWidget-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "de.restwert.app.widget";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		B10000000000000000000016 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = RestwertWidget.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "RestwertWidget-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "de.restwert.app.widget";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		C10000000000000000000015 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = RestwertShare.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "RestwertShare-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "de.restwert.app.share";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		C10000000000000000000016 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = RestwertShare.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "RestwertShare-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "de.restwert.app.share";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 6.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 		A10000000000000000000011 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				RESTWERT_APP_ENTITLEMENTS = Restwert.entitlements;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -449,6 +328,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				RESTWERT_APP_ENTITLEMENTS = Restwert.entitlements;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -458,7 +338,6 @@
 		A10000000000000000000012 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				RESTWERT_APP_ENTITLEMENTS = Restwert.entitlements;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -476,6 +355,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				RESTWERT_APP_ENTITLEMENTS = Restwert.entitlements;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
@@ -487,12 +367,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "$(RESTWERT_APP_ENTITLEMENTS)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 3MX55UN8BD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				CODE_SIGN_ENTITLEMENTS = "$(RESTWERT_APP_ENTITLEMENTS)";
 				INFOPLIST_FILE = "Restwert-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -509,13 +389,13 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "de.restwert.app";
+				PRODUCT_BUNDLE_IDENTIFIER = de.restwert.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -527,12 +407,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "$(RESTWERT_APP_ENTITLEMENTS)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 3MX55UN8BD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				CODE_SIGN_ENTITLEMENTS = "$(RESTWERT_APP_ENTITLEMENTS)";
 				INFOPLIST_FILE = "Restwert-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -549,13 +429,133 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "de.restwert.app";
+				PRODUCT_BUNDLE_IDENTIFIER = de.restwert.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B10000000000000000000015 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = RestwertWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3MX55UN8BD;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "RestwertWidget-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.restwert.app.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B10000000000000000000016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = RestwertWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3MX55UN8BD;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "RestwertWidget-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.restwert.app.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C10000000000000000000015 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = RestwertShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3MX55UN8BD;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "RestwertShare-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.restwert.app.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C10000000000000000000016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = RestwertShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3MX55UN8BD;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "RestwertShare-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.restwert.app.share;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -565,15 +565,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		B10000000000000000000010 /* Build configuration list for PBXNativeTarget "RestwertWidget" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				B10000000000000000000015 /* Debug */,
-				B10000000000000000000016 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		A10000000000000000000010 /* Build configuration list for PBXNativeTarget "Restwert" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -588,6 +579,15 @@
 			buildConfigurations = (
 				A10000000000000000000011 /* Debug */,
 				A10000000000000000000012 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B10000000000000000000010 /* Build configuration list for PBXNativeTarget "RestwertWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B10000000000000000000015 /* Debug */,
+				B10000000000000000000016 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
