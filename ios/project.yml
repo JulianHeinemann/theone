@@ -16,6 +16,7 @@ targets:
     dependencies:
       - package: RestwertKit
       - target: RestwertWidget
+      - target: RestwertShare
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: de.restwert.app
@@ -35,7 +36,9 @@ targets:
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-        CODE_SIGN_ENTITLEMENTS: Restwert.entitlements
+        # Geräte-Build ohne iCloud: RESTWERT_APP_ENTITLEMENTS=Restwert-Device.entitlements (nur App Group).
+        RESTWERT_APP_ENTITLEMENTS: Restwert.entitlements
+        CODE_SIGN_ENTITLEMENTS: $(RESTWERT_APP_ENTITLEMENTS)
   RestwertWidget:
     type: app-extension
     platform: iOS
@@ -54,4 +57,26 @@ targets:
         INFOPLIST_FILE: RestwertWidget-Info.plist
         INFOPLIST_KEY_CFBundleDisplayName: Restwert
         CODE_SIGN_ENTITLEMENTS: RestwertWidget.entitlements
+        SKIP_INSTALL: YES
+  RestwertShare:
+    # „Teilen“ → Restwert: Mail-Text, Fotos (bis 20), PDFs. Legt Dateien in die App Group, die App liest sie ein.
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: RestwertShare
+    dependencies:
+      - package: RestwertKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.restwert.app.share
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: 1
+        SWIFT_VERSION: "6.0"
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: RestwertShare-Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: Restwert
+        CODE_SIGN_ENTITLEMENTS: RestwertShare.entitlements
         SKIP_INSTALL: YES

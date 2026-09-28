@@ -43,6 +43,11 @@ struct GoldenOCRTests {
         Case(id: "v10 CinemaxX englisch", text: "CinemaxX Gift Card\nValue: EUR 40\nCard number 5021 0099 3344 7781\nValid thru Dec 31, 2028",
              merchant: "cinemaxx", value: 40, number: "5021009933447781", expires: [2028, 12, 31]),
         Case(id: "v11 Einkaufsliste", text: "Einkaufsliste\nMilch, Brot, Äpfel", voucher: false),
+        // Gestalteter Bäckerei-Gutschein (Foto aus der Fotos-App, Juli-Test): „Geschenkgutschein“ in Schreibschrift nicht oder verlesen.
+        Case(id: "Krustenzauber ohne Gutschein-Wort", text: "KRUSTEN\nZAUBER\nKRUSTENZAUBER\nFÜR UNSERE BACKWELT\n25 €\nFür echte Backfreude und besondere Brotbackmomente.",
+             value: 25),
+        Case(id: "Krustenzauber verlesen", text: "KRUSTENZAUBER\nGesdienkgutsdiein\nFÜR UNSERE BACKWELT\n25 €", value: 25),
+        Case(id: "Preisliste mit mehreren Beträgen", text: "Brot 4,50 €\nBrötchen 0,60 €\nKuchen 3,20 €", value: 4.5, voucher: false),
         Case(id: "v12 Stadtgutschein", text: "Kassel Stadtgutschein\nWert 10 Euro\nSeriennummer KS-2026-004711\nGültigkeit: 24 Monate",
              merchant: "stadtgutschein", value: 10, number: "KS-2026-004711", expires: [2028, 9, 27]),
     ]
@@ -60,5 +65,16 @@ struct GoldenOCRTests {
             #expect([got?.year, got?.month, got?.day] == e.map(Optional.some))
         }
         #expect(ScanDraft.looksLikeVoucher(d, text: c.text, hasBarcode: false) == c.voucher)
+    }
+
+    @Test("Markante Überschrift wird Ladenname, wenn kein Laden bekannt ist")
+    func headline() {
+        #expect(ScanDraft.merge(text: "KRUSTEN\nZAUBER\nKRUSTENZAUBER\nFÜR UNSERE BACKWELT\n25 €", smart: nil).customName == "Krustenzauber")
+        #expect(ScanDraft.merge(text: "KRUSTENZAUBER\nFÜR UNSERE BACKWELT\n25 €", smart: nil).customName == "Krustenzauber")
+        #expect(ScanDraft.merge(text: "GUTSCHEIN\ncafé sonnenschein\nüber 30, - Euro", smart: nil).customName == "Café Sonnenschein")
+        #expect(ScanDraft.merge(text: "DOUGLAS\nGeschenkkarte 50 €", smart: nil).customName == nil)
+        // Auch über Apple Intelligence: Versalien des Schriftzugs werden normal geschrieben, Kürzel nicht.
+        #expect(ScanDraft.merge(text: "KRUSTENZAUBER\nGeschenkgutschein\n25 €", smart: CardDraft(customName: "KRUSTENZAUBER")).customName == "Krustenzauber")
+        #expect(ScanDraft.merge(text: "KFC\nGutschein 10 €", smart: CardDraft(customName: "KFC")).customName == "KFC")
     }
 }
