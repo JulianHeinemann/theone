@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		A10000000000000000000021 /* RestwertKit in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000020 /* RestwertKit */; };
 		B10000000000000000000033 /* RestwertWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B10000000000000000000001 /* RestwertWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C10000000000000000000021 /* RestwertKit in Frameworks */ = {isa = PBXBuildFile; productRef = C10000000000000000000020 /* RestwertKit */; };
+		C10000000000000000000033 /* RestwertShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C10000000000000000000001 /* RestwertShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -18,6 +20,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = B10000000000000000000006;
 			remoteInfo = RestwertWidget;
+		};
+		C10000000000000000000031 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000000000000000000009 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C10000000000000000000006;
+			remoteInfo = RestwertShare;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -29,6 +38,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				B10000000000000000000033 /* RestwertWidget.appex in Embed Foundation Extensions */,
+				C10000000000000000000033 /* RestwertShare.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -40,6 +50,8 @@
 		A10000000000000000000014 /* Restwert-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Restwert-Info.plist"; sourceTree = "<group>"; };
 		B10000000000000000000001 /* RestwertWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RestwertWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B10000000000000000000014 /* RestwertWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RestwertWidget-Info.plist"; sourceTree = "<group>"; };
+		C10000000000000000000001 /* RestwertShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RestwertShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		C10000000000000000000014 /* RestwertShare-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RestwertShare-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -51,6 +63,11 @@
 		B10000000000000000000002 /* RestwertWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = RestwertWidget;
+			sourceTree = "<group>";
+		};
+		C10000000000000000000002 /* RestwertShare */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = RestwertShare;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -71,6 +88,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C10000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C10000000000000000000021 /* RestwertKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -79,8 +104,10 @@
 			children = (
 				A10000000000000000000002 /* Restwert */,
 				B10000000000000000000002 /* RestwertWidget */,
+				C10000000000000000000002 /* RestwertShare */,
 				A10000000000000000000014 /* Restwert-Info.plist */,
 				B10000000000000000000014 /* RestwertWidget-Info.plist */,
+				C10000000000000000000014 /* RestwertShare-Info.plist */,
 				A10000000000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +117,7 @@
 			children = (
 				A10000000000000000000001 /* Restwert.app */,
 				B10000000000000000000001 /* RestwertWidget.appex */,
+				C10000000000000000000001 /* RestwertShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -110,6 +138,7 @@
 			);
 			dependencies = (
 				B10000000000000000000030 /* PBXTargetDependency */,
+				C10000000000000000000030 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A10000000000000000000002 /* Restwert */,
@@ -142,6 +171,29 @@
 			productReference = B10000000000000000000001 /* RestwertWidget.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		C10000000000000000000006 /* RestwertShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C10000000000000000000010 /* Build configuration list for PBXNativeTarget "RestwertShare" */;
+			buildPhases = (
+				C10000000000000000000007 /* Sources */,
+				C10000000000000000000003 /* Frameworks */,
+				C10000000000000000000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C10000000000000000000002 /* RestwertShare */,
+			);
+			name = RestwertShare;
+			packageProductDependencies = (
+				C10000000000000000000020 /* RestwertKit */,
+			);
+			productName = RestwertShare;
+			productReference = C10000000000000000000001 /* RestwertShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -156,6 +208,9 @@
 						CreatedOnToolsVersion = 16.0;
 					};
 					B10000000000000000000006 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					C10000000000000000000006 = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -179,6 +234,7 @@
 			targets = (
 				A10000000000000000000006 /* Restwert */,
 				B10000000000000000000006 /* RestwertWidget */,
+				C10000000000000000000006 /* RestwertShare */,
 			);
 		};
 /* End PBXProject section */
@@ -192,6 +248,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A10000000000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C10000000000000000000008 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -215,6 +278,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C10000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -222,6 +292,11 @@
 			isa = PBXTargetDependency;
 			target = B10000000000000000000006 /* RestwertWidget */;
 			targetProxy = B10000000000000000000031 /* PBXContainerItemProxy */;
+		};
+		C10000000000000000000030 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C10000000000000000000006 /* RestwertShare */;
+			targetProxy = C10000000000000000000031 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -286,9 +361,70 @@
 			};
 			name = Release;
 		};
+		C10000000000000000000015 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = RestwertShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "RestwertShare-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "de.restwert.app.share";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C10000000000000000000016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = RestwertShare.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "RestwertShare-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "de.restwert.app.share";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		A10000000000000000000011 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				RESTWERT_APP_ENTITLEMENTS = Restwert.entitlements;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -322,6 +458,7 @@
 		A10000000000000000000012 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				RESTWERT_APP_ENTITLEMENTS = Restwert.entitlements;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -355,7 +492,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				CODE_SIGN_ENTITLEMENTS = Restwert.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "$(RESTWERT_APP_ENTITLEMENTS)";
 				INFOPLIST_FILE = "Restwert-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -395,7 +532,7 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				CODE_SIGN_ENTITLEMENTS = Restwert.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "$(RESTWERT_APP_ENTITLEMENTS)";
 				INFOPLIST_FILE = "Restwert-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Restwert;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
@@ -455,6 +592,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		C10000000000000000000010 /* Build configuration list for PBXNativeTarget "RestwertShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C10000000000000000000015 /* Debug */,
+				C10000000000000000000016 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -466,6 +612,10 @@
 
 /* Begin XCSwiftPackageProductDependency section */
 		A10000000000000000000020 /* RestwertKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RestwertKit;
+		};
+		C10000000000000000000020 /* RestwertKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RestwertKit;
 		};

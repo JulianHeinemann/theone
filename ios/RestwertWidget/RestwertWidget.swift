@@ -137,6 +137,8 @@ struct RestwertWidgetView: View {
         if let snap = entry.snapshot {
             switch family {
             case .accessoryRectangular: lockScreen(snap)
+            case .accessoryCircular: circular(snap)
+            case .systemLarge: large(snap)
             case .accessoryInline:
                 Text(snap.next.first.map { "\($0.name) \(dueText($0.daysLeft(at: entry.date)))" } ?? snap.total)
             case .systemMedium: medium(snap)
@@ -146,6 +148,8 @@ struct RestwertWidgetView: View {
             switch family {
             case .accessoryInline:
                 Text("Restwert: App öffnen")
+            case .accessoryCircular:
+                Image(systemName: "ticket").font(.title2).widgetAccentable()
             case .accessoryRectangular:
                 // Sperrbildschirm: Systemfarbe statt festem Schwarz, sonst im Vibrant-Modus kaum sichtbar.
                 VStack(alignment: .leading, spacing: 1) {
@@ -183,12 +187,26 @@ struct RestwertWidgetView: View {
         .widgetURL(s.next.first.flatMap { URL(string: "restwert://card/\($0.id)") })
     }
 
+    /// Knopf „Scannen“: öffnet Restwert direkt mit der Kamera.
+    private var scanButton: some View {
+        Link(destination: URL(string: "restwert://scan")!) {
+            Label("Scannen", systemImage: "viewfinder")
+                .font(.caption.weight(.bold))
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background(onBrand, in: .capsule)
+                .foregroundStyle(brandYellow)
+        }
+        .accessibilityLabel("Gutschein scannen")
+    }
+
     private func medium(_ s: WidgetSnapshot) -> some View {
         HStack(alignment: .top, spacing: 14) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Guthaben").font(.caption.weight(.medium)).opacity(0.7)
                 Text(s.total).font(.system(size: 28, weight: .bold)).minimumScaleFactor(0.6).lineLimit(1)
                 Text("\(s.count) Gutscheine").font(.caption).opacity(0.75)
+                Spacer(minLength: 4)
+                scanButton
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .leading, spacing: 6) {
@@ -207,6 +225,62 @@ struct RestwertWidgetView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .foregroundStyle(onBrand)
+    }
+
+    /// Groß: Summe, Knopf „Scannen“ und die nächsten Abläufe mit Betrag.
+    private func large(_ s: WidgetSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Guthaben").font(.caption.weight(.medium)).opacity(0.7)
+                    Text(s.total).font(.system(size: 32, weight: .bold)).minimumScaleFactor(0.6).lineLimit(1)
+                    Text("\(s.count) Gutscheine").font(.caption).opacity(0.75)
+                }
+                Spacer()
+                scanButton
+            }
+            Rectangle().fill(onBrand.opacity(0.25)).frame(height: 1)
+            Text("Als Nächstes").font(.caption.weight(.medium)).opacity(0.7)
+            if s.next.isEmpty {
+                Text("Nichts läuft bald ab.").font(.callout)
+            }
+            ForEach(s.next.prefix(6)) { n in
+                Link(destination: URL(string: "restwert://card/\(n.id)")!) {
+                    HStack(spacing: 8) {
+                        BrandDot(hex: n.color)
+                        Text(n.name).font(.callout.weight(.semibold)).lineLimit(1)
+                        Spacer(minLength: 6)
+                        if s.locked == false, n.headline != "••••" {
+                            Text(n.headline).font(.callout.weight(.semibold)).monospacedDigit().lineLimit(1)
+                        }
+                        Text(dueText(n.daysLeft(at: entry.date))).font(.caption).opacity(0.75)
+                            .frame(minWidth: 70, alignment: .trailing)
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .foregroundStyle(onBrand)
+    }
+
+    /// Sperrbildschirm rund: Tage bis zum nächsten Ablauf.
+    private func circular(_ s: WidgetSnapshot) -> some View {
+        ZStack {
+            AccessoryWidgetBackground()
+            if let n = s.next.first {
+                let d = max(0, n.daysLeft(at: entry.date))
+                VStack(spacing: -2) {
+                    Text(d > 99 ? "99+" : "\(d)").font(.system(size: 20, weight: .bold, design: .rounded)).minimumScaleFactor(0.6)
+                    Text(d == 1 ? "Tag" : "Tage").font(.system(size: 10, weight: .semibold))
+                }
+                .widgetAccentable()
+                .accessibilityLabel("\(n.name) läuft \(dueText(d)) ab")
+            } else {
+                Image(systemName: "checkmark").font(.title3.weight(.bold))
+                    .accessibilityLabel("Nichts läuft bald ab")
+            }
+        }
+        .widgetURL(s.next.first.flatMap { URL(string: "restwert://card/\($0.id)") })
     }
 
     private func lockScreen(_ s: WidgetSnapshot) -> some View {
@@ -229,7 +303,7 @@ struct RestwertWidget: Widget {
         }
         .configurationDisplayName("Restwert")
         .description("Dein Guthaben und was als Nächstes abläuft.")
-        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular, .accessoryInline])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular, .accessoryInline, .accessoryCircular])
     }
 }
 

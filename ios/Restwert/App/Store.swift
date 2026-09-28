@@ -711,6 +711,14 @@ final class Store {
     /// „Betrag offen“ und „Morgen erinnern“. Spätere rücken beim nächsten Start oder Aktivwerden nach.
     static let reminderLimit = 60
 
+    /// Zahl am App-Symbol: eigene Gutscheine, die in der Warnfrist („Läuft bald ab“) ablaufen. Abschaltbar.
+    func updateBadge() {
+        let on = UserDefaults.standard.object(forKey: "badge") as? Bool ?? true
+        let warnDays = UserDefaults.standard.object(forKey: "warnDays") as? Int ?? 30
+        let count = on ? cards.filter { $0.isActive && !$0.isExample && !$0.forGifting && !$0.issuedByMe && $0.daysLeft <= warnDays }.count : 0
+        Task { try? await UNUserNotificationCenter.current().setBadgeCount(count) }
+    }
+
     func requestNotifications() async {
         _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
         await scheduleReminders()
@@ -804,6 +812,9 @@ final class Store {
         content.body = "\(c.headline) gültig bis \(CalendarDay.local(c.expires).dayMonthYear). Jetzt einlösen."
         content.sound = .default
         content.categoryIdentifier = ReminderPrefs.category.identifier
+        // Erinnerungen je Gutschein gruppieren; bald ablaufende weiter oben in der Übersicht.
+        content.threadIdentifier = c.id.uuidString
+        content.relevanceScore = id == "1" || id == "fallback" ? 1 : 0.6
         // Name und Ablauf mitgeben: „Morgen erinnern“ braucht sie auch bei gesperrtem Gerät (Datei dann nicht lesbar).
         content.userInfo = ["card": c.id.uuidString, "name": c.name, "expires": c.expires.timeIntervalSince1970]
         let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
@@ -835,7 +846,13 @@ enum ReminderPrefs {
     /// Mitteilung mit „Morgen erinnern“.
     static let category = UNNotificationCategory(
         identifier: "expiry",
-        actions: [UNNotificationAction(identifier: "snooze", title: "Morgen erinnern", options: [])],
+        actions: [
+            // Öffnet Restwert direkt mit dem Barcode (App-Sperre und Code-Schutz gelten wie immer).
+            UNNotificationAction(identifier: "checkout", title: "An der Kasse zeigen", options: [.foreground],
+                                 icon: UNNotificationActionIcon(systemImageName: "barcode")),
+            UNNotificationAction(identifier: "snooze", title: "Morgen erinnern", options: [],
+                                 icon: UNNotificationActionIcon(systemImageName: "clock")),
+        ],
         intentIdentifiers: [])
 
     /// Nächster sinnvoller Termin, wenn alle Vorläufe vorbei sind: heute zur Uhrzeit, sonst morgen,

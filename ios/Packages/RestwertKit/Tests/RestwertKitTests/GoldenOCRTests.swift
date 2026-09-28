@@ -73,5 +73,8 @@ struct GoldenOCRTests {
         #expect(ScanDraft.merge(text: "KRUSTENZAUBER\nFÜR UNSERE BACKWELT\n25 €", smart: nil).customName == "Krustenzauber")
         #expect(ScanDraft.merge(text: "GUTSCHEIN\ncafé sonnenschein\nüber 30, - Euro", smart: nil).customName == "Café Sonnenschein")
         #expect(ScanDraft.merge(text: "DOUGLAS\nGeschenkkarte 50 €", smart: nil).customName == nil)
+        // Auch über Apple Intelligence: Versalien des Schriftzugs werden normal geschrieben, Kürzel nicht.
+        #expect(ScanDraft.merge(text: "KRUSTENZAUBER\nGeschenkgutschein\n25 €", smart: CardDraft(customName: "KRUSTENZAUBER")).customName == "Krustenzauber")
+        #expect(ScanDraft.merge(text: "KFC\nGutschein 10 €", smart: CardDraft(customName: "KFC")).customName == "KFC")
     }
 }

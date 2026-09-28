@@ -85,6 +85,8 @@ struct ScanView: View {
         // Im Ergebnis keine Tab-Leiste: sie verdeckte „Hinzufügen“, Zurück geht oben links.
         .toolbar(outcome == nil ? .automatic : .hidden, for: .tabBar)
         .onAppear(perform: consumeIntent)
+        .onAppear(perform: consumeSharedBatch)
+        .onChange(of: router.pendingBatch) { _, _ in consumeSharedBatch() }
         #if DEBUG
         .onAppear {
             // Nur für Screenshots: Mehrfachauswahl mit Dateien statt Fotos nachstellen.
@@ -373,6 +375,24 @@ struct ScanView: View {
         .padding(.horizontal, Layout.page).padding(.top, 10).padding(.bottom, 8)
     }
 
+    /// Aus dem Teilen-Menü übergebene Dateien wie eine Mehrfachauswahl einlesen (auch eine einzelne Datei).
+    /// Läuft schon eine Reihe, werden sie hinten angehängt.
+    private func consumeSharedBatch() {
+        let files = router.pendingBatch
+        guard !files.isEmpty else { return }
+        router.pendingBatch = []
+        let running = batchTotal > 0 && (busy || outcome != nil || !batch.isEmpty)
+        batch += files.map { .file($0) }
+        if running {
+            batchTotal += files.count
+        } else {
+            batchTotal = files.count
+            batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
+            withAnimation(reduceMotion ? nil : .smooth) { outcome = nil }
+            nextFromBatch()
+        }
+    }
+
     /// Mehrere Fotos: aktuelles Ergebnis auslassen, weiter mit dem nächsten.
     private var skipButton: some View {
         Button(batch.isEmpty ? "Überspringen – fertig" : "Überspringen – nächstes Foto") {
@@ -407,7 +427,11 @@ struct ScanView: View {
         let source = batch.removeFirst()
         read {
             switch source {
-            case .file(let url): return await Importer.analyze(url: url)
+            case .file(let url):
+                let result = await Importer.analyze(url: url)
+                // Aus dem Teilen-Menü übernommene Kopie nach dem Lesen löschen (das Foto steckt im Ergebnis).
+                if url.path().contains("/shared-inbox/") { try? FileManager.default.removeItem(at: url) }
+                return result
             case .photo(let item):
                 guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
                     return ScanOutcome()

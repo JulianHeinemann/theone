@@ -23,7 +23,9 @@ public enum ScanDraft {
             // Schreibweise aus dem Original übernehmen (die KI liefert manchmal alles klein).
             let found = original(name, in: text) ?? name
             // Auch das Original ist oft klein (Handschrift): dann Wörter groß beginnen.
-            d.customName = found == found.lowercased() ? found.capitalized(with: Locale(identifier: "de_DE")) : found
+            // Ebenso reine Versalien eines Schriftzugs („KRUSTENZAUBER“ → „Krustenzauber“); kurze Kürzel („KFC“) bleiben.
+            let shouting = found == found.uppercased() && found.filter(\.isLetter).count > 4
+            d.customName = found == found.lowercased() || shouting ? found.capitalized(with: Locale(identifier: "de_DE")) : found
         }
         if d.value == nil, let v = smart.value, amountAppears(v, in: text) { d.value = v }
         if d.percent == nil, let p = smart.percent, percentAppears(p, in: text) { d.percent = p }

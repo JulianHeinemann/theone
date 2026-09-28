@@ -15,6 +15,7 @@ struct SettingsView: View {
     @AppStorage("iCloudSync") private var syncOn = false
     @State private var notifDenied = false
     @AppStorage("reminders") private var reminders = true
+    @AppStorage("badge") private var badge = true
     @AppStorage("pinLock") private var pinLock = true
     @AppStorage("maskNumber") private var maskNumber = false
     @AppStorage("appLock") private var appLock = false
@@ -122,6 +123,10 @@ struct SettingsView: View {
                     }
                     .foregroundStyle(Color.warn)
                 }
+                Toggle(isOn: $badge) {
+                    settingLabel("Zahl am App-Symbol", "Wie viele Gutscheine bald ablaufen", "app.badge")
+                }
+                .onChange(of: badge) { _, _ in store.updateBadge() }
                 if reminders {
                     NavigationLink {
                         ReminderSettingsView()

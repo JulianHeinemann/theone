@@ -35,14 +35,18 @@ struct RestwertApp: App {
                 .onOpenURL { url in router.openImport(url) }
                 .task {
                     NotificationHandler.cardLookup = { [store] id in store.cards.first { $0.id == id } }
-                    NotificationHandler.openCard = { [router] id in router.showCard(id) }
+                    NotificationHandler.openCard = { [router] id, checkout in
+                        if checkout { router.showCheckout(id) } else { router.showCard(id) }
+                    }
                     cloud.attach(store)
+                    // Kaltstart nach „Teilen“ → Restwert (oder Tipp auf „bereit zum Prüfen“).
+                    router.takeSharedInbox()
                     await cloud.syncNow()
                 }
         }
         .onChange(of: scenePhase) { _, phase in
             // Beim Verlassen der App alles sicher auf die Platte bringen.
-            if phase == .background { store.flush() }
+            if phase == .background { store.flush(); store.updateBadge() }
             guard phase == .active else { return }
             // Nach dem Entsperren ggf. die Datei nachladen, die vorher gesperrt war.
             store.reloadIfNeeded()
@@ -50,6 +54,9 @@ struct RestwertApp: App {
             WidgetBridge.update(cards: store.cards, total: store.total)
             // Gutscheinnamen für Siri-Phrasen („Öffne Zalando in Restwert“) aktuell halten.
             RestwertShortcuts.updateAppShortcutParameters()
+            // Aus dem Teilen-Menü (Fotos, Mail) Übergebenes einlesen.
+            router.takeSharedInbox()
+            store.updateBadge()
             Task { await cloud.syncNow() }
         }
     }
@@ -80,6 +87,8 @@ final class Router {
     var editing: GiftCard?
     /// Datei, die über „Teilen → Restwert“ oder „Öffnen in“ angekommen ist.
     var pendingImport: URL?
+    /// Aus der Teilen-Erweiterung übergebene Dateien (Fotos, PDFs, Mail-Text): der Hinzufügen-Tab liest sie als Reihe ein.
+    var pendingBatch: [URL] = []
     /// Kurze Bestätigung unten, optional mit „Rückgängig“.
     var toast: Toast?
     /// Aus dem Einstieg: direkt Kamera oder Formular im Hinzufügen-Tab öffnen.
@@ -97,7 +106,10 @@ final class Router {
     func openImport(_ url: URL) {
         // restwert://card/<id> aus dem Widget öffnet den Gutschein.
         if url.scheme == "restwert" {
-            if url.host() == "card", let id = UUID(uuidString: url.lastPathComponent) { showCard(id) } else { tab = .home }
+            if url.host() == "card", let id = UUID(uuidString: url.lastPathComponent) { showCard(id) }
+            // restwert://scan aus dem Widget: gleich die Kamera öffnen.
+            else if url.host() == "scan" { tab = .scan; scanIntent = .camera }
+            else { tab = .home }
             return
         }
         pendingImport = url
@@ -105,6 +117,25 @@ final class Router {
     }
 
     /// Nach dem Speichern direkt die Detailansicht zeigen.
+    /// Wartende Teilen-Übergaben aus der App Group abholen und im Hinzufügen-Tab einlesen.
+    func takeSharedInbox() {
+        guard let dir = SharedInbox.directory() else { return }
+        let target = FileManager.default.temporaryDirectory.appending(path: "shared-inbox", directoryHint: .isDirectory)
+        let files = SharedInbox.take(from: dir, to: target)
+        guard !files.isEmpty else { return }
+        // Die Mitteilung „bereit zum Prüfen“ hat sich damit erledigt.
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["inbox-ready"])
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["inbox-ready"])
+        tab = .scan
+        pendingBatch += files
+    }
+
+    /// Aus der Erinnerung „An der Kasse zeigen“: Gutschein und darüber die Kasse.
+    func showCheckout(_ id: UUID) {
+        tab = .home
+        homePath = [.card(id), .checkout(id)]
+    }
+
     func showCard(_ id: UUID) {
         tab = .home
         homePath = [.card(id)]
@@ -145,6 +176,14 @@ struct RootView: View {
                     router.homePath = []
                     router.tab = .home
                     withAnimation(.smooth(duration: 0.5)) { onboarded = true }
+                    // Kam die App über „Teilen“ (Fotos, Mail): gleich zum geteilten Gutschein.
+                    if !router.pendingBatch.isEmpty {
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(550))
+                            router.tab = .scan
+                        }
+                        return
+                    }
                     guard exit != .browse else { return }
                     // Tab erst wechseln, wenn die Tab-Leiste steht – sonst übernimmt sie die Auswahl nicht.
                     Task {
@@ -709,12 +748,13 @@ struct LockScreen: View {
 /// Tippen auf eine Erinnerung öffnet den Gutschein; „Morgen erinnern“ plant sie einen Tag später neu.
 final class NotificationHandler: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     /// Beim Kaltstart angetippter Gutschein, bis der Router bereitsteht.
-    @MainActor static var pendingCard: UUID?
-    @MainActor static var openCard: ((UUID) -> Void)? {
+    @MainActor static var pendingCard: (id: UUID, checkout: Bool)?
+    /// Öffnet den Gutschein; `checkout` = gleich „An der Kasse“ (Aktion in der Erinnerung).
+    @MainActor static var openCard: ((UUID, Bool) -> Void)? {
         didSet {
-            if let id = pendingCard, let openCard {
+            if let pending = pendingCard, let openCard {
                 pendingCard = nil
-                openCard(id)
+                openCard(pending.id, pending.checkout)
             }
         }
     }
@@ -747,7 +787,8 @@ final class NotificationHandler: NSObject, UIApplicationDelegate, UNUserNotifica
         } else {
             await MainActor.run {
                 // Beim Kaltstart ist der Router evtl. noch nicht bereit: ID vormerken, didSet öffnet sie.
-                if let open = Self.openCard { open(id) } else { Self.pendingCard = id }
+                let checkout = response.actionIdentifier == "checkout"
+                if let open = Self.openCard { open(id, checkout) } else { Self.pendingCard = (id, checkout) }
             }
         }
     }

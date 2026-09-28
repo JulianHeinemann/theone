@@ -449,7 +449,9 @@ private struct RadarPlan {
             // Bündel: Summe der Euro-Guthaben auf ganze Euro („95 €“ statt „95,15 €“), damit sie in die Spalte passt;
             // Rabattcodes zählen nicht mit. Nur Rabattcodes im Bündel: kein Betrag.
             let sum = its.reduce(0) { $0 + ($1.value ?? 0) }
-            if its.count == 1 { marks[i].caption = its[0].amount }
+            // Jahresspalten sind schmal: Euro dort ohne Cent („12 €“ statt „12,40 €“), sonst fiele der Betrag weg.
+            if its.count == 1, marks[i].zoneB, let v = its[0].value { marks[i].caption = RadarItem.short(v.rounded()) }
+            else if its.count == 1 { marks[i].caption = its[0].amount }
             else if sum > 0 { marks[i].caption = RadarItem.short(sum.rounded()) }
             if let c = marks[i].caption { marks[i].captionW = fonts.width(c, fonts.caption) }
         }
