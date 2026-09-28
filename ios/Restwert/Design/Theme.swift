@@ -506,13 +506,15 @@ struct AmountText: View {
         var comma = AttributedString(",")
         comma.font = .display(size)
         // Komma rückt an die Cent heran: bleibt ~1 pt Luft, keine sichtbare Lücke.
-        comma.kern = -em * 0.075
+        comma.kern = -em * 0.1
         text += comma
-        var small = AttributedString("\(cents) €")
+        // Schmales Leerzeichen vor „€“: gehört sichtbar zu den Cent, keine Lücke.
+        var small = AttributedString("\(cents)\u{202F}€")
         // Fest an „Large Title“ wie die Euro: über `.display` hinge die kleine Größe (< 28) an „Title 2“,
         // die bei großen Textgrößen stärker wächst – dann kippt das Verhältnis und die Hochstellung passt nicht mehr.
         small.font = .system(.largeTitle, design: .rounded, weight: .heavy).scaled(by: size * 0.46 / 34)
-        small.baselineOffset = em * 0.40
+        // Etwas tiefer als früher (0,40): Cent und Euro lesen sich als ein Betrag, nicht als zwei Zeilen.
+        small.baselineOffset = em * 0.33
         text += small
         return text
     }

@@ -43,6 +43,8 @@ final class ShareModel {
     }
 
     var state: State = .working
+    /// Kleine Vorschau der ersten geteilten Bilder, damit man sieht, was übergeben wurde.
+    var thumbnails: [UIImage] = []
 
     func store(_ providers: [NSItemProvider]) async {
         guard let dir = SharedInbox.directory() else {
@@ -60,6 +62,8 @@ final class ShareModel {
             } else if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier),
                       await Self.copyImage(provider, to: dir, batch: batch, index: i) {
                 photos += 1
+                if thumbnails.count < 4, let url = Self.saved(in: dir, batch: batch, index: i),
+                   let thumb = await Self.thumbnail(url) { thumbnails.append(thumb) }
             } else if let text = await Self.text(provider), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 let url = dir.appending(path: SharedInbox.fileName(batch: batch, index: i, extension: "txt"))
                 if (try? Data(text.utf8).write(to: url, options: .atomic)) != nil {
@@ -99,6 +103,18 @@ final class ShareModel {
         let request = UNNotificationRequest(identifier: "inbox-ready", content: content,
                                             trigger: UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false))
         try? await center.add(request)
+    }
+
+    /// Die gerade abgelegte Datei zu diesem Eintrag (Endung je nach Bildformat).
+    private static func saved(in dir: URL, batch: Date, index: Int) -> URL? {
+        let prefix = SharedInbox.fileName(batch: batch, index: index, extension: "x").dropLast(2)
+        return SharedInbox.pending(in: dir).first { $0.lastPathComponent.hasPrefix(prefix) }
+    }
+
+    /// Verkleinert (max. 300 px), damit die Erweiterung mit wenig Speicher auskommt.
+    private nonisolated static func thumbnail(_ url: URL) async -> UIImage? {
+        guard let image = UIImage(contentsOfFile: url.path()) else { return nil }
+        return await image.byPreparingThumbnail(ofSize: CGSize(width: 300, height: 300 * image.size.height / max(image.size.width, 1)))
     }
 
     // MARK: Laden aus dem Teilen-Blatt (Rückrufe laufen im Hintergrund; nur Sendable-Werte zurück)
@@ -166,12 +182,30 @@ private struct ShareView: View {
                     Label(title(photos: photos, documents: documents, texts: texts), systemImage: "checkmark.circle.fill")
                         .font(.title3.weight(.bold))
                         .symbolRenderingMode(.multicolor)
+                    if !model.thumbnails.isEmpty {
+                        HStack(spacing: 10) {
+                            ForEach(Array(model.thumbnails.enumerated()), id: \.offset) { _, img in
+                                Image(uiImage: img).resizable().scaledToFill()
+                                    .frame(width: 72, height: 72)
+                                    .clipShape(.rect(cornerRadius: 12))
+                                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.quaternary))
+                            }
+                        }
+                        .accessibilityHidden(true)
+                    }
                     if let preview {
                         Text(preview).font(.body.weight(.semibold))
                             .padding(12).frame(maxWidth: .infinity, alignment: .leading)
                             .background(.fill.tertiary, in: .rect(cornerRadius: 12))
                     }
-                    Text("Öffne Restwert: Die App liest alles ein, du prüfst jeden Gutschein und speicherst ihn mit einem Tipp.")
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("So geht es weiter").font(.headline)
+                        Label("Tippe auf „Fertig“.", systemImage: "1.circle")
+                        Label("Öffne Restwert – die App liest alles ein.", systemImage: "2.circle")
+                        Label("Prüfen und mit einem Tipp speichern.", systemImage: "3.circle")
+                    }
+                    .font(.body)
+                    Text("Sind Mitteilungen erlaubt, erinnert dich Restwert gleich daran.")
                         .font(.body).foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                     Label("Bleibt auf diesem Gerät. Nichts wird hochgeladen.", systemImage: "lock")

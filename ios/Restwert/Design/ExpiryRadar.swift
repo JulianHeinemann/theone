@@ -321,6 +321,9 @@ private struct RadarPlan {
     struct Band { var x0: CGFloat; var x1: CGFloat; var strong: Bool }
 
     static let horizon = 90
+    /// Tage der linearen Zone: 90, oder bis Silvester, wenn das nur knapp dahinter liegt
+    /// (sonst stünde nach „Nov Dez“ noch eine Spalte „2026“ – im September verwirrend).
+    var horizon = 90
     static let labelGap: CGFloat = 3
     /// Luft über der obersten Spur für Warnring und „!“ (der Rest ragt in den Innenabstand der Hülle).
     static let topGap: CGFloat = 8
@@ -358,10 +361,15 @@ private struct RadarPlan {
         captionH = ceil(fonts.caption.lineHeight)
         todayX = t / 2 + 2
 
+        if let yearEnd = cal.date(from: DateComponents(year: cal.component(.year, from: today), month: 12, day: 31)) {
+            let toYearEnd = days(yearEnd)
+            if toYearEnd > Self.horizon && toYearEnd <= 125 { horizon = toYearEnd }
+        }
+        let horizon = self.horizon
         let dated: [(item: RadarItem, d: Int)] = items.map { (item: $0, d: days($0.expires)) }
             .sorted { a, b in a.d != b.d ? a.d < b.d : a.item.name < b.item.name }
-        let near = dated.filter { $0.d <= Self.horizon }
-        let far = dated.filter { $0.d > Self.horizon }
+        let near = dated.filter { $0.d <= horizon }
+        let far = dated.filter { $0.d > horizon }
         let W = max(width, 1)
 
         // Zone B: ein Kalenderjahr je Spalte, gleich breit. Passen nicht alle, fasst die letzte Spalte den Rest („2029+“).
@@ -386,7 +394,7 @@ private struct RadarPlan {
         }
         // Zone A linear: Heute links, Tag 90 so weit rechts, dass keine Trefferfläche in die Jahreszone ragt.
         let xEnd = farCols.isEmpty ? W - todayX : zoneAEnd - hit / 2 + 6
-        let perDay = max(0, xEnd - todayX) / CGFloat(Self.horizon)
+        let perDay = max(0, xEnd - todayX) / CGFloat(horizon)
         let x0 = todayX
         func xA(_ d: Int) -> CGFloat { x0 + CGFloat(d) * perDay }
 
@@ -396,7 +404,7 @@ private struct RadarPlan {
         let pillW = fonts.width("Heute", fonts.pill) + 16
         var lastRight = pillW
         var m = cal.date(from: cal.dateComponents([.year, .month], from: today)) ?? today
-        while let next = cal.date(byAdding: .month, value: 1, to: m), days(next) <= Self.horizon {
+        while let next = cal.date(byAdding: .month, value: 1, to: m), days(next) <= horizon {
             m = next
             let x = xA(days(m))
             var month = m.formatted(.dateTime.month(.abbreviated).locale(de)).replacingOccurrences(of: ".", with: "")
@@ -433,7 +441,12 @@ private struct RadarPlan {
             }
             let full = fonts.width(c.from == c.to ? "2027" : "2027+", fonts.label) + 4 <= c.x1 - c.x0
             let yy = c.from % 100
-            let label = full ? "\(c.from)\(c.from == c.to ? "" : "+")" : "’\(yy)\(c.from == c.to ? "" : "+")"
+            var label = full ? "\(c.from)\(c.from == c.to ? "" : "+")" : "’\(yy)\(c.from == c.to ? "" : "+")"
+            // Rest des laufenden Jahres (nach der 90-Tage-Zone): nicht einfach „2026“ hinter „Jun“.
+            if c.from == cal.component(.year, from: today), c.from == c.to {
+                let rest = "Rest ’\(yy)"
+                label = fonts.width(rest, fonts.label) + 4 <= c.x1 - c.x0 ? rest : "’\(yy)"
+            }
             columns.append(Column(x0: c.x0, x1: c.x1, label: label))
             guard let first = inCol.first else { continue }
             // Eine Kachel je Jahr (früheste vorne, „+N“ für den Rest): gestapelte Kacheln mit Beträgen dazwischen
@@ -492,7 +505,7 @@ private struct RadarPlan {
         s.append(in14.isEmpty ? "keiner läuft in den nächsten 14\u{00A0}Tagen ab" : "\(in14.count) in den nächsten 14\u{00A0}Tagen")
         if in30.count > in14.count { s.append("\(in30.count) in 30\u{00A0}Tagen") }
         if sum30 > 0 { s.append("\(sum30.euro) in 30\u{00A0}Tagen betroffen") }
-        if let last = dated.last, last.d > Self.horizon {
+        if let last = dated.last, last.d > horizon {
             s.append("Zeitachse: nächste 90\u{00A0}Tage, danach Jahre bis \(cal.component(.year, from: last.item.expires))")
         } else {
             s.append("Zeitachse: nächste 90\u{00A0}Tage")

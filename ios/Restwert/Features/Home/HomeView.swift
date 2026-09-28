@@ -26,15 +26,9 @@ struct HomeView: View {
                 if store.cards.isEmpty {
                     EmptyState { router.tab = .scan }
                 } else {
-                    // Dringendes zuerst, damit es ohne Scrollen sichtbar ist. Die Suche wirkt hier, die Chips erst darunter.
-                    section("Läuft bald ab", cards: lists.dueSoon)
-                    // Selbst ausgegebene Gutscheine (Café) sind Fristen der Kunden, nicht eigene.
-                    let own = lists.active.filter { !$0.issuedByMe }
-                    if !own.isEmpty {
-                        ExpiryRadarSection(items: own.map { RadarItem(card: $0) },
-                                           onSelect: { router.homePath.append(.card($0.id)) },
-                                           onShowAll: { router.homePath.append(.radar) })
-                    }
+                    // Reihenfolge: Guthaben → Dringendes (mit Weg zur Kasse) → Filter und Liste → Verfallsradar.
+                    // Die Liste kommt früh, weil man auf dem Start meist einen bestimmten Gutschein sucht.
+                    section("Läuft bald ab", cards: lists.dueSoon, quickCheckout: true)
                     if lists.showFilters { filterBar(lists) }
                     if lists.searchEmpty {
                         ContentUnavailableView.search(text: lists.query)
@@ -46,6 +40,14 @@ struct HomeView: View {
                     // Der Zoom-Übergang hängt dann nur an der oberen Zeile, sonst gäbe es zwei Quellen mit derselben ID.
                     section(listTitle(lists), cards: lists.list, sortable: true,
                             zoomSkip: lists.activeFilter == .all ? [] : Set(lists.dueSoon.map(\.id)))
+                    // Verfallsradar als Überblick unter der Liste; „Läuft bald ab“ oben nennt das Dringende schon.
+                    // Selbst ausgegebene Gutscheine (Café) sind Fristen der Kunden, nicht eigene.
+                    let own = lists.active.filter { !$0.issuedByMe }
+                    if !own.isEmpty && lists.query.isEmpty {
+                        ExpiryRadarSection(items: own.map { RadarItem(card: $0) },
+                                           onSelect: { router.homePath.append(.card($0.id)) },
+                                           onShowAll: { router.homePath.append(.radar) })
+                    }
                     NavigationLink(value: Route.radar) {
                         Label("Alle Ablauftermine", systemImage: "calendar")
                             .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
@@ -58,7 +60,8 @@ struct HomeView: View {
             }
             .padding(.horizontal, Layout.page)
             .padding(.top, 4)
-            .padding(.bottom, Layout.section)
+            // Mehr Luft am Ende: das Letzte soll ganz über die schwebende Tab-Leiste passen.
+            .padding(.bottom, Layout.section * 2)
         }
         .scrollIndicators(.hidden)
         // Solange der Rückgängig-Hinweis über der Tab-Leiste steht, lässt sich das Listenende darüber schieben.
@@ -105,7 +108,8 @@ struct HomeView: View {
     }
 
     @ViewBuilder
-    private func section(_ title: String, cards: [GiftCard], sortable: Bool = false, zoomSkip: Set<UUID> = []) -> some View {
+    private func section(_ title: String, cards: [GiftCard], sortable: Bool = false, zoomSkip: Set<UUID> = [],
+                         quickCheckout: Bool = false) -> some View {
         if !cards.isEmpty {
             VStack(alignment: .leading, spacing: Layout.group) {
                 HStack(alignment: .firstTextBaseline) {
@@ -135,12 +139,33 @@ struct HomeView: View {
                             .padding(.trailing, 4)
                         }
                         .contextMenu { rowMenu(c) }
+                        // Bald ablaufend: der nächste Schritt direkt an der Zeile, nicht erst im „…“-Menü.
+                        if quickCheckout && c.isActive { quickAction(c) }
                     }
                 }
                 .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
             }
             .animation(.snappy, value: cards.map(\.id))
         }
+    }
+
+    /// „An der Kasse zeigen“ / „Code einlösen“ / „Foto zeigen“ unter einer bald ablaufenden Zeile.
+    private func quickAction(_ c: GiftCard) -> some View {
+        let online = c.merchant.category == .codeOnly && !c.number.isEmpty
+        let paper = c.number.isEmpty && c.photo != nil
+        let title = online ? "Code einlösen" : paper ? "Foto an der Kasse zeigen" : c.number.isEmpty ? "Einlösen" : "An der Kasse zeigen"
+        return Button { router.homePath.append(c.number.isEmpty && !paper ? .card(c.id) : .checkout(c.id)) } label: {
+            Label(title, systemImage: online ? "globe" : paper ? "photo" : "barcode")
+                .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.onInk)
+                .padding(.horizontal, 14)
+                .frame(minHeight: 40)
+                .background(Color.ink, in: .capsule)
+                .contentShape(.capsule)
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.leading, 72).padding(.bottom, Layout.group)
+        .accessibilityLabel("\(title): \(c.name)")
     }
 
     private func filterBar(_ lists: HomeLists) -> some View {
@@ -400,18 +425,19 @@ private struct TotalHeader: View {
     private var codesNote: String? {
         let codes = cards.filter { !$0.kind.isValueBased }.count
         guard codes > 0 else { return nil }
-        return codes == 1 ? "+ 1 Rabattcode, nicht in der Summe" : "+ \(codes) Rabattcodes, nicht in der Summe"
+        return codes == 1 ? "+ 1 Rabattcode (nicht in der Summe)" : "+ \(codes) Rabattcodes (nicht in der Summe)"
     }
 
     var body: some View {
         let big = !typeSize.isAccessibilitySize
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: 2) {
+            // Kompakt: die Karte ist Überblick, die Liste darunter das Eigentliche.
+            VStack(alignment: .leading, spacing: 0) {
                 Text("Guthaben").font(.scaled(15, weight: .semibold)).opacity(0.75)
-                AmountText(value: total, size: big ? 60 : 36)
+                AmountText(value: total, size: big ? 48 : 34)
                     .animation(.snappy, value: total)
             }
-            .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.ticketInset).padding(.bottom, Layout.inset)
+            .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.inset).padding(.bottom, Layout.group)
             .frame(maxWidth: .infinity, alignment: .leading)
             // Gemessen, damit die Kerben bei jeder Schriftgröße genau auf der Abrisslinie sitzen.
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tearY = $0 }
@@ -419,11 +445,12 @@ private struct TotalHeader: View {
             TearLine(color: .sumText).padding(.horizontal, Layout.inset)
             VStack(alignment: .leading, spacing: 2) {
                 Text(caption).font(.scaled(15, weight: .semibold))
-                if let codesNote { Text(codesNote).font(.scaled(13)).opacity(0.75) }
-                if saved > 0 { Text("\(saved.euro) schon eingelöst").font(.scaled(13)).opacity(0.75) }
+                // Rabattcode-Hinweis und Eingelöstes in einer ruhigen Zeile.
+                let notes = [codesNote, saved > 0 ? "\(saved.euro) eingelöst" : nil].compactMap { $0 }
+                if !notes.isEmpty { Text(notes.joined(separator: " · ")).font(.scaled(13)).opacity(0.75) }
                 if examples { Text("Nur Beispiele – dein erster Gutschein ersetzt sie").font(.scaled(13)).opacity(0.75) }
             }
-            .padding(.horizontal, Layout.ticketInset).padding(.vertical, Layout.group)
+            .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.group).padding(.bottom, Layout.inset)
         }
         .foregroundStyle(Color.sumText)
         .frame(maxWidth: .infinity, alignment: .leading)

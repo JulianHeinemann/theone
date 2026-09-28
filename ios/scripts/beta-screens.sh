@@ -11,6 +11,8 @@ shot() { local n="$1"; shift; xcrun simctl terminate "$U" $B 2>/dev/null || true
 M=(-onboarded YES -appLock NO -codeLock NO)
 shot einstieg -onboarded NO
 shot start "${M[@]}"
+# Startseite mit echtem Bestand (dringend, nächstes Jahr, spätere Jahre mit Rabattcode), oben und nach unten gescrollt
+shot start-bestand "${M[@]}" -demoRadar YES
 shot hinzufuegen "${M[@]}" -demoScreen scan
 shot detail "${M[@]}" -demoScreen detail
 shot kasse "${M[@]}" -demoScreen checkout
