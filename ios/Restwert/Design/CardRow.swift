@@ -138,7 +138,8 @@ struct CardRow: View {
             if let symbol = due.symbol { Image(systemName: symbol) }
         }
         .labelStyle(DueLabelStyle())
-        .lineLimit(1).minimumScaleFactor(0.75)
+        // Gleich groß wie „von 25,00 €“ darunter/daneben: nicht verkleinern, lieber umbrechen.
+        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
         .font(.scaled(13, weight: due.level == .calm ? .regular : .semibold))
         .foregroundStyle(due.color)
         .padding(.horizontal, urgent ? 8 : 0).padding(.vertical, urgent ? 3 : 0)

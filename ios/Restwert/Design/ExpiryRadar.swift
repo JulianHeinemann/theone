@@ -109,10 +109,22 @@ struct ExpiryRadar: View {
         Canvas { ctx, size in
             let top: CGFloat = 0
             let axis = p.axisY
-            // Warnzonen nur als farbige Achse (bis 14 Tage rot, bis 30 Tage orange) – keine Flächen hinter den Kacheln.
+            // Dezenter Punkteraster als Hintergrund (Millimeterpapier), nur über der Achse.
+            let step: CGFloat = 14
+            var dots = Path()
+            var y = axis - step
+            while y > top + 4 {
+                var x: CGFloat = step / 2
+                while x < size.width { dots.addEllipse(in: CGRect(x: x - 1, y: y - 1, width: 2, height: 2)); x += step }
+                y -= step
+            }
+            ctx.fill(dots, with: .color(Color.line.opacity(0.9)))
+            // Warnzonen als farbige Abschnitte der Achse (bis 14 Tage rot, bis 30 Tage orange), mit Luft zur Heute-Marke
+            // und zueinander, damit nichts zusammengequetscht wirkt.
             for band in p.bands {
-                let w = max(0, band.x1 - band.x0)
-                ctx.fill(Path(roundedRect: CGRect(x: band.x0, y: axis - 2.5, width: w, height: 5), cornerRadius: 2.5),
+                let x0 = max(band.x0, p.todayX + 7) + (band.strong ? 0 : 2)
+                let w = max(0, band.x1 - x0 - 2)
+                ctx.fill(Path(roundedRect: CGRect(x: x0, y: axis - 2, width: w, height: 4), cornerRadius: 2),
                          with: .color(band.strong ? Color.warn : Color.soon))
             }
             // Spaltengrenzen der Jahreszone: zart gestrichelt, damit sie nicht wie ein Stiel wirken.
@@ -134,10 +146,10 @@ struct ExpiryRadar: View {
             for t in p.ticks {
                 ctx.fill(Path(roundedRect: CGRect(x: t.x - 1, y: axis - 7, width: 2, height: 7), cornerRadius: 1), with: .color(Color.ink))
             }
-            // Heute: schmale gelbe Marke quer zur Achse (statt Punkt) – überdeckt weder Stiel noch Betrag.
-            let mark = Path(roundedRect: CGRect(x: p.todayX - 2.5, y: axis - 9, width: 5, height: 18), cornerRadius: 2.5)
+            // Heute: runde gelbe Marke am Achsanfang, ohne schwarzen Rand; die Warnzonen beginnen mit Abstand dahinter.
+            let mark = Path(ellipseIn: CGRect(x: p.todayX - 6, y: axis - 6, width: 12, height: 12))
             ctx.fill(mark, with: .color(Color.brandYellow))
-            ctx.stroke(mark, with: .color(Color.ink), lineWidth: 1.2)
+            ctx.stroke(mark, with: .color(Color.surface), lineWidth: 2)
             if !p.columns.isEmpty {
                 // Achsbruch: zwei schräge Striche in der Lücke.
                 let mid = p.zoneAEnd + p.breakW / 2
@@ -366,8 +378,9 @@ private struct RadarPlan {
             let y0 = cal.component(.year, from: first.item.expires)
             let y1 = cal.component(.year, from: last.item.expires)
             // Spalten breit genug für Kachel und Betrag („2× 120 €“); passen nicht alle Jahre, fasst die letzte zusammen.
-            let colMin = max(hit, fonts.width("95 € + 20 %", fonts.caption) + 2, fonts.width("2027+", fonts.label) + 6)
-            let room = W * 0.56 - Self.breakW
+            // Spalten mindestens so breit wie „2027+“ bzw. eine Kachel; Beträge dürfen etwas über die Spalte hinausragen.
+            let colMin = max(hit, 70, fonts.width("2027+", fonts.label) + 6)
+            let room = W * 0.5 - Self.breakW
             let fit: Int = max(1, Int(room / colMin))
             let k: Int = Swift.min(y1 - y0 + 1, fit)
             let colW: CGFloat = Swift.max(colMin, Swift.min(84, room / CGFloat(k)))
@@ -383,9 +396,15 @@ private struct RadarPlan {
         }
         // Zone A linear: Heute links, Tag 90 so weit rechts, dass keine Trefferfläche in die Jahreszone ragt.
         let xEnd = farCols.isEmpty ? W - todayX : zoneAEnd - hit / 2 + 6
-        let perDay = max(0, xEnd - todayX) / CGFloat(horizon)
+        // Die ersten 30 Tage (dort liegt das Dringende) bekommen 55 % der Breite, der Rest bis zum Horizont 45 %:
+        // rote und orange Zone sind so gut sichtbar, Kacheln der nächsten Wochen stehen nicht aufeinander.
+        let span = max(0, xEnd - todayX)
         let x0 = todayX
-        func xA(_ d: Int) -> CGFloat { x0 + CGFloat(d) * perDay }
+        let near30 = span * 0.55
+        func xA(_ d: Int) -> CGFloat {
+            if d <= 30 { return x0 + CGFloat(d) / 30 * near30 }
+            return x0 + near30 + CGFloat(d - 30) / CGFloat(max(1, horizon - 30)) * (span - near30)
+        }
 
         bands = [Band(x0: x0, x1: xA(14), strong: true), Band(x0: xA(14), x1: xA(30), strong: false)]
 
@@ -400,6 +419,8 @@ private struct RadarPlan {
             if cal.component(.month, from: m) == 1 { month += " \(m.formatted(.dateTime.year(.twoDigits).locale(de)))" }
             let w = fonts.width(month, fonts.label)
             let fits = x + 3 >= lastRight + 6 && x + 3 + w <= zoneAEnd
+            // Kein Monatsstrich direkt an der Heute-Marke (sah gequetscht aus).
+            guard x - x0 >= 14 else { continue }
             ticks.append(Tick(x: x, label: fits ? month : nil))
             if fits { lastRight = x + 3 + w }
         }
@@ -483,7 +504,7 @@ private struct RadarPlan {
                 var ok = mk.caption != nil && mk.x - half >= prevRight + 4 && mk.x - half >= -8 && mk.x + half <= W + 8
                 if ok, n + 1 < idx.count { ok = marks[idx[n + 1]].x - t / 2 >= mk.x + half + 4 }
                 // Jahresspalte: Betrag darf etwas überstehen (bis zum Nachbarn bzw. Rand), sonst fiele „120 €“ weg.
-                if ok, mk.zoneB { ok = mk.captionW <= (farCols.first.map { $0.x1 - $0.x0 } ?? 0) + 10 }
+                if ok, mk.zoneB { ok = mk.captionW <= (farCols.first.map { $0.x1 - $0.x0 } ?? 0) + 18 }
                 if ok, lane == 0, !mk.zoneB {
                     while stem < upperStems.count, upperStems[stem] < mk.x - half - 2 { stem += 1 }
                     if stem < upperStems.count, upperStems[stem] <= mk.x + half + 2 { ok = false }

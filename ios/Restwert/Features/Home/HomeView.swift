@@ -119,9 +119,9 @@ struct HomeView: View {
                     Spacer()
                     if sortable { sortMenu }
                 }
-                VStack(spacing: 0) {
-                    ForEach(Array(cards.enumerated()), id: \.element.id) { i, c in
-                        if i > 0 { Divider().padding(.leading, 72) }
+                // Jeder Gutschein als eigene Karte (nicht als zusammenhängende Liste).
+                VStack(spacing: 8) {
+                    ForEach(cards) { c in
                         HStack(spacing: 0) {
                             NavigationLink(value: Route.card(c.id)) {
                                 if zoomSkip.contains(c.id) {
@@ -139,10 +139,10 @@ struct HomeView: View {
                             .accessibilityLabel("Aktionen für \(c.name)")
                             .padding(.trailing, 4)
                         }
+                        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
                         .contextMenu { rowMenu(c) }
                     }
                 }
-                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
             }
             .animation(.snappy, value: cards.map(\.id))
         }
@@ -151,15 +151,9 @@ struct HomeView: View {
     /// „Läuft bald ab“: große Überschrift mit Anzahl, jeder Gutschein als eigene Karte mit dem nächsten Schritt.
     private func dueSoonSection(_ cards: [GiftCard], more: Int) -> some View {
         VStack(alignment: .leading, spacing: Layout.group) {
-            HStack(spacing: 10) {
-                Text("Läuft bald ab").font(.scaled(26, weight: .bold)).foregroundStyle(Color.ink)
-                Text("\(cards.count + more)").font(.scaled(17, weight: .semibold)).monospacedDigit().foregroundStyle(Color.ink2)
-                    .padding(.horizontal, 10).padding(.vertical, 4)
-                    .background(Color.fill, in: .capsule)
-                    .accessibilityLabel("\(cards.count + more) Gutscheine")
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isHeader)
+            // Überschrift wie die anderen Abschnitte.
+            Text("Läuft bald ab").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                .accessibilityAddTraits(.isHeader)
             ForEach(cards) { c in
                 DueSoonCard(card: c, zoom: zoom,
                             open: { router.homePath.append(.card(c.id)) },
@@ -244,9 +238,8 @@ struct HomeView: View {
             .accessibilityAddTraits(.isHeader)
             .accessibilityValue(showDone ? "aufgeklappt" : "eingeklappt")
             if showDone {
-                VStack(spacing: 0) {
-                    ForEach(Array(done.enumerated()), id: \.element.id) { i, c in
-                        if i > 0 { Divider().padding(.leading, 72) }
+                VStack(spacing: 8) {
+                    ForEach(done) { c in
                         HStack(spacing: 0) {
                             NavigationLink(value: Route.card(c.id)) { CardRow(card: c, warnDays: warnDays) }
                                 .buttonStyle(.plain)
@@ -254,10 +247,10 @@ struct HomeView: View {
                                 .labelStyle(.iconOnly).accessibilityLabel("\(c.name) entfernen").foregroundStyle(Color.bad)
                                 .frame(width: Layout.tap, height: Layout.tap).padding(.trailing, 4)
                         }
+                        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
                         .contextMenu { rowMenu(c) }
                     }
                 }
-                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
             }
         }
     }
@@ -535,27 +528,28 @@ private struct DueSoonCard<MenuItems: View>: View {
     var body: some View {
         let due = due
         let stacked = typeSize.isAccessibilitySize
-        VStack(spacing: Layout.inset) {
+        VStack(spacing: Layout.group) {
             HStack(alignment: .top, spacing: 2) {
                 Button(action: open) {
                     let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
                     layout {
-                        MerchantMark(card: card, size: 52).matchedTransitionSource(id: card.id, in: zoom)
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(card.name).font(.scaled(18, weight: .bold)).foregroundStyle(Color.ink).lineLimit(2)
+                        // Maße wie die Listenzeilen: Logo 44, Name 16, graue Zeilen 13.
+                        MerchantMark(card: card, size: 44).matchedTransitionSource(id: card.id, in: zoom)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(card.name).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink).lineLimit(2)
                             Label(due.text, systemImage: "clock")
-                                .font(.scaled(14, weight: .semibold))
+                                .font(.scaled(13, weight: .semibold))
                                 .foregroundStyle(due.urgent ? Color.warn : Color.soon)
                                 .lineLimit(1)
-                                .padding(.horizontal, 10).padding(.vertical, 5)
+                                .padding(.horizontal, 8).padding(.vertical, 3)
                                 .background((due.urgent ? Color.warn : Color.soon).opacity(0.13), in: .capsule)
                                 .fixedSize()
                         }
                         .layoutPriority(1)
                         if !stacked { Spacer(minLength: 8) }
-                        VStack(alignment: stacked ? .leading : .trailing, spacing: 4) {
+                        VStack(alignment: stacked ? .leading : .trailing, spacing: 3) {
                             // Betrag darf etwas kleiner werden, die Frist-Pille nie abgeschnitten.
-                            Text(card.headline).font(.amount(stacked ? 20 : 22)).foregroundStyle(Color.ink)
+                            Text(card.headline).font(.amount(stacked ? 16 : 20)).foregroundStyle(Color.ink)
                                 .lineLimit(1).minimumScaleFactor(0.7)
                             // Klein und grau wie das Datum in der Liste: Ursprungsbetrag bzw. „Rabatt“.
                             Text(card.kind.isValueBased ? "von \(card.value.euro)" : "Rabatt")
@@ -576,15 +570,16 @@ private struct DueSoonCard<MenuItems: View>: View {
             }
             Button(action: act) {
                 Label(action.title, systemImage: action.icon)
-                    .font(.scaled(18, weight: .semibold)).foregroundStyle(Color.onInk)
-                    .frame(maxWidth: .infinity, minHeight: 56)
-                    .background(Color.ink, in: .rect(cornerRadius: 16, style: .continuous))
-                    .contentShape(.rect(cornerRadius: 16))
+                    .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.onInk)
+                    .frame(maxWidth: .infinity, minHeight: Layout.tap + 4)
+                    .background(Color.ink, in: .rect(cornerRadius: 14, style: .continuous))
+                    .contentShape(.rect(cornerRadius: 14))
             }
+            .padding(.trailing, Layout.group)
             .buttonStyle(.plain)
             .accessibilityLabel("\(action.title): \(card.name)")
         }
-        .padding(Layout.inset)
+        .padding(.leading, Layout.inset).padding(.trailing, 4).padding(.vertical, Layout.group)
         .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
     }
 }

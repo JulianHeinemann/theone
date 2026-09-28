@@ -239,59 +239,76 @@ private extension View {
 private struct WelcomePage: View {
     let active: Bool
     @State private var step = 0
-    @State private var countStart: Date?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Zielbetrag; die Zahl zählt per Animation dorthin (siehe CountingAmount).
+    @State private var shown: Double = 0
     @State private var tearY: CGFloat = 110
     @State private var landed = 0
     private let total = 136.25
-    private let countDuration = 0.8
+
+    /// Karten hinter dem Guthaben: Farbe, Kürzel, Drehung und Versatz im aufgefächerten Zustand.
+    /// Bewusst ohne Markennamen: nur Farbflächen.
+    private struct FanCard { let from: Color; let to: Color; let angle: Double; let dx: CGFloat; let dy: CGFloat }
+    private static let fan: [FanCard] = [
+        FanCard(from: Color(hex: 0x6A4BD8), to: Color(hex: 0x3A5BD9), angle: -7, dx: 0, dy: -54),
+        FanCard(from: Color(hex: 0xE0527A), to: Color(hex: 0xF08A3C), angle: -4, dx: 0, dy: -36),
+        FanCard(from: Color(hex: 0x1F9C8B), to: Color(hex: 0x6BCB77), angle: -1.5, dx: 0, dy: -18),
+    ]
+    private let countDuration = 0.9
 
     var body: some View {
         PageFrame(title: "Kein Gutschein\nverfällt mehr.",
                   text: "Restwert behält den Überblick über alles, was du noch einlösen kannst – Geschenkkarten, Rabattcodes, Stadtgutscheine.",
                   active: active) {
             ZStack {
-                // Zweite Karte dahinter, schräg – wie ein Stapel in der Schublade.
-                RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous)
-                    .fill(Color.surface)
-                    .shadow(color: Color.shade, radius: 14, y: 6)
-                    .rotationEffect(.degrees(step >= 1 ? -4 : 0))
-                    .offset(x: step >= 1 ? -6 : 0, y: step >= 1 ? 10 : 0)
+                // Gutscheinkarten fächern sich hinter dem Guthaben auf – wie ein Stapel aus dem Portemonnaie.
+                ForEach(Array(Self.fan.enumerated()), id: \.offset) { i, card in
+                    RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous)
+                        .fill(LinearGradient(colors: [card.from, card.to], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .compositingGroup()
+                        .shadow(color: Color.shade, radius: 10, y: 4)
+                        // Schmaler als das Guthaben und um die untere Mitte gedreht: die Ecken bleiben im Bildschirm.
+                        .padding(.horizontal, 18)
+                        .rotationEffect(.degrees(step >= 1 ? card.angle : 0), anchor: .bottom)
+                        .offset(x: step >= 1 ? card.dx : 0, y: step >= 1 ? card.dy : 0)
+                        .opacity(step >= 1 ? 1 : 0)
+                        .animation(.spring(duration: 0.8, bounce: 0.35).delay(0.08 * Double(i)), value: step)
+                }
                 ticket
                     .rotationEffect(.degrees(step >= 1 ? 0 : -6))
                     .offset(y: step >= 1 ? 0 : -60)
                     .opacity(step >= 1 ? 1 : 0)
             }
             .fixedSize(horizontal: false, vertical: true)
+            // Platz über dem Guthaben für die aufgefächerten Karten (nichts ragt aus dem Bild).
+            .padding(.top, 64)
             .motion(.spring(duration: 0.7, bounce: 0.3), value: step)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Beispiel: Noch \(total.euro) drauf, 5 Gutscheine, 2 laufen bald ab")
         }
-        .modifier(Stepper(active: active, steps: [150, 500, 900], step: $step))
+        .modifier(Stepper(active: active, steps: [150, 500, 1100], step: $step))
         .onChange(of: step) { _, s in
-            // Hochzählen startet, sobald das Ticket gelandet ist; Haptik genau einmal, wenn die Abrisslinie steht.
-            countStart = s == 2 ? .now : nil
+            // Haptik genau einmal, wenn die Abrisslinie steht.
             if s == 3 { landed += 1 }
+            if s < 2 { shown = 0 }
+        }
+        // Hochzählen, sobald das Ticket gelandet ist: ein einziger animierter Wert – SwiftUI zeichnet pro Bild nur die Zahl neu,
+        // nicht die ganze Seite mit Schatten und Verläufen (flüssig auch auf älteren Geräten).
+        .onChange(of: step >= 2) { _, counting in
+            if counting { shown = total }
         }
         .sensoryFeedback(.impact(weight: .light), trigger: landed)
     }
 
-    /// Betrag zum Zeitpunkt `date`: vorher 0, danach der Endwert, dazwischen weich abgebremst (kubisch).
-    private func amount(at date: Date) -> Double {
-        if step < 2 { return 0 }
-        guard step == 2 else { return total }
-        let t = min(1, max(0, date.timeIntervalSince(countStart ?? date) / countDuration))
-        return (total * (1 - pow(1 - t, 3)) * 100).rounded() / 100
-    }
 
     private var ticket: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Guthaben").font(.scaled(15, weight: .semibold)).opacity(0.75)
-                // Eine durchgehende Zählbewegung pro Bildschirmbild statt vieler Einzelübergänge.
-                TimelineView(.animation(paused: step != 2)) { context in
-                    AmountText(value: amount(at: context.date), size: 60)
-                        .transaction { $0.animation = nil }
-                }
+                // Ziffern wechseln ohne eigene Übergangsanimation – die Bewegung ist das Hochzählen selbst.
+                // Eigene Animation direkt an der Zahl: sonst erbt sie die Federbewegung der Karten und zählt über das Ziel hinaus.
+                CountingAmount(value: shown, size: 60)
+                    .animation(reduceMotion ? nil : .easeOut(duration: countDuration), value: shown)
             }
             .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.ticketInset).padding(.bottom, Layout.inset)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -523,5 +540,21 @@ private struct FirstCardPage: View {
         .offset(y: shown ? 0 : 24)
         .opacity(shown ? 1 : 0)
         .motion(.spring(duration: 0.5, bounce: 0.3), value: shown)
+    }
+}
+
+/// Betrag, der beim Animieren seines Werts hochzählt (Animatable: nur diese Ansicht wird je Bild neu gezeichnet).
+private struct CountingAmount: View, Animatable {
+    var value: Double
+    let size: CGFloat
+    var animatableData: Double {
+        get { value }
+        set { value = newValue }
+    }
+
+    var body: some View {
+        AmountText(value: (value * 100).rounded() / 100, size: size)
+            // Keine eigene Ziffern-Überblendung zusätzlich zum Zählen.
+            .contentTransition(.identity)
     }
 }

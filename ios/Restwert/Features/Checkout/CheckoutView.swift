@@ -153,9 +153,9 @@ struct CheckoutView: View {
                 .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 18).padding(.vertical, 10)
-                // Weiß mit kräftigem Tintenrand statt grauer Füllung (wirkte wie ausgeschaltet).
+                // Helle Fläche mit zartem Rand (kein schwarzer Rahmen, nicht grau wie ausgeschaltet).
                 .background(Color.surface, in: .capsule)
-                .overlay(Capsule().strokeBorder(Color.ink, lineWidth: 1.5))
+                .overlay(Capsule().strokeBorder(Color.line, lineWidth: 1.5))
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)
