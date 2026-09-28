@@ -186,6 +186,7 @@ struct ScanView: View {
         .onChange(of: photoItems) { _, items in
             guard !items.isEmpty else { return }
             photoItems = []
+            batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
             batch = items.map { .photo($0) }
             batchTotal = items.count
             nextFromBatch()
@@ -310,6 +311,12 @@ struct ScanView: View {
         readTask?.cancel()
         readTask = nil
         busy = false
+        // Abbrechen in einer Mehrfachauswahl: Rest als übersprungen zählen und mit Bilanz beenden.
+        if batchTotal > 1 {
+            batchSkipped += batch.count + 1
+            batch = []
+            nextFromBatch()
+        }
     }
 
     /// „Hinzufügen“ bzw. bei Nicht-Gutscheinen „Erneut scannen“ als Hauptaktion.
@@ -329,7 +336,8 @@ struct ScanView: View {
                 }
                 // Untereinander: „Trotzdem hinzufügen“ bräche nebeneinander zweizeilig um.
                 Button("Trotzdem hinzufügen") { formSeed = FormSeed(outcome: outcome) }.buttonStyle(.quiet)
-                rescanOrSkip
+                // In einer Reihe steht „Überspringen“ schon oben; einzeln „Erneut scannen“.
+                if batchTotal <= 1 { Button("Erneut scannen") { rescan() }.buttonStyle(.quiet) }
             } else if canSave {
                 // Alles sicher erkannt: ein Tipp genügt. Wer prüfen will, öffnet das Formular.
                 Button("Speichern") { formSeed = FormSeed(outcome: outcome, autoSave: true) }.buttonStyle(.primary)
@@ -422,6 +430,8 @@ struct ScanView: View {
         if let scanned = result.barcode ?? result.draft.number,
            let own = store.cards.first(where: { $0.issuedByMe && plain($0.number) == plain(scanned) }) {
             withAnimation(reduceMotion ? nil : .smooth) { outcome = nil }
+            // Eigener Café-Gutschein in einer Reihe: die Reihe endet hier (Einlösen hat Vorrang).
+            batch = []; batchTotal = 0; batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
             router.tab = .home
             router.homePath = [.checkout(own.id)]
             router.toast = Toast(message: "Dein Gutschein: noch \(own.balance.euro) offen", undo: nil)

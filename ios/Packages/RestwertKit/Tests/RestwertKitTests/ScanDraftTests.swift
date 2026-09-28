@@ -239,6 +239,16 @@ struct ScanDraftTests {
         #expect(n.owner == "Oma" && n.locationNote == "Schublade" && n.addedAt == nil)
     }
 
+    @Test("Lesbare Namen für umgewandelte Barcode-Arten")
+    func readableSymbologies() {
+        #expect(VoucherScanner.readableSymbology("code93") == "Code 93")
+        #expect(VoucherScanner.readableSymbology("Code93i") == "Code 93")
+        #expect(VoucherScanner.readableSymbology("GS1DataBarExpanded") == "GS1 DataBar")
+        #expect(VoucherScanner.readableSymbology("codabar") == "Codabar")
+        #expect(VoucherScanner.readableSymbology("UPCE") == "UPC-E")
+        #expect(VoucherScanner.readableSymbology("Unbekannt") == "Unbekannt")
+    }
+
     @Test("Laufzeit lässt sich ab anderem Erhalt-Datum neu rechnen")
     func validityFromReceived() {
         let v = TextParser.parse("3 Jahre gültig ab Ende des Jahres", now: now).validity
