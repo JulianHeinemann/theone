@@ -10,11 +10,11 @@ private struct LegalSection: Identifiable {
     var id: String { title }
 }
 
-/// Anbieterangaben – bewusst Platzhalter, nichts erfunden.
+/// Anbieterangaben (Impressum und Verantwortlicher im Sinne der DSGVO).
 private enum Provider {
-    static let name = "[Name]"
-    static let address = "[Anschrift]"
-    static let email = "[E-Mail]"
+    static let name = "Julian Heinrich"
+    static let address = "Hansaring 37, 48155 Münster"
+    static let email = "info@maitr.de"
 }
 
 struct PrivacyPolicyView: View {
