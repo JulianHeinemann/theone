@@ -110,26 +110,28 @@ struct CardRow: View {
             }
             // Zwei Stufen: bis 14 Tage Pille mit Ausrufezeichen, danach nur Text mit Uhr.
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 6) { dueLabel(due); tags(due, active: active) }
-                VStack(alignment: .leading, spacing: 3) { dueLabel(due); HStack(spacing: 6) { tags(due, active: active) } }
+                HStack(spacing: 6) { dueLabel(due); tags(due, active: active, dot: true) }
+                // Eigene Zeile: ohne führenden Mittelpunkt.
+                VStack(alignment: .leading, spacing: 3) { dueLabel(due); HStack(spacing: 6) { tags(due, active: active, dot: false) } }
             }
         }
     }
 
     @ViewBuilder
-    private func tags(_ due: Due, active: Bool) -> some View {
+    private func tags(_ due: Due, active: Bool, dot: Bool) -> some View {
+        let lead = dot ? "· " : ""
         // Ruhige Zusätze als Text mit Trennpunkt statt eigener Pillen.
         // Selbst ausgegeben: in der zweiten Zeile, damit der Ladenname ganz sichtbar bleibt.
         if card.issuedByMe {
-            Text(card.issuedTo.isEmpty ? "· selbst ausgestellt" : "· für \(card.issuedTo)").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.ink2)
+            Text(card.issuedTo.isEmpty ? "\(lead)selbst ausgestellt" : "\(lead)für \(card.issuedTo)").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.ink2)
                 .lineLimit(2).fixedSize(horizontal: false, vertical: true)
         }
         // Nur bei „noch X Tage“ zusätzlich nennen; beim Datum steht es schon im Text.
         if due.estimated && due.level != .calm {
-            Text("· Datum geschätzt").font(.scaled(13)).foregroundStyle(Color.muted).fixedSize()
+            Text("\(lead)Datum geschätzt").font(.scaled(13)).foregroundStyle(Color.muted).fixedSize()
         }
         if card.pendingSince != nil && active {
-            Text("· Betrag offen").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.warn).fixedSize()
+            Text("\(lead)Betrag offen").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.warn).fixedSize()
         }
     }
 

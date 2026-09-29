@@ -21,8 +21,13 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Layout.section) {
                 // Der Kopf beschreibt immer den ganzen Bestand, unabhängig von Filter und Suche.
-                TotalHeader(total: store.total, cards: lists.active.filter { !$0.forGifting && !$0.issuedByMe }, soon: lists.dueSoonCount,
-                            saved: lists.saved, examples: lists.examplesOnly && !Self.storeShots)
+                // Tipp auf das Guthaben öffnet die Ablauftermine mit Verfallsradar – ohne durch die ganze Liste zu scrollen.
+                NavigationLink(value: Route.radar) {
+                    TotalHeader(total: store.total, cards: lists.active.filter { !$0.forGifting && !$0.issuedByMe }, soon: lists.dueSoonCount,
+                                saved: lists.saved, examples: lists.examplesOnly && !Self.storeShots)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Öffnet Ablauftermine und Verfallsradar")
                 if store.cards.isEmpty {
                     EmptyState { router.tab = .scan }
                 } else {
@@ -478,11 +483,18 @@ private struct TotalHeader: View {
             // Abrisslinie auf Höhe der Kerben: oben der Betrag, unten der Abschnitt.
             TearLine(color: .sumText).padding(.horizontal, Layout.inset)
             VStack(alignment: .leading, spacing: 2) {
-                Text(caption).font(.scaled(15, weight: .semibold))
-                // Rabattcode-Hinweis und Eingelöstes in einer ruhigen Zeile.
-                let notes = [codesNote, saved > 0 ? "\(saved.euro) eingelöst" : nil].compactMap { $0 }
-                if !notes.isEmpty { Text(notes.joined(separator: " · ")).font(.scaled(13)).opacity(0.75) }
-                if examples { Text("Nur Beispiele – dein erster Gutschein ersetzt sie").font(.scaled(13)).opacity(0.75) }
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(caption).font(.scaled(15, weight: .semibold))
+                    Spacer(minLength: 4)
+                    Image(systemName: "chevron.right").font(.scaled(13, weight: .semibold)).opacity(0.6)
+                }
+                // Bei sehr großer Schrift nur das Wichtigste: sonst schöbe die Karte „Läuft bald ab“ unter die Tab-Leiste.
+                if big {
+                    // Rabattcode-Hinweis und Eingelöstes in einer ruhigen Zeile.
+                    let notes = [codesNote, saved > 0 ? "\(saved.euro) eingelöst" : nil].compactMap { $0 }
+                    if !notes.isEmpty { Text(notes.joined(separator: " · ")).font(.scaled(13)).opacity(0.75) }
+                    if examples { Text("Nur Beispiele – dein erster Gutschein ersetzt sie").font(.scaled(13)).opacity(0.75) }
+                }
             }
             .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.group).padding(.bottom, Layout.inset)
         }

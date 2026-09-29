@@ -63,4 +63,12 @@ shot gross-start-bestand "${M[@]}"
 shot gross-start-bestand-unten "${M[@]}" -demoScrollBottom YES
 xcrun simctl ui "$U" content_size large
 xcrun simctl terminate "$U" $B 2>/dev/null || true
+# Anmeldung, Konto, Coupons, Vorder-/Rückseite (Runde 16+)
+TG="$(cd "$(dirname "$0")/../../docs/evaluation/testgutscheine" && pwd)"
+shot einstieg-anmelden -onboarded NO -onboardingPage 3
+xcrun simctl ui "$U" appearance dark; shot einstieg-anmelden-dunkel -onboarded NO -onboardingPage 3; xcrun simctl ui "$U" appearance light
+WAIT=25 shot scan-v15-coupon "${M[@]}" -demoImport "$TG/v15-coupon-gratis-kaffee.jpg"
+WAIT=25 shot scan-coupon-rabatt "${M[@]}" -demoImport "$TG/v16-coupon-rabatt-mbw.jpg"
+WAIT=22 shot scan-rueckseite-angebot "${M[@]}" -demoImportBatch "$TG/v17-karte-vorne.jpg|$TG/v18-karte-hinten.jpg"
+# Konto angemeldet (Vorschau) und scan-vorder-rueckseite: scrollen bzw. tippen – per Hand (siehe Protokoll).
 echo "fertig: $(ls "$O" | wc -l) Dateien"

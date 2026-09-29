@@ -37,6 +37,13 @@ final class AppleAccount {
         userID = Self.readUserID()
         name = UserDefaults.standard.string(forKey: Self.nameKey) ?? ""
         email = UserDefaults.standard.string(forKey: Self.emailKey) ?? ""
+        #if DEBUG
+        // Nur für Screenshots: `-demoAppleName Julia` zeigt den angemeldeten Zustand (im Simulator gibt es keine Apple-Anmeldung).
+        if let demo = UserDefaults.standard.string(forKey: "demoAppleName") {
+            userID = "demo"; name = demo; email = ""
+            return
+        }
+        #endif
         Self.migrateStoredNames()
         // Ältere Stände speicherten Vor- und Nachnamen: auf den Vornamen kürzen, wie im Einstieg versprochen.
         if let first = name.split(separator: " ").first.map(String.init), first != name {
@@ -108,7 +115,7 @@ final class AppleAccount {
 
     /// Beim Start: Hat der Nutzer die Anmeldung in den iOS-Einstellungen widerrufen, hier abmelden.
     func refreshCredentialState() async {
-        guard let id = userID else { return }
+        guard let id = userID, id != "demo" else { return }
         let state = await withCheckedContinuation { (cont: CheckedContinuation<ASAuthorizationAppleIDProvider.CredentialState, Never>) in
             ASAuthorizationAppleIDProvider().getCredentialState(forUserID: id) { state, _ in cont.resume(returning: state) }
         }

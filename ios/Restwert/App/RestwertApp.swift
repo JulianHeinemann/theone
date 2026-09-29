@@ -225,6 +225,10 @@ struct MainTabView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Namespace private var zoom
 
+    /// Unten nur auf der Startliste (dort gibt die Liste Platz frei). Sonst oben: unten lägen Knopfleisten
+    /// (Kasse, Hinzufügen-Liste), die der Hinweis verdecken würde.
+    private var toastAtBottom: Bool { router.tab == .home && router.homePath.isEmpty }
+
     var body: some View {
         @Bindable var router = router
         TabView(selection: $router.tab) {
@@ -258,13 +262,14 @@ struct MainTabView: View {
         .tabBarMinimizeBehavior(.onScrollDown)
         // Aktiver Tab in Tinte, keine dritte Akzentfarbe.
         .tint(Color.ink)
-        .overlay(alignment: .bottom) {
+        .overlay(alignment: toastAtBottom ? .bottom : .top) {
             if let toast = router.toast {
                 // Nur den eigenen Toast schließen, nie einen inzwischen neueren.
                 ToastView(toast: toast) { if router.toast?.id == toast.id { router.toast = nil } }
                     .id(toast.id)
-                    .padding(.horizontal, 16).padding(.bottom, 96)
-                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+                    .padding(.horizontal, 16)
+                    .padding(toastAtBottom ? .bottom : .top, toastAtBottom ? 96 : 8)
+                    .transition(reduceMotion ? .opacity : .move(edge: toastAtBottom ? .bottom : .top).combined(with: .opacity))
             }
         }
         .animation(.snappy, value: router.toast?.id)

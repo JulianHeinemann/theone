@@ -431,7 +431,7 @@ struct SettingsView: View {
                 .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(account.displayName).font(.scaled(16, weight: .semibold))
-                    Label("Angemeldet mit Apple", systemImage: "apple.logo")
+                    Text("\(Image(systemName: "apple.logo")) Angemeldet mit Apple")
                         .font(.scaled(13)).foregroundStyle(.secondary)
                     if !account.email.isEmpty, account.email != account.displayName {
                         Text(account.email).font(.scaled(13)).foregroundStyle(.secondary).lineLimit(1)

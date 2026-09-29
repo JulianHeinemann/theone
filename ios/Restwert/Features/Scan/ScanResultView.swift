@@ -122,7 +122,9 @@ struct ScanResultView: View {
                 }
                 // Kacheln als Liste, dann im Raster: bei ungerader Zahl steht die letzte über die volle Breite
                 // (keine einzelne Kachel mit Lücke daneben). Bei sehr großer Schrift eine Spalte.
-                let tiles = tileList(draft, code: code)
+                let all = tileList(draft, code: code)
+                let tiles = all.filter { !$0.wide }
+                let wide = all.filter(\.wide)
                 let oneColumn = typeSize.isAccessibilitySize
                 let lone = !oneColumn && tiles.count % 2 == 1 ? tiles.last : nil
                 LazyVGrid(columns: oneColumn ? [GridItem(.flexible(), alignment: .top)]
@@ -133,6 +135,9 @@ struct ScanResultView: View {
                     }
                 }
                 if let lone { cell(lone.label, lone.value, index: tiles.count - 1, alert: lone.alert) }
+                ForEach(Array(wide.enumerated()), id: \.offset) { i, t in
+                    cell(t.label, t.value, index: tiles.count + i, alert: t.alert)
+                }
                 if outcome.barcode != nil, outcome.resolvedFormat?.format == .text {
                     // Online-Code mit Barcode auf dem Beleg (z. B. OTTO-PDF): sagen, wofür der Barcode nicht ist.
                     Label("Der Barcode auf dem Gutschein ist nicht für die Kasse (oft eine Bestellnummer). Den Code gibst du im Shop ein.",
@@ -242,7 +247,7 @@ struct ScanResultView: View {
         }
     }
 
-    private struct Tile { let label: String; let value: String; var alert = false }
+    private struct Tile { let label: String; let value: String; var alert = false; var wide = false }
 
     /// Die Angaben des Ergebnisses in fester Reihenfolge.
     private func tileList(_ draft: CardDraft, code: String?) -> [Tile] {
@@ -266,7 +271,8 @@ struct ScanResultView: View {
         }
         if let m = draft.minOrder { t.append(Tile(label: "Mindestbestellwert", value: "ab \(m.euro)")) }
         if let code {
-            t.append(Tile(label: "Code", value: code))
+            // Lange Codes über die volle Breite, damit sie in einer Zeile stehen (wie an der Kasse).
+            t.append(Tile(label: "Code", value: code, wide: code.filter { !$0.isWhitespace }.count > 12))
             t.append(Tile(label: "Barcode an der Kasse", value: formatText))
             if let pin = draft.pin { t.append(Tile(label: "PIN", value: String(repeating: "•", count: pin.count))) }
         } else {

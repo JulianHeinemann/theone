@@ -324,7 +324,7 @@ struct CheckoutView: View {
                             .onTapGesture { revealCode(card) }
                     }
                     // Geschützt: nur ein Weg (auf den Code tippen), kein „Vollbild“-Versprechen vor dem Entsperren.
-                    if !(codeLock && hidden) && !card.issuedByMe && !checkoutTypeSize.isAccessibilitySize { Text("Tippen für Vollbild").font(.scaled(12)).foregroundStyle(Color.muted) }
+                    if !(codeLock && hidden) && !card.issuedByMe && !checkoutTypeSize.isAccessibilitySize { Text("Tippen für Vollbild").font(.scaled(13)).foregroundStyle(Color.ink2) }
                     if card.photo != nil {
                         Button("Original-Foto zeigen", systemImage: "photo") {
                             // Auf dem Foto steht der Code: bei Code-Schutz erst entsperren.
