@@ -31,7 +31,9 @@ public struct CardDraft: Sendable, Equatable {
     }
 
     /// Heuristik: Rabattcode oder Aktionsgutschein statt Wertgutschein.
-    public var isDiscount: Bool { percent != nil || discountValue != nil || benefit != nil }
+    /// Ein fester Nachlass zählt nur ohne Gutscheinwert: „Gutschein 50 € … sparen Sie 5 €“ bleibt ein 50-€-Gutschein
+    /// (sonst fiele das Guthaben aus der Summe), „10 € Rabatt ab 50 €“ ist ein Coupon (50 € ist dort Mindestbestellwert).
+    public var isDiscount: Bool { percent != nil || benefit != nil || (discountValue != nil && value == nil) }
 
     /// Vorschlag für die Art: Rabatt mit Code (ohne Barcode) ist ein Rabattcode, sonst ein Aktionsgutschein.
     /// `nil` heißt: kein Rabatt erkannt, die Art bleibt beim Wertgutschein bzw. der Wahl des Nutzers.
@@ -173,7 +175,7 @@ public enum TextParser {
     /// „Gratis Kaffee“, „kostenloser Cappuccino“, „1 Kaffee gratis“ → „Gratis Kaffee“. Versand und Lieferung zählen nicht.
     public static func benefit(in s: String) -> String? {
         // „2 für 1“, nicht „für 2 Personen“ und keine Preise („2 für 1,50 €“, „3 für 10 €“).
-        let deal = #"(?i)(?<![\d.,])([1-9])\s*(?:für|fuer|for|zum\s+Preis\s+von)\s*([1-9])(?![.,]?\d)(?!\s*(?:,-|€|EUR\b|Euro\b|Person\w*|Pers\b|Pers\.))"#
+        let deal = #"(?i)(?<![\d.,])([1-9])\s*(?:für|fuer|for|zum\s+Preis\s+von)\s*([1-9])(?![.,]?\d)(?!\s*(?:,-|€|EUR\b|Euro\b|Person\w*|Pers\b|Pers\.|Std\b|Stunde\w*|Min\b|Minute\w*|Nacht|Nächte\w*|Tag\w*|Gäste\w*|Plätze\w*|Karten\b|Tickets?\b))"#
         for g in matches(deal, in: s) {
             if let a = Int(g[1]), let b = Int(g[2]), a > b { return "\(a) für \(b)" }
         }
@@ -185,7 +187,7 @@ public enum TextParser {
             #"\b"# + free + #"\s+"# + product + #"(?![\wäöüß])"#,
             #"(?:\b(?i:ein(?:e[nm]?)?)|(?<![\d.,])1)\s+"# + product + #"\s+"# + free + #"\b"#,
         ]
-        let excluded = #"(?i)^(?:versand\w*|liefer\w*|rücksend\w*|ruecksend\w*|rückversand|retoure\w*|zustellung|porto|stornierung|kündigung|rückgabe|umtausch|anmeldung|registrierung|parken|beratung|hotline|testen|dazu|online|app)$"#
+        let excluded = #"(?i)^(?:versand\w*|liefer\w*|rücksend\w*|ruecksend\w*|rückversand|retoure\w*|zustellung|porto|stornierung|kündigung|rückgabe|umtausch|anmeldung|registrierung|parken|parkplatz\w*|parkplätze|parkhaus|wlan|wifi|wi-fi|internet|zugang|lieferservice|beratung|hotline|testen|dazu|online|app|stornierung\w*|eintragung)$"#
         for p in patterns {
             for g in matches(p, in: s) {
                 let word = g[1]

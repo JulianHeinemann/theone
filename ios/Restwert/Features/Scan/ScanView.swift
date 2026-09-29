@@ -413,7 +413,8 @@ struct ScanView: View {
                 Button("Erneut scannen") { rescan() }.buttonStyle(main)
                 Button("Trotzdem von Hand eintragen") { formSeed = FormSeed(outcome: nil) }.buttonStyle(.quiet)
             }
-            if !backFirst && outcome.duplicateID == nil { backActions(outcome, prominent: false) }
+            // Mail-Text hat keine Rückseite.
+            if !backFirst && outcome.duplicateID == nil && outcome.source != .text { backActions(outcome, prominent: false) }
         }
         .padding(.horizontal, Layout.page).padding(.top, 10).padding(.bottom, 8)
     }

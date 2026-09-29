@@ -709,7 +709,7 @@ struct CardFormView: View {
         if let k = d.suggestedKind(hasBarcode: o.barcode != nil) { kind = k }
         if let p = d.percent { percentText = p.formatted() }
         // Fester Rabatt („10 € Rabatt“) gehört ins Feld „oder Wert in €“, nicht ins Guthaben.
-        if d.percent == nil, let off = d.discountValue { valueText = Self.money(off) }
+        if d.isDiscount, d.percent == nil, let off = d.discountValue { valueText = Self.money(off) }
         if let b = d.benefit { benefitText = b }
         let online = Merchant.byID[merchantID]?.category == .codeOnly
         if !d.isDiscount, online || o.source == .text {

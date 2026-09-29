@@ -1,5 +1,6 @@
 import SwiftUI
 import AuthenticationServices
+import CryptoKit
 import Security
 
 /// Optionale Anmeldung mit Apple – nur ein Profil auf diesem Gerät, kein Konto bei uns und kein Server.
@@ -54,7 +55,7 @@ final class AppleAccount {
             // Nur der Vorname (so steht es im Einstieg); den Nachnamen braucht die Begrüßung nicht.
             let given = credential.fullName?.givenName ?? credential.fullName?.familyName ?? ""
             if !given.isEmpty { rename(given) }
-            else if name.isEmpty, let known = Self.knownNames[credential.user] { rename(known) }
+            else if name.isEmpty, let known = Self.knownNames[Self.hashed(credential.user)] { rename(known) }
             if let mail = credential.email, !mail.isEmpty { email = mail; UserDefaults.standard.set(mail, forKey: Self.emailKey) }
             error = nil
         case .failure(let err):
@@ -70,7 +71,7 @@ final class AppleAccount {
         UserDefaults.standard.set(trimmed, forKey: Self.nameKey)
         if let id = userID {
             var known = Self.knownNames
-            known[id] = trimmed.isEmpty ? nil : trimmed
+            known[Self.hashed(id)] = trimmed.isEmpty ? nil : trimmed
             UserDefaults.standard.set(known, forKey: Self.knownNamesKey)
         }
     }
@@ -93,6 +94,11 @@ final class AppleAccount {
             ASAuthorizationAppleIDProvider().getCredentialState(forUserID: id) { state, _ in cont.resume(returning: state) }
         }
         if state == .revoked || state == .notFound { signOut(forget: true) }
+    }
+
+    /// Merkliste nur mit Prüfsumme der Kennung: die Apple-Kennung selbst liegt ausschließlich im Schlüsselbund.
+    private static func hashed(_ id: String) -> String {
+        SHA256.hash(data: Data(id.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 
     private static var knownNames: [String: String] {

@@ -210,3 +210,23 @@ struct BackPhotoStorageTests {
         #expect(c.sanitized.minOrder == nil)
     }
 }
+
+@Suite("Coupons – Befunde Beta-Runde 16")
+struct CouponRound16Tests {
+    @Test("Wertgutschein mit Werbezeile bleibt Wertgutschein (kein 5-€-Coupon)")
+    func valueVoucherWithPromoLine() {
+        let d = TextParser.parse("GESCHENKGUTSCHEIN\nBuchhandlung Seitenweise\nWert: 50,00 €\nJetzt Newsletter abonnieren und 5 € sparen")
+        #expect(d.value == 50)
+        #expect(!d.isDiscount)
+        #expect(d.suggestedKind == nil)
+    }
+
+    @Test("Kein Coupon: kostenloses WLAN, gratis Parkplatz, Reservierung „4 für 2 Stunden“")
+    func noBenefitForAmenities() {
+        #expect(TextParser.benefit(in: "Kostenloses WLAN für Gäste") == nil)
+        #expect(TextParser.benefit(in: "Gratis Parkplatz im Hof") == nil)
+        #expect(TextParser.benefit(in: "Tisch für 4 für 2 Stunden reserviert") == nil)
+        #expect(TextParser.benefit(in: "Gratis Kaffee zu jedem Kuchen") == "Gratis Kaffee")
+        #expect(TextParser.benefit(in: "3 für 2 auf alle Bücher") == "3 für 2")
+    }
+}
