@@ -334,7 +334,7 @@ private struct WelcomePage: View {
             .padding(.top, 64)
             .motion(.spring(duration: 0.7, bounce: 0.3), value: step)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Beispiel: Noch \(total.euro) drauf, 5 Gutscheine, 2 laufen bald ab")
+            .accessibilityLabel("Beispiel: Noch \(total.euro) drauf, 5 Gutscheine und 1 Code, 2 laufen bald ab")
         }
         .modifier(Stepper(active: active, steps: [150, 500, 1100], step: $step))
         .onChange(of: step) { _, s in
@@ -370,8 +370,9 @@ private struct WelcomePage: View {
                 .motion(.easeOut(duration: 0.5), value: step)
                 .padding(.horizontal, Layout.inset)
             VStack(alignment: .leading, spacing: 2) {
-                Text("5 Gutscheine · 2 laufen bald ab").font(.scaled(15, weight: .semibold))
-                Text("+ 1 Rabattcode, nicht in der Summe").font(.scaled(13)).opacity(0.75)
+                // Dieselbe Zählweise wie die Guthabenkarte auf dem Start.
+                Text("5 Gutscheine + 1 Code · 2 laufen bald ab").font(.scaled(15, weight: .semibold))
+                Text("Der Rabattcode zählt nicht zur Summe").font(.scaled(13)).opacity(0.75)
             }
             .padding(.horizontal, Layout.ticketInset).padding(.vertical, Layout.group)
             .frame(maxWidth: .infinity, alignment: .leading)

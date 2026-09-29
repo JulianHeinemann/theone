@@ -68,7 +68,7 @@ struct SettingsView: View {
                             AccessibilityNotification.Announcement("Schutz für geteiltes Gerät ist an").post()
                         }
                     } label: {
-                        let label = settingLabel("Mehrere nutzen dieses Gerät", "Schaltet die drei Schalter darunter auf einmal ein: PIN schützen, App sperren, Codes erst nach \(method)", "person.2")
+                        let label = settingLabel("Mehrere nutzen dieses Gerät", "Schaltet auf einmal ein: PIN schützen, App sperren, Codes erst nach \(method)", "person.2")
                         let pill = Text("Einschalten").font(.scaled(15, weight: .semibold))
                             .lineLimit(1).fixedSize()
                             .padding(.horizontal, 12).padding(.vertical, 6)
@@ -281,6 +281,8 @@ struct SettingsView: View {
         .onChange(of: warnDays) { _, _ in Task { await store.scheduleReminders() } }
         // Widget sofort anpassen: mit App-Sperre ohne Beträge.
         // Widget und Erinnerungen sofort anpassen: mit Sperre ohne Beträge und ohne Ladennamen.
+        // Schutz auf dieser Seite eingeschaltet: Vorname ab sofort nur nach Face ID änderbar.
+        .onChange(of: appLock || codeLock || pinLock) { _, on in if on { nameLocked = true } }
         .onChange(of: appLock) { _, _ in WidgetBridge.update(cards: store.cards); Task { await store.scheduleReminders() } }
         .onChange(of: codeLock) { _, _ in WidgetBridge.update(cards: store.cards); Task { await store.scheduleReminders() } }
         .onChange(of: reminderDays) { _, _ in Task { await store.scheduleReminders() } }
@@ -418,7 +420,7 @@ struct SettingsView: View {
         }
     }
 
-    /// Abgemeldet: offizieller „Mit Apple anmelden“-Knopf. Angemeldet: Name, E-Mail und „Abmelden“.
+    /// Abgemeldet: offizieller „Mit Apple anmelden“-Knopf. Angemeldet: Vorname (änderbar) und „Abmelden“.
     @ViewBuilder private var appleAccountRow: some View {
         if account.isSignedIn {
             HStack(spacing: 14) {

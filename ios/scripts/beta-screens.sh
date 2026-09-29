@@ -6,6 +6,8 @@ U="$1"; O="${2:-build/beta-shots}"; B=de.restwert.app
 APP="$(find build/sim/Build/Products -maxdepth 2 -name 'Restwert.app' -type d | head -1)"
 rm -rf "$O"; mkdir -p "$O"
 xcrun simctl ui "$U" appearance light; xcrun simctl ui "$U" increase_contrast disabled; xcrun simctl ui "$U" content_size large
+# Face ID im Simulator einrichten, sonst fragt iOS statt Face ID nach dem Code (login-entsperrt, geteiltes-geraet-an).
+xcrun simctl spawn "$U" notifyutil -s com.apple.BiometricKit.enrollmentChanged 1; xcrun simctl spawn "$U" notifyutil -p com.apple.BiometricKit.enrollmentChanged
 xcrun simctl uninstall "$U" $B 2>/dev/null || true; xcrun simctl install "$U" "$APP"
 shot() { local n="$1"; shift; xcrun simctl terminate "$U" $B 2>/dev/null || true; xcrun simctl launch "$U" $B "$@" >/dev/null; sleep "${WAIT:-5}"; xcrun simctl io "$U" screenshot "$O/$n.png" >/dev/null 2>&1; echo "📸 $n"; }
 M=(-onboarded YES -appLock NO -codeLock NO)

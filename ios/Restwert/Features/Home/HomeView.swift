@@ -159,9 +159,16 @@ struct HomeView: View {
     /// „Läuft bald ab“: große Überschrift mit Anzahl, jeder Gutschein als eigene Karte mit dem nächsten Schritt.
     private func dueSoonSection(_ cards: [GiftCard], more: Int) -> some View {
         VStack(alignment: .leading, spacing: Layout.group) {
-            // Überschrift wie die anderen Abschnitte.
-            Text("Läuft bald ab").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
-                .accessibilityAddTraits(.isHeader)
+            // Überschrift wie die anderen Abschnitte; weitere bald ablaufende gleich daneben (nicht unten unter der Tab-Leiste).
+            HStack(alignment: .firstTextBaseline) {
+                Text("Läuft bald ab").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer(minLength: 8)
+                if more > 0 {
+                    Text(more == 1 ? "+ 1 weiterer in der Liste" : "+ \(more) weitere in der Liste")
+                        .font(.scaled(14)).foregroundStyle(Color.ink2).multilineTextAlignment(.trailing)
+                }
+            }
             ForEach(cards) { c in
                 DueSoonCard(card: c, zoom: zoom,
                             open: { router.homePath.append(.card(c.id)) },
@@ -170,10 +177,6 @@ struct HomeView: View {
                 }
                 // Höchstens Bedienungshilfen-Stufe 1: sehr groß, aber der Kasse-Knopf bleibt über der Tab-Leiste.
                 .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-            }
-            if more > 0 {
-                Text(more == 1 ? "1 weiterer steht unten in der Liste." : "\(more) weitere stehen unten in der Liste.")
-                    .font(.scaled(14)).foregroundStyle(Color.ink2)
             }
         }
         .animation(.snappy, value: cards.map(\.id))

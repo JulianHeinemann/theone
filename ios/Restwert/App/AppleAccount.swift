@@ -80,7 +80,7 @@ final class AppleAccount {
             guard let credential = auth.credential as? ASAuthorizationAppleIDCredential else { return }
             userID = credential.user
             Self.writeUserID(credential.user)
-            // Apple liefert Name und E-Mail nur bei der ersten Anmeldung; später gilt der gemerkte Name.
+            // Apple liefert den Namen nur bei der ersten Anmeldung; später gilt der gemerkte Vorname.
             // Nur der Vorname (so steht es im Einstieg); den Nachnamen braucht die Begrüßung nicht.
             let given = credential.fullName?.givenName ?? ""
             if !given.isEmpty { rename(given) }

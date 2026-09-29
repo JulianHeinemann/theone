@@ -88,7 +88,7 @@ struct CardRow: View {
         let open = card.pendingSince != nil && active ? ", Betrag offen" : ""
         let urgent = due.level == .urgent ? ", dringend" : ""
         let estimated = due.estimated ? ", Ablaufdatum geschätzt" : ""
-        return "\(card.name)\(who)\(open), \(amount), \(due.text)\(urgent)\(estimated)\(card.forGifting ? ", zum Verschenken" : "")\(card.issuedByMe ? (card.issuedTo.isEmpty ? ", selbst ausgestellt" : ", selbst ausgestellt für \(card.issuedTo)") : "")"
+        return "\(card.name)\(who)\(open), \(amount), \(due.text)\(urgent)\(estimated)\(card.forGifting ? ", zum Verschenken" : "")\(card.issuedByMe ? (card.issuedTo.isEmpty ? ", selbst ausgestellt" : ", selbst ausgestellt für \(card.issuedTo)") + (card.number.count >= 4 ? ", Code endet auf \(card.number.suffix(4))" : "") : "")"
     }
 
     private func nameBlock(_ due: Due, active: Bool) -> some View {

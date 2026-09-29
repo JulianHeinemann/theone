@@ -164,7 +164,6 @@ public enum ScanDraft {
         return a.isEmpty ? b.count : row[b.count]
     }
 
-    /// Code muss nach Code aussehen: mindestens 4 Zeichen und eine Ziffer.
     /// Rückseite hervorheben (nur für Kartenfotos): Ohne Code nur bei Karten (Geschenkkarte, Kartennummer) –
     /// ein handgeschriebener Gutschein oder eine Speisekarte hat keine Rückseite mit Nummer. Sonst, wenn der Text
     /// auf PIN, Rubbelfeld oder Rückseite verweist und die PIN noch fehlt.
@@ -174,6 +173,7 @@ public enum ScanDraft {
         return !hasPin && text.range(of: #"(?i)\b(?:PIN|Rubbel\w*|freirubbeln|Rückseite|Rueckseite)\b"#, options: .regularExpression) != nil
     }
 
+    /// Code muss nach Code aussehen: mindestens 4 Zeichen und eine Ziffer.
     public static func isPlausibleCode(_ n: String) -> Bool {
         let c = n.replacingOccurrences(of: " ", with: "")
         // Betragszeilen („über30,-Euro“, „25 €“) sind kein Code, auch wenn die KI sie dafür hält.
