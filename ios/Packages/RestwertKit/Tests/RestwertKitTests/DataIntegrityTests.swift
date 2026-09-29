@@ -411,6 +411,32 @@ struct PhotoFileTests {
         #expect(back.deletedAt?[deletedID] != nil)
     }
 
+    @Test("Rückseitenfoto als eigene Datei: nicht in der JSON, nach Neustart wieder da, Verweis bleibt ohne Laden")
+    func backPhotoFile() throws {
+        let dir = tempDir()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        var a = voucher()
+        a.photoBack = Data(repeating: 7, count: 4000)
+        let files = PhotoFiles(directory: dir)
+        let (disk, _) = files.prepare(StoredState(cards: [a], tests: [], deletedAt: [:], pinChanged: [:]), pending: [])
+        #expect(disk.cards[0].photoBack == nil)
+        #expect(disk.backPhotos == [a.id])
+        let json = try JSONEncoder().encode(disk)
+        #expect(json.count < 2000)
+        let reread = try JSONDecoder().decode(StoredState.self, from: json)
+        #expect(PhotoFiles(directory: dir).loadBacks(reread.backPhotos ?? [])[a.id] == a.photoBack)
+        // Nicht geladen (z. B. Gerät gesperrt): Verweis bleibt, Datei wird beim Aufräumen nicht gelöscht.
+        let again = PhotoFiles(directory: dir)
+        let (disk2, keep2) = again.prepare(StoredState(cards: reread.cards, tests: [], deletedAt: [:], pinChanged: [:]), pending: [])
+        #expect(disk2.backPhotos == [a.id])
+        again.removeAll(except: keep2, removable: [a.id])
+        #expect(FileManager.default.fileExists(atPath: again.backURL(for: a.id).path))
+        // Gutschein gelöscht: Rückseite verschwindet beim Aufräumen.
+        let (_, keep3) = again.prepare(StoredState(cards: [], tests: [], deletedAt: [a.id: .now], pinChanged: [:]), pending: [])
+        again.removeAll(except: keep3, removable: [a.id])
+        #expect(!FileManager.default.fileExists(atPath: again.backURL(for: a.id).path))
+    }
+
     @Test("Noch nicht geladene Fotos bleiben erhalten; entfernte Fotos verschwinden erst nach dem Aufräumen")
     func pendingAndCleanup() throws {
         let dir = tempDir()

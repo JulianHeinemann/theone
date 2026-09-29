@@ -113,6 +113,12 @@ final class Store {
             keepCopyBeforeWrite = snap.dropped > 0
             let withoutPhoto = Set(cards.filter { $0.photo == nil }.map(\.id))
             pendingPhotos = Set(snap.photos ?? []).intersection(withoutPhoto)
+            // Rückseiten sind kleine Vorschaubilder: gleich mitladen.
+            if let backIDs = snap.backPhotos, !backIDs.isEmpty {
+                let files = photoFiles
+                let backs = Self.io.sync { files.loadBacks(backIDs) }
+                for i in cards.indices where cards[i].photoBack == nil { cards[i].photoBack = backs[cards[i].id] }
+            }
             loadPhotos()
         } else {
             // Nicht dekodierbar: ohne Beispiele leer starten, Original bleibt als .broken-Kopie erhalten.

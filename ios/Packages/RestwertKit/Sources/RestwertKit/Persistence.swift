@@ -12,10 +12,12 @@ public struct StoredState: Codable, Sendable {
     public var pinChanged: [UUID: Date]?
     /// Gutscheine, deren Foto als Datei in `photos/` liegt.
     public var photos: [UUID]?
+    /// Gutscheine, deren Rückseitenfoto als Datei `<id>-back.jpg` in `photos/` liegt.
+    public var backPhotos: [UUID]?
     /// Einträge, die beim Lesen nicht dekodierbar waren und übersprungen wurden.
     public var dropped = 0
 
-    private enum CodingKeys: String, CodingKey { case cards, tests, deleted, deletedAt, pinChanged, photos }
+    private enum CodingKeys: String, CodingKey { case cards, tests, deleted, deletedAt, pinChanged, photos, backPhotos }
 
     public init(cards: [GiftCard], tests: [TestResult], deletedAt: [UUID: Date], pinChanged: [UUID: Date], photos: [UUID] = []) {
         self.cards = cards
@@ -37,6 +39,7 @@ public struct StoredState: Codable, Sendable {
         deletedAt = try? c.decodeIfPresent([UUID: Date].self, forKey: .deletedAt)
         pinChanged = try? c.decodeIfPresent([UUID: Date].self, forKey: .pinChanged)
         photos = try? c.decodeIfPresent([UUID].self, forKey: .photos)
+        backPhotos = try? c.decodeIfPresent([UUID].self, forKey: .backPhotos)
         dropped = rawCards.count - cards.count + rawTests.count - tests.count
     }
 
@@ -48,6 +51,7 @@ public struct StoredState: Codable, Sendable {
         try c.encodeIfPresent(deletedAt, forKey: .deletedAt)
         try c.encodeIfPresent(pinChanged, forKey: .pinChanged)
         try c.encodeIfPresent(photos, forKey: .photos)
+        try c.encodeIfPresent(backPhotos, forKey: .backPhotos)
     }
 
     /// Löschvermerke mit Datum; ältere Dateien kennen nur die IDs, die gelten dann ab `now`.
@@ -74,6 +78,22 @@ public final class PhotoFiles: @unchecked Sendable {
     }
 
     public func url(for id: UUID) -> URL { directory.appending(path: "\(id.uuidString).jpg") }
+    public func backURL(for id: UUID) -> URL { directory.appending(path: "\(id.uuidString)-back.jpg") }
+    private var knownBack: [UUID: Data] = [:]
+    /// Rückseiten, auf die der zuletzt vorbereitete Stand verweist (für ``removeAll(except:removable:)``).
+    private var backRefs: Set<UUID> = []
+
+    /// Rückseitenfotos lesen (klein, daher gleich beim Laden). Nicht lesbare bleiben als Datei und Verweis erhalten.
+    public func loadBacks(_ ids: some Sequence<UUID>) -> [UUID: Data] {
+        var out: [UUID: Data] = [:]
+        for id in ids {
+            if let data = try? Data(contentsOf: backURL(for: id)) {
+                out[id] = data
+                knownBack[id] = data
+            }
+        }
+        return out
+    }
 
     /// Fotos lesen (fehlende Dateien werden übersprungen) und als bekannt merken.
     public func load(_ ids: some Sequence<UUID>) -> [UUID: Data] {
@@ -132,10 +152,13 @@ public final class PhotoFiles: @unchecked Sendable {
         let fm = FileManager.default
         guard let files = try? fm.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) else { return }
         for file in files where file.pathExtension == "jpg" {
-            guard let id = UUID(uuidString: file.deletingPathExtension().lastPathComponent), !keep.contains(id),
+            let name = file.deletingPathExtension().lastPathComponent
+            let isBack = name.hasSuffix("-back")
+            guard let id = UUID(uuidString: isBack ? String(name.dropLast(5)) : name),
+                  !(isBack ? backRefs : keep).contains(id),
                   removable?.contains(id) ?? true else { continue }
             try? fm.removeItem(at: file)
-            known[id] = nil
+            if isBack { knownBack[id] = nil } else { known[id] = nil }
         }
     }
 
@@ -161,6 +184,28 @@ public final class PhotoFiles: @unchecked Sendable {
             return x
         }
         out.photos = refs.sorted { $0.uuidString < $1.uuidString }
+        // Rückseiten ebenso als eigene Dateien (seit Version 3); nicht geschriebene bleiben eingebettet.
+        var backs: Set<UUID> = []
+        let fm = FileManager.default
+        if out.cards.contains(where: { $0.photoBack != nil }) {
+            try? fm.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
+        out.cards = out.cards.map { c in
+            var x = c
+            if let data = c.photoBack {
+                if knownBack[c.id] == data || (try? data.write(to: backURL(for: c.id), options: Self.writeOptions)) != nil {
+                    knownBack[c.id] = data
+                    x.photoBack = nil
+                    backs.insert(c.id)
+                }
+            } else if fm.fileExists(atPath: backURL(for: c.id).path) {
+                // Datei da, aber (noch) nicht geladen – z. B. Gerät war beim Start gesperrt: Verweis behalten.
+                backs.insert(c.id)
+            }
+            return x
+        }
+        out.backPhotos = backs.isEmpty ? nil : backs.sorted { $0.uuidString < $1.uuidString }
+        backRefs = backs
         return (out, refs)
     }
 }
