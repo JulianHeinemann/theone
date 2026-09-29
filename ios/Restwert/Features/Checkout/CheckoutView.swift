@@ -476,6 +476,8 @@ struct CheckoutView: View {
 
     private func copy(_ code: String) {
         // Nicht dauerhaft in der Zwischenablage liegen lassen.
+        // Leerzeichen dienen nur der Lesbarkeit (Gruppen); Shops erwarten den Code ohne.
+        let code = code.filter { !$0.isWhitespace }
         UIPasteboard.general.setItems([[UTType.plainText.identifier: code]],
                                       options: [.localOnly: true, .expirationDate: Date.now.addingTimeInterval(Clipboard.lifetime)])
         copied += 1

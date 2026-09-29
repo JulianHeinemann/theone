@@ -809,7 +809,7 @@ final class NotificationHandler: NSObject, UIApplicationDelegate, UNUserNotifica
             let fire = Date.now.addingTimeInterval(24 * 3600)
             let expires = (content.userInfo["expires"] as? Double).map { Date(timeIntervalSince1970: $0) }
             guard let text = Self.snoozeText(id: id, fire: fire, title: content.title, body: content.body,
-                                                   name: content.userInfo["name"] as? String, expires: expires) else { return }
+                                                   name: content.userInfo["name"] as? String ?? Self.cardLookup?(id)?.name, expires: expires) else { return }
             let copy = content.mutableCopy() as? UNMutableNotificationContent ?? UNMutableNotificationContent()
             // Mit App-Sperre oder Code-Schutz auch die vertagte Erinnerung ohne Laden und Betrag.
             let quiet = UserDefaults.standard.bool(forKey: "appLock") || UserDefaults.standard.bool(forKey: "codeLock")

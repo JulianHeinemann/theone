@@ -112,18 +112,15 @@ struct IssuedVoucherShare: View {
     let card: GiftCard
     var message = ""
     @State private var image: Image?
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: Layout.group) {
+            // Bei sehr großer Schrift der Knopf zuerst: die Vorschau ist dann höher als der Bildschirm.
+            if typeSize.isAccessibilitySize { shareButton }
             // Vorschau wächst mit der Schrift; das geteilte Bild bleibt fest gesetzt.
             IssuedVoucherCard(card: card, message: message, scalable: true)
-            if let image {
-                ShareLink(item: image, preview: SharePreview("Gutschein \(card.name)", image: image)) {
-                    Label("Gutschein teilen oder drucken", systemImage: "square.and.arrow.up")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.primary)
-            }
+            if !typeSize.isAccessibilitySize { shareButton }
             Label("Zum Einlösen: Tipp unten auf „+“ und dann auf „Gutschein scannen“ und scanne den QR-Code. Restwert erkennt den eigenen Gutschein und öffnet gleich „Gutschein einlösen“.",
                   systemImage: "qrcode.viewfinder")
                 .font(.scaled(14)).foregroundStyle(Color.ink2)
@@ -134,6 +131,16 @@ struct IssuedVoucherShare: View {
                 .background(Color.white).environment(\.colorScheme, .light))
             renderer.scale = 3
             if let ui = renderer.uiImage { image = Image(uiImage: ui) }
+        }
+    }
+
+    @ViewBuilder private var shareButton: some View {
+        if let image {
+            ShareLink(item: image, preview: SharePreview("Gutschein \(card.name)", image: image)) {
+                Label("Gutschein teilen oder drucken", systemImage: "square.and.arrow.up")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.primary)
         }
     }
 }

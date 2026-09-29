@@ -15,6 +15,7 @@ struct SettingsView: View {
     @State private var confirmSignOut = false
     @State private var nameDraft = ""
     @FocusState private var nameFocused: Bool
+    @State private var nameLocked = false
     /// Nur lesend, damit Schalter und Kopfzeile immer denselben Stand zeigen (CloudSync liest direkt aus UserDefaults).
     @AppStorage("iCloudSync") private var syncOn = false
     @State private var notifDenied = false
@@ -99,6 +100,8 @@ struct SettingsView: View {
                     } label: {
                         settingLabel("Sperren", "Wie lange Restwert im Hintergrund offen bleibt", "timer")
                     }
+                    // Eigene Auswahlseite mit Pfeil: als Knopf erkennbar (das Menü „Sofort ⌃“ wirkte wie Text).
+                    .pickerStyle(.navigationLink)
                 }
                 Toggle(isOn: guarded($codeLock, reason: "Code-Schutz ausschalten")) {
                     settingLabel("Gutscheincodes erst nach \(method) zeigen", "Für geteilte Geräte: Code, Barcode und Foto bleiben verdeckt", "rectangle.and.hand.point.up.left")
@@ -433,9 +436,6 @@ struct SettingsView: View {
                     Text(account.displayName).font(.scaled(16, weight: .semibold))
                     Text("\(Image(systemName: "apple.logo")) Angemeldet mit Apple")
                         .font(.scaled(13)).foregroundStyle(.secondary)
-                    if !account.email.isEmpty, account.email != account.displayName {
-                        Text(account.email).font(.scaled(13)).foregroundStyle(.secondary).lineLimit(1)
-                    }
                 }
                 Spacer(minLength: 0)
             }
@@ -445,13 +445,23 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 Text("Vorname").font(.scaled(16))
                 TextField("Wie dürfen wir dich nennen?", text: $nameDraft)
+                    // Bei eingeschaltetem Schutz erst nach Face ID änderbar (wie Abmelden).
+                    .disabled(nameLocked)
                     .multilineTextAlignment(.trailing)
                     .textContentType(.givenName)
                     .submitLabel(.done)
                     .onSubmit { account.rename(nameDraft) }
                     .focused($nameFocused)
             }
-            .onAppear { nameDraft = account.name }
+            .overlay {
+                if nameLocked {
+                    Color.clear.contentShape(.rect).onTapGesture {
+                        Task { if await allowedToDelete("Vornamen ändern") { nameLocked = false; nameFocused = true } }
+                    }
+                    .accessibilityElement().accessibilityLabel("Vorname \(account.name), zum Ändern entsperren").accessibilityAddTraits(.isButton)
+                }
+            }
+            .onAppear { nameDraft = account.name; nameLocked = appLock || codeLock || pinLock }
             .onChange(of: nameFocused) { _, focused in if !focused { account.rename(nameDraft) } }
             .onChange(of: account.name) { _, new in if !nameFocused { nameDraft = new } }
             // Bei eingeschaltetem Schutz erst Face ID – wie bei allen anderen Änderungen am Schutz.
@@ -574,8 +584,8 @@ struct ReminderSettingsView: View {
 struct PrivacyExplainer: View {
     private let rows: [(icon: String, title: String, text: String)] = [
         (Device.name == "iPad" ? "ipad" : "iphone", "Auf deinem \(Device.name)", "Gutscheine, Fotos, PINs und Verlauf liegen in einer Datei, die iOS verschlüsselt, solange das \(Device.name) gesperrt ist."),
-        ("person.crop.circle.badge.xmark", "Kein Konto, kein Server von uns", "Es gibt keine Anmeldung und keine Datenbank bei uns. Wir sehen nicht, welche Gutscheine du hast."),
-        ("lock.icloud", "iCloud-Sync (freiwillig)", "Jeder Gutschein wird auf dem \(Device.name) mit AES-256 verschlüsselt, bevor er in dein eigenes iCloud geht. Der Schlüssel liegt nur in deinem iCloud-Schlüsselbund. Diese Sync-Daten können weder wir noch Apple lesen. Fotos werden nicht synchronisiert."),
+        ("person.crop.circle.badge.xmark", "Kein Konto, kein Server von uns", "Kein Konto und keine Datenbank bei uns. „Mit Apple anmelden“ ist freiwillig und bleibt auf dem \(Device.name). Wir sehen nicht, welche Gutscheine du hast."),
+        ("lock.icloud", "iCloud-Sync (freiwillig)", "Jeder Gutschein wird auf dem \(Device.name) mit AES-256 verschlüsselt, bevor er in deine eigene iCloud geht. Der Schlüssel liegt nur in deinem iCloud-Schlüsselbund. Diese Sync-Daten können weder wir noch Apple lesen. Fotos werden nicht synchronisiert."),
         ("key", "PINs", "PINs liegen lokal in der geschützten Datei. Mit iCloud-Sync gehen sie zusätzlich nur in deinen iCloud-Schlüsselbund, nie in eine Datenbank. Angezeigt werden sie nur nach Face ID, Touch ID oder \(Device.name)-Code."),
         ("externaldrive.badge.icloud", "iCloud-Backup des \(Device.name)s", "Wie alle App-Daten ist die Datei im iCloud-Backup deines \(Device.name)s enthalten. Ohne „Erweiterten Datenschutz“ kann Apple dieses Backup öffnen; mit ihm ist es Ende-zu-Ende verschlüsselt."),
         ("text.viewfinder", "Scannen", "Barcode- und Texterkennung laufen auf dem \(Device.name). Fotos werden nirgendwohin geschickt."),

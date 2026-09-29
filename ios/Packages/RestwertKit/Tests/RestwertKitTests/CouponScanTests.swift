@@ -254,4 +254,24 @@ struct CouponRound16Tests {
         #expect(d.benefit == "Gratis Kaffee")
         #expect(d.isDiscount)
     }
+
+    @Test("Aktionscode mit EUR bleibt Code, Betragszeile nicht")
+    func eurCodes() {
+        #expect(ScanDraft.isPlausibleCode("SOMMER50EUR"))
+        #expect(ScanDraft.isPlausibleCode("XMAS10EUR-2026"))
+        #expect(!ScanDraft.isPlausibleCode("30 EUR"))
+        #expect(!ScanDraft.isPlausibleCode("über30,-Euro"))
+        #expect(!ScanDraft.isPlausibleCode("25 €"))
+    }
+
+    @Test("Wertgutschein mit Beigabe bleibt Wertgutschein; Reservierungen ohne Angebot")
+    func round19() {
+        let a = TextParser.parse("WERTGUTSCHEIN\nCafé Krone\n50,00 €\nGratis Kaffee dazu")
+        #expect(a.value == 50 && !a.isDiscount)
+        let b = TextParser.parse("Geschenkgutschein 25 €\nBuchhandlung Seitenweise\n+ 2 für 1 auf Lesezeichen")
+        #expect(b.value == 25 && !b.isDiscount)
+        #expect(TextParser.benefit(in: "Tischreservierung: 4 für 2") == nil)
+        #expect(TextParser.benefit(in: "Reservierung: 4 für 2") == nil)
+        #expect(TextParser.benefit(in: "2 für 1 – Reservierung empfohlen") == "2 für 1")
+    }
 }

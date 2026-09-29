@@ -1,0 +1,1066 @@
+[
+ {
+  "persona": "Sabine K., 38, Grundschullehrerin, bekommt Gutscheine von Eltern (Papier, Stadtgutschein, handgeschrieben) (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Papiergutscheine per Foto scannen, Übersicht was noch drauf ist und bald abläuft",
+  "scores": {
+   "gesamt": 10,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "scores_runde18": {
+   "gesamt": 10,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Omas Café-Gutschein bleibt vorbildlich: „Hinzufügen“ schwarz, Rückseite nur als leiser Link. In der Foto-Reihe ist die Kamera jetzt nur noch ein kleines Symbol – statt vier großer Knöpfe sind es drei plus Symbol. Ich bleibe bei meiner Empfehlung im Kollegium.",
+  "behoben": [
+   "scan-rueckseite-angebot: Kamera nur noch als kleines Symbol neben „Nächstes Foto ist die Rückseite“ (ScanView.swift:443-453) – die Leiste ist ruhiger.",
+   "scan-v04: Café Sonnenschein weiter „Hinzufügen“ schwarz, „Rückseite hinzufügen“ leiser Link (Importer.swift:109-111, Karte-Regex jetzt mit Wortgrenzen).",
+   "gespeichert-im-tab: Meldung „„Douglas“ gespeichert – Ansehen“ oben unter der Statusleiste, nichts verdeckt; Scan-Kachel „… auf Wunsch auch die Rückseite“ (ScanView.swift:742)."
+  ],
+  "offen": [
+   "scan-rueckseite-angebot: in der Foto-Reihe bleibt „Nächstes Foto ist die Rückseite“ der schwarze Knopf, „Hinzufügen“ weiß – laut beta-screens.sh:72 ist das Bild eine Karten-Vorderseite (v17-karte-vorne), also nachvollziehbar, aber mein Wunsch (Hinzufügen als Hauptknopf) ist nicht umgesetzt.",
+   "scan-v15-coupon / scan-coupon-rabatt: leiser Link „Rückseite hinzufügen“ auch bei Papier-Coupons (ScanView.swift:416-419 schließt nur Mail-Text und .codeOnly aus)."
+  ],
+  "befunde": [
+   {
+    "screen": "scan-rueckseite-angebot / ScanView.swift:368-371, 442-453",
+    "befund": "Buchhandlung Seitenweise (Foto 1 von 2): schwarzer Knopf „Nächstes Foto ist die Rückseite“ + Kamerasymbol, darunter „Hinzufügen“ und „Überspringen – nächstes Foto“ weiß. Für eine Geschenkkarte ohne Nummer vorn richtig, beim Durcharbeiten eines Stapels muss ich aber weiter auf die Position von „Hinzufügen“ achten.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v15-coupon, scan-coupon-rabatt",
+    "befund": "Café Krone (Gratis Kaffee, „Nur Code“) und Blumenhaus Lindner (SOMMER10, Mindestbestellwert) zeigen weiter den leisen Link „Rückseite hinzufügen“ – für Coupons überflüssig, stört aber nicht.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches – ich bin bei 10. Kosmetik: bei Coupons den Rückseiten-Link weglassen.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Helga und Werner B., 70 und 72, Rentnerpaar, teilen sich ein iPhone, mittlere Schriftgröße (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Geteiltes Gerät mit 'Codes erst nach Face ID zeigen', einfache Kasse, verständliche Sprache",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "scores_runde18": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 10,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Bei großer Schrift steht jetzt „Tippen für Vollbild“ unter dem Barcode – das haben wir uns gewünscht. Auf der gelben Karte steht „5 Gutscheine + 1 Code“ und „2 laufen bald ab“ sauber in zwei Zeilen, und der Kasse-Knopf vom Modehaus ist trotzdem ohne Scrollen zu sehen. Nur „Sofort“ ist immer noch grüner Text statt Knopf.",
+  "behoben": [
+   "gross-kasse: „Tippen für Vollbild“ auch bei großer Schrift sichtbar, darunter „Helligkeit automatisch erhöht“.",
+   "gross-start: Guthabenkarte zweizeilig „5 Gutscheine + 1 Code“ / „2 laufen bald ab“, kein einsames „ab“ mehr; „Nur Beispiele“ sichtbar; „An der Kasse zeigen“ (Modehaus Kranz) vollständig über der Tab-Leiste.",
+   "kasse: einheitlich „PIN zeigen“ statt „PIN anzeigen“."
+  ],
+  "offen": [
+   "geteiltes-geraet-an / SettingsView.swift:95-99: Schonfrist „Sofort ⌃“ weiter grüner Menü-Text ohne Rahmen oder Fläche (seit mehreren Runden)."
+  ],
+  "befunde": [
+   {
+    "screen": "geteiltes-geraet-an / SettingsView.swift:95-99",
+    "befund": "„Sperren – Sofort ⌃“ ist ein Standard-Picker ohne Knopf-Form; für uns nicht klar, dass man darauf tippen kann.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross/scan-v09",
+    "befund": "Bei großer Schrift füllt die Warnung „Hohes Guthaben (1.250,00 €) …“ den Bildschirm; der wichtigste Satz „Ruf sofort die Firma … an und lass das Guthaben sperren“ läuft in den Ausblendverlauf und ist erst nach Scrollen lesbar. Nur zwei große Knöpfe – gut.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-start-bestand",
+    "befund": "Unter der Tab-Leiste scheinen bei großer Schrift Kartentexte durch („Guthaben“, „Ablauf“) – wirkt etwas unruhig, stört die Bedienung nicht.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "„Sofort“ als erkennbarer Knopf mit Rahmen, und bei großer Schrift die Handlungsanweisung der Betrugswarnung zuerst (oder ohne Scrollen) zeigen.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Leon M., 19, Azubi im Einzelhandel, steht täglich an der Kasse mit Handscanner (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Barcode-Qualität an der Kasse, richtige Symbologie, Prüfziffern",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "scores_runde18": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Nach neun Runden ist der Umbruch-Kommentar endlich richtig, der doppelte Kommentar weg und die Karte-Regex hat Wortgrenzen. Code 128 jetzt mit Modulzahl-Test nach Norm – das ist genau die Art Absicherung, die ich wollte. Radar-Kommentare und der SOMMER50EUR-Test fehlen aber immer noch.",
+  "behoben": [
+   "ScanResultView.swift:340-343: Doc-Kommentar beschreibt jetzt den Code („Bindestrich nicht trennbar, danach eine unsichtbare Umbruchstelle“).",
+   "ScanView.swift:416: nur noch eine Kommentarzeile „Mail-Text und reine Online-Codes haben keine Rückseite.“",
+   "Importer.swift:111: Karte-Regex mit \\b und Präfixliste (geschenk|guthaben|gutschein|kunden|wert|prepaid|bonus)karte – „Speisekarte“, „Eintrittskarte“, „Postkarte“ treffen nicht mehr.",
+   "Code 128 im Paket mit Modulzahl-Test (Protokoll Punkt 10), Kassen-Barcodes 12/12 zurückgelesen; kasse zeigt EAN sauber mit „Tippen für Vollbild“."
+  ],
+  "offen": [
+   "ios/Restwert/Design/ExpiryRadar.swift:53, 58, 394, 476: Kommentare sprechen weiter von „+N“-Bündel bzw. „+N für den Rest“, während Z. 227/492 „statt einer Plakette“ sagen.",
+   "Kein Test für beschriftungslosen KI-Code „SOMMER50EUR“ (keine Fundstelle in ios/Packages/RestwertKit/Tests).",
+   "Kein Test für suggestsBack-Negativfälle: Importer.swift:106-114 liegt im App-Target; die Speisekarte-Tests (ScanDraftTests.swift:56-57, 98) prüfen nur looksLikeVoucher, nicht das Hervorheben der Rückseite."
+  ],
+  "befunde": [
+   {
+    "screen": "ExpiryRadar.swift:53, 58, 394, 476",
+    "befund": "Veraltete „+N“-Bündel-Kommentare widersprechen Z. 227/492, unverändert seit mehreren Runden.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Importer.swift:106-114",
+    "befund": "Neue Wortgrenzen-Regex ohne Test: weder „Speisekarte“/„Eintrittskarte“ (darf nicht hervorheben) noch „Geschenkkarte“/„Gift Card“ (muss hervorheben) sind für suggestsBack abgesichert.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-vorder-rueckseite",
+    "befund": "Nach angehängter Rückseite: „Barcode an der Kasse: nicht gelesen – im nächsten Schritt wählen“ neben voller Kartennummer 6280 1234 5678 9012 – korrekt, aber hier wäre ein Vorschlag (z. B. Code 128 aus der Nummer) hilfreicher als ein offener Schritt.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Radar-Kommentare an den Code anpassen, Test für „SOMMER50EUR“ und Tests für suggestsBack (Speisekarte/Eintrittskarte negativ, Geschenkkarte positiv). Funktional bin ich bei 9–10.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Thomas R., 45, Pendler, bekommt fast nur Online-Codes per Mail (Zalando, Amazon, OTTO) (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Import aus Mail-Text und PDF-Anhang, Fristen, Code online einlösen",
+  "scores": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "scores_runde18": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Stabil: Amazon, Zalando und OTTO ohne Rückseiten-Link, lange Codes einzeilig, OTTO wird mit einem Tipp gespeichert. Mein einziger Punkt aus Runde 18 – ob die Leerzeichen in „7GHK 2M9P XQ41“ dazugehören – ist aber wieder nicht angefasst.",
+  "behoben": [
+   "scan-v13: OTTO „Sicher erkannt“, Code OT-7731-5520-9912 einzeilig, Hinweis „Der Barcode auf dem Gutschein ist nicht für die Kasse“, „Speichern“ mit einem Tipp, kein Rückseiten-Link.",
+   "kasse-online: AQ7K-2ZPM4H-R8TX groß in einer Zeile, „Code kopieren“ mit 10-Minuten-Hinweis."
+  ],
+  "offen": [
+   "scan-v14 / kasse-online: kein Hinweis zu Leerzeichen bei gruppierten Codes. CardFormView.swift:690-694 entfernt Leerzeichen nur bei reinen Ziffernfolgen; „7GHK 2M9P XQ41“ wird mit Leerzeichen gespeichert und von CheckoutView.swift:477-480 genau so kopiert.",
+   "scan-v14: Kaufdatum nur mit heute (30.09.2026) vorbelegt, „Gültig bis · berechnet 31.12.2029“ – bei alten Mails leicht zu übersehen.",
+   "Teilen aus der Mail-App weiter ohne Screenshot (bekannte Grenze)."
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v14 / CardFormView.swift:690-694, CheckoutView.swift:477-480",
+    "befund": "Gruppierter alphanumerischer Online-Code wird samt Leerzeichen gespeichert und kopiert; viele Shops lehnen Leerzeichen im Gutscheinfeld ab. Weder ein Hinweis noch ein Kopieren ohne Leerzeichen.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "scan-v14",
+    "befund": "Kaufdatum aus der Mail wird nicht übernommen, sondern heute vorbelegt; die berechnete Frist kann dadurch zu spät liegen.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Beim Kopieren gruppierter Codes die Leerzeichen weglassen (oder einen Satz dazu anzeigen). Dann 10.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Sandra K., 34, alleinerziehend, ein Gerät wird von zwei Kindern (7 und 11) mitgenutzt (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Geteiltes Gerät: Codes vor Kindern verstecken, Schutz nicht aus Versehen abschaltbar",
+  "scores": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Der Schutz ist so solide wie in Runde 18, und die neue „Später eintragen“-Erinnerung verrät bei Sperre den Laden nicht mehr. Aber mein einziger Wunsch zur 10 – Vornamen nur nach Face ID ändern – steht nicht einmal im Protokoll und ist im Code unverändert.",
+  "behoben": [
+   "„Später eintragen“-Erinnerung mit App-Sperre/Code-Schutz ohne Laden: „Hast du mit einem Gutschein bezahlt?“ (CheckoutView.swift:529-531)",
+   "Schutz unverändert vollständig: grüne Bestätigung, „Sofort“, Fußtext zu stillen Erinnerungen (geteiltes-geraet-an; SettingsView.swift:112), Kasse „Geschützt – tippen und entsperren“ + „PIN zeigen“ (kasse-code-geschuetzt), Abmelden nur nach Face ID (SettingsView.swift:458-459)"
+  ],
+  "offen": [
+   "Vorname-Feld weiter ohne Face ID änderbar, auch bei eingeschaltetem Schutz: rename bei Enter/Fokusverlust ohne allowedToDelete (SettingsView.swift:446-455) – direkt über dem geschützten „Abmelden“",
+   "„Bezahlt – Einkauf abziehen“ aktiv als schwarzer Hauptknopf, obwohl der Code verdeckt ist (kasse-code-geschuetzt; CheckoutView.swift:221, kein disabled an codeHidden Z. 40)"
+  ],
+  "befunde": [
+   {
+    "screen": "einstellungen-konto / SettingsView.swift:446-455",
+    "befund": "Namensänderung weiterhin ungeschützt; uneinheitlich zu Abmelden (Z. 458-459), das bei Schutz Face ID verlangt. Für die Gutscheine harmlos, auf dem Kindergerät aber ein Streich-Einfallstor.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kasse-code-geschuetzt / CheckoutView.swift:221",
+    "befund": "Solange der Code verdeckt ist, lässt sich Guthaben per „Bezahlt – Einkauf abziehen“ abbuchen, ohne je entsperrt zu haben. Rückgängig über Verlauf, aber verwirrend für Kinder.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Vornamen bei eingeschaltetem Schutz nur nach Face ID ändern (wie Abmelden). Optional: „Bezahlt“ erst nach Entsperren aktiv.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Helga M., 61, Sehschwäche, nutzt große Schrift (Dynamic Type) und „Kontrast erhöhen“ (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Lesbarkeit, Kontrast, Größe der Warnungen und Knöpfe",
+  "scores": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Guthabenkarte liest sich jetzt sauber zweizeilig, und bei „Kontrast erhöhen“ heben sich die weißen Karten deutlich vom dunkleren Grund ab – schön. Die rote Betrugsbox bei großer Schrift ist aber exakt so abgeschnitten wie in Runde 18; das war mein Punkt zur 10.",
+  "behoben": [
+   "„ab“ steht nicht mehr allein: „5 Gutscheine + 1 Code“ / „2 laufen bald ab“ zweizeilig, „Nur Beispiele“ sichtbar, Kasse-Knopf weiter über der Tab-Leiste (gross-start)",
+   "Kontrast erhöhen: Einstellungen mit deutlich dunklerem Grund, Karten heben sich ab (kontrast-einstellungen)",
+   "„Einschalten“ bei XL unter dem Text mit Rand, Schutz zuerst (gross-einstellungen; SettingsView.swift:75-80)"
+  ],
+  "offen": [
+   "Rote Betrugsbox bei XL unverändert: endet im Verlauf bei „…an und lass das Guthaben sperren“, Polizei-Hinweis nur nach Scrollen, kein Scroll-Hinweis (gross/scan-v09; im Protokoll R19 nicht erwähnt)",
+   "Apple-Knopf fest 56 pt, wächst nicht mit der Schrift (AppleAccount.swift:185)",
+   "„Einschalten“ weiter beige Füllung Color.fill (SettingsView.swift:74) – mit Rand erkennbar, nicht kräftig"
+  ],
+  "befunde": [
+   {
+    "screen": "gross/scan-v09",
+    "befund": "Box endet im Farbverlauf mitten im Handlungssatz; dass noch Sperr-/Polizeihinweise folgen, ist nicht erkennbar. „Hinzufügen“/„Erneut scannen“ belegen ein Drittel des Bildschirms.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross-einstellungen",
+    "befund": "Die schwebende Tab-Leiste liegt bei XL über der Zeile „App mit Face ID sperren“ (Text scheint durch) – beim Scrollen lösbar, aber unruhig.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Die rote Box bei großer Schrift vollständig erfassbar: Kurzfassung mit „Mehr lesen“ oder klarer Scroll-Hinweis, „Polizei“ im sichtbaren Teil.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Werner B., 67, pensionierter Kriminalhauptkommissar, früher Betrugsprävention für Senioren (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Gutscheinbetrug (Enkeltrick, falsche Behörden), Warnungen, Schutz der Codes",
+  "scores": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 7
+  },
+  "scores_runde18": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Die E-Mail wird nicht mehr gespeichert, alte werden einmalig gelöscht – damit hält die App, was der Einstieg („Keine E-Mail“) verspricht. Auch die „Später eintragen“-Erinnerung schweigt jetzt bei Schutz. Ich empfehle die App weiter; nur der Polizei-Hinweis bei großer Schrift bleibt versteckt.",
+  "behoben": [
+   "Keine E-Mail-Speicherung mehr: handle() schreibt keinen emailKey (AppleAccount.swift:81-97), Altbestand wird einmalig entfernt (AppleAccount.swift:56-57), Anfrage nur .fullName (Z. 78)",
+   "Migration nur einmal mit Merker appleAccountMigratedV2 (AppleAccount.swift:49-59)",
+   "„Später eintragen“-Erinnerung bei App-Sperre/Code-Schutz ohne Laden (CheckoutView.swift:529-531)",
+   "Datenschutz App und Website konsistent: „gespeichert wird nur der Vorname. Eine E-Mail-Adresse fragt Restwert nicht ab.“ (LegalView.swift:41; site/datenschutz.html)"
+  ],
+  "offen": [
+   "Polizei-/Sperrhinweis bei XL weiter unter der Falz (gross/scan-v09) – unverändert zu R18"
+  ],
+  "befunde": [
+   {
+    "screen": "gross/scan-v09",
+    "befund": "Für Senioren mit großer Schrift gehört „Anzeige bei der Polizei“ in den ersten sichtbaren Absatz; derzeit endet die Box im Verlauf bei „lass das Guthaben sperren“.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "AppleAccount.swift:8-9, 22, 87; SettingsView.swift:418, 436-437",
+    "befund": "Veraltete Kommentare/Restcode: „E-Mail wird noch angezeigt, falls vorhanden“, „Apple liefert Name und E-Mail“; E-Mail-Anzeigezweig in den Einstellungen ist nach der Migration toter Code. Keine Datenschutzwirkung, aber verwirrend bei einem Audit.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "AppleAccount.swift:89",
+    "befund": "Fehlt givenName, wird familyName als „Vorname“ gespeichert – widerspricht leicht „gespeichert wird nur der Vorname“ (LegalView.swift:41). Seltener Randfall.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches. Wünschenswert: Polizei-Hinweis bei großer Schrift sichtbar, E-Mail-Reste im Code aufräumen, kein Nachname als Vorname-Ersatz.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Tarek A., 29, Deutsch als Zweitsprache (B1), Lagerlogistiker (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Verständlichkeit der Warnungen und Schutztexte",
+  "scores": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Alle drei Punkte erledigt: „Abdul Karim“ bleibt stehen, weil die Kürzung nur einmal läuft, „Die Anmeldung sperrt die App nicht“ verstehe ich sofort, und der Abmelde-Dialog sagt „Vornamen“. Jetzt empfehle ich die App meinen Kollegen wieder.",
+  "behoben": [
+   "Zweiteiliger Vorname bleibt: Kürzung und Merklisten-Umstellung nur einmal (Merker, AppleAccount.swift:49-59); Apple-givenName wird nicht mehr gesplittet (Z. 89-90)",
+   "„Ein Tipp, bestätigt mit Face ID. Die Anmeldung sperrt die App nicht – dafür gibt es „Schutz“.“ (OnboardingView.swift:526; einstieg-anmelden, einstieg-anmelden-dunkel)",
+   "Abmelde-Dialog: „Deinen Vornamen merkt sich Restwert …“ (SettingsView.swift:464)",
+   "„begrüßt dich mit deinem Vornamen“ (OnboardingView.swift:535)"
+  ],
+  "offen": [
+   "„bereit für kommende Funktionen“ weiter vage (OnboardingView.swift:535; einstieg-anmelden)",
+   "„Später“ weiter klein und grau unter dem großen Apple-Knopf (OnboardingView.swift:127; einstieg-anmelden) – durch „Freiwillig“ entschärft"
+  ],
+  "befunde": [
+   {
+    "screen": "einstieg-anmelden / OnboardingView.swift:535",
+    "befund": "„ist bereit für kommende Funktionen“ sagt B1-Lesern nicht, was kommt; ohne den Halbsatz wäre der Text kürzer und ehrlicher.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz / SettingsView.swift:112",
+    "befund": "Fußtext ist mit vier Sätzen lang; „iPhone-Code ist der Code, mit dem du dein iPhone entsperrst“ hilft, steht aber ganz am Ende.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches. Wünschenswert: „kommende Funktionen“ streichen oder konkret machen.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Timo Brandt, 31, iOS-Entwickler und erfahrener TestFlight-Beta-Tester (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Codequalität, Tests, Scan-Pipeline (Vision/Fallbacks), Sperrlogik",
+  "scores": {
+   "gesamt": 8,
+   "scan": 7,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 8,
+   "scan": 7,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Meine beiden mittleren Regressionen aus R18 sind behoben, und meine Probe probe19c bestätigt das: Praktisch, Fantastisch, Asiatisch, Tischdecken und Tischlerei ergeben wieder ein Angebot, und 'Gratis Kaffee im Wert von 3,50 €' bleibt ein Coupon. 170/170 Tests sind grün, der Namens-Merker läuft einmalig. Die isDiscount-Korrektur schießt aber wieder über das Ziel hinaus. Jetzt schlägt jedes benefit den Gutscheinwert, sodass 'Wertgutschein 50 € / Gratis Kaffee dazu' als Coupon ohne Summe endet. Das ist die R16-Datenverlust-Klasse, nur aus der anderen Richtung.",
+  "behoben": [
+   "Zeilenfilter mit Wortgrenze (TextParser.swift:182): 'Praktisch: 3 für 2 …', 'Fantastische Aktion: 2 für 1', 'Asiatische Wochen 2 für 1', '3 für 2 auf Tischdecken', 'Coupon Tischlerei Holz / 3 für 2', '2 für 1 … – Reservierung empfohlen' ergeben benefit gesetzt, kind coupon (Probe probe19c)",
+   "'Coupon / Gratis Kaffee im Wert von 3,50 €' und 'Coupon / 2 für 1 Pizza / Wert bis 12 €' ergeben isDiscount true, kind coupon (TextParser.swift:38)",
+   "'Tisch reserviert: 4 für 2' bleibt kein Gutschein, Negativ- und Positivtests wörtlich (CouponScanTests.swift:248-256)",
+   "Namenskürzung nur einmal per Merker 'appleAccountMigratedV2' (AppleAccount.swift:47-59)",
+   "'Hotel Alpenblick / Gratis Parkplatz / Doppelzimmer 89 €' zählt nicht mehr als 89-€-Wertgutschein (wird Coupon)"
+  ],
+  "offen": [
+   "'Coupon / 30 % auf Sonnenbrillen (Wert max. 20 €)' ergibt weiter Wertgutschein 20 €, isDiscount false, kind nil (Probe). 'Wert max.' zählt als Guthaben",
+   "'Menü 3 für 2 Erwachsene' ergibt Coupon, 'Kostenloser Parkplatz-Service' ergibt 'Gratis Parkplatz-Service' (Probe, ^…$-verankerte Ausschlussliste)",
+   "isPlausibleCode: 'EURO10-X7K9'/'EUROPA-2026-AB' false, '1250.00' true (Probe PLAUS)",
+   "Negativtests weiter nur auf TextParser.benefit/parse, nicht auf ScanDraft.merge/looksLikeVoucher. Doppeltes fixedSize (RestwertApp.swift:448-449), providers.prefix(20) (RestwertShare/ShareViewController.swift:58), kein XCUITest"
+  ],
+  "befunde": [
+   {
+    "screen": "RestwertKit/TextParser.swift:38 + CardFormView.swift:709/738 + Models.swift:326-327",
+    "befund": "Neue Regression durch 'isDiscount = benefit != nil || …': Ein Wertgutschein mit Beigabe wird zum Coupon. 'Wertgutschein 50 € / Gratis Kaffee dazu' ergibt value 50, benefit 'Gratis Kaffee', isDiscount true, kind coupon, ebenso 'Geschenkgutschein 25 € / 2 für 1 Cocktails am Dienstag' (Probe probe19c). Das Formular setzt kind = .coupon, und countsTowardTotal verlangt kind.isValueBased. Die 50 € bzw. 25 € fehlen danach in der Summe. Außerdem überspringt Importer.swift:184 bei isDiscount die EAN-Prüfung der Nummer. 'Wert schlägt Angebot' fehlt jetzt für echte Gutscheinwerte ('Gutschein/Wertgutschein/Geschenkgutschein X €'). Einen Test dafür gibt es nicht.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "RestwertKit/TextParser.swift:182",
+    "befund": "Die Wortgrenze lässt die zusammengesetzten Formen durch. 'Restaurant Linde / Tischreservierung: 4 für 2' und 'Restaurant Linde / Reservierung: 4 für 2' ergeben jetzt Coupon '4 für 2' (Probe). R18 hatte 'reserv' ohne Grenze gefiltert, das ist also eine Rückkehr der R16-Fehlerklasse in Nebenformen. Dazu der umgekehrte Fall: 'Coupon / Tisch-Kicker 2 für 1' ergibt benefit nil, weil \\b vor dem Bindestrich greift. Besser wäre '\\b(?:tisch\\w*reserv|reservier(?:t|ung))' in Verbindung mit fehlendem Coupon-Kontext.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "RestwertKit/Tests/RestwertKitTests/CouponScanTests.swift:248-256",
+    "befund": "Der neue Test prüft Positivfälle und den Artikelwert, aber keinen Gegentest 'Wertgutschein X € mit Gratis-Beigabe bleibt Wertgutschein'. Deshalb fällt die Regression oben nicht auf. Mein Wunsch aus R18 nach Tests auf merge/looksLikeVoucher-Ebene ist offen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Features/Home/HomeView.swift:479",
+    "befund": "'let big = !typeSize.isAccessibilitySize' heißt genau das Gegenteil von dem, was der Name sagt. Die Zeile :505 'big ? \"Nur Beispiele – dein erster …\" : \"Nur Beispiele\"' stimmt zwar, liest sich aber wie ein Fehler. Umbenennen in 'regular' oder 'compact' umkehren.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "isDiscount so fassen, dass ein erkannter Gutscheinwert ('Gutschein/Wertgutschein/Geschenkgutschein X €') auch mit Beigabe Wertgutschein bleibt und nur 'im Wert von/Wert bis/max.' dem Artikel zugeordnet wird. Reservierungs-Komposita filtern, Tests auf merge-Ebene für beide Richtungen, dazu ein XCUITest Scan → Rückseite → Speichern.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Rainer Köhler, 48, Kassen- und Scanner-Techniker (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Barcode-Darstellung an der Kasse: Symbologien, Ruhezonen, Kontrast, Rücklesbarkeit",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Nach fünf Runden gibt es endlich meinen Code-128-Modulzahltest, und zwar sauber. (n−13) mod 11 = 0, Stopp-Muster 2331112 bitgenau, Satz C kürzer als Buchstaben, Nicht-ASCII ergibt nil. In meiner Probe erfüllen auch 'A' (46), 7 Ziffern (90, ungerade → Satz-Wechsel), Tab und DEL die Norm. 'Tippen zum Vergrößern' ist jetzt 13 pt in ink2 wie das Vollbild-Label. Am Scan-Ergebnis hat sich für die Kartennummer aber nichts getan: Die Code-Kachel steht weiter hinter 'Barcode an der Kasse: nicht gelesen'.",
+  "behoben": [
+   "Code-128-Modulzahltest im Paket (ModuleCountTests.swift:38-54, Code128.swift). Die App nutzt dieselbe Funktion (BarcodeView.swift:61), eigene Probe: alle Längen ≡ 13 mod 11",
+   "'Tippen zum Vergrößern' 13 pt ink2 (CheckoutView.swift:398), 'Tippen für Vollbild' jetzt auch bei XL (CheckoutView.swift:327)",
+   "Beim eigenen Café-Gutschein kein Banner mehr über der Kasse (laut Protokoll VoiceOver-Ansage), damit ist der Zurück-Knopf frei"
+  ],
+  "offen": [
+   "scan-vorder-rueckseite.png: 'Barcode an der Kasse: nicht gelesen – im nächsten Schritt wählen' bei 16-stelliger Kartennummer '6280 1234 5678 9012', kein Vorschlag 'Code 128 aus Nummer'",
+   "Code-Kachel (wide) wird hinter Barcode/PIN angehängt (ScanResultView.swift:126-138, :275-277, sichtbar in scan-vorder-rueckseite.png)",
+   "fallbackCache ohne Obergrenze (BarcodeView.swift:87)"
+  ],
+  "befunde": [
+   {
+    "screen": "scan-vorder-rueckseite.png, ScanResultView.swift:126-138",
+    "befund": "Weiter unverändert: 'Barcode an der Kasse' und 'PIN' stehen oben, der 'Code', auf den sie sich beziehen, erst darunter. VoiceOver liest es in derselben Reihenfolge. Die breite Kachel gehört vor die Barcode-Kachel, zum Beispiel indem man wide-Kacheln an ihrer Einfügeposition rendert.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-vorder-rueckseite.png",
+    "befund": "Bei der reinen 16-stelligen Kartennummer ohne gelesenen Barcode bleibt die Wahl beim Nutzer. Für Geschenkkarten mit Nummer, aber ohne EAN-Prüfziffer, wäre 'Code 128 aus der Nummer' eine sichere Vorbelegung, die sich nach dem neuen Test belegbar normgerecht zeichnet.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "RestwertKit/Code128.swift:13-22",
+    "befund": "Die Module werden aus dem gerenderten CIImage über die mittlere Pixelzeile gelesen. Das ist robust, hängt aber von der 1-px-pro-Modul-Ausgabe von Core Image ab. Der neue Test fängt eine Änderung dort ab, das ist gut so. Eine eigene Tabellen-Kodierung wäre unabhängiger (kein Fehler, nur Hinweis).",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Vorbelegung 'Code 128 aus Nummer' für reine Kartennummern, die Code-Kachel vor 'Barcode an der Kasse' und eine Obergrenze für den fallbackCache.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Svenja Albrecht, 36, QA-Testerin, testet systematisch im Simulator (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Nachweise gegen Protokoll abgleichen, Testfälle v01–v15, Konsistenz von Texten und Zuständen",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Protokoll und Stand passen diesmal zusammen: 170 Tests im Protokoll, 170 in meinem Lauf, und die Screenshots sind nach den jeweiligen Commits entstanden. gross-start zeigt jetzt 'Nur Beispiele' und die zweizeilige Zählweise ohne verwaistes 'ab', der Kasse-Knopf bleibt sichtbar. Unbeantwortet ist zum zweiten Mal die Doppelzeile 'Café am Markt · für Familie Weber' in liste-ausgestellt. Auch 'Seiten-/weise' steht weiter im Scan-Ergebnis.",
+  "behoben": [
+   "gross-start.png: 'Nur Beispiele' auch bei XL (HomeView.swift:504-505)",
+   "gross-start.png: '5 Gutscheine + 1 Code' / '2 laufen bald ab' zweizeilig, kein 'ab' allein (HomeView.swift:462-470)",
+   "Protokoll nennt 170 Tests, eigener Lauf 'Test run with 170 tests in 28 suites passed'",
+   "Einheitliche Wortwahl 'zeigen' (CheckoutView.swift:154, SettingsView.swift:88, HomeView.swift:562, RestwertApp.swift:620)",
+   "kontrast-einstellungen.png: deutlich dunklerer Grund, weiße Karten heben sich ab (SettingsView.swift:646-660)"
+  ],
+  "offen": [
+   "liste-ausgestellt.png (00:31): zwei identische Zeilen 'Café am Markt 25,00 € · für Familie Weber'. Seit R17 ohne Antwort, ob Seed-Duplikat oder fehlende Duplikatprüfung",
+   "scan-vorder-rueckseite.png: 'Buchhandlung Seiten-/weise' weiter getrennt",
+   "Bei XL fehlt weiter 'Der Rabattcode zählt nicht zur Summe' (HomeView.swift:499-503). '+ 1 Code' deutet es nur an",
+   "Kein Screenshot der Abschlussbilanz, kein XCUITest"
+  ],
+  "befunde": [
+   {
+    "screen": "liste-ausgestellt.png",
+    "befund": "Dritte Runde mit derselben Doppelzeile. Die Überschrift 'Selbst ausgestellt · 50,00 € offen bei Kunden' rechnet beide mit. Falls das ein echtes Duplikat aus dem Screenshot-Skript ist, zeigt der Nachweis eine falsche Summe. Falls nicht, fehlt eine Duplikatwarnung beim Ausstellen. Das braucht in jedem Fall eine Antwort im Protokoll.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-start.png, HomeView.swift:499-503",
+    "befund": "Die Zählweise ist jetzt einheitlich, der Satz, dass der Code nicht in 136,25 € steckt, entfällt bei XL aber weiter. Die erste Karte darunter ist ausgerechnet der Rabattcode 'Modehaus Kranz 15 %'. Kurzform-Vorschlag: '+ 1 Code (nicht in Summe)' in der Caption selbst.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Protokoll Punkt 9 vs. Store.swift:770-771",
+    "befund": "'Später eintragen' ist jetzt still bei Schutz, aber nur für neu geplante Nachfragen. Eine vorher geplante '-later'-Mitteilung behält den Laden im Titel, wenn man danach den Schutz einschaltet: replanReminders entfernt '-later' nur ohne pendingSince und plant sie nicht neu. Das ist ein Testfall, den das Protokoll nicht abdeckt.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Die Doppelzeile klären (Seed oder Duplikatprüfung), 'Seitenweise' ohne Trennung, den Rabattcode-Hinweis bei XL in Kurzform, einen Nachweis-Screenshot der Abschlussbilanz und einen XCUITest-Lauf.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Markus Weidner, 42, IT-Administrator, datenschutzbewusst (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Datenfluss, Speicherung, Zwischenablage, Logs, App-Sperre und Code-Schutz, Apple-Anmeldung",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 7,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Beide mittleren Befunde aus R18 sind behoben. Meine BackProbe zeigt jetzt 'refs after remove: nil, file exists: false, resurrected: false', und auch der Weg 'Neustart → geladen → entfernt' löscht die Datei. 'Später eintragen' nennt bei Schutz keinen Laden mehr. Die Migration läuft einmalig und entfernt gespeicherte E-Mails. Übrig sind kleinere Datenschutzreste, die seit Runden offen sind, dazu eine Lücke bei schon geplanten Mitteilungen.",
+  "behoben": [
+   "Entfernte Rückseite wird gelöscht und kommt nicht zurück (Persistence.swift:201-204, Test DataIntegrityTests.swift:434-441, eigene Probe backprobe/backprobe2)",
+   "'Später eintragen' bei App-Sperre/Code-Schutz ohne Laden (CheckoutView.swift:529-531), passt zum Fußtext SettingsView.swift:112",
+   "Namenskürzung nur einmal per Merker, selbst eingetragener Doppelvorname bleibt (AppleAccount.swift:47-59)",
+   "Keine E-Mail mehr gespeichert, alte wird entfernt (AppleAccount.swift:56-57, Zeile 'credential.email' entfernt)",
+   "Abmelde-Dialog sagt 'Vornamen' (SettingsView.swift:464)"
+  ],
+  "offen": [
+   "Fallback 'givenName ?? familyName' speichert einen Nachnamen als Vornamen (AppleAccount.swift:89)",
+   "Name in userInfo jeder Ablauf-Erinnerung (Store.swift:835)",
+   "Übergabedateien nachträglich per try? geschützt (RestwertShare/ShareViewController.swift:87)",
+   ".notFound führt zu signOut(forget: true) (AppleAccount.swift:128)",
+   "Rückseiten synchron per Self.io.sync im Start-Pfad (Store.swift:117-120)"
+  ],
+  "befunde": [
+   {
+    "screen": "App/Store.swift:770-771 + SettingsView.swift:281-282",
+    "befund": "Schaltet man App-Sperre oder Code-Schutz ein, ruft onChange scheduleReminders auf. replanReminders behält bestehende '-later'- und '-snooze'-Mitteilungen aber unverändert (drop nur ohne pendingSince bzw. ohne Karte), sodass bereits geplante 'Hast du bei <Laden> bezahlt?' und vertagte Erinnerungen mit Laden und Betrag trotzdem auf dem Sperrbildschirm erscheinen. Der Fußtext verspricht das Gegenteil. Beim Umschalten sollten beide neu geplant oder stumm ersetzt werden.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "App/AppleAccount.swift:89",
+    "befund": "Unverändert: Liefert Apple nur familyName, wird der Nachname als 'Vorname' gespeichert und begrüßt. Das widerspricht dem Datenschutztext 'gespeichert wird nur der Vorname'.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "App/Store.swift:835",
+    "befund": "Der Ladenname steht weiter in userInfo jeder Ablauf-Erinnerung. Das ist nicht sichtbar, liegt aber im Mitteilungsspeicher, auch wenn Titel und Text still sind. Für Snooze reicht die ID, den Namen kann man beim Tippen aus dem Store holen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "App/Store.swift:117-120",
+    "befund": "Die Rückseiten werden weiter synchron im Start-Pfad gelesen (io.sync auf dem Main-Thread), anders als die Vorderseiten, die loadPhotos asynchron nachlädt. Das ist kein Datenschutzfehler, aber es bleibt uneinheitlich.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Geplante '-later'- und '-snooze'-Mitteilungen beim Einschalten des Schutzes still neu planen, kein Nachname als Vorname-Fallback, userInfo ohne Namen, Übergabedateien direkt geschützt schreiben, .notFound nicht wie Widerruf behandeln, Rückseiten asynchron laden.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Mara Lindqvist, 33, UX-Designerin in einer Hamburger Produktagentur, achtet auf Hierarchie und Konsistenz (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Visuelle Hierarchie und Konsistenz: Start bei XL, Einlösen, Meldungen, Einstellungen, Kontrast, Scan-Ergebnis",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Drei meiner vier Punkte aus Runde 18 sind erledigt. Beim eigenen Gutschein liegt keine Meldung mehr über dem Kartenkopf, „Café am Markt“ steht bei XL vollständig da. Die Guthabenkarte bricht bei XL sauber in „5 Gutscheine + 1 Code“ / „2 laufen bald ab“ um. Die Einstellungen heben sich bei erhöhtem Kontrast endlich ab. Neu stört mich aber der Betrag auf der Guthabenkarte in gross-start-bestand: Er ist dort deutlich kleiner als in gross-start.",
+  "behoben": [
+   "Keine Meldung mehr über dem Kartenkopf der Einlöse-Seite, Ladenname bei XL vollständig (gross-eigener-gutschein-einloesen, eigener-gutschein-einloesen)",
+   "Kein verwaistes „ab“ mehr: bei Bedienungshilfen-Größen zwei Zeilen (Features/Home/HomeView.swift:469; gross-start, gross-start-bestand)",
+   "Einstellungen bei erhöhtem Kontrast mit dunklerem Grund, die weißen Karten heben sich ab (Features/Settings/SettingsView.swift:646-660; kontrast-einstellungen)",
+   "„Nur Beispiele“ bleibt bei XL sichtbar, Kasse-Knopf der ersten Karte trotzdem über der Tab-Leiste (gross-start)"
+  ],
+  "offen": [
+   "scan-vorder-rueckseite: Die Kachel „Barcode an der Kasse: nicht gelesen – im nächsten Schritt wählen“ ist dreizeilig, die PIN-Kachel daneben einzeilig. Das Raster bleibt ungleich hoch.",
+   "scan-rueckseite-angebot (Knopfordnung) auch diesmal nicht neu vorgelegt"
+  ],
+  "befunde": [
+   {
+    "screen": "gross-start-bestand / Features/Home/HomeView.swift:485",
+    "befund": "Der Betrag „145,15 €“ ist in gross-start-bestand sichtbar kleiner als „136,25 €“ in gross-start, obwohl die Schriftgröße gleich ist. Die Cents sind winzig, und die Zahl wirkt kaum größer als das Label „Guthaben“ darüber. Die wichtigste Zahl der App verliert dort ihre Hierarchie. Ursache nicht belegt, vermutlich wurde während der Betragsanimation (.animation(.snappy, value: total)) aufgenommen oder anders skaliert.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "kontrast-start vs. kontrast-einstellungen",
+    "befund": "Zwei Lösungen für dasselbe Problem: Auf dem Start bekommen die Karten bei erhöhtem Kontrast einen dunklen Rand, in den Einstellungen wird dafür der Grund dunkler und die Karten bleiben randlos. Beides funktioniert, als System ist es aber uneinheitlich.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gespeichert-im-tab",
+    "befund": "Die Meldung „„Douglas“ gespeichert“ sitzt ohne Luft direkt auf der Oberkante der Überschrift „Hinzufügen“. Sie verdeckt nichts, wirkt aber gequetscht.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-vorder-rueckseite",
+    "befund": "Ungleich hohe Kacheln (Barcode dreizeilig, PIN einzeilig). Die einzige Kachel mit Handlungsbedarf ist nicht hervorgehoben.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Der Guthabenbetrag in allen Zuständen gleich groß; eine einzige Kontrast-Sprache (Rand oder dunkler Grund); ein ruhiges Kachelraster im Scan-Ergebnis mit hervorgehobener „nicht gelesen“-Kachel; etwas Abstand unter der oberen Meldung.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Jule Okafor, 30, Community-Managerin für Beta-Programme bei einem Fintech, liest Feedback von Hunderten Testern (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Was Beta-Tester melden würden: Protokoll gegen Screenshots, Support-Last; Anmeldung/Konto, Meldungen, Einlösen, Texte",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Das Protokoll stimmt wieder mit den Bildern. Die Einlöse-Seite ist frei, der Einstieg sagt „mit deinem Vornamen“ und „Die Anmeldung sperrt die App nicht“. Das Ticket aus Runde 18 ist damit weg. Ein neues sehe ich trotzdem: In „So schützt Restwert deine Daten“ steht noch „Es gibt keine Anmeldung“, obwohl eine Seite darüber „Angemeldet mit Apple“ steht.",
+  "behoben": [
+   "Keine Meldung mehr über Laden oder Einlöse-Knopf beim eigenen Gutschein (eigener-gutschein-einloesen, gross-eigener-gutschein-einloesen; VoiceOver-Ansage statt Banner)",
+   "„Restwert begrüßt dich mit deinem Vornamen“ (Features/Onboarding/OnboardingView.swift:535; einstieg-anmelden)",
+   "Guthabenkarte mit einer Zählweise: „5 Gutscheine + 1 Code · 2 laufen bald ab“ plus „Der Rabattcode zählt nicht zur Summe“ (dunkel-start, kontrast-start). Weniger Rückfragen zur Summe."
+  ],
+  "offen": [
+   "Weiterhin kein Screenshot der Bilanz nach einer Mehrfachauswahl, nur mehrere-fotos und mehrere-fotos-kein-gutschein"
+  ],
+  "befunde": [
+   {
+    "screen": "Features/Settings/SettingsView.swift:577 (PrivacyExplainer, erreichbar über „So schützt Restwert deine Daten“, :215)",
+    "befund": "Die Zeile „Kein Konto, kein Server von uns – Es gibt keine Anmeldung und keine Datenbank bei uns“ widerspricht der Apple-Anmeldung im Konto-Abschnitt („Angemeldet mit Apple“, einstellungen-konto). Gemeint ist: kein Konto bei uns. So wie der Satz dasteht, ist er ein sicheres Vertrauens-Ticket („Was stimmt denn jetzt?“).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross-kasse",
+    "befund": "Bei XL liegt „PIN zeigen“ unter der Aktionsleiste, erst nach Scrollen sichtbar. Die Frage „Wo ist die PIN?“ an der Kasse ist ein naheliegendes Ticket.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "„Kein Konto bei uns“ statt „Es gibt keine Anmeldung“ im Datenschutz-Erklärer; ein Screenshot der Mehrfachauswahl-Bilanz; „PIN zeigen“ bei XL ohne Scrollen oder mit Hinweis.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Tobias Brandt, 40, Accessibility-Beta-Tester, stark sehbehindert, nutzt VoiceOver und große Schrift, prüft mit dem Accessibility Inspector im Simulator (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "VoiceOver-Labels, Dynamic Type, Tippziele, Kontrast; Start, Einstellungen, Kasse und Einlösen bei XL",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Endlich sind alle drei Punkte aus Runde 18 umgesetzt. Die Einlöse-Karte ist bei XL frei, und statt Banner gibt es eine VoiceOver-Ansage. Das Wort „ab“ steht nicht mehr allein. „Tippen für Vollbild“ steht auch bei großer Schrift da. Mit „Kontrast erhöhen“ heben sich die Einstellungen ab. Offen bleiben der Accessibility-Audit und ein kleinerer Betrag in gross-start-bestand.",
+  "behoben": [
+   "Keine Meldung mehr über dem Ladennamen bei XL, stattdessen eine VoiceOver-Ansage (gross-eigener-gutschein-einloesen; App/RestwertApp.swift:473-475)",
+   "„Tippen für Vollbild“ auch bei Bedienungshilfen-Größen, 13 pt skaliert, Color.ink2 (Features/Checkout/CheckoutView.swift:327; gross-kasse)",
+   "Guthabenkarte bei XL zweizeilig ohne einzelnes „ab“ (Features/Home/HomeView.swift:469; gross-start)",
+   "Kontrast in den Einstellungen: dunklerer Grund bei erhöhtem Kontrast (Features/Settings/SettingsView.swift:656-660; kontrast-einstellungen)"
+  ],
+  "offen": [
+   "Einstieg weiter auf accessibility1/2 begrenzt (Features/Onboarding/OnboardingView.swift:47, 79)",
+   "Kein dokumentierter Accessibility-Inspector-Audit, kein XCUITest (Protokoll „Weiterhin bekannte Grenzen“)"
+  ],
+  "befunde": [
+   {
+    "screen": "gross-start-bestand / Features/Home/HomeView.swift:485",
+    "befund": "Bei XL ist der Guthabenbetrag „145,15 €“ deutlich kleiner als in gross-start, die Cents sind mit Restsehvermögen kaum lesbar. Ausgerechnet die wichtigste Zahl ist dort kleiner als die Zeile „4 Gutscheine + 1 Code“ darunter.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross-kasse",
+    "befund": "„PIN zeigen“ und der Rest von „Helligkeit automatisch erhöht“ liegen bei XL unter dem Verlauf der Aktionsleiste. Dass es unten weitergeht, zeigt nur ein Verlauf, den ich mit Lupe nicht sehe.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kontrast-einstellungen",
+    "befund": "Die Abschnittsüberschrift „Schutz“ ist mittelgrau auf dem jetzt dunkleren grauen Grund und wirkt schwächer als ohne erhöhten Kontrast. Nicht gemessen, nur optisch.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Der Betrag bei XL immer in voller Größe; „PIN zeigen“ bei XL erreichbar ohne Suchen; ein dokumentierter Accessibility-Audit oder XCUITest; Einstieg auch über accessibility2.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Sabine Roth, 44, freie Texterin und Lektorin für Produkt- und Banking-Apps (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Mikrotexte, Glossar, Tonalität, Konsistenz: Anmeldung, Konto, Einstellungen, Coupons, Rückseite, Kasse",
+  "scores": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Es geht voran. „Die Anmeldung sperrt die App nicht“, „mit deinem Vornamen“, „deiner iCloud“ im Rechtstext und durchgehend „zeigen“ sind umgesetzt. Die Hälfte meines Glossars steht aber weiter unverändert da. Dazu kommen zwei neue Fundstellen im Datenschutz-Erklärer, eine davon inhaltlich falsch.",
+  "behoben": [
+   "„alles aus deiner iCloud“ (Features/Settings/LegalView.swift:49)",
+   "„Die Anmeldung sperrt die App nicht – dafür gibt es „Schutz““ (einstieg-anmelden; Features/Onboarding/OnboardingView.swift:526)",
+   "„begrüßt dich mit deinem Vornamen“ (Features/Onboarding/OnboardingView.swift:535)",
+   "„Code anzeigen“ ist verschwunden, durchgehend „zeigen“ (PIN zeigen in kasse; Features/Home/HomeView.swift)"
+  ],
+  "offen": [
+   "„Mindestbestellwert“ (Features/Scan/ScanResultView.swift:272; Features/Add/CardFormView.swift:479, 793)",
+   "„Tippe auf „Fertig““ (RestwertShare/ShareViewController.swift:212) gegen „Tipp unten auf „+““ (Features/Issue/IssueVoucherView.swift:127)",
+   "Kassenknöpfe in drei Satzformen: „Bezahlt – Einkauf abziehen“ / „Nicht angenommen“ / „Später eintragen“ (Features/Checkout/CheckoutView.swift:197, 226, 237; kasse)",
+   "„Rückseite neu“ ohne Verb sichtbar, nur das VoiceOver-Label sagt „scannen“ (Features/Scan/ScanView.swift:435-437; scan-vorder-rueckseite)",
+   "Sammelzeile „Schaltet PIN-Schutz, App-Sperre und Code-Schutz auf einmal ein“ passt nicht zu den Schalternamen „PIN mit Face ID schützen“, „App mit Face ID sperren“, „Gutscheincodes erst nach Face ID zeigen“ (Features/Settings/SettingsView.swift:70; einstellungen-schutz)",
+   "„Nur Code“ großgeschrieben mitten im Wert (Features/Scan/ScanResultView.swift:241, 335; scan-v15-coupon)"
+  ],
+  "befunde": [
+   {
+    "screen": "Features/Settings/SettingsView.swift:577",
+    "befund": "„Kein Konto, kein Server von uns – Es gibt keine Anmeldung …“ ist seit der Apple-Anmeldung sachlich falsch. Richtig wäre „Kein Konto bei uns“ bzw. „Die Anmeldung mit Apple ist freiwillig und legt kein Konto bei uns an“.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "Features/Settings/SettingsView.swift:578",
+    "befund": "„bevor er in dein eigenes iCloud geht“: die nächste abweichende iCloud-Form. Im Rechtstext steht jetzt „deiner iCloud“, im Erklärer „dein iCloud“.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v15-coupon vs. scan-vorder-rueckseite",
+    "befund": "Zwei verschiedene Betrugswarnungen für denselben Zweck: kurz „Gib Gutscheincodes nie am Telefon oder per Nachricht weiter.“ und lang „Kein Laden, keine Behörde und keine Firma … will betrügen.“ Eine Formulierung würde reichen.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Der Datenschutz-Erklärer passend zur Anmeldung („kein Konto bei uns“, „deine iCloud“); dazu der Rest des Glossars in einem Durchgang: „Mindesteinkauf“, „Tipp“/„Tippe“ einheitlich, eine Satzform an der Kasse, „Rückseite neu scannen“ sichtbar, Sammelzeile gleich den Schalternamen, „nur Code“ klein, eine Betrugswarnung.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Rüdiger, 52, Schnäppchenjäger mit über 40 Gutscheinen aus Aktionen, Cashback und Geschenken (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Überblick bei vielen Karten, Verfallsradar, schnelles Erfassen, Kasse, Coupons",
+  "scores": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Guthabenkarte zählt jetzt sauber: „5 Gutscheine + 1 Code · 2 laufen bald ab“ mit „Der Rabattcode zählt nicht zur Summe“. Das passt zu den beiden Karten darunter (Modehaus Kranz 15 %, Wohnwerk). Store-Bild 05 zeigt endlich die Seite „Ablauftermine“ mit dem Radar oben. Das Radar-Bündel sagt aber noch „3 Gutscheine“ inklusive Rabattcode, und der Hinweis „1 weiterer“ steckt weiter unter der Tab-Leiste.",
+  "behoben": [
+   "Eine Zählweise auf der Guthabenkarte: „5 Gutscheine + 1 Code · 2 laufen bald ab“, „bald ab“ zählt den Code mit wie die Karten darunter (dunkel-start, 01_start, 07_start_dunkel)",
+   "Ziel des › belegt: Store-Bild 05_radar zeigt „Ablauftermine“ mit Verfallsradar oben, Kopfzeile „2 in 30 Tagen · 50 €“ passend zur Karte"
+  ],
+  "offen": [
+   "Radar-Bündel zählt den Rabattcode als Gutschein: „95 € + 20 % / 3 Gutscheine“ (start-bestand-unten; ExpiryRadar.swift:500)",
+   "„1 weiterer steht unten in der Liste.“ liegt in start-viele-fristen weiter unter der Tab-Leiste (HomeView.swift:175)",
+   "Demo-Läden „KM Kaffee“ und „Schreibwaren Stahl“ (RestwertApp.swift:359) fehlen in der Liste erfundener Läden (docs/appstore/README.md:84)"
+  ],
+  "befunde": [
+   {
+    "screen": "start-bestand-unten / Restwert/Design/ExpiryRadar.swift:500",
+    "befund": "Die Karte oben sagt „+ 1 Code“, das Radar-Bündel darunter „95 € + 20 % / 3 Gutscheine“. Die Beschriftung zählt jedes Element als „Gutschein“, auch den Rabattcode. Das ist die letzte der drei Zählweisen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-viele-fristen / Restwert/Features/Home/HomeView.swift:175",
+    "befund": "Die dritte Karte (Wohnwerk) wird von der Tab-Leiste angeschnitten, „1 weiterer steht unten in der Liste.“ ist nur als „1“ am linken Rand zu ahnen. Seit Runde 17 unverändert.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "docs/appstore/README.md:84",
+    "befund": "Die Liste erfundener Läden nennt „Schreibwaren Stahl“ und „KM Kaffee“ nicht, obwohl beide in den Demodaten stehen (RestwertApp.swift:359) und Stahl im Radar erscheint.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Radar-Bündel wie die Karte zählen („2 Gutscheine + 1 Code“) und den „weitere“-Hinweis über der Tab-Leiste zeigen. Mehr fehlt nicht, dann empfehle ich die App aktiv weiter.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Meltem, 41, Besitzerin eines kleinen Cafés, gibt eigene handgeschriebene Papiergutscheine aus und nimmt sie an (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Papiergutscheine ohne Code, Foto an der Kasse, Nutzen für Ladeninhaber",
+  "scores": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 6
+  },
+  "scores_runde18": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Das Einlösen meines eigenen Gutscheins ist jetzt sehr ruhig: Laden, Guthaben, QR-Code und ein Knopf, keine Meldung darüber. Das gefällt mir. Von meinen vier Punkten aus Runde 18 ist aber wieder keiner erledigt. Der XL-Teilen-Knopf ist zum zehnten Mal angeschnitten, und die beiden Weber-Gutscheine sehen weiter genau gleich aus.",
+  "behoben": [
+   "Keine Meldung mehr über der Kasse beim eigenen Gutschein, dafür eine VoiceOver-Ansage (eigener-gutschein-einloesen; ScanView.swift:594-595)"
+  ],
+  "offen": [
+   "XL: „Gutschein teilen oder drucken“ unten angeschnitten, die Home-Leiste liegt auf „oder drucken“ (gross-ausgeben)",
+   "Zwei Weber-Gutscheine nicht zu unterscheiden: zweimal „Café am Markt / bis 31.12.2029 / für Familie Weber / 25,00 € von 25,00 €“ (liste-ausgestellt, liste-ausgestellt-unten)",
+   "Eigener Gutschein in einer Fotoreihe verwirft die übrigen Fotos (ScanView.swift:591 dropPendingBatch). Jetzt ganz ohne sichtbare Meldung, nur die VoiceOver-Ansage (ScanView.swift:595)",
+   "Kein Screenshot der Detailansicht eines ausgestellten Gutscheins mit Verlauf nach Teil-Einlösung"
+  ],
+  "befunde": [
+   {
+    "screen": "gross-ausgeben",
+    "befund": "Der schwarze Knopf „Gutschein teilen oder drucken“ endet am Bildschirmrand, der Home-Balken liegt auf „oder drucken“. Store-Bild 07 sagt dazu „Hell, dunkel und große Schrift – alles passt.“",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "liste-ausgestellt",
+    "befund": "Beide Weber-Zeilen sind völlig gleich, auch im Betrag. Ohne Code-Ende (etwa „…JG9N“) weiß ich an der Theke nicht, welcher welcher ist.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Restwert/Features/Scan/ScanView.swift:587-596",
+    "befund": "Scanne ich eine Reihe von Fotos und eines ist mein eigener Gutschein, springt die App zur Kasse und verwirft die restlichen Fotos. Seit das Banner weg ist, sieht ein sehender Nutzer gar keinen Hinweis mehr, dass die anderen Fotos nicht gelesen wurden. Das ist schlechter als in Runde 18.",
+    "schwere": "mittel"
+   }
+  ],
+  "was_fehlt_zur_10": "XL-Teilen-Knopf ganz auf dem Bildschirm, Code-Ende zum Unterscheiden gleicher Gutscheine, eine Fotoreihe, die nach meinem Gutschein weiterläuft oder sichtbar sagt, was mit den anderen Fotos passiert, und ein Beleg für die Detailansicht mit Verlauf.",
+  "wuerde_nutzen": true,
+  "nps": 7
+ },
+ {
+  "persona": "Lea, 21, Studentin, will alles in Sekunden erledigt haben (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Tempo, wenige Taps, Screenshot/Mail-Import, schnell an die Kasse",
+  "scores": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Alles bleibt schnell. In der Foto-Reihe gibt es für Zalando drei Knöpfe, an der Kasse einen großen Barcode mit „PIN zeigen“, und die Scan-Kachel sagt jetzt klar „Barcode und Text werden automatisch gelesen – auf Wunsch auch die Rückseite.“ Das „Überspringen“ im Einstieg ist weiter nur ein Sprung zur Anmeldung.",
+  "behoben": [
+   "Scan-Kachel verständlich: Vorderseite automatisch, Rückseite auf Wunsch (gespeichert-im-tab)",
+   "Einheitlich „zeigen“ (PIN zeigen) an der Kasse (kasse)",
+   "Gespeichert-Meldung oben mit „Ansehen“, verdeckt nichts (gespeichert-im-tab)"
+  ],
+  "offen": [
+   "„Überspringen“ führt weiter zur Anmeldeseite (OnboardingView.swift:67), laut Protokoll bewusst so"
+  ],
+  "befunde": [
+   {
+    "screen": "einstieg-anfang / Restwert/Features/Onboarding/OnboardingView.swift:67",
+    "befund": "„Überspringen“ springt zur Anmeldeseite (accountPage), erst dort geht es mit „Später“ weiter. Ein Tipp mehr. Die Begründung verstehe ich, aber so ist es kein echtes Überspringen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-vorder-rueckseite",
+    "befund": "Der Ladenname wird im Ergebnis getrennt („Buchhandlung Seiten-/weise ✦“). Das stört nicht, sieht aber unruhig aus.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Ein „Überspringen“, das direkt in die App führt. Sonst ist alles in Sekunden erledigt. Ich zeige die App Freundinnen.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Tobias, 39, Tech-Journalist, schreibt ein App-Review für ein Online-Magazin (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Gesamtqualität, Ehrlichkeit der Erkennung, Datenschutz, Sicherheitsmodell, Details, App-Store-Auftritt",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde18": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Meine Befunde wurden diesmal fast vollständig bearbeitet. Der Hinweis an die App-Prüfung beschreibt Abmelden und Vorname jetzt korrekt, die Store-Bilder 01/05/07 zeigen genau den Build (Pfeil ›, „+ 1 Code“), die Scan-Kachel ist eindeutig, und die Konto-Ansicht bleibt vorbildlich datensparsam. Übrig bleibt vor allem ein Werbesatz im Store, den der Build bei großer Schrift nicht hält.",
+  "behoben": [
+   "Review-Hinweis korrekt: „Abmelden“ beendet die Anmeldung, der Vorname bleibt gemerkt, „Alles löschen“ entfernt alles (docs/appstore/README.md:99)",
+   "Store-Bilder aus dem aktuellen Stand, mit › und neuer Zählweise (docs/appstore/screenshots/01_start.png, 05_radar.png, 07_start_dunkel.png, alle 00:33 nach df57ffd)",
+   "Scan-Kachel: „Barcode und Text werden automatisch gelesen – auf Wunsch auch die Rückseite.“ (gespeichert-im-tab)",
+   "Zählweise auf der Guthabenkarte einheitlich (dunkel-start)"
+  ],
+  "offen": [
+   "Store-Bild 07 „große Schrift – alles passt“ vs. angeschnittener XL-Teilen-Knopf (gross-ausgeben)",
+   "Radar-Bündel zählt den Rabattcode als „Gutschein“ (ExpiryRadar.swift:500, start-bestand-unten)",
+   "Eigener Gutschein in einer Reihe verwirft die übrigen Fotos, jetzt ohne sichtbare Meldung (ScanView.swift:591-595)",
+   "Kein Wallet-Pass, kein XCUITest, kein Accessibility-Audit"
+  ],
+  "befunde": [
+   {
+    "screen": "docs/appstore/screenshots/07_start_dunkel.png / gross-ausgeben",
+    "befund": "Die Unterzeile verspricht „Hell, dunkel und große Schrift – alles passt.“ Im Build ist der Hauptknopf „Gutschein teilen oder drucken“ bei XL unten angeschnitten. Eine Werbeaussage, die ein Rezensent in zwei Minuten widerlegt.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "Restwert/Features/Scan/ScanView.swift:587-596",
+    "befund": "Nach dem Wegfall des Banners verwirft der Sprung zum eigenen Gutschein die Fotoreihe still: batchTotal/batchSaved werden auf 0 gesetzt, sehende Nutzer bekommen keine Bilanz.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "docs/appstore/README.md:84",
+    "befund": "Die Liste erfundener Läden ist unvollständig (Schreibwaren Stahl, KM Kaffee, Café am Markt fehlen), obwohl sie als Nachweis zu 5.2.1 dient.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "XL ohne Anschnitt (oder die Store-Zeile ehrlicher), eine sichtbare Bilanz der Fotoreihe beim eigenen Gutschein, das Radar mit derselben Zählweise wie die Karte. Für den Konkurrenzvergleich weiter ein Wallet-Pass.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ }
+]

@@ -414,7 +414,8 @@ struct ScanView: View {
                 Button("Trotzdem von Hand eintragen") { formSeed = FormSeed(outcome: nil) }.buttonStyle(.quiet)
             }
             // Mail-Text und reine Online-Codes haben keine Rückseite.
-            if !backFirst && outcome.duplicateID == nil && outcome.source != .text
+            // Coupons ebenso nicht: Angebot und Code stehen vorn.
+            if !backFirst && outcome.duplicateID == nil && outcome.source != .text && !outcome.draft.isDiscount
                 && outcome.draft.merchantID.flatMap({ Merchant.byID[$0] })?.category != .codeOnly {
                 backActions(outcome, prominent: false)
             }
@@ -432,7 +433,7 @@ struct ScanView: View {
                     .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
                     .symbolRenderingMode(.multicolor)
                 Spacer(minLength: 8)
-                Button("Rückseite neu") { showBackScanner = true }
+                Button("Rückseite ersetzen") { showBackScanner = true }
                     .font(.scaled(15, weight: .semibold))
                     .accessibilityLabel("Rückseite neu scannen")
             }
@@ -587,7 +588,11 @@ struct ScanView: View {
         if let scanned = result.barcode ?? result.draft.number,
            let own = store.cards.first(where: { $0.issuedByMe && plain($0.number) == plain(scanned) }) {
             withAnimation(reduceMotion ? nil : .smooth) { outcome = nil }
-            // Eigener Café-Gutschein in einer Reihe: die Reihe endet hier (Einlösen hat Vorrang).
+            // Eigener Café-Gutschein in einer Reihe: die Reihe endet hier (Einlösen hat Vorrang) – mit Hinweis.
+            let rest = batch.count
+            if rest > 0 {
+                router.toast = Toast(message: rest == 1 ? "Eigener Gutschein erkannt – 1 weiteres Foto wurde nicht gelesen." : "Eigener Gutschein erkannt – \(rest) weitere Fotos wurden nicht gelesen.", undo: nil)
+            }
             dropPendingBatch(); batchTotal = 0; batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
             router.tab = .home
             router.homePath = [.checkout(own.id)]

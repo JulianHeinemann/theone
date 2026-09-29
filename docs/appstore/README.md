@@ -81,7 +81,7 @@ Erste Version im App Store.
 In dieser Reihenfolge hochladen: 01_start, 02_checkout, 03_scan, 04_detail, 05_radar, 06_keypad, 07_start_dunkel.
 `screenshots/raw/` sind die unbearbeiteten Simulator-Aufnahmen. Neu erzeugen: `cd ios && scripts/store-screens.sh`.
 
-Alle Läden in Bildern, Beispielen und Einstieg sind erfunden (Modehaus Kranz, Wohnwerk, Buchhandlung Seitenweise, Parfümerie Blüte, Kaufhaus Lindner, Café Krone) – keine echten Marken (Richtlinie 5.2.1).
+Alle Läden in Bildern, Beispielen und Einstieg sind erfunden (Modehaus Kranz, Wohnwerk, Buchhandlung Seitenweise, Parfümerie Blüte, Kaufhaus Lindner, Café Krone, Café am Markt, Schreibwaren Stahl, KM Kaffee) – keine echten Marken (Richtlinie 5.2.1).
 
 ## App-Datenschutz („Nutrition Label“)
 

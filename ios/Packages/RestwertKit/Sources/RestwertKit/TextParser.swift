@@ -35,7 +35,13 @@ public struct CardDraft: Sendable, Equatable {
     /// (sonst fiele das Guthaben aus der Summe), „10 € Rabatt ab 50 €“ ist ein Coupon (50 € ist dort Mindestbestellwert).
     /// Ebenso ein Prozent-Zusatz („Gutschein 50 € + 10 % Rabatt“): Mit Gutscheinwert bleibt es ein Wertgutschein.
     /// Ein Angebot („Gratis Kaffee im Wert von 3,50 €“) ist immer ein Coupon: der Betrag ist der Wert des Artikels, kein Guthaben.
-    public var isDiscount: Bool { benefit != nil || (value == nil && (percent != nil || discountValue != nil)) }
+    /// Mit Gutscheinwert bleibt ein Angebot eine Beigabe („Wertgutschein 50 € + Gratis Kaffee“ zählt 50 €) –
+    /// außer der Betrag ist der Wert des Artikels („Gratis Kaffee im Wert von 3,50 €“).
+    public var isDiscount: Bool {
+        (benefit != nil && (value == nil || valueIsItemValue)) || (value == nil && (percent != nil || discountValue != nil))
+    }
+    /// Der gelesene Betrag ist der Wert eines Gratis-Artikels („im Wert von 3,50 €“), kein Guthaben.
+    public var valueIsItemValue = false
 
     /// Vorschlag für die Art: Rabatt mit Code (ohne Barcode) ist ein Rabattcode, sonst ein Aktionsgutschein.
     /// `nil` heißt: kein Rabatt erkannt, die Art bleibt beim Wertgutschein bzw. der Wahl des Nutzers.
@@ -90,6 +96,10 @@ public enum TextParser {
         d.recipient = recipient(in: t)
         d.minOrder = minOrder(in: t)
         d.benefit = benefit(in: t)
+        if d.benefit != nil, t.range(of: #"(?i)\bim\s+Wert\s+von\b"#, options: .regularExpression) != nil,
+           t.range(of: #"(?i)\b(?:wert|geschenk)gutschein\b"#, options: .regularExpression) == nil {
+            d.valueIsItemValue = true
+        }
         d.number = code(in: t, excluding: d.pin)
         return d
     }
@@ -179,7 +189,7 @@ public enum TextParser {
         // „2 für 1“, nicht „für 2 Personen“ und keine Preise („2 für 1,50 €“, „3 für 10 €“).
         let deal = #"(?i)(?<![\d.,])([1-9])\s*(?:für|fuer|for|zum\s+Preis\s+von)\s*([1-9])(?![.,]?\d)(?!\s*(?:,-|€|EUR\b|Euro\b|Person\w*|Pers\b|Pers\.|Std\b|Stunde\w*|Min\b|Minute\w*|Gäste\w*|Plätze\w*))"#
         // Zeilen mit Reservierung („Tisch reserviert: 4 für 2“) sind keine Angebote.
-        let offerLines = s.split(separator: "\n").filter { $0.range(of: #"(?i)\btisch\b|\breserviert\b"#, options: .regularExpression) == nil }
+        let offerLines = s.split(separator: "\n").filter { $0.range(of: #"(?i)\btisch(?:reservierung)?\b|\breserviert\b|\breservierung\s*:"#, options: .regularExpression) == nil }
             .joined(separator: "\n")
         for g in matches(deal, in: offerLines) {
             if let a = Int(g[1]), let b = Int(g[2]), a > b { return "\(a) für \(b)" }

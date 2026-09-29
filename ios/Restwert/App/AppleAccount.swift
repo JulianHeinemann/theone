@@ -6,23 +6,21 @@ import Security
 /// Optionale Anmeldung mit Apple – nur ein Profil auf diesem Gerät, kein Konto bei uns und kein Server.
 /// Gespeichert werden die anonyme Apple-Nutzerkennung (Schlüsselbund, nur dieses Gerät) und der Vorname
 /// (App-Einstellungen), den Apple nur bei der allerersten Anmeldung mitliefert. Ältere Stände hatten die E-Mail;
-/// sie wird noch angezeigt, falls vorhanden, aber nicht mehr angefragt. Gutscheine bleiben auf dem Gerät und im eigenen iCloud.
+/// sie wird beim ersten Start gelöscht und nicht mehr angefragt. Gutscheine bleiben auf dem Gerät und im eigenen iCloud.
 @Observable
 final class AppleAccount {
     static let shared = AppleAccount()
 
     private(set) var userID: String?
     private(set) var name: String
-    private(set) var email: String
     /// Letzter Fehler zum Anzeigen (Abbruch durch den Nutzer ist kein Fehler).
     var error: String?
 
     var isSignedIn: Bool { userID != nil }
 
-    /// Anzeigename: Vorname, sonst E-Mail, sonst neutral.
+    /// Anzeigename: Vorname, sonst neutral.
     var displayName: String {
         if !name.isEmpty { return name }
-        if !email.isEmpty { return email }
         return "Apple-Konto"
     }
 
@@ -36,11 +34,10 @@ final class AppleAccount {
     private init() {
         userID = Self.readUserID()
         name = UserDefaults.standard.string(forKey: Self.nameKey) ?? ""
-        email = UserDefaults.standard.string(forKey: Self.emailKey) ?? ""
         #if DEBUG
         // Nur für Screenshots: `-demoAppleName Julia` zeigt den angemeldeten Zustand (im Simulator gibt es keine Apple-Anmeldung).
         if let demo = UserDefaults.standard.string(forKey: "demoAppleName") {
-            userID = "demo"; name = demo; email = ""
+            userID = "demo"; name = demo
             return
         }
         #endif
@@ -53,7 +50,6 @@ final class AppleAccount {
                 name = first
                 UserDefaults.standard.set(first, forKey: Self.nameKey)
             }
-            email = ""
             UserDefaults.standard.removeObject(forKey: Self.emailKey)
             UserDefaults.standard.set(true, forKey: migratedKey)
         }
@@ -86,7 +82,7 @@ final class AppleAccount {
             Self.writeUserID(credential.user)
             // Apple liefert Name und E-Mail nur bei der ersten Anmeldung; später gilt der gemerkte Name.
             // Nur der Vorname (so steht es im Einstieg); den Nachnamen braucht die Begrüßung nicht.
-            let given = credential.fullName?.givenName ?? credential.fullName?.familyName ?? ""
+            let given = credential.fullName?.givenName ?? ""
             if !given.isEmpty { rename(given) }
             else if name.isEmpty, let known = Self.knownNames[Self.hashed(credential.user)] { rename(known) }
             error = nil
@@ -113,7 +109,6 @@ final class AppleAccount {
         if forget { UserDefaults.standard.removeObject(forKey: Self.knownNamesKey) }
         userID = nil
         name = ""
-        email = ""
         Self.deleteUserID()
         UserDefaults.standard.removeObject(forKey: Self.nameKey)
         UserDefaults.standard.removeObject(forKey: Self.emailKey)

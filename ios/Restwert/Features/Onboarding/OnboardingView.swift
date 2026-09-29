@@ -532,7 +532,7 @@ private struct AccountPage: View {
         PageFrame(title: account.isSignedIn ? "Hallo\(greeting)!" : "Melde dich\nmit Apple an.",
                   text: account.isSignedIn
                     ? "Du bist mit Apple angemeldet. Abmelden kannst du jederzeit in den Einstellungen."
-                    : "Freiwillig: Restwert begrüßt dich mit deinem Vornamen und ist bereit für kommende Funktionen. Kein Konto bei uns, alles geht auch ohne – ändern kannst du es jederzeit in den Einstellungen.",
+                    : "Freiwillig: Restwert begrüßt dich mit deinem Vornamen. Kein Konto bei uns, alles geht auch ohne – ändern kannst du es jederzeit in den Einstellungen.",
                   active: active) {
             VStack(spacing: 0) {
                 ForEach(Array(benefits.enumerated()), id: \.offset) { i, b in

@@ -209,6 +209,8 @@ struct ScanResultView: View {
     static let highValue: Double = 200
     /// Was man im Betrugsfall tut: beim Aussteller sperren lassen, bevor jemand einlöst.
     static let nextStep = "Ruf sofort die Firma auf dem Gutschein an und lass das Guthaben sperren. Zeig den Betrug bei der Polizei an. Das geht auch online."
+    /// Kurzform direkt im Satz: bei großer Schrift ohne Scrollen sichtbar.
+    static let nextStepShort = "ruf sofort die Firma an, lass das Guthaben sperren und zeig es bei der Polizei an (auch online)."
 
     /// Ganzes Foto zeigen (nicht beschneiden), damit Ladenname und Logo sichtbar bleiben. Mit Rückseite beide nebeneinander.
     @ViewBuilder private var photoView: some View {
@@ -450,7 +452,7 @@ struct ScanResultView: View {
             out.append(Check(level: .warning, text: "Du hast in den letzten 7 Tagen schon \(n == 1 ? "einen Gutschein" : "\(n) Gutscheine") ab 100\u{00A0}€ erfasst. Hat dich jemand gebeten, Gutscheine zu kaufen und die Codes durchzugeben? So gehen Betrüger oft vor. Gib nichts weiter.\n\n\(Self.nextStep)"))
         } else if let value = draft.value, value >= Self.highValue {
             // Schon der erste hohe Gutschein: Betrug kurz beim Namen nennen, nicht erst weit unten.
-            out.append(Check(level: .warning, text: "Hohes Guthaben (\(value.euro)). Hat dich jemand am Telefon oder per Nachricht gebeten, diesen Gutschein zu kaufen? Dann ist es Betrug. Gib den Code nicht weiter.\n\n\(Self.nextStep)"))
+            out.append(Check(level: .warning, text: "Hohes Guthaben (\(value.euro)). Gib den Code nicht weiter. Hat dich jemand am Telefon oder per Nachricht gebeten, ihn zu kaufen? Dann ist es Betrug – \(Self.nextStepShort)"))
         }
         return out
     }

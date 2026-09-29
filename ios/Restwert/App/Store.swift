@@ -774,6 +774,17 @@ final class Store {
             return drop
         }
         center.removePendingNotificationRequests(withIdentifiers: remove)
+        // Schutz neu eingeschaltet: schon geplante Nachfragen („Später eintragen“, „Morgen erinnern“) ohne Laden
+        // und Betrag neu anlegen – sie stünden sonst weiter lesbar auf dem Sperrbildschirm.
+        if UserDefaults.standard.bool(forKey: "appLock") || UserDefaults.standard.bool(forKey: "codeLock") {
+            for r in await center.pendingNotificationRequests() where r.identifier.hasSuffix("-later") || r.identifier.hasSuffix("-snooze") {
+                guard let c = r.content.mutableCopy() as? UNMutableNotificationContent else { continue }
+                let later = r.identifier.hasSuffix("-later")
+                c.title = later ? "Hast du mit einem Gutschein bezahlt?" : "Ein Gutschein läuft bald ab"
+                c.body = later ? "Zieh den Einkauf ab, damit dein Guthaben stimmt." : "Öffne Restwert, um ihn zu sehen."
+                try? await center.add(UNNotificationRequest(identifier: r.identifier, content: c, trigger: r.trigger))
+            }
+        }
         guard enabled else { return }
         let status = await center.notificationSettings().authorizationStatus
         guard status == .authorized || status == .provisional else { return }
@@ -832,7 +843,9 @@ final class Store {
         content.threadIdentifier = c.id.uuidString
         content.relevanceScore = id == "1" || id == "fallback" ? 1 : 0.6
         // Name und Ablauf mitgeben: „Morgen erinnern“ braucht sie auch bei gesperrtem Gerät (Datei dann nicht lesbar).
-        content.userInfo = ["card": c.id.uuidString, "name": c.name, "expires": c.expires.timeIntervalSince1970]
+        // Mit Schutz auch in den (unsichtbaren) Zusatzdaten kein Ladenname; „Morgen erinnern“ holt ihn dann aus der App.
+        content.userInfo = quiet ? ["card": c.id.uuidString, "expires": c.expires.timeIntervalSince1970]
+            : ["card": c.id.uuidString, "name": c.name, "expires": c.expires.timeIntervalSince1970]
         let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
         let request = UNNotificationRequest(identifier: "\(c.id.uuidString)-\(id)", content: content,
                                             trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))

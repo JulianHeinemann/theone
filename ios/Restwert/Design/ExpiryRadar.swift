@@ -50,12 +50,12 @@ struct RadarItem: Identifiable, Equatable {
 /// Verfallsradar: ehrliche Zeitachse in zwei gekennzeichneten Zonen.
 /// Zone A: „Heute“ am linken Rand, die nächsten 90 Tage mit Monatsstrichen (die ersten 30 Tage gestreckt).
 /// Danach ein sichtbarer Achsbruch, Zone B: spätere Kalenderjahre als gleich breite Spalten.
-/// Höchstens zwei Spuren ohne Überdeckung; was nicht mehr passt, wird zum „+N“-Bündel.
+/// Höchstens zwei Spuren ohne Überdeckung; was nicht mehr passt, wird zum Bündel (Summe und Anzahl darunter).
 /// Beschriftungen werden gemessen und bei Kollision weggelassen. Die Platzierung wird einmal je Aufbau berechnet.
 struct ExpiryRadar: View {
     let items: [RadarItem]
     var onSelect: ((RadarItem) -> Void)? = nil
-    /// Tipp auf ein „+N“-Bündel (z. B. Ablauftermine öffnen).
+    /// Tipp auf ein Bündel (z. B. Ablauftermine öffnen).
     var onBundle: (([RadarItem]) -> Void)? = nil
     /// Bei `true` fallen die Kacheln nacheinander auf die Achse (Onboarding, erster Auftritt).
     var animateIn = true
@@ -391,7 +391,6 @@ private struct RadarPlan {
         if let first = far.first, let last = far.last {
             let y0 = cal.component(.year, from: first.item.expires)
             let y1 = cal.component(.year, from: last.item.expires)
-            // Spalten breit genug für Kachel und Betrag („2× 120 €“); passen nicht alle Jahre, fasst die letzte zusammen.
             // Spalten mindestens so breit wie „2027+“ bzw. eine Kachel; Beträge dürfen etwas über die Spalte hinausragen.
             let colMin = max(hit, 70, fonts.width("2027+", fonts.label) + 6)
             let room = W * 0.5 - Self.breakW
@@ -473,7 +472,7 @@ private struct RadarPlan {
             }
             columns.append(Column(x0: c.x0, x1: c.x1, label: label))
             guard let first = inCol.first else { continue }
-            // Eine Kachel je Jahr (früheste vorne, „+N“ für den Rest): gestapelte Kacheln mit Beträgen dazwischen
+            // Eine Kachel je Jahr, Summe und Anzahl darunter: gestapelte Kacheln mit Beträgen dazwischen
             // ließen nicht erkennen, welcher Betrag zu welcher Kachel gehört.
             // Vorne der Gutschein mit dem meisten Guthaben, damit die Summe darunter zu ihm passt.
             let face = inCol.max { ($0.value ?? -1) < ($1.value ?? -1) } ?? first
@@ -497,7 +496,11 @@ private struct RadarPlan {
                 var first = sum > 0 ? RadarItem.short(sum.rounded()) : ""
                 if codes.count == 1, let a = codes[0].amount { first += first.isEmpty ? a : " + \(a)" }
                 else if !codes.isEmpty { first += first.isEmpty ? "\(codes.count) Codes" : " + \(codes.count) Codes" }
-                marks[i].caption = "\(first)\n\(its.count) Gutscheine"
+                let vouchers = its.count - codes.count
+                let count = codes.isEmpty ? "\(its.count) Gutscheine"
+                    : vouchers == 0 ? "\(codes.count) Codes"
+                    : "\(vouchers) \(vouchers == 1 ? "Gutschein" : "Gutscheine") + \(codes.count) \(codes.count == 1 ? "Code" : "Codes")"
+                marks[i].caption = "\(first)\n\(count)"
             }
             if let c = marks[i].caption {
                 let lines = c.split(separator: "\n").map(String.init)
