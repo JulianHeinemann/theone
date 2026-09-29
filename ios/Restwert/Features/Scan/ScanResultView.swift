@@ -28,7 +28,8 @@ struct ScanResultView: View {
         .padding(.top, 8)
         .onAppear {
             revealed = true
-            fraudHintScans += 1
+            // Nur echte Gutscheine zählen: unscharfe Fehlversuche verbrauchen sonst die ausführlichen Hinweise.
+            if outcome.looksLikeVoucher { fraudHintScans += 1 }
         }
         .task {
             // Kurz warten, bis VoiceOver den Seitenwechsel angesagt hat; Warnungen mit hoher Priorität.
@@ -47,7 +48,7 @@ struct ScanResultView: View {
         let name = d.merchantID.flatMap { Merchant.byID[$0]?.name } ?? d.customName ?? "Laden nicht erkannt"
         let amount = d.percent.map { "\(Int($0)) Prozent" } ?? d.value.map(\.euro) ?? "ohne Betrag"
         let until = d.expires.map { ", gültig bis \($0.dayMonthYear)" } ?? ""
-        let warnings = checks(draft: d, merchant: d.merchantID.flatMap { Merchant.byID[$0] }).filter { $0.level == .warning }
+        let warnings = Self.checks(outcome: outcome, draft: d, merchant: d.merchantID.flatMap { Merchant.byID[$0] }).filter { $0.level == .warning }
         let warn = warnings.isEmpty ? "" : " Achtung: " + warnings.map(\.text).joined(separator: " ")
         return "Gutschein erkannt: \(name), \(amount)\(until).\(warn)"
     }
@@ -69,7 +70,7 @@ struct ScanResultView: View {
         let draft = outcome.draft
         let merchant = draft.merchantID.flatMap { Merchant.byID[$0] }
         let code = outcome.displayCode
-        let allChecks = checks(draft: draft, merchant: merchant)
+        let allChecks = Self.checks(outcome: outcome, draft: draft, merchant: merchant)
         let warnings = allChecks.filter { $0.level == .warning }
         return VStack(alignment: .leading, spacing: 16) {
             // Warnungen (abgelaufen, hoher Wert, Prüfziffer) ganz oben, nicht unter den angehefteten Knöpfen.
@@ -129,7 +130,7 @@ struct ScanResultView: View {
                 }
                 if let lone { cell(lone.label, lone.value, index: tiles.count - 1, alert: lone.alert) }
                 if outcome.barcode != nil, outcome.resolvedFormat?.format == .text {
-                    // Online-Code mit Strichcode auf dem Beleg (z. B. OTTO-PDF): sagen, wofür der Strichcode nicht ist.
+                    // Online-Code mit Barcode auf dem Beleg (z. B. OTTO-PDF): sagen, wofür der Barcode nicht ist.
                     Label("Der Barcode auf dem Gutschein ist nicht für die Kasse (oft eine Bestellnummer). Den Code gibst du im Shop ein.",
                           systemImage: "info.circle")
                         .font(.scaled(13)).foregroundStyle(Color.ink2)
@@ -180,18 +181,18 @@ struct ScanResultView: View {
     /// Betrugshinweis: bei hohem Wert ausführlich mit nächstem Schritt, sonst nach drei Scans kurz.
     @ViewBuilder
     private func fraudBox(_ draft: CardDraft) -> some View {
-    // Ab 200 € und beim Muster steht alles (Frage und nächster Schritt) schon oben in der roten Box.
-    let value = draft.value ?? 0
-    let redBox = value >= Self.highValue || (value >= 100 && outcome.recentHighValueCount >= 1)
-    if !redBox {
-    Label(value >= 100 ? "Hat dich jemand gebeten, diesen Gutschein zu kaufen und den Code durchzugeben? Dann ist es Betrug. Gib den Code nicht weiter. \(Self.nextStep)"
-          : fraudHintScans < 3 ? "Kein Laden, keine Behörde und keine Firma lässt sich mit Gutscheincodes bezahlen. Wer am Telefon oder per Nachricht nach dem Code fragt, will betrügen."
-          : "Gib Gutscheincodes nie am Telefon oder per Nachricht weiter.",
-          systemImage: "exclamationmark.shield")
-        .font(.scaled(14, weight: .medium)).foregroundStyle(Color.ink)
-        .fixedSize(horizontal: false, vertical: true)
-        .padding(Layout.group).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+        // Ab 200 € und beim Muster steht alles (Frage und nächster Schritt) schon oben in der roten Box.
+        let value = draft.value ?? 0
+        let redBox = value >= Self.highValue || (value >= CardQueries.patternValue && outcome.recentHighValueCount >= 1)
+        if !redBox {
+        Label(value >= 100 ? "Hat dich jemand gebeten, diesen Gutschein zu kaufen und den Code durchzugeben? Dann ist es Betrug. Gib den Code nicht weiter. \(Self.nextStep)"
+              : fraudHintScans < 3 ? "Kein Laden, keine Behörde und keine Firma lässt sich mit Gutscheincodes bezahlen. Wer am Telefon oder per Nachricht nach dem Code fragt, will betrügen."
+              : "Gib Gutscheincodes nie am Telefon oder per Nachricht weiter.",
+              systemImage: "exclamationmark.shield")
+            .font(.scaled(14, weight: .medium)).foregroundStyle(Color.ink)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(Layout.group).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
     }
     }
 
@@ -273,13 +274,12 @@ struct ScanResultView: View {
         .background(alert ? Color.warn.opacity(0.12) : Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(label): \(value)\(ai ? ", von Apple Intelligence ergänzt" : "")")
-        .accessibilityElement(children: .combine)
         .opacity(revealed || reduceMotion ? 1 : 0)
         .offset(y: revealed || reduceMotion ? 0 : 12)
         .animation(reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.3).delay(0.08 * Double(index)), value: revealed)
     }
 
-    /// Handelscodes wie unter dem Strichcode gedruckt: EAN-13 1-6-6 („4 006381 333931“), UPC-A 1-5-5-1
+    /// Handelscodes wie unter dem Barcode gedruckt: EAN-13 1-6-6 („4 006381 333931“), UPC-A 1-5-5-1
     /// („0 36000 29145 2“), EAN-8 4-4 („9638 5074“); sonst Vierergruppen.
     static func codeDisplay(_ code: String, format: CodeFormat? = nil) -> String {
         let c = code.replacingOccurrences(of: " ", with: "")
@@ -355,7 +355,8 @@ struct ScanResultView: View {
         }
     }
 
-    fileprivate func checks(draft: CardDraft, merchant: Merchant?) -> [Check] {
+    /// Reine Funktion über dem Ergebnis, ohne View-Zustand: auch für ``ScanOutcome/warningTexts`` nutzbar.
+    fileprivate static func checks(outcome: ScanOutcome, draft: CardDraft, merchant: Merchant?) -> [Check] {
         var out: [Check] = []
         if outcome.barcode != nil, outcome.resolvedFormat?.format == .text, draft.percent == nil {
             out.append(Check(level: .info, text: "Online-Code: Du gibst ihn im Shop ein. Der Barcode auf dem Gutschein wird deshalb nicht angezeigt."))
@@ -401,7 +402,7 @@ struct ScanResultView: View {
             if expires < Calendar.current.startOfDay(for: .now) {
                 out.append(Check(level: .warning, text: "Laut Gutschein abgelaufen am \(expires.dayMonthYear). Oft trotzdem noch einlösbar – frag im Laden nach."))
                 if draft.percent == nil {
-                    out.append(Check(level: .info, text: "Oft trotzdem nicht verloren: Für gekaufte Gutscheine gelten meist 3 Jahre ab Ende des Kaufjahres, kürzere Fristen sind oft unwirksam. Frag beim Laden nach Einlösung oder Erstattung."))
+                    out.append(Check(level: .info, text: "Gekaufte Gutscheine gelten meist 3 Jahre ab dem Ende des Kaufjahres, auch wenn ein kürzeres Datum draufsteht. Frag im Laden: einlösen oder Geld zurück?"))
                 }
             } else if draft.expiresIsEstimate {
                 out.append(Check(level: .info, text: "Gültig bis \(expires.dayMonthYear) ist aus der Laufzeit auf dem Gutschein berechnet, ab dem Kaufdatum oben. Stell es dort richtig ein."))
@@ -413,9 +414,9 @@ struct ScanResultView: View {
             // Kein Alarm: fehlt ein Datum, gilt meist die gesetzliche Frist. Sie beginnt mit dem Kauf, nicht mit dem Scan.
             out.append(Check(level: .info, text: "Kein Ablaufdatum gefunden. Vorausgefüllt wird die gesetzliche Frist (\(legal)), gerechnet ab dem Kaufdatum oben."))
         }
-        if let value = draft.value, value >= 100, outcome.recentHighValueCount >= 1 {
+        if let value = draft.value, value >= CardQueries.patternValue, outcome.recentHighValueCount >= 1 {
             let n = outcome.recentHighValueCount
-            out.append(Check(level: .warning, text: "Du hast in den letzten 7 Tagen schon \(n == 1 ? "einen Gutschein" : "\(n) Gutscheine") ab 100 € erfasst. Hat dich jemand gebeten, Gutscheine zu kaufen und die Codes durchzugeben? So gehen Betrüger oft vor. Gib nichts weiter.\n\n\(Self.nextStep)"))
+            out.append(Check(level: .warning, text: "Du hast in den letzten 7 Tagen schon \(n == 1 ? "einen Gutschein" : "\(n) Gutscheine") ab 100\u{00A0}€ erfasst. Hat dich jemand gebeten, Gutscheine zu kaufen und die Codes durchzugeben? So gehen Betrüger oft vor. Gib nichts weiter.\n\n\(Self.nextStep)"))
         } else if let value = draft.value, value >= Self.highValue {
             // Schon der erste hohe Gutschein: Betrug kurz beim Namen nennen, nicht erst weit unten.
             out.append(Check(level: .warning, text: "Hohes Guthaben (\(value.euro)). Hat dich jemand am Telefon oder per Nachricht gebeten, diesen Gutschein zu kaufen? Dann ist es Betrug. Gib den Code nicht weiter.\n\n\(Self.nextStep)"))
@@ -428,7 +429,7 @@ extension ScanOutcome {
     /// Rote Warnungen (abgelaufen, hoher Wert, Prüfziffer); „Hinzufügen“ fragt dann einmal nach und nennt sie.
     var warningTexts: [String] {
         let d = draft
-        return ScanResultView(outcome: self).checks(draft: d, merchant: d.merchantID.flatMap { Merchant.byID[$0] })
+        return ScanResultView.checks(outcome: self, draft: d, merchant: d.merchantID.flatMap { Merchant.byID[$0] })
             .filter { $0.level == .warning }.map(\.text)
     }
 

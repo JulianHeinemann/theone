@@ -342,8 +342,10 @@ struct Shake: GeometryEffect {
 // MARK: - Schatten
 
 /// Schatten der App: zwei Stufen, beide in `Color.shade`.
-/// Regel: Schatten immer über `.compositingGroup()` – sonst wirft jeder Text und jedes Symbol auf der Karte
-/// einen eigenen Schatten (im Dunkeln 45 % Schwarz: Gelb wird Senf, Text bekommt einen braunen Hof).
+/// Regel: Schatten nie auf Text oder Symbole – sonst wirft jedes Zeichen auf der Karte einen eigenen Schatten
+/// (im Dunkeln 45 % Schwarz: Gelb wird Senf, Text bekommt einen braunen Hof). Entweder auf der deckenden
+/// Grundfläche (`cardSurface`, günstig, auch bei bewegtem Inhalt) oder über `.compositingGroup()` (`ticketShadow`,
+/// für Flächen ohne einfache Grundform wie Zickzack-Bon oder Kassenleiste).
 enum Shadow {
     /// Karten, Tickets, Bon.
     static let card: CGFloat = 14
@@ -357,10 +359,22 @@ extension View {
         compositingGroup().shadow(color: Color.shade, radius: radius, y: y)
     }
 
-    func cardSurface(radius: CGFloat = Layout.cardRadius) -> some View {
+    /// Karte auf `surface`: Der Schatten liegt auf der deckenden Fläche darunter, nicht auf dem Inhalt.
+    /// So wirft kein Text einen eigenen Schatten, und Inhalt, der sich bewegt oder zählt, zwingt den Schatten
+    /// nicht in jedem Bild zu neuem Weichzeichnen – anders als `compositingGroup().shadow` auf der ganzen Karte.
+    func cardSurface(radius: CGFloat = Layout.cardRadius, shadow: CGFloat = Shadow.card, y: CGFloat = 6) -> some View {
+        background {
+            RoundedRectangle(cornerRadius: radius, style: .continuous)
+                .fill(Color.surface)
+                .shadow(color: Color.shade, radius: shadow, y: y)
+        }
+        .modifier(ContrastEdge(radius: radius))
+    }
+
+    /// Flache Karte ohne Schatten (Detail, Kasse): dieselbe Fläche und derselbe Kontrast-Rand wie `cardSurface`.
+    func flatSurface(radius: CGFloat = Layout.cardRadius) -> some View {
         background(Color.surface, in: .rect(cornerRadius: radius, style: .continuous))
             .modifier(ContrastEdge(radius: radius))
-            .ticketShadow()
     }
 
     /// Feste Knopfleiste unten: deckendes Papier, darüber ein kurzer Verlauf, damit Inhalt weich ausläuft
@@ -486,8 +500,11 @@ struct AmountText: View {
     /// Alle Beträge hängen an „Large Title“ (Font.scaled ab 28 pt); Abstände wachsen mit.
     @ScaledMetric(relativeTo: .largeTitle) private var scale: CGFloat = 1
 
+    /// Einmal angelegt: Der Zähler im Einstieg formatiert in jedem Bild neu.
+    private static let german = Locale(identifier: "de_DE")
+
     private var parts: (String, String) {
-        let s = value.formatted(.number.precision(.fractionLength(2)).locale(Locale(identifier: "de_DE")))
+        let s = value.formatted(.number.precision(.fractionLength(2)).locale(Self.german))
         let comps = s.split(separator: ",", maxSplits: 1).map(String.init)
         return (comps.first ?? s, comps.count > 1 ? comps[1] : "00")
     }

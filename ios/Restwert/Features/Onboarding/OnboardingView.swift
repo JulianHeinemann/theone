@@ -6,7 +6,7 @@ enum OnboardingExit { case browse, add, scan, manual }
 
 /// Einstieg in vier Seiten: Willkommen (Ticket), Sammeln (Liste), Erinnern (Mitteilung), Erster Gutschein.
 /// Jede Seite spielt ihre kleine Animation, sobald sie sichtbar wird. Bei „Bewegung reduzieren“ steht alles sofort da.
-/// Kein Login: Die App hat bewusst kein Konto. Wer schon Gutscheine hat, holt sie aus dem eigenen iCloud.
+/// Kein Login: Die App hat bewusst kein Konto. Wer schon Gutscheine hat, holt sie aus der eigenen iCloud.
 /// Nach der Mitteilungs-Erlaubnis fragt erst das Formular beim ersten Speichern – nicht der Einstieg.
 struct OnboardingView: View {
     var onFinish: (OnboardingExit) -> Void
@@ -174,7 +174,13 @@ private struct PageFrame<Stage: View>: View {
                     .accessibilityHidden(true)
             }
         }
-        .opacity(active || reduceMotion ? 1 : 0.4)
+        // Inaktive Seiten gedimmt – als Papier-Schleier obenauf statt `.opacity` auf der ganzen Seite:
+        // Gruppen-Deckkraft zwänge die komplette Seite samt Schatten in jedem Bild in eine Zwischenebene.
+        .overlay {
+            Color.page.opacity(active || reduceMotion ? 0 : 0.6)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: active)
     }
 
@@ -192,10 +198,12 @@ private struct PageFrame<Stage: View>: View {
 }
 
 /// Zeitgesteuerter Auftritt: zählt Schritte hoch, sobald die Seite aktiv wird; bei „Bewegung reduzieren“ sofort am Ende.
-/// Verlässt man die Seite, springt sie ohne Animation auf den Anfang zurück, damit sie beim Wiederkommen neu spielt.
+/// Verlässt man die Seite, springt sie ohne Animation auf den Anfang zurück, damit sie beim Wiederkommen neu spielt –
+/// aber erst, wenn sie hinausgeglitten ist: „Weiter“ wechselt die Seite sofort, die Bühne bleibt noch 0,5 s sichtbar.
+/// Kommt man vorher zurück, bleibt die fertige Bühne stehen statt von vorn zu spielen.
 private struct Stepper: ViewModifier {
     let active: Bool
-    let steps: [Int]           // Millisekunden bis zu jedem Schritt
+    let steps: [Int]           // Millisekunden Pause vor jedem Schritt
     @Binding var step: Int
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -203,11 +211,14 @@ private struct Stepper: ViewModifier {
         content.task(id: active) {
             if reduceMotion { step = steps.count; return }
             guard active else {
+                try? await Task.sleep(for: .milliseconds(600))
+                if Task.isCancelled { return }
                 var reset = Transaction()
                 reset.disablesAnimations = true
                 withTransaction(reset) { step = 0 }
                 return
             }
+            guard step == 0 else { return }
             for (i, ms) in steps.enumerated() {
                 try? await Task.sleep(for: .milliseconds(ms))
                 if Task.isCancelled { return }
@@ -329,10 +340,13 @@ private struct WelcomePage: View {
             .motion(.easeOut(duration: 0.3).delay(0.25), value: step)
         }
         .foregroundStyle(Color.sumText)
-        .background(Color.sumFill, in: TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchFromTop: tearY + 0.5))
-        // Erst zusammensetzen, dann Schatten – sonst werfen die Buchstaben eigene Schatten.
-        .compositingGroup()
-        .shadow(color: Color.shade, radius: 14, y: 6)
+        // Schatten auf der deckenden Ticketfläche, nicht auf dem Inhalt: Der Zähler ändert den Text in jedem Bild;
+        // eine Gruppe mit Schatten müsste dann jedes Mal neu gezeichnet und weichgezeichnet werden.
+        .background {
+            TicketShape(radius: Layout.cardRadius, notchRadius: 9, notchFromTop: tearY + 0.5)
+                .fill(Color.sumFill)
+                .shadow(color: Color.shade, radius: Shadow.card, y: 6)
+        }
     }
 }
 
@@ -374,9 +388,7 @@ private struct CollectPage: View {
                     .motion(.spring(duration: 0.5, bounce: 0.25), value: step)
                 }
             }
-            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
-            .compositingGroup()
-            .shadow(color: Color.shade, radius: 14, y: 6)
+            .cardSurface()
             .scaleEffect(step >= 1 ? 1 : 0.96)
             .motion(.spring(duration: 0.5), value: step)
             .accessibilityHidden(true)
@@ -394,7 +406,7 @@ private struct RemindPage: View {
 
     var body: some View {
         PageFrame(title: "Wir sagen Bescheid,\nbevor’s zu spät ist.",
-                  text: "Rechtzeitig vor dem Ablaufdatum bekommst du eine Erinnerung. Ohne Spam, versprochen. Ob wir dir Mitteilungen schicken dürfen, fragen wir erst, wenn du deinen ersten Gutschein gespeichert hast.",
+                  text: "Rechtzeitig vor dem Ablaufdatum bekommst du eine Erinnerung. Ohne Spam, versprochen. Wir fragen erst nach deinem ersten Gutschein, ob wir dir Mitteilungen schicken dürfen.",
                   active: active) {
             VStack(spacing: Layout.group) {
                 // Mitteilung fällt von oben herein, wie auf dem Sperrbildschirm.
@@ -412,9 +424,7 @@ private struct RemindPage: View {
                     }
                 }
                 .padding(Layout.inset)
-                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
-                .compositingGroup()
-                .shadow(color: Color.shade, radius: 16, y: 8)
+                .cardSurface(shadow: Shadow.float, y: 8)
                 .offset(y: step >= 1 ? 0 : -120)
                 .opacity(step >= 1 ? 1 : 0)
                 .motion(.spring(duration: 0.55, bounce: 0.35), value: step)
@@ -440,16 +450,14 @@ private struct RemindPage: View {
                     }
                 }
                 .padding(.horizontal, Layout.inset).padding(.vertical, Layout.group)
-                .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
-                .compositingGroup()
-                .shadow(color: Color.shade, radius: 14, y: 6)
+                .cardSurface()
                 .opacity(step >= 2 ? 1 : 0)
                 .offset(y: step >= 2 ? 0 : 16)
                 .motion(.easeOut(duration: 0.4), value: step)
             }
             .accessibilityHidden(true)
         }
-        .modifier(Stepper(active: active, steps: [250, 350, 350, 250], step: $step))
+        .modifier(Stepper(active: active, steps: [150, 350, 350, 250], step: $step))
         .onChange(of: step) { _, s in if s == 1 { arrived += 1 } }
         .sensoryFeedback(.impact(weight: .light), trigger: arrived)
     }
@@ -481,9 +489,9 @@ private struct FirstCardPage: View {
                   text: "Dauert 20 Sekunden. Die Beispiele auf „Start“ verschwinden dann automatisch.",
                   active: active, decorativeStage: false) {
             VStack(spacing: Layout.group) {
-                option(icon: "viewfinder", title: "Gutschein scannen", text: "Barcode oder QR-Code abfotografieren",
+                option(icon: "viewfinder", title: "Gutschein scannen", text: "Barcode, QR-Code oder Text abfotografieren",
                        strong: true, shown: step >= 1) { onPick(.scan) }
-                option(icon: "keyboard", title: "Code eintippen", text: "Betrag, Laden und Ablaufdatum eingeben",
+                option(icon: "keyboard", title: "Von Hand eingeben", text: "Laden, Guthaben und Ablaufdatum eintippen",
                        strong: false, shown: step >= 2) { onPick(.manual) }
                 restoreLink
                     .opacity(step >= 2 ? 1 : 0)
@@ -499,7 +507,7 @@ private struct FirstCardPage: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Schon Gutscheine in iCloud? \(Text("Wiederherstellen").fontWeight(.semibold).foregroundStyle(Color.ink))")
                     .font(.scaled(15)).foregroundStyle(Color.ink2)
-                Text("Holt deine Gutscheine aus deinem eigenen iCloud – ganz ohne Konto.")
+                Text("Holt deine Gutscheine aus deiner iCloud – ganz ohne Konto.")
                     .font(.scaled(13)).foregroundStyle(Color.muted)
             }
             .fixedSize(horizontal: false, vertical: true)
@@ -510,7 +518,7 @@ private struct FirstCardPage: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Wiederherstellen")
-        .accessibilityHint("Holt deine Gutscheine aus deinem eigenen iCloud – ganz ohne Konto.")
+        .accessibilityHint("Holt deine Gutscheine aus deiner iCloud – ganz ohne Konto.")
     }
 
     /// `strong`: Hauptweg in Tinte (Gelb bleibt der Marke vorbehalten), sonst neutrale Fläche.
@@ -522,6 +530,7 @@ private struct FirstCardPage: View {
                     .foregroundStyle(strong ? Color.onInk : Color.ink)
                     .frame(width: 56, height: 56)
                     .background(strong ? Color.ink : Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.scaled(17, weight: .bold)).foregroundStyle(Color.ink)
                     Text(text).font(.scaled(15)).foregroundStyle(Color.ink2)
@@ -529,11 +538,10 @@ private struct FirstCardPage: View {
                 }
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.muted)
+                    .accessibilityHidden(true)
             }
             .padding(Layout.inset)
-            .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
-            .compositingGroup()
-            .shadow(color: Color.shade, radius: 14, y: 6)
+            .cardSurface()
             .contentShape(.rect)
         }
         .buttonStyle(.plain)

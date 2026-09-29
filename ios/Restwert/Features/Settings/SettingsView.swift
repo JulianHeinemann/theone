@@ -108,7 +108,7 @@ struct SettingsView: View {
             .tint(Color.toggleOn)
 
             Section { accountSection } footer: {
-                Text("Ohne eigenes Konto und ohne unseren Server: Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deinem eigenen iCloud. Den Schlüssel hat nur dein iCloud-Schlüsselbund – diese Sync-Daten können weder wir noch Apple lesen. Das iCloud-Backup deines \(Device.name)s kann Apple dagegen öffnen, solange „Erweiterter Datenschutz“ aus ist.")
+                Text("Ohne eigenes Konto und ohne unseren Server: Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deiner iCloud. Den Schlüssel hat nur dein iCloud-Schlüsselbund – diese Sync-Daten können weder wir noch Apple lesen. Das iCloud-Backup deines \(Device.name)s kann Apple dagegen öffnen, solange „Erweiterter Datenschutz“ aus ist.")
             }
 
             Section {
@@ -159,7 +159,7 @@ struct SettingsView: View {
             }
 
             Section {
-                Label("Gespeichert auf diesem \(Device.name) mit Dateischutz des Systems, PINs eingeschlossen. Mit iCloud-Sync zusätzlich Ende-zu-Ende verschlüsselt in deinem eigenen iCloud; PINs gehen dabei nur in den iCloud-Schlüsselbund.", systemImage: "lock")
+                Label("Gespeichert auf diesem \(Device.name) mit Dateischutz des Systems, PINs eingeschlossen. Mit iCloud-Sync zusätzlich Ende-zu-Ende verschlüsselt in deiner iCloud; PINs gehen dabei nur in den iCloud-Schlüsselbund.", systemImage: "lock")
                 Label("Import: Live-Scan, Foto, PDF, E-Mail-Text oder in Mail „Teilen → Restwert“. Handschrift wird mitgelesen.", systemImage: "square.and.arrow.down")
                 if SmartExtractor.isAvailable {
                     Label("Apple Intelligence liest schwierige Gutscheine direkt auf dem Gerät.", systemImage: "apple.intelligence")
@@ -255,13 +255,14 @@ struct SettingsView: View {
         .onChange(of: warnDays) { _, _ in Task { await store.scheduleReminders() } }
         // Widget sofort anpassen: mit App-Sperre ohne Beträge.
         // Widget und Erinnerungen sofort anpassen: mit Sperre ohne Beträge und ohne Ladennamen.
-        .onChange(of: appLock) { _, _ in WidgetBridge.update(cards: store.cards, total: store.total); Task { await store.scheduleReminders() } }
-        .onChange(of: codeLock) { _, _ in WidgetBridge.update(cards: store.cards, total: store.total); Task { await store.scheduleReminders() } }
+        .onChange(of: appLock) { _, _ in WidgetBridge.update(cards: store.cards); Task { await store.scheduleReminders() } }
+        .onChange(of: codeLock) { _, _ in WidgetBridge.update(cards: store.cards); Task { await store.scheduleReminders() } }
         .onChange(of: reminderDays) { _, _ in Task { await store.scheduleReminders() } }
         .onChange(of: reminderHour) { _, _ in Task { await store.scheduleReminders() } }
-        .confirmationDialog("Alle Restwert-Daten aus deinem iCloud löschen?", isPresented: $confirmDeleteCloud, titleVisibility: .visible) {
+        .confirmationDialog("Alle Restwert-Daten aus deiner iCloud löschen?", isPresented: $confirmDeleteCloud, titleVisibility: .visible) {
             Button("Aus iCloud löschen", role: .destructive) {
                 Task {
+                    guard await allowedToDelete("Restwert-Daten aus iCloud löschen") else { return }
                     do {
                         try await cloud.deleteCloudData()
                         // Auch Sync-Schlüssel und PINs aus dem iCloud-Schlüsselbund entfernen; lokal bleiben die PINs in der Datei.
@@ -273,12 +274,21 @@ struct SettingsView: View {
         } message: {
             Text("Entfernt die Gutscheine aus iCloud sowie Schlüssel und PINs aus dem iCloud-Schlüsselbund. Auf diesem \(Device.name) bleibt alles erhalten. Der Sync wird ausgeschaltet.")
         }
-        .confirmationDialog("Alle Gutscheine, Einlösungen und Tests löschen?", isPresented: $confirmReset, titleVisibility: .visible) {
-            Button("Alles löschen", role: .destructive) { withAnimation(reduceMotion ? nil : .default) { store.resetAll() } }
+        .confirmationDialog("Alle Gutscheine, Einlösungen und Kassen-Tests löschen?", isPresented: $confirmReset, titleVisibility: .visible) {
+            Button("Alles löschen", role: .destructive) {
+                Task { if await allowedToDelete("Alle Gutscheine löschen") { withAnimation(reduceMotion ? nil : .default) { store.resetAll() } } }
+            }
         }
     }
 
     /// Einschalten sofort, Ausschalten erst nach Face ID oder Gerätecode. Ohne Gerätecode wie in der Detailansicht: direkt.
+    /// Löschen ist so geschützt wie die Codes: Ist eine Sperre eingeschaltet (geteiltes Gerät, Kinder), erst Face ID –
+    /// sonst ließe sich der ganze Bestand mit zwei Tipps endgültig entfernen. Ohne Gerätecode wirkt keine Sperre.
+    private func allowedToDelete(_ reason: String) async -> Bool {
+        guard (appLock || codeLock || pinLock) && DeviceSecurity.status != .noPasscode else { return true }
+        return await DeviceSecurity.guardSensitive(reason)
+    }
+
     private func guarded(_ value: Binding<Bool>, reason: String) -> Binding<Bool> {
         Binding(get: { value.wrappedValue && hasPasscode }, set: { new in
             if new {
@@ -341,7 +351,7 @@ struct SettingsView: View {
         }
     }
 
-    /// Wie `Store.csvFile()`, aber ohne Beispielkarten und mit Dateischutz.
+    /// Lesbare Liste für Tabellen (ohne PINs und Beispielkarten), Excel-tauglich mit deutschen Zahlen, mit Dateischutz.
     private func writeCSV() -> URL? {
         let own = store.cards.filter { !$0.isExample }
         let text = CardQueries.csv(own, warnDays: warnDays)
@@ -387,14 +397,14 @@ struct SettingsView: View {
         // Bei sehr großer Schrift Symbol über den Text, damit der Text die ganze Breite hat.
         let layout = typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 10)) : AnyLayout(HStackLayout(spacing: 14))
         layout {
-            // „Sicher in deinem iCloud“ erst nach einem erfolgreichen Abgleich; vorher und währenddessen neutral.
+            // „Sicher in deiner iCloud“ erst nach einem erfolgreichen Abgleich; vorher und währenddessen neutral.
             let inCloud = syncOn && cloud.state == .idle && cloud.lastSync != nil
             let checking = syncOn && cloud.state == .syncing
             Image(systemName: inCloud ? "lock.icloud" : syncOn ? "icloud" : Device.name == "iPad" ? "ipad" : "iphone").font(.scaled(20, weight: .semibold))
                 .frame(width: 48, height: 48).background(Color.fill, in: .circle)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(inCloud ? "Sicher in deinem iCloud" : checking ? "iCloud wird geprüft" : syncOn ? "iCloud-Sync wartet" : "Nur auf diesem \(Device.name)")
+                Text(inCloud ? "Sicher in deiner iCloud" : checking ? "iCloud wird geprüft" : syncOn ? "iCloud-Sync wartet" : "Nur auf diesem \(Device.name)")
                     .font(.scaled(16, weight: .semibold))
                 Text(inCloud ? "Ende-zu-Ende verschlüsselt, auf allen deinen Apple-Geräten."
                      : syncOn ? "Bis iCloud bereit ist, bleibt alles auf diesem \(Device.name)."

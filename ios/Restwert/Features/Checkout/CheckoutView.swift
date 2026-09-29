@@ -60,15 +60,16 @@ struct CheckoutView: View {
                     if let result {
                         // Nur noch für „Nicht angenommen“ und Rabattcodes; Beträge laufen über den Ziffernblock.
                         VStack(alignment: .leading, spacing: Layout.group) {
-                            Text(!result ? "Nicht angenommen – dein Guthaben bleibt gleich." : "\(card.kind.label) wird als eingelöst markiert.")
+                            Text(!result ? "\(failedLabel(card)) – dein Guthaben bleibt gleich." : "\(card.kind.label) wird als eingelöst markiert.")
                                 .font(.scaled(17, weight: .semibold))
                             if !isOnline(card) {
                                 LabeledField(label: "Filiale", placeholder: "optional, z.\u{00A0}B. Köln Hohe Straße", text: $storeName)
                             }
-                            LabeledField(label: "Notiz", placeholder: result ? "optional" : "optional, z.\u{00A0}B. Kasse wollte Plastikkarte", text: $note)
+                            LabeledField(label: "Notiz", placeholder: result ? "optional"
+                                         : isOnline(card) ? "optional, z.\u{00A0}B. Code wurde nicht angenommen" : "optional, z.\u{00A0}B. Kasse wollte Plastikkarte", text: $note)
                         }
                         .padding(Layout.inset)
-                        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
+                        .flatSurface()
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
@@ -191,7 +192,7 @@ struct CheckoutView: View {
                     if checkoutTypeSize.isAccessibilitySize {
                         // Sehr große Schrift: beide Nebenwege in einem Menü, damit die Leiste nicht den halben Bildschirm füllt.
                         Menu {
-                            Button("Nicht angenommen") { withAnimation(.snappy) { result = false } }
+                            Button(failedLabel(card)) { withAnimation(.snappy) { result = false } }
                             Button("Später eintragen") { Task { await remindLater(card) }; dismiss() }
                         } label: {
                             Label("Andere Möglichkeiten", systemImage: "ellipsis.circle")
@@ -219,8 +220,13 @@ struct CheckoutView: View {
         return card.kind.isValueBased ? "Bezahlt – Einkauf abziehen" : "Eingelöst"
     }
 
+    /// Ein Wortlaut für Knopf, Menü und Bestätigung: online „Hat nicht geklappt“, an der Kasse „Nicht angenommen“.
+    private func failedLabel(_ card: GiftCard) -> String {
+        isOnline(card) ? "Hat nicht geklappt" : "Nicht angenommen"
+    }
+
     private func notAccepted(_ card: GiftCard) -> some View {
-        Button("Nicht angenommen") { withAnimation(.snappy) { result = false } }
+        Button(failedLabel(card)) { withAnimation(.snappy) { result = false } }
             .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
             .buttonStyle(.bordered).buttonBorderShape(.capsule).tint(Color.ink)
             .frame(minHeight: Layout.tap)
@@ -357,8 +363,7 @@ struct CheckoutView: View {
             .offset(y: torn ? 160 : 0)
             .opacity(torn ? 0 : 1)
         }
-        .compositingGroup()
-        .shadow(color: Color.shade, radius: 14, y: 6)
+        .ticketShadow()
     }
 
     /// Papiergutschein: Restbetrag groß über dem Foto, damit man ihn an der Kasse nennen kann.

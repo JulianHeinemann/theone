@@ -276,6 +276,8 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     public var issuedByMe: Bool = false
     /// Nur bei selbst ausgegebenen Gutscheinen: für wen (Kunde) und der Gruß auf dem Gutscheinbild.
     public var issuedTo: String = ""
+    /// Für wen der Gutschein ist, wie Liste und Detail es zeigen: bei selbst ausgegebenen der Empfänger, sonst der Besitzer.
+    public var forWhom: String { issuedByMe ? issuedTo : owner }
     public var greeting: String = ""
     /// Wann in Restwert erfasst (nicht wann gekauft): Grundlage für die Betrugsmuster-Warnung. Fehlt bei älteren Ständen.
     public var addedAt: Date?

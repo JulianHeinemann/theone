@@ -165,8 +165,8 @@ struct BalanceCard: View {
                     VStack(alignment: .leading, spacing: 0) {
                         Text(card.name).font(.scaled(20, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
                         // Für wen der Gutschein ist, wie in der Liste; VoiceOver liest es mit.
-                        if !card.owner.isEmpty {
-                            Text("für \(card.owner)").font(.scaled(13, weight: .semibold)).lineLimit(1).opacity(0.85)
+                        if !card.forWhom.isEmpty {
+                            Text("für \(card.forWhom)").font(.scaled(13, weight: .semibold)).lineLimit(1).opacity(0.85)
                         }
                     }
                     Spacer(minLength: 8)
@@ -233,9 +233,8 @@ struct BalanceCard: View {
                 UsedUpStamp().padding(.top, 58).padding(.trailing, 16)
             }
         }
-        // Erst zusammenfassen, dann Schatten: sonst wirft jede Schrift ihren eigenen Schatten.
-        .compositingGroup()
-        .shadow(color: Color.shade, radius: 14, y: 6)
+        // Stempel ragt über die Fläche: deshalb Gruppe statt Schatten auf der Grundform.
+        .ticketShadow()
         .accessibilityElement(children: .combine)
     }
 }

@@ -174,16 +174,6 @@ struct CardDetailView: View {
         }
     }
 
-    private func cell(_ label: String, _ value: String, tint: Color = .ink) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.scaled(12)).foregroundStyle(Color.muted)
-            Text(value).font(.scaled(16, weight: .semibold)).foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
-                .contentTransition(.numericText())
-        }
-        .padding(.vertical, 4)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     /// Neben-Aktionen als Kacheln (Icon in Ladenfarbe) statt Einstellungs-Liste; Hauptaktion bleibt „An der Kasse zeigen“.
     private func actionGroup(_ card: GiftCard) -> some View {
         let hasPin = card.kind == .giftCard && !card.pin.isEmpty
@@ -319,7 +309,7 @@ struct CardDetailView: View {
         }
         .foregroundStyle(Color.ink)
         .padding(14)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
+        .flatSurface()
     }
 
     /// Eigene Erinnerung nur für diesen Gutschein.
@@ -360,7 +350,7 @@ struct CardDetailView: View {
         }
         .foregroundStyle(Color.ink)
         .padding(14)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
+        .flatSurface()
     }
 
     /// Von jetzt bis zum Ende des Ablauftags; nie ein leerer Bereich, auch nicht am Ablauftag selbst.
@@ -419,7 +409,7 @@ struct CardDetailView: View {
                 Spacer()
                 Text("Ändern").font(.scaled(15, weight: .bold))
             }
-            .foregroundStyle(Color.ink).padding(Layout.inset).background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
+            .foregroundStyle(Color.ink).padding(Layout.inset).flatSurface()
         }
         .buttonStyle(.plain)
     }
@@ -464,7 +454,7 @@ struct CardDetailView: View {
         .foregroundStyle(Color.ink)
         .padding(Layout.inset)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
+        .flatSurface()
     }
 
     /// Code als Text zum Kopieren; den Barcode gibt es nur an der Kasse, damit er nicht doppelt erscheint.
@@ -536,7 +526,7 @@ struct CardDetailView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
+        .flatSurface()
     }
 
     /// Stempel zurücknehmen (Store entfernt Einlösedatum und Verlaufseintrag).
@@ -567,13 +557,11 @@ struct CardDetailView: View {
             withAnimation(.snappy) { pinVisible = true }
             return
         }
-        let context = LAContext()
         guard DeviceSecurity.canAuthenticate else {
             // Kein iPhone-Code: nicht still zeigen, sondern sagen, dass der Schutz so nicht wirkt.
             confirmUnprotectedPin = true
             return
         }
-        _ = context
         if await DeviceSecurity.guardSensitive("PIN von \(card.name) anzeigen") {
             withAnimation(.snappy) { pinVisible = true }
             AccessibilityNotification.Announcement("PIN: \(card.pin)").post()
@@ -625,6 +613,7 @@ struct LocationSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Wo liegt der Gutschein?").font(.scaled(22, weight: .heavy)).padding(.top, 24)
+                .accessibilityAddTraits(.isHeader)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
                 ForEach(StorageLocation.allCases) { loc in
                     Button { withAnimation(.snappy) { location = loc } } label: {
@@ -661,7 +650,7 @@ struct CardBon: View {
         ReceiptPaper {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("Einlöse-Verlauf").font(.scaled(20, weight: .heavy))
+                    Text("Einlöse-Verlauf").font(.scaled(20, weight: .heavy)).accessibilityAddTraits(.isHeader)
                     Spacer()
                     Text(card.name.uppercased()).font(.scaled(12, weight: .bold, design: .monospaced)).foregroundStyle(Color.muted)
                 }

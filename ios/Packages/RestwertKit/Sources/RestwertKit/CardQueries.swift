@@ -28,6 +28,32 @@ public enum CardQueries {
         cards.filter { !$0.isArchived && $0.status(warnDays: warnDays) == .expiringSoon }.sorted { $0.expires < $1.expires }
     }
 
+    // MARK: - Betrugsmuster und Dubletten
+
+    /// Ab diesem Wert zählt ein Gutschein zum Muster „mehrere hohe Gutscheine in kurzer Zeit“.
+    public static let patternValue: Double = 100
+    /// Zeitraum des Musters.
+    public static let patternWindow: TimeInterval = 7 * 24 * 3600
+
+    /// Wie viele eigene Gutscheine ab ``patternValue`` in den letzten ``patternWindow`` erfasst wurden
+    /// (oft auf Anweisung von Betrügern gekauft). Beispiele und selbst ausgegebene Gutscheine zählen nicht.
+    public static func recentHighValueCount(_ cards: [GiftCard], now: Date = .now) -> Int {
+        let since = now.addingTimeInterval(-patternWindow)
+        return cards.filter { !$0.isExample && !$0.issuedByMe && $0.value >= patternValue && $0.addedOrReceived >= since }.count
+    }
+
+    /// Code ohne Trennzeichen in Großbuchstaben – so vergleichen Dubletten-Prüfung und Kassen-Abgleich.
+    public static func plainCode(_ s: String) -> String {
+        s.filter { $0.isLetter || $0.isNumber }.uppercased()
+    }
+
+    /// Schon gespeicherter eigener Gutschein mit demselben Code; Beispiele und selbst ausgegebene ausgenommen.
+    public static func duplicate(of code: String, in cards: [GiftCard]) -> GiftCard? {
+        let plain = plainCode(code)
+        guard !plain.isEmpty else { return nil }
+        return cards.first { !$0.isExample && !$0.issuedByMe && plainCode($0.number) == plain }
+    }
+
     public static func bonLines(_ cards: [GiftCard]) -> [BonLine] {
         cards.flatMap { c in c.history.map { BonLine(cardID: c.id, cardName: c.name, merchantID: c.merchantID, redemption: $0) } }
             .sorted { $0.redemption.date > $1.redemption.date }

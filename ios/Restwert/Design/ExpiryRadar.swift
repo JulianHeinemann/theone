@@ -227,6 +227,8 @@ struct ExpiryRadar: View {
                         }
                     }
             }
+            // Erst zu einer Ebene zusammenfassen, dann ein Schatten (flüssiger als je Element).
+            .compositingGroup()
             .shadow(color: Color.shade, radius: 3, y: 1)
             if m.showCaption, let c = m.caption {
                 let parts = c.split(separator: "\n").map(String.init)

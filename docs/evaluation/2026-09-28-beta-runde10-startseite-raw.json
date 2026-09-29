@@ -1,0 +1,1201 @@
+[
+ {
+  "persona": "Sabine K., 38, Grundschullehrerin, bekommt Gutscheine von Eltern (Papier, Stadtgutschein, handgeschrieben) und sammelt sie im Portemonnaie (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Papiergutscheine per Foto scannen, Übersicht was noch drauf ist und bald abläuft",
+  "scores": {
+   "gesamt": 10,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "scores_runde9": {
+   "gesamt": 10,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Die Eltern schicken mir die Gutscheine oft als Foto – jetzt tippe ich in der Fotos-App auf Teilen und Restwert, fertig. Der Krustenzauber-Gutschein in Schreibschrift wird erkannt, und auf der Startseite sehe ich gleich, was bald abläuft, mit Knopf für die Kasse. Die Liste kommt früher, das Radar stört nicht mehr. Für mich ist das besser als vorher.",
+  "behoben": [
+   "Startseite (start-bestand): Liste direkt nach Guthabenkarte und 'Läuft bald ab'; Radar steht darunter (start-bestand-unten). Mein Überblick ist schneller da.",
+   "start-bestand / start: Unter jeder Zeile in 'Läuft bald ab' ein Knopf 'An der Kasse zeigen' bzw. 'Code einlösen' – der nächste Schritt ist sichtbar.",
+   "start-bestand-unten: Radar ohne verwirrende '2026'-Spalte: 'Heute · Nov · Dez // 2027 · 2028 · 2029+', eine Kachel je Jahr mit eigenem Betrag.",
+   "teilen-blatt / teilen-erweiterung / teilen-ergebnis: Foto aus der Fotos-App über 'Restwert' im Teilen-Menü übergeben; Blatt mit Vorschau und drei Schritten, danach 'Krustenzauber 25,00 €' als Ergebnis.",
+   "teilen-ergebnis: gestalteter Gutschein ohne lesbares 'Gutschein'-Wort (Schreibschrift) wird erkannt, Überschrift als Ladenname 'Krustenzauber'."
+  ],
+  "offen": [
+   "gespeichert-im-tab: Hinweis '„Douglas“ gespeichert – Ansehen' liegt weiterhin über 'Von Hand eingeben' und dem Untertitel von 'Aus einer Datei' (ScanView.swift:77 schafft nur Scroll-Platz).",
+   "ScanView.swift:166 / ScanView.swift:422: Nach dem Speichern des letzten Fotos einer Reihe ersetzt die Bilanz sofort den Hinweis mit 'Ansehen' – unverändert.",
+   "Reihen-Ende (Bilanz) weiterhin ohne Screenshot."
+  ],
+  "befunde": [
+   {
+    "screen": "teilen-ergebnis / ScanResultView.swift:241",
+    "befund": "Bei einem Papiergutschein ohne Datum (Krustenzauber) steht in der Kachel 'Gültig bis: nicht gefunden', obwohl darunter das Kaufdatum 28.09.2026 schon ausgefüllt ist und 'Davon hängt „Gültig bis“ ab' dasteht. Die gesetzliche Frist nennt erst 'Was wir geprüft haben' weiter unten (ScanResultView.swift:411-413). Die Kachel könnte gleich '31.12.2029 · gesetzlich' zeigen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-erweiterung / RestwertShare/ShareViewController.swift:203",
+    "befund": "Schritt 3 verspricht 'Prüfen und mit einem Tipp speichern', das Ergebnis danach (teilen-ergebnis) hat aber 'Hinzufügen' mit Formular – bei Papiergutscheinen ohne Code ist der Ein-Tipp-Weg nie möglich.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gespeichert-im-tab",
+    "befund": "Speichern-Hinweis verdeckt weiterhin eine Listenzeile; stört mich kaum.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts – die 10 bleibt, der Umbau und das Teilen aus Fotos machen es für mich noch besser. Kosmetik: bei Papiergutscheinen ohne Datum die gesetzliche Frist gleich in der Kachel zeigen, Schritt 3 im Teilen-Blatt ehrlich formulieren ('Prüfen und speichern'), Hinweis 'Ansehen' nach dem letzten Foto behalten.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Helga und Werner B., 70 und 72, Rentnerpaar, teilen sich ein iPhone, mittlere Schriftgröße (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Geteiltes Gerät mit 'Codes erst nach Face ID zeigen', einfache Kasse, verständliche Sprache",
+  "scores": {
+   "gesamt": 10,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "scores_runde9": {
+   "gesamt": 10,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Auf der ersten Seite steht jetzt 'Stadler – noch 11 Tage' und direkt darunter ein großer Knopf 'An der Kasse zeigen'. So müssen wir nicht mehr suchen, das ist für uns das Beste an der neuen Seite. Das Teilen aus den Fotos brauchen wir kaum, aber die Schritte 1-2-3 sind verständlich.",
+  "behoben": [
+   "start / start-bestand / kontrast-start / dunkel-start: 'Läuft bald ab' mit großem Knopf 'An der Kasse zeigen' – auch mit Kontrast (Rand um die Karte) und dunkel gut lesbar.",
+   "Guthabenkarte kompakter; '+ 1 Rabattcode (nicht in der Summe)' in einer ruhigen Zeile – die Rechnung ist klar (Stadler, KM Kaffee, Amazon, Buchladen = 145,15 €, RestwertApp.swift:343-344).",
+   "geteiltes-geraet-an / einstellungen-schutz: grüne Bestätigung 'Schutz für geteiltes Gerät ist an' unverändert gut.",
+   "kasse-code-geschuetzt: 'Geschützt – tippen und entsperren' mit Schloss, Leiste mit 'Bezahlt – Einkauf abziehen' klar."
+  ],
+  "offen": [
+   "geteiltes-geraet-an: unter der schwebenden Tab-Leiste scheint weiterhin Text durch (bekannte iOS-26-Grenze).",
+   "gross-kasse / kasse: Die Screenshots zeigen jetzt die Stadler-Karte (RADAR11, ohne PIN, ohne Ladenhinweis) statt der Thalia-Beispielkarte, die das Protokoll nennt. 'PIN anzeigen' mit Rand und der Ladenhinweis bei großer Schrift sind in dieser Runde nicht per Screenshot belegt. Der Code ist seit Runde 9 unverändert (git diff 874d9a9..HEAD berührt Features/Checkout nicht), deshalb kein Punktabzug."
+  ],
+  "befunde": [
+   {
+    "screen": "gross-start",
+    "befund": "Bei sehr großer Schrift füllt die Guthabenkarte fast die halbe Seite; die Zeile 'Stadler' steht erst unten, und ihr Knopf 'An der Kasse zeigen' liegt beim Öffnen unter der Tab-Leiste (man muss scrollen). Mit unserer mittleren Schrift passt es (start-bestand), für Nachbarn mit XL-Schrift nicht ganz.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "kasse / gross-kasse (Aufnahme)",
+    "befund": "Die Kassen-Screenshots haben die Karte gewechselt (demoRadar-Bestand: RestwertApp.swift:338-351, dann sample = erste Karte, RestwertApp.swift:353). Der Fall mit PIN ist dadurch nicht mehr zu sehen; die Protokollangabe 'kasse (Thalia-Beispielkarte)' stimmt nicht.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-blatt",
+    "befund": "Im Teilen-Menü des Simulators stehen englische Systemtexte ('1 Photo Selected', 'Use as Wallpaper') – nicht die App, verwirrt uns aber ein wenig.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches – für uns ist die neue Startseite besser. Feinschliff: bei XL-Schrift die Guthabenkarte noch kleiner, damit der Knopf 'An der Kasse zeigen' ohne Scrollen sichtbar ist; den Kassen-Screenshot wieder mit PIN-Karte aufnehmen.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Leon M., 19, Azubi im Einzelhandel, steht täglich an der Kasse mit Handscanner (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Barcode-Qualität an der Kasse, richtige Symbologie, Prüfziffern",
+  "scores": {
+   "gesamt": 10,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 10,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Rücklesung weiter 12/12, kasse-code93 zeigt sauber 'auf der Karte: Code 93'. Neu gut für die Schlange an der Kasse: der Kunde tippt auf der Startseite direkt auf 'An der Kasse zeigen' und hat den Barcode. Meine drei Aufräum-Punkte von letzter Woche sind aber alle noch da.",
+  "behoben": [
+   "barcodes/rueckgelesen.txt: weiterhin 12/12 exakt zurückgelesen (EAN-13, EAN-8, UPC-A, ITF, Code 39 mit Leerzeichen, 2x Code 128, QR, PDF417, Aztec, 2x Data Matrix).",
+   "start-bestand: 'An der Kasse zeigen' direkt aus 'Läuft bald ab' – ein Tipp weniger bis zum Barcode; Online-Code dort 'Code einlösen' (start), also richtige Aktion je Art.",
+   "kasse / kasse-code93: Barcode mittig, gleichmäßige Striche, Code-128-Hinweis unverändert gut."
+  ],
+  "offen": [
+   "ios/Restwert/Services/Importer.swift:65: Doc-Kommentar sagt weiter 'gelesener oder am Code erkannter Barcode', Zeile 72-73 erlaubt nur origin == .scanned oder Online-Code.",
+   "scan-v09 / scan-v13: Code-Kachel bricht weiter zweizeilig um ('AQ7K-2ZPM4H-' / 'R8TX', 'OT-7731-5520-' / '9912').",
+   "ScanResultView.swift:265: Format im Scan-Ergebnis nur bei origin == .scanned übergeben (Vorschau-Heuristik), unverändert.",
+   "scan-v14: Online-Code '7GHK 2M9P XQ41' mit Leerzeichen gruppiert, ohne Hinweis."
+  ],
+  "befunde": [
+   {
+    "screen": "ios/Restwert/Services/Importer.swift:65",
+    "befund": "Veralteter Kommentar widerspricht der Regel in Zeile 72-73 (nur gelesener Barcode oder Online-Code) – seit Runde 8 offen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v09, scan-v13",
+    "befund": "Lange Codes in halber Kachel zweizeilig; beim Abgleich mit dem Papier unruhig. Die volle Breite hätte Platz (PIN-Kachel bei v13 steht schon allein).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kasse / gross-kasse",
+    "befund": "Die Kassen-Screenshots zeigen diesmal die Demo-Karte 'RADAR11' (Code 128, RestwertApp.swift:346) statt einer echten Handelsnummer; zur Barcode-Qualität sagen die Einzel-Screenshots barcodes/kasse-1…12 mehr. Kein App-Fehler.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches – an der Kasse passt alles, und der neue Knopf auf der Startseite spart Zeit. Aufräumen wie in Runde 9: Kommentar in Importer.swift:65 korrigieren, lange Codes im Ergebnis über volle Kachelbreite.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Thomas R., 45, Pendler, bekommt fast nur Online-Codes per Mail (Zalando, Amazon, OTTO) (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Import aus Mail-Text und PDF-Anhang, Fristen, Code online einlösen",
+  "scores": {
+   "gesamt": 10,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Endlich: Restwert steht im Teilen-Menü und nimmt laut Code auch markierten Mail-Text und PDFs an, mit Vorschau wie 'Amazon · 25,00 €'. Auf der Startseite steht beim Zalando-Code gleich 'Code einlösen', das ist genau mein Weg. Im Simulator sehe ich den Weg aus Mail zwar nicht, aber aus Fotos klappt er.",
+  "behoben": [
+   "Teilen-Erweiterung vorhanden: markierter Text (RestwertShare/ShareViewController.swift:168-186), PDFs und bis 20 Bilder (RestwertShare-Info.plist: SupportsText, Image/File je 20); App liest Texte aus der App Group ein (Importer.swift:208). Ende-zu-Ende aus der Fotos-App belegt (teilen-blatt → teilen-erweiterung → teilen-ergebnis).",
+   "start: Online-Code in 'Läuft bald ab' mit Knopf 'Code einlösen' statt Kasse – passt zu mir.",
+   "Teilen-Blatt: 'Bleibt auf diesem Gerät. Nichts wird hochgeladen.' – beruhigend."
+  ],
+  "offen": [
+   "Mail-Text-Weg aus der Mail-App im Simulator nicht prüfbar (bekannte Grenze) – nur Code und Protokoll belegen ihn, kein Screenshot mit Text-Vorschau.",
+   "scan-v14: Code '7GHK 2M9P XQ41' mit Leerzeichen ohne Hinweis, ob sie beim Abtippen dazugehören.",
+   "scan-v13: OTTO-Code bricht in der Kachel um."
+  ],
+  "befunde": [
+   {
+    "screen": "hinzufuegen / gespeichert-im-tab / ScanView.swift:234",
+    "befund": "Die Zeile 'Aus dem Text einer E-Mail' sagt weiter 'Text kopieren und hier einfügen' – dass man jetzt in Mail markieren und über 'Teilen → Restwert' schicken kann, erfährt man hier nicht (nur bei 'Aus einer Datei' für Anhänge).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "ScanView.swift:52 / ScanView.swift:422",
+    "befund": "Die Reihe zählt alles als 'Foto': geteilter Mail-Text oder PDF zeigt 'Foto 1 von 2' und am Ende '2 Fotos: …', obwohl es Texte/PDFs sind. Die Erweiterung selbst unterscheidet sauber ('Mail-Text', '1 PDF', ShareViewController.swift:233-236).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v14",
+    "befund": "Gruppierter Online-Code ohne Hinweis 'ohne Leerzeichen eingeben'; 'Code kopieren' löst es an der Online-Kasse.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Mein Hauptwunsch ist erfüllt, deshalb 10. Damit ich die App auch meinen Kollegen richtig erkläre: in 'Aus dem Text einer E-Mail' auf den Teilen-Weg hinweisen und bei geteilten Texten/PDFs nicht 'Foto' sagen; ein Screenshot der Erweiterung mit Mail-Text-Vorschau (z. B. aus Notizen geteilt) würde den Weg im Simulator belegen.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Sandra K., 34, alleinerziehend, ein iPad wird von zwei Kindern (7 und 11) mitgenutzt (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Geteiltes Gerät: Codes vor Kindern verstecken, Schutz nicht aus Versehen abschaltbar",
+  "scores": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Auf dem iPad sehe ich jetzt oben gleich, was bald abläuft, und darunter meine Gutscheine – viel schneller als vorher. Der neue Knopf „An der Kasse zeigen“ macht mir erst Sorgen, aber die Kasse bleibt hinter Face ID. Und das Teilen-Blatt sagt „Bleibt auf diesem Gerät“, das beruhigt mich.",
+  "behoben": [
+   "Schutz-Einstellungen unverändert vollständig: grüne Bestätigung „Schutz für geteiltes Gerät ist an“ mit allen drei Schaltern (geteiltes-geraet-an)",
+   "Widget respektiert App-Sperre und Code-Schutz: bei Sperre „••••“ und keine Beträge (WidgetBridge.swift:47-56) – wichtig, weil es jetzt ein großes Widget mit 6 Abläufen gibt",
+   "iPad-Startseite: Liste kommt deutlich früher, Radar zeigt jetzt auch am Douglas-Stapel den Betrag („D +1 · 44 €“, ipad-start)"
+  ],
+  "offen": [
+   "iPad-Querformat weiter nicht per Screenshot belegt (Skriptgrenze, kein Abzug)",
+   "iPad-Kasse im Hochformat mit großer Leerfläche (ipad-kasse, unverändert)",
+   "Widget-Darstellung und Mitteilungs-Knopf „An der Kasse zeigen“ unter App-Sperre nur im Code prüfbar, nicht per Screenshot"
+  ],
+  "befunde": [
+   {
+    "screen": "RestwertApp.swift:109-111 / Store.swift:812",
+    "befund": "Erinnerung nennt Laden und Guthaben im Klartext („… gültig bis … Jetzt einlösen.“), auch wenn „Codes erst nach Face ID“ an ist; Codes stehen nicht drin. Auf einem Familien-iPad sehen Kinder so, welche Gutscheine es gibt – für mich hinnehmbar, ein Schalter „Beträge in Mitteilungen ausblenden“ wäre nett.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand / ipad-start",
+    "befund": "Neuer Schnellknopf „An der Kasse zeigen“ direkt auf der Startseite; führt zur Kasse, die bei Code-Schutz verdeckt bleibt (kasse-code-geschuetzt). Keine Lücke im Schutz erkennbar.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-blatt",
+    "befund": "Systemblatt zeigt „1 Photo Selected“ und „Use as Wallpaper“ auf Englisch (iOS-Simulator, nicht die App).",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts im Simulator-Build; der Umbau hat für mich nichts verschlechtert und der Schutz gilt auch für Widget und Schnellknopf.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Helga M., 61, Sehschwäche, nutzt große Schrift (Dynamic Type) und „Kontrast erhöhen“ (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Lesbarkeit, Kontrast, Größe der Warnungen und Knöpfe",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Besser: Das kleine Radar ist nicht mehr das Erste, was ich sehe, sondern oben steht groß „Stadler, noch 11 Tage“. Mit Kontrast hat die Karte jetzt einen klaren Rand. Aber bei meiner großen Schrift liegt der neue schwarze Knopf „An der Kasse zeigen“ genau unter der Tab-Leiste, und das Radar ist unten immer noch winzig.",
+  "behoben": [
+   "Radar steht nicht mehr über der Liste; „Läuft bald ab“ wächst bei XL voll mit (gross-start; HomeView.swift:29-50)",
+   "„Läuft bald ab“-Karte hat bei Kontrast erhöhen einen sichtbaren Rand (kontrast-start)",
+   "Betrag an gestapelten Radar-Marken: auf dem iPad „D +1 · 44 €“ (ipad-start) – mein Douglas-Punkt aus Runde 9 ist dort gelöst",
+   "Rote Abgelaufen-Box bei XL unverändert gut (gross/scan-v07)"
+  ],
+  "offen": [
+   "Radar-Beschriftungen wachsen weiter nur bis Bedienungshilfen 1 (ExpiryRadar.swift:75 und :95 `.dynamicTypeSize(...Self.maxType)`), und es gibt keinen Screenshot des Radars bei XL/Kontrast",
+   "Auf dem iPhone steht unter dem Stapel „a +3“ (2029+) kein Betrag – ausgerechnet dort liegen die 1.250 € Amazon (start-bestand-unten; Beschriftung wird verworfen, wenn sie breiter als die Jahresspalte ist: ExpiryRadar.swift:481)",
+   "„PIN anzeigen“ innen weiter hellgrau gefüllt (unverändert)",
+   "Rote Betrugsbox bei XL: „Zeig den Betrug bei der Polizei an“ verläuft im Nebel über „Hinzufügen“ (gross/scan-v09, unverändert)"
+  ],
+  "befunde": [
+   {
+    "screen": "gross-start",
+    "befund": "Bei XL liegt der neue Knopf „An der Kasse zeigen“ beim Öffnen unter der schwebenden Tab-Leiste; man sieht nur verschwommene Schrift hinter Glas. Per Scrollen erreichbar.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "ExpiryRadar.swift:75",
+    "befund": "Radar bleibt bei Bedienungshilfen 1 gedeckelt; Monate/Beträge (12 pt skaliert) wachsen bei XL nicht weiter. Durch den Umbau liegt es jetzt unten und ist weniger wichtig, ersetzt aber keine große Textfassung.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start-bestand-unten / ExpiryRadar.swift:481",
+    "befund": "Gestapelte Marke „a +3“ in 2029+ ohne Summe, weil „1.3xx €“ nicht in die Spalte passt; dafür gibt es kein Kürzel wie „1,3 T€“ oder eine zweite Zeile.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-start",
+    "befund": "Guthaben-Betrag bei XL mit 34 pt (HomeView.swift:437) optisch kaum größer als die Zeile „4 Gutscheine · 1 läuft bald ab“ – lesbar, aber nicht mehr der Blickfang.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-erweiterung",
+    "befund": "Teilen-Blatt mit großen Nummern-Schritten gut lesbar; nicht bei XL aufgenommen, daher nicht prüfbar.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Ein Verfallsradar, das bei großer Schrift mitwächst oder bei XL durch eine lesbare Textliste ersetzt wird (mit Screenshot), Beträge auch an jedem Stapel, und dass der Kasse-Knopf bei XL nicht unter der Tab-Leiste verschwindet.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Werner B., 67, pensionierter Kriminalhauptkommissar, früher Betrugsprävention für Senioren (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Gutscheinbetrug (Enkeltrick, falsche Behörden), Warnungen, Schutz der Codes",
+  "scores": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Der neue Weg über „Teilen“ läuft durch dieselbe Prüfung wie ein Scan: der Bäckerei-Gutschein kommt mit „Gelesen – bitte prüfen“ und dem Satz „Gib Gutscheincodes nie am Telefon oder per Nachricht weiter“. Keine Abkürzung am Betrugsschutz vorbei – so gehört sich das.",
+  "behoben": [
+   "Keine Regression: rote Box ab 200 € mit Handlungssatz und Musterwarnung unverändert (scan-v09, musterwarnung)",
+   "Geteilte Fotos/Mails laufen als Reihe durch die normale Scan-Auswertung mit denselben Warnungen (ScanView.swift consumeSharedBatch; teilen-ergebnis)",
+   "Teilen-Erweiterung legt Dateien nur lokal in die App Group, „Nichts wird hochgeladen“ (teilen-erweiterung)"
+  ],
+  "offen": [
+   "Erste Karte 100–199 € ohne Vorgeschichte weiter nur mit grauem Hinweis, ohne Rückfrage – vertretbar",
+   "Bei XL verläuft der Polizei-Satz in der roten Box im Nebel über „Hinzufügen“ (gross/scan-v09)"
+  ],
+  "befunde": [
+   {
+    "screen": "teilen-ergebnis",
+    "befund": "Krustenzauber 25 €: „Gültig bis: nicht gefunden“, Hauptknopf „Hinzufügen“ mit Formular statt Ein-Tipp-Speichern – richtig vorsichtig bei einem Gutschein ohne Code.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Store.swift:812",
+    "befund": "Ablauf-Erinnerung enthält Laden und Guthaben, aber keinen Code – aus Betrugssicht in Ordnung.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross/scan-v09",
+    "befund": "Unverändert: bei XL sind „Gib den Code nicht weiter“ und „lass das Guthaben sperren“ sichtbar, die Anzeige-Empfehlung erst nach Scrollen.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches im Simulator-Build; optional eine Rückfrage schon bei der ersten Karte ab 100 €.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Tarek A., 29, Deutsch als Zweitsprache (B1), Lagerlogistiker (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Verständlichkeit der Warnungen und Schutztexte",
+  "scores": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Startseite ist jetzt einfacher: „Läuft bald ab“, darunter ein schwarzer Knopf „An der Kasse zeigen“ – ich weiß sofort, was ich tun soll. Beim Teilen stehen drei kurze Schritte mit Nummern, das verstehe ich gut. Die lange rote Box ist immer noch ein Block.",
+  "behoben": [
+   "Warnung mit klarer Aktion: „An der Kasse zeigen“ / „Code einlösen“ direkt unter „Läuft bald ab“ (start, start-bestand)",
+   "Radar ohne verwirrende Spalte „2026“ hinter „Dez“: Heute – Nov – Dez – 2027 – 2028 – 2029+ (start-bestand-unten)",
+   "Teilen-Blatt: „So geht es weiter“ mit drei nummerierten, kurzen Sätzen (teilen-erweiterung)",
+   "„+ 1 Rabattcode (nicht in der Summe)“ und „Nur Beispiele – dein erster Gutschein ersetzt sie“ klar (start)"
+  ],
+  "offen": [
+   "Rote Box bei 1.250 € und Musterwarnung weiter ein Absatz ohne Umbruch vor „Ruf sofort …“ (scan-v09, musterwarnung)"
+  ],
+  "befunde": [
+   {
+    "screen": "musterwarnung",
+    "befund": "Sieben Sätze in einem Block; ein Absatz vor „Ruf sofort die Firma …“ würde B1-Lesern helfen (unverändert).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand",
+    "befund": "Überschrift „Weitere“ über der Liste ist knapp; „Weitere Gutscheine“ wäre für mich eindeutiger.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-blatt",
+    "befund": "„1 Photo Selected“ und „Use as Wallpaper“ sind Englisch (Systemblatt im Simulator, nicht die App).",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches; höchstens ein Absatz in der langen roten Box.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Timo Brandt, 31, iOS-Entwickler und erfahrener TestFlight-Beta-Tester (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Codequalität, Tests, Scan-Pipeline (Vision/Fallbacks), Sperrlogik",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Teilen-Erweiterung ist sauber gebaut: Sie liest selbst nichts aus, legt die Dateien nur in die App Group, und SharedInbox ist getestet. Bei mir laufen 139/139 Tests grün. Die neue Regel für Gutscheine ohne Gutschein-Wort ist aber zu großzügig, und meine drei Architekturpunkte aus Runde 9 sind unverändert.",
+  "behoben": [
+   "Doppelter Überspringen-Knopf bei Dubletten in einer Reihe: 'Erneut scannen' nur noch einzeln, in der Reihe kein zweiter skipButton (ScanView.swift:342, Commit 874d9a9)",
+   "Unit-Test für readableSymbology (ScanDraftTests.swift 'Lesbare Namen für umgewandelte Barcode-Arten', inkl. Rückfall auf den Rohnamen)",
+   "Abbrechen in einer Fotoreihe beendet die Reihe mit Bilanz statt stillem Rest (ScanView.swift:316-321)",
+   "Neue Logik ist getestet: SharedInboxTests (Reihenfolge, genau einmal abholen), GoldenOCRTests (Krustenzauber, verlesenes Wort, Preisliste), headlineName; eigener Lauf 'Test run with 139 tests in 22 suites passed'",
+   "Startseite: Liste vor dem Radar, Radar bei Suche ausgeblendet (HomeView.swift:29-50) – für mich besser, weil ich auf dem Start meist eine bestimmte Karte suche"
+  ],
+  "offen": [
+   "canSaveDirectly weiter @MainActor-Computed (Importer.swift:67), aiFilled parst bei jedem Zugriff (Importer.swift:77), warningTexts baut eine ScanResultView (ScanResultView.swift:428)",
+   "Fehler der Texterkennung bleiben still leer: (try? await request.perform(on: image)) ?? [] (VoucherScanner.swift:238)",
+   "Kein XCUITest-Target (project.pbxproj: 0 Treffer für ui-testing); auch der neue Weg Teilen → App → Reihe ist nur per Screenshot belegt"
+  ],
+  "befunde": [
+   {
+    "screen": "RestwertKit ScanDraft.swift:69",
+    "befund": "looksLikeVoucher akzeptiert jetzt jeden Text mit genau einem Betrag und Währung. Eigene Probe mit ScanDraft.merge + looksLikeVoucher (Skript im Scratchpad): 'Brot / 4,50 €', 'Preisschild / Kaffeemaschine / 49,99 €', 'Jetzt 10 € sparen! / Nur diese Woche', 'MENÜ DES TAGES / Schnitzel mit Pommes / 12,90 €' und 'Eintrittskarte / Konzert / 35 €' ergeben alle true, dazu headlineName als Ladenname ('Kaffeemaschine', 'Nur diese Woche'). Vorher wären das 'Kein Gutschein erkannt' gewesen. Ein Preisschild oder eine Tageskarte in einer Fotoreihe erscheint so als 'Gelesen – bitte prüfen'. Es ist ein Fehlalarm ohne Datenverlust, aber der Golden-Test deckt nur die Preisliste mit mehreren Beträgen ab.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "ScanView.swift:384-391 (consumeSharedBatch)",
+    "befund": "running verlangt batchTotal > 0. Nach einem einzelnen Kamera- oder Datei-Scan ist batchTotal 0. Kommt dann eine Teilen-Übergabe, setzt der else-Zweig outcome = nil: Ein ungespeichertes Ergebnis verschwindet ohne die sonst übliche Rückfrage 'Ergebnis verwerfen?'. Das passiert z. B., wenn man mitten im Prüfen in die Fotos-App wechselt, teilt und zurückkommt.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "RestwertKit SharedInbox.swift:22 / RestwertShare/ShareViewController.swift:129",
+    "befund": "pending() filtert '.part'-Dateien, und der Test prüft das. Die Erweiterung schreibt aber nie über eine .part-Datei, sondern kopiert direkt mit copyItem (nicht atomar). Die Absicherung gegen halb geschriebene Dateien ist also nur getestet, nicht benutzt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "RestwertShare/ShareViewController.swift:58",
+    "befund": "providers.prefix(20) wirft alles ab dem 21. Anhang still weg. Die Aktivierungsregel erlaubt 20 Bilder UND 20 Dateien (RestwertShare-Info.plist), gemischt also bis zu 40. Die Erfolgsmeldung sagt nichts über Weggelassenes.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Die Ein-Betrag-Regel enger fassen (z. B. nur mit Schmuck-/Überschrift-Merkmalen oder ohne Preis-/Menü-Wörter) und mit Negativfällen testen. Ein laufendes Einzelergebnis nicht still durch eine Teilen-Übergabe verwerfen. .part wirklich nutzen oder entfernen. warningTexts/aiFilled/canSaveDirectly beim Erzeugen berechnen, Texterkennungsfehler als eigenen Zustand führen und einen XCUITest für Scan → Speichern → Kasse anlegen.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Rainer Köhler, 48, Kassen- und Scanner-Techniker (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Barcode-Darstellung an der Kasse: Symbologien, Ruhezonen, Kontrast, Rücklesbarkeit",
+  "scores": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Das ist für die Praxis die beste Änderung seit Langem: 'An der Kasse zeigen' direkt auf der Startseite und in der Erinnerung. So steht der Barcode mit einem Tipp da, während die Schlange wartet. An der Kasse selbst hat sich aber nichts geändert, und meine beiden Punkte aus Runde 9 sind noch offen.",
+  "behoben": [
+   "Kürzerer Weg zum Barcode: Knopf 'An der Kasse zeigen' unter jeder bald ablaufenden Zeile (HomeView.swift:152-169; start-bestand.png, start.png mit 'Code einlösen' für Zalando online und 'An der Kasse zeigen' für IKEA)",
+   "Erinnerung mit Aktion 'An der Kasse zeigen' (.foreground), öffnet Detail und darüber die Kasse (Store.swift:846-855, RestwertApp.swift:135-138)",
+   "Unit-Test für die lesbaren Barcode-Namen jetzt vorhanden (ScanDraftTests readableSymbologies)",
+   "Startseite: Knopf in hell, dunkel und bei Kontrast gut abgesetzt (start-bestand, dunkel-start, kontrast-start)"
+  ],
+  "offen": [
+   "Vollbild (FullBarcode, CheckoutView.swift:966 ff.) zeigt den Hinweis 'Als Code 128 gezeichnet …' weiter nicht",
+   "Kein Unit-Test für die Modulzahl aus modules(of:) (BarcodeView.swift:81); in den Tests 0 Treffer",
+   "GS1-128/FNC1 beim Neuzeichnen (Hinweis, im Simulator nicht prüfbar)"
+  ],
+  "befunde": [
+   {
+    "screen": "CheckoutView.swift:966 (FullBarcode)",
+    "befund": "Seit Runde 8 unverändert: Im Vollbild fehlt der Hinweis auf das Ersatzformat. Gerade dorthin geht der Kassierer, wenn der Scanner nicht liest.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "BarcodeView.swift:81-91",
+    "befund": "modules(of:) nimmt weiter 1 Pixel pro Modul aus dem CIFilter an und ist nicht getestet. Ändert Apple das Verhalten, fällt es nicht auf.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-start.png",
+    "befund": "Bei großer Schrift liegt der neue Knopf 'An der Kasse zeigen' beim Öffnen unter der schwebenden Tab-Leiste und ist nur verschwommen zu sehen. Man muss erst scrollen. Er funktioniert, ist aber genau dort am schwächsten, wo er am meisten hilft.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Den Ersatzformat-Hinweis auch im Vollbild zeigen und einen Unit-Test für die Modulzahl im Code-128-Pfad anlegen (11·n+35). Mehr brauche ich an der Kasse nicht.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Svenja Albrecht, 36, QA-Testerin, testet systematisch im Simulator (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Nachweise gegen Protokoll abgleichen, Testfälle v01–v14, Konsistenz von Texten und Zuständen",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Den Teilen-Weg kann ich nachvollziehen: Blatt der Fotos-App, Restwert-Blatt mit Vorschau und drei Schritten, dann Krustenzauber 25,00 € in der App (mit 'Fotos' als Rücksprung). Die neue Startseite ist klarer. Aber 'start-bestand-unten' ist nicht der gescrollte 'start-bestand', und zwei Punkte von mir aus Runde 9 fehlen weiter.",
+  "behoben": [
+   "Doppelter Überspringen-Knopf bei Dubletten behoben (ScanView.swift:329-342: in der Reihe nur skipButton oben, 'Erneut scannen' nur einzeln)",
+   "Unit-Test für die Namenstabelle (ScanDraftTests readableSymbologies: code93, Code93i, GS1DataBarExpanded, codabar, UPCE, unbekannt)",
+   "Protokoll Punkt 7 belegt: teilen-blatt (Restwert im Teilen-Menü), teilen-erweiterung ('1 Foto für Restwert bereit', Vorschau, drei Schritte, 'Bleibt auf diesem Gerät'), teilen-ergebnis ('Krustenzauber', 'Guthaben 25,00 €', 'Foto zeigen')",
+   "Protokoll Punkt 1/2 belegt: start-bestand zeigt Guthaben kompakt, '+ 1 Rabattcode (nicht in der Summe)' in einer Zeile, 'Läuft bald ab' mit Knopf, darunter Filter und Liste",
+   "Protokoll Punkt 5 belegt: Radar in start-bestand-unten mit Achse 'Heute · Nov · Dez // 2027 · 2028 · 2029+', keine '2026'-Spalte hinter Dez",
+   "139/139 Tests auf meinem Mac grün (Protokoll sagt 139)"
+  ],
+  "offen": [
+   "'Prüfen und ändern' und 'Überspringen – nächstes Foto' stehen weiter nebeneinander im HStack (ScanView.swift:346-350), der Umbruch aus Runde 9 ist nicht behandelt",
+   "Kein Screenshot der Abschlussbilanz ('5 Fotos: 3 gespeichert, …')",
+   "Speichern-Nachweis weiter per Startparameter, kein Knopf-Nachweis (kein XCUITest)",
+   "Mehrfachauswahl weiter per -demoImportBatch statt über den Fotos-Picker (der Teilen-Weg aus der Fotos-App ist jetzt aber ein echter Ende-zu-Ende-Nachweis für 1 Foto)"
+  ],
+  "befunde": [
+   {
+    "screen": "start-bestand.png vs. start-bestand-unten.png",
+    "befund": "Laut Protokoll ist 'start-bestand-unten' derselbe Bestand nach unten gescrollt. Oben stehen '4 Gutscheine' mit 145,15 € (Stadler, KM Kaffee, Amazon 70, Buchladen + Zalando-Code). Unten erscheinen zusätzlich Douglas 50,00 €, zweimal 'Café am Markt · ausgegeben' und Amazon 1.250,00 € bis 28.09.2036. Das ist ein anderer Datenstand (auch anderer Zeitstempel, 15:02 statt 14:47). Die Summe in der Guthabenkarte passt damit nicht zur unten sichtbaren Liste.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "RestwertKit ScanDraft.swift:69",
+    "befund": "Nachgeprüft mit eigenem Skript: Ein Text mit genau einem Betrag gilt jetzt als Gutschein ('Brot 4,50 €', Tageskarte 'Schnitzel mit Pommes 12,90 €', Werbung 'Jetzt 10 € sparen!' → true, Ladenname 'Nur diese Woche'). Der Testfall v11-Stil 'Kein Gutschein erkannt' greift damit bei Einzelpreis-Fotos nicht mehr. Es gibt nur einen Negativtest mit mehreren Beträgen.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start-bestand-unten.png (Verfallsradar)",
+    "befund": "Die Spalte '2029+' mit +3 (darunter Amazon 1.250 €) zeigt als einzige keinen Betrag. Gerade das meiste Geld steht ohne Zahl da, die Summe passt offenbar nicht in die Spalte (ExpiryRadar.swift: Bündelsumme wird ausgeblendet, wenn sie Nachbarn berührt).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ExpiryRadar.swift:509-511",
+    "befund": "Die VoiceOver-Zusammenfassung sagt weiter 'Zeitachse: nächste 90 Tage', obwohl die Achse jetzt bis Silvester reicht (horizon bis 125 Tage, :364-367).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-ergebnis.png",
+    "befund": "'Gültig bis: nicht gefunden' direkt über 'Wann gekauft oder bekommen? Davon hängt „Gültig bis“ ab.' mit gesetztem Datum 28.09.2026. Aus Nutzersicht widersprüchlich: Das Kaufdatum steht fest, aber die Kachel rechnet keine Frist (z. B. gesetzliche 3 Jahre) und erklärt auch nicht, warum.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Screenshots aus einem einzigen Datenstand (start-bestand und -unten konsistent). Negativtests für die Ein-Betrag-Regel (Preisschild, Speisekarte, Werbung) und die Regel enger fassen. Nebenknöpfe in der Reihe untereinander, Screenshot der Abschlussbilanz, Betrag auch für die Jahresspalte '2029+' und ein Speichern-Nachweis über den echten Knopf (XCUITest).",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Markus Weidner, 42, IT-Administrator, datenschutzbewusst (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Datenfluss, Speicherung, Zwischenablage, Logs, App-Sperre und Code-Schutz",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Gut ist, dass die Teilen-Übergabe im Datenschutztext steht, in der App und auf der Website, dass bewusst keine Server-Pushes kommen und dass die Zahl am App-Symbol abschaltbar ist. Die Dateien der Erweiterung liegen aber ohne den Dateischutz, den die App selbst überall nutzt. Wird eine Reihe abgebrochen, bleiben Kopien liegen. Meine beiden Punkte aus den Vorrunden sind unverändert.",
+  "behoben": [
+   "Datenschutztext nennt die Teilen-Übergabe über den gemeinsamen Ordner, 'die App holt es dann ab und löscht es dort. Nichts davon wird hochgeladen.' (LegalView.swift:31, server/public/datenschutz.html:33)",
+   "Teilen-Erweiterung fragt nie selbst nach Mitteilungen und schickt nur bei schon erteilter Erlaubnis eine lokale Mitteilung (ShareViewController.swift notifyReady); keine Server-Pushes",
+   "Widget groß zeigt Beträge nur, wenn nicht gesperrt (RestwertWidget.swift large: s.locked == false); Zahl am App-Symbol abschaltbar (SettingsView.swift 'Zahl am App-Symbol')",
+   "'An der Kasse zeigen' aus der Mitteilung geht über den normalen Router (RestwertApp.swift:135-138), App-Sperre bleibt davor",
+   "Startseite: für mich neutral bis besser, nichts Neues wird ohne Tipp offengelegt"
+  ],
+  "offen": [
+   "Empfänger und Gruß gehen weiter mit Export und iCloud-Sync, ohne Hinweis im Ausgeben-Screen (IssueVoucherView.swift:63, :101) oder im Datenschutztext",
+   "manualRisk meldet weiter nur die erste Auffälligkeit, Dublette vor Betrugssatz (CardFormView.swift:722-735)",
+   "Ohne iPhone-Code bleibt die Sperre bewusst abschaltbar (bekannte Grenze)"
+  ],
+  "befunde": [
+   {
+    "screen": "RestwertShare/ShareViewController.swift:69, :129, :144",
+    "befund": "Die Erweiterung schreibt Mail-Text (.atomic), kopierte Fotos/PDFs (copyItem) und JPEGs ohne .completeFileProtection in die App Group. Die App selbst schreibt ihre Daten überall mit .completeFileProtection (Store.swift:230, Persistence.swift:93). Ein geteilter Gutschein mit Code und PIN liegt also bis zum nächsten Öffnen der App mit dem schwächeren Standardschutz im Gruppenordner. Wie lange, bestimmt allein der Nutzer.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "ScanView.swift:319, :447, :458 / RestwertApp.swift:308-309",
+    "befund": "Die App verschiebt die Übergabe nach tmp/shared-inbox und löscht eine Datei erst nach dem Lesen (ScanView.swift:431). Bei Abbrechen einer Reihe (batch = []), 'Erneut scannen' oder beim eigenen Café-Gutschein mitten in der Reihe werden die restlichen Kopien verworfen, aber nicht gelöscht. Sie bleiben bis zur Systembereinigung liegen. Das widerspricht dem Satz 'holt es ab und löscht es' zwar nicht wörtlich, aber im Geist.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "IssueVoucherView.swift:63, :101",
+    "befund": "Seit Runde 7 unverändert: Empfänger und Gruß sind für ein Café Kundendaten, werden gespeichert, exportiert und synchronisiert, aber nirgends erwähnt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "CardFormView.swift:726-734",
+    "befund": "Unverändert: Bei 'Von Hand eingeben' verdrängt der Dublettentext den Betrugssatz.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Die Erweiterung schreibt mit .completeFileProtection (bzw. setzt den Schutz für den Inbox-Ordner). Abgebrochene Reihen löschen ihre Kopien in tmp/shared-inbox. Ein Satz zu Empfänger/Gruß beim Ausgeben und im Datenschutztext, und bei 'Von Hand eingeben' Dublette und Betrugssatz zusammen.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Mara Lindqvist, 33, UX-Designerin in einer Hamburger Produktagentur, achtet auf Hierarchie und Konsistenz (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Visuelle Hierarchie, Ergebnis-Screen, Konsistenz zwischen Scan, Detail und Kasse; Ein-Tipp-Speichern, Gutschein ausgeben, iPad; neue Startseite und Teilen-Weg",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die neue Startseite ist klar besser: Guthabenkarte kompakter, darunter sofort das Dringende mit einem echten nächsten Schritt, danach die Liste – das Radar ist endlich Überblick statt Hindernis, und ‚Heute · Nov · Dez // 2027 · 2028 · 2029+‘ liest sich eindeutig. Das Teilen-Blatt ist ruhig und gut gegliedert. Aber meine eigenen vier Punkte aus Runde 9 sind wortgleich noch da, und unter dem Ausgegeben-Filter zeigt das Radar jetzt fremde Karten.",
+  "behoben": [
+   "Nebenbei: Startseite neu geordnet – Liste beginnt auf dem iPhone schon im ersten Bildschirm (start-bestand, ‚Weitere‘ bei y≈1470 px von 2000 angezeigt), Radar darunter (start-bestand-unten)",
+   "Nebenbei: Guthabenkarte kompakter, Rabattcode-Hinweis in einer ruhigen Zeile (start, start-bestand)",
+   "Nebenbei: Radar ohne verwirrende ‚2026‘-Spalte hinter ‚Dez‘, eine Kachel je Jahr mit eigenem Betrag (start-bestand-unten, ipad-start)",
+   "Nebenbei: Teilen-Erweiterung mit Vorschau, drei nummerierten Schritten und Datenschutz-Zeile – sauberer Aufbau (teilen-erweiterung)"
+  ],
+  "offen": [
+   "iPad-Start: Wortmarke an der linken Bildschirmkante und Suchfeld über volle Breite, Inhalt auf Lesebreite – weiter zwei linke Kanten (ipad-start, als Grenze dokumentiert)",
+   "‚· ausgegeben‘ weiter als eigene dritte Zeile mit führendem Punkt (liste-ausgegeben-filter, start-bestand-unten; Design/CardRow.swift:117)",
+   "gross-eigener-gutschein-einloesen: schwarze Meldung ‚Dein Gutschein: noch 25,00 € offen‘ klebt ohne Lücke auf dem schwarzen Einlöse-Knopf",
+   "Code-Kachel halbe Breite bricht mitten im Code um: ‚AQ7K–2ZPM4H– / R8TX‘ (scan-v09)",
+   "gross-dublette: drei volle Knöpfe belegen bei XL rund ein Drittel der Höhe"
+  ],
+  "befunde": [
+   {
+    "screen": "liste-ausgegeben-filter / Features/Home/HomeView.swift:45",
+    "befund": "Durch den Umbau steht das Verfallsradar direkt unter der gefilterten Liste, ignoriert aber den Filter: unter ‚Ausgegeben · 50,00 € noch offen‘ zeigt es Douglas 50 € und Amazon – eine Nachbarschaft, die fälschlich Zugehörigkeit suggeriert. Früher (Radar oben) fiel das nicht auf. Radar bei aktivem Filter ausblenden oder mitfiltern.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start / start-bestand",
+    "befund": "Die ‚An der Kasse zeigen‘-Kapseln sind vollflächig schwarz wie der Primärknopf im Scan-Ergebnis. Bei zwei bald ablaufenden (start) stehen zwei gleich schwere schwarze Knöpfe untereinander direkt unter der gelben Karte – der Bereich wirkt lauter als nötig; eine Sekundär-Kapsel (Umriss) würde die Hierarchie halten.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand-unten",
+    "befund": "Beim Scrollen laufen Zeilen sichtbar hinter Wortmarke und Suchfeld durch (Amazon/Buchladen halbtransparent hinter ‚Restwert‘, Douglas-Zeile vom Suchfeld angeschnitten) – kein klarer Kopfbereich.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ipad-start",
+    "befund": "Unverändert zwei linke Kanten (Wortmarke x≈15 pt, Inhalt zentriert auf ~700 pt).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-eigener-gutschein-einloesen",
+    "befund": "Meldung und Hauptknopf ohne Abstand in gleicher Tinte, wirkt wie ein zweiteiliger Knopf.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Radar bei aktivem Filter ausblenden oder mitfiltern; iPad-Startseite mit Wortmarke und Suchfeld auf der Lesebreite; bei XL Abstand zwischen Einlöse-Meldung und Einlöse-Knopf; Code-Kachel über volle Breite; ‚ausgegeben‘ ohne führenden Punkt hinter dem Datum.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Jule Okafor, 30, Community-Managerin für Beta-Programme bei einem Fintech, liest Feedback von Hunderten Testern (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Was Beta-Tester typischerweise melden würden: Verwirrung, Vertrauen, Erklärtexte, Support-Last; neue Startseite, Teilen-Erweiterung",
+  "scores": {
+   "gesamt": 10,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "scores_runde9": {
+   "gesamt": 10,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "‚Wie bekomme ich das Foto aus meiner Galerie rein?‘ war eine der häufigsten Fragen – das Teilen-Menü mit ‚1 Foto für Restwert bereit‘ und drei Schritten beantwortet sie, und der Krustenzauber-Gutschein wird jetzt erkannt statt abgelehnt. Der ‚An der Kasse zeigen‘-Knopf direkt bei ‚noch 11 Tage‘ spart Leuten den Umweg. Meine drei Kleinigkeiten stehen noch, dazu ein neuer Kandidat fürs Ticketsystem: das Radar unter dem Ausgegeben-Filter.",
+  "behoben": [
+   "Nebenbei: Teilen aus der Fotos-App im Simulator durchgängig belegt (teilen-blatt → teilen-erweiterung → teilen-ergebnis), ‚Bleibt auf diesem Gerät. Nichts wird hochgeladen.‘ beugt Datenschutz-Fragen vor",
+   "Nebenbei: Gestalteter Bäckerei-Gutschein ohne lesbares Gutschein-Wort wird als ‚Krustenzauber · 25,00 €‘ gelesen statt ‚Kein Gutschein‘ (teilen-ergebnis) – echter Fehlerbericht behoben",
+   "Nebenbei: Warnung mit Aktion (‚An der Kasse zeigen‘, online ‚Code einlösen‘) direkt unter bald ablaufenden Gutscheinen (start, start-bestand)"
+  ],
+  "offen": [
+   "Meldung ‚„Douglas“ gespeichert – Ansehen‘ verdeckt weiter ‚Von Hand eingeben‘ (gespeichert-im-tab)",
+   "‚Dein Gutschein: noch 25,00 € offen‘ aus Laden-Sicht doppeldeutig (Features/Scan/ScanView.swift:461)",
+   "‚Nicht angenommen‘ vs. ‚Hat nicht geklappt‘ (Features/Checkout/CheckoutView.swift:187, :216)",
+   "Screenshot der Mehrfach-Bilanz fehlt weiterhin"
+  ],
+  "befunde": [
+   {
+    "screen": "liste-ausgegeben-filter / Features/Home/HomeView.swift:45",
+    "befund": "Café-Betreiber filtert ‚Ausgegeben‘ und sieht direkt darunter ein Radar mit Douglas und Amazon (eigene Gutscheine, Filter wird ignoriert). Erwartbares Ticket: ‚Warum stehen meine Privatgutscheine bei den ausgegebenen?‘",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "teilen-erweiterung",
+    "befund": "Schritt 2 ‚Öffne Restwert‘ ist ein manueller App-Wechsel; die Mitteilung kommt nur, wenn Mitteilungen schon erlaubt sind (RestwertShare/ShareViewController.swift:96). Wer sie abgelehnt hat, muss selbst daran denken – ehrlich erklärt, aber ein Drop-off-Punkt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand vs. start-bestand-unten",
+    "befund": "Die beiden Screenshots zeigen offenbar unterschiedliche Datenstände (oben 4 Gutscheine/145,15 € ohne Chip ‚Ausgegeben‘, unten zusätzlich Douglas 50 €, zwei Café-Karten, Amazon 1.250 €). Für Release-Notes verwirrend; Aufnahme mit einem Stand wiederholen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-blatt",
+    "befund": "Systemblatt zeigt ‚1 Photo Selected‘ und ‚Use as Wallpaper‘ auf Englisch – Simulator-Sprache, nicht die App; in Support-Doku nicht so zeigen.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches. Feinschliff: Radar bei Filter ausblenden, Toast ohne Überdeckung, ‚Dein Gutschein‘ eindeutig, Screenshot der Mehrfach-Bilanz.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Tobias Brandt, 40, Accessibility-Beta-Tester, stark sehbehindert, nutzt VoiceOver und große Schrift, prüft mit dem Accessibility Inspector im Simulator (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "VoiceOver-Labels, Überschriften-Struktur, Dynamic Type, Tippziele, Ansagen; neue Startseite bei XL",
+  "scores": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Grundsätzlich ist die neue Reihenfolge für mich besser: weniger Radar oben, die Liste kommt früher, und der Kasse-Knopf hat ein Label mit Ladennamen. Bei XL sehe ich aber auf der Startseite den neuen Knopf gar nicht – er liegt unter der Tab-Leiste –, und er ist mit 40 pt kleiner als alle anderen Tippziele. Keiner meiner fünf Punkte aus Runde 9 ist erledigt.",
+  "behoben": [
+   "Nebenbei: Kasse-Kurzknopf mit sprechendem VoiceOver-Label ‚An der Kasse zeigen: Stadler‘ (Features/Home/HomeView.swift:168), Abschnittstitel als Überschrift (HomeView.swift:117)",
+   "Nebenbei: Radar mit eigener Zusammenfassung für VoiceOver, weiter unten und damit nicht mehr vor der Liste (Design/ExpiryRadar.swift:165)",
+   "gross-kasse: der verblasste Hinweis im Verlauf ist im aktuellen Screenshot (Stadler, ohne PIN) nicht mehr zu sehen – anderer Gutschein, daher nicht abschließend geprüft"
+  ],
+  "offen": [
+   "Kein dokumentierter Accessibility-Inspector-Audit inkl. VoiceOver-Reihenfolge (weiter als Grenze genannt)",
+   "VoiceOver-Label der Ausgeben-Karte ohne ‚gültig bis‘ und Gruß (Features/Issue/IssueVoucherView.swift:177)",
+   "gross-ausgeben: Knopf ‚Gutschein teilen oder drucken‘ läuft unter den Bildschirmrand, keine feste Leiste",
+   "gross-eigener-gutschein-einloesen: Meldung und Einlöse-Knopf ohne Abstand, gleiche Farbe",
+   "gross-dublette: drei volle Knöpfe"
+  ],
+  "befunde": [
+   {
+    "screen": "Features/Home/HomeView.swift:162",
+    "befund": "Neuer Kurzknopf ‚An der Kasse zeigen‘/‚Code einlösen‘ mit .frame(minHeight: 40) – unter den 44 pt, die das Projekt selbst als Layout.tap festlegt (Design/Theme.swift:145).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross-start",
+    "befund": "Bei XL füllen Wortmarke, Suchfeld und Guthabenkarte gut 55 % des ersten Bildschirms; der neue ‚An der Kasse zeigen‘-Knopf liegt beim Öffnen genau unter der schwebenden Tab-Leiste und ist nur verschwommen zu erahnen. Die Karte selbst bricht ‚4 Gutscheine · 1 läuft bald ab‘ und die Rabattcode-Zeile auf je zwei Zeilen.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross-start",
+    "befund": "Cent im Guthaben bei XL weiter klein hochgestellt (‚145,¹⁵ €‘); für Lupen-Nutzer schwerer lesbar als der Rest – VoiceOver liest es korrekt, visuell bleibt es knapp.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Features/Issue/IssueVoucherView.swift:177",
+    "befund": "accessibilityLabel weiter nur Laden, Guthaben, Empfänger, Code – ohne ‚gültig bis‘ und Gruß.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-ausgeben",
+    "befund": "‚oder drucken‘ liegt am unteren Rand, Knopf angeschnitten, kein Verlauf als Scroll-Hinweis.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-eigener-gutschein-einloesen",
+    "befund": "Schwarze Meldung sitzt ohne Lücke auf dem schwarzen Knopf; mit Lupe nicht zu unterscheiden, was tippbar ist.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Kurzknopf auf 44 pt; bei XL ‚Läuft bald ab‘ samt Knopf ohne Scrollen erreichbar oder zumindest nicht unter der Tab-Leiste; dokumentierter Accessibility-Inspector-Audit mit VoiceOver-Reihenfolge; Gültigkeit und Gruß im Label der Ausgeben-Karte; Ausgeben bei XL mit fester Leiste; Abstand zwischen Einlöse-Meldung und Knopf.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Sabine Roth, 44, freie Texterin und Lektorin für Produkt- und Banking-Apps (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Mikrotexte, Glossar, Tonalität, Konsistenz der Begriffe; neue Startseite und Teilen-Texte",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Startseite spricht jetzt in Handlungen: ‚An der Kasse zeigen‘, ‚Code einlösen‘ – genau richtig. Das Teilen-Blatt ist schlicht und ehrlich (‚Bleibt auf diesem Gerät. Nichts wird hochgeladen.‘). Aber alle fünf Textstellen aus Runde 9 stehen unverändert da, und die neue Mitteilung hat einen Numerus-Fehler.",
+  "behoben": [
+   "Nebenbei: Handlungsknöpfe auf der Startseite konsistent mit der Kasse (‚An der Kasse zeigen‘, online ‚Code einlösen‘; Features/Home/HomeView.swift:156)",
+   "Nebenbei: Teilen-Erweiterung mit klarer Überschrift ‚So geht es weiter‘ und drei kurzen Schritten (teilen-erweiterung)",
+   "Nebenbei: Radar-Beschriftung eindeutig, kein ‚2026‘ mehr hinter ‚Dez‘ (start-bestand-unten)"
+  ],
+  "offen": [
+   "Café-Knopf weiter ‚Einlösen – Betrag abziehen‘ (Features/Checkout/CheckoutView.swift:210)",
+   "‚Nicht angenommen‘ vs. ‚Hat nicht geklappt‘ (Features/Checkout/CheckoutView.swift:187, :216)",
+   "Glossar-Ausreißer: ‚Laden, Betrag und Code selbst eintippen‘ (Features/Scan/ScanView.swift:257, sichtbar in gespeichert-im-tab), ‚sucht Laden, Wert, Code, PIN …‘ (ScanView.swift:556), ‚Restbetrag drauf‘ (Features/Onboarding/OnboardingView.swift:336)",
+   "‚Dein Gutschein: noch 25,00 € offen‘ mehrdeutig (Features/Scan/ScanView.swift:461)",
+   "‚Strichcode‘ im OTTO-Hinweis statt ‚Barcode‘ (Features/Scan/ScanResultView.swift:133)"
+  ],
+  "befunde": [
+   {
+    "screen": "RestwertShare/ShareViewController.swift:100",
+    "befund": "Mitteilungstext ‚Tippen, um sie in Restwert einzulesen.‘ auch bei einem Foto (Titel dann ‚Gutschein bereit zum Prüfen‘, Singular) – ‚sie‘ passt nicht; ‚Tippen, um ihn einzulesen‘ bzw. nach Anzahl unterscheiden.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "RestwertShare/ShareViewController.swift:203 / Features/Issue/IssueVoucherView.swift:127",
+    "befund": "Imperativ uneinheitlich: Erweiterung ‚Tippe auf „Fertig“‘, App ‚Tipp unten auf „+“‘. Eine Form wählen (‚Tipp‘ passt zum lockeren Du der App).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-ergebnis",
+    "befund": "‚Gültig bis: nicht gefunden‘ direkt über ‚Wann gekauft oder bekommen? Davon hängt „Gültig bis“ ab.‘ mit gesetztem Datum 28.09.2026 – der Leser erwartet nach dem Satz eine berechnete Frist wie bei Amazon (‚Gültig bis · berechnet‘, scan-v09). Entweder berechnen oder ‚Datum wählen, um die Frist zu berechnen‘.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-ergebnis",
+    "befund": "Kachel heißt hier ‚An der Kasse: Foto zeigen‘, sonst ‚Barcode an der Kasse: …‘ – verständlich, aber ein weiteres Kachel-Etikett im Glossar.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Features/Checkout/CheckoutView.swift:210",
+    "befund": "Weiter drei Kassenknöpfe, zwei Muster: ‚Bezahlt – Einkauf abziehen‘, ‚Eingelöst – Einkauf abziehen‘, Café ‚Einlösen – Betrag abziehen‘.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Café-Knopf auf ‚Eingelöst – Einkauf abziehen‘; eine Formulierung für den Misserfolg; ‚Betrag/Wert/Restbetrag‘ an drei Stellen auf ‚Guthaben‘; ‚Dein Gutschein‘ eindeutig; ‚Strichcode‘ → ‚Barcode‘; Numerus in der Teilen-Mitteilung und einheitlich ‚Tipp‘.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Rüdiger, 52, Schnäppchenjäger mit über 40 Gutscheinen aus Aktionen, Cashback und Geschenken (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Überblick bei vielen Karten, Verfallsradar, schnelles Erfassen, Kasse",
+  "scores": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 7
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Endlich liegt die Tab-Leiste nicht mehr über dem Radar, und „Stadler, noch 11 Tage“ hat gleich den Knopf „An der Kasse zeigen“, genau so will ich das. Aber mein Radar steht jetzt unter der ganzen Liste. Bei fünf Karten ist das egal, bei meinen über 40 muss ich zehnmal wischen, bis ich ihn sehe.",
+  "behoben": [
+   "Tab-Leiste über dem Radar: beim Scrollen schrumpft sie auf zwei kleine Knöpfe, Radar mit Jahresbeschriftung „Heute · Nov · Dez // 2027 · 2028 · 2029+“ ist ganz frei (start-bestand-unten)",
+   "„Abbrechen“ im Stapel beendet die Reihe jetzt mit Bilanz und zählt den Rest als übersprungen (Restwert/Features/Scan/ScanView.swift:311-321)",
+   "Neue Mehrfachauswahl setzt die Zähler zurück (ScanView.swift:191)",
+   "Radar im September verständlich: keine Spalte „2026“ mehr hinter „Dez“, eine Kachel je Jahr mit eigenem Betrag, „+3“ für den vollen Jahresstapel (start-bestand-unten)",
+   "Warnung mit Aktion: „An der Kasse zeigen“ bzw. „Code einlösen“ direkt unter jeder Zeile in „Läuft bald ab“ (start, start-bestand)"
+  ],
+  "offen": [
+   "„„Douglas“ gespeichert – Ansehen“ liegt im Ruhezustand weiter über „Von Hand eingeben“ und dem Ende von „Aus einer Datei“ (gespeichert-im-tab)",
+   "Die Bilanz nennt nur Zahlen, nicht welche Fotos übersprungen oder unlesbar waren (ScanView.swift:417-422)"
+  ],
+  "befunde": [
+   {
+    "screen": "Restwert/Features/Home/HomeView.swift:31-50",
+    "befund": "Das Verfallsradar steht jetzt fest unter der vollständigen Liste, ohne Abkürzung nach oben. Bei 40+ Gutscheinen liegt mein Überblick viele Bildschirme tief, und „Alle Ablauftermine“ steht auch erst ganz unten. Für Vielsammler ist der Umbau beim Radar ein Rückschritt (die Bildschirmfotos zeigen nur 5 bis 9 Karten).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start-bestand / start-bestand-unten",
+    "befund": "Die zwei Bildschirmfotos zeigen unterschiedliche Bestände: oben „4 Gutscheine, 145,15 €“, nach unten gescrollt kommen Douglas, zweimal Café und Amazon 1.250 € dazu (spätere Aufnahme). Den Summenkopf kann ich deshalb nicht gegen die Liste nachrechnen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gespeichert-im-tab",
+    "befund": "Die Gespeichert-Meldung deckt „Von Hand eingeben“ ab, bis sie verschwindet.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Radar oder eine kompakte Ablauf-Zeile auch bei vielen Karten ohne langes Scrollen erreichbar, zum Beispiel oben einklappbar oder über ein Antippen von „1 läuft bald ab“ in der Guthabenkarte. Dazu eine Gespeichert-Meldung, die nichts verdeckt.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Meltem, 41, Besitzerin eines kleinen Cafés, gibt eigene handgeschriebene Papiergutscheine aus und nimmt sie an (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Papiergutscheine ohne Code, Foto an der Kasse, Nutzen für Ladeninhaber",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Der Krustenzauber-Gutschein aus der Fotos-App wird erkannt, mit „An der Kasse: Foto zeigen“. So sehen die gestalteten Gutscheine aus, die meine Kundschaft von anderen Läden mitbringt. Meine eigene Ausgegeben-Liste zeigt aber immer noch zweimal „Café am Markt, 25,00 €“, und ich weiß nicht, welcher für Familie Weber ist. Das ist jetzt die zweite Runde ohne diesen Wunsch.",
+  "behoben": [
+   "Zweite ausgegebene Karte nicht mehr unter der Tab-Leiste: beide Café-Zeilen ganz sichtbar (liste-ausgegeben-filter)",
+   "Gestaltete Gutscheine ohne Code und ohne lesbares Gutschein-Wort werden erkannt, der Ladenname kommt aus der Überschrift, an der Kasse „Foto zeigen“ (teilen-ergebnis)",
+   "Eigener Café-Gutschein mitten in einer Fotoreihe beendet die Reihe jetzt ausdrücklich, statt Zähler liegen zu lassen (Restwert/Features/Scan/ScanView.swift:457-458)",
+   "Ausgegebene Gutscheine erscheinen weiter nicht im Radar (HomeView.swift:44-45; im Radar von start-bestand-unten keine Café-Kachel)"
+  ],
+  "offen": [
+   "Empfänger steht weiter nicht in der Listenzeile: die Zeile zeigt nur card.owner, nicht den Empfänger (Restwert/Design/CardRow.swift:97-101), und liste-ausgegeben-filter zeigt zwei gleiche Zeilen",
+   "Verlauf je ausgegebenem Gutschein (ausgegeben am, an wen, eingelöst am/Betrag) weiter durch keinen Screenshot belegt, nur im Code (Restwert/Features/Detail/CardDetailView.swift:664)",
+   "XL-Schrift: „Gutschein teilen oder drucken“ weiter unten angeschnitten (gross-ausgeben)",
+   "Einlösen auf einem zweiten Gerät (Theken-iPad) im Simulator nicht prüfbar"
+  ],
+  "befunde": [
+   {
+    "screen": "liste-ausgegeben-filter",
+    "befund": "Zwei ausgegebene 25-€-Gutscheine sind nicht zu unterscheiden (gleicher Name, Betrag und Ablauf; kein Empfänger in der Zeile).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "liste-ausgegeben-filter",
+    "befund": "Mit Filter „Ausgegeben“ zeigt das Radar darunter Douglas und Amazon, also Karten, die gar nicht im Filter sind, und die Guthabenkarte oben „1.300,00 €, 2 Gutscheine“. Für mich als Ladeninhaberin wirkt die Seite in dieser Ansicht widersprüchlich.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Restwert/Features/Scan/ScanView.swift:457-461",
+    "befund": "Eigener Gutschein in einer Fotoreihe: die restlichen Fotos werden ohne Bilanz verworfen. Die Meldung sagt nur „Dein Gutschein: noch … offen“, nicht dass die übrigen Fotos nicht gelesen wurden.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-ausgeben",
+    "befund": "XL: Teilen-Knopf unten angeschnitten, „oder drucken“ liegt am Rand.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Empfänger („für Familie Weber“) in der Zeile ausgegebener Gutscheine und ein Screenshot der Detailansicht eines ausgegebenen Gutscheins nach Teil-Einlösung mit Verlauf (ausgegeben am, an wen, eingelöst am/Betrag). Dazu der XL-Teilen-Knopf ganz sichtbar.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Lea, 21, Studentin, will alles in Sekunden erledigt haben (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Tempo, wenige Taps, Screenshot/Mail-Import, schnell an die Kasse",
+  "scores": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Teilen aus Fotos direkt an Restwert ist genau mein Weg: Screenshot, teilen, fertig. Und auf dem Start drücke ich bei der Karte, die bald abläuft, sofort „An der Kasse zeigen“, ohne erst ins Detail. Nervig: Nach dem Teilen muss ich Restwert noch selbst öffnen, und meine zwei alten Kleinigkeiten sind wieder genau gleich.",
+  "behoben": [
+   "„Abbrechen“ im Stapel beendet die Reihe sauber mit Bilanz, kein „Foto 3 von 5“ mehr beim nächsten Einzel-Import (Restwert/Features/Scan/ScanView.swift:311-321)",
+   "Zähler werden bei neuer Mehrfachauswahl zurückgesetzt (ScanView.swift:191)",
+   "Ein Tipp vom Start zur Kasse: Knopf „An der Kasse zeigen“ bzw. „Code einlösen“ unter jeder bald ablaufenden Karte (start, start-bestand)"
+  ],
+  "offen": [
+   "„„Douglas“ gespeichert – Ansehen“ verdeckt im Ruhezustand weiter „Von Hand eingeben“ und die zweite Zeile von „Aus einer Datei“ (gespeichert-im-tab), jetzt die dritte Runde",
+   "Letztes Foto im Stapel übers Formular gespeichert: der Toast „… gespeichert – Ansehen“ (ScanView.swift:166) wird sofort von der Bilanz ohne „Ansehen“ ersetzt (ScanView.swift:422)"
+  ],
+  "befunde": [
+   {
+    "screen": "teilen-erweiterung / teilen-ergebnis",
+    "befund": "Schritt 3 verspricht „Prüfen und mit einem Tipp speichern.“ (RestwertShare/ShareViewController.swift:205), aber der geteilte Krustenzauber-Gutschein landet bei „Gelesen – bitte prüfen“ mit „Hinzufügen“ und Formular. Das Versprechen stimmt nur für sicher erkannte Gutscheine.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-erweiterung",
+    "befund": "Nach dem Teilen sind es noch zwei Schritte (Fertig, Restwert selbst öffnen). Laut Protokoll dürfen Erweiterungen die App nicht öffnen; die Mitteilung „Gutschein bereit zum Prüfen“ ist im Simulator nicht per Screenshot belegt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Restwert/Features/Scan/ScanView.swift:166, 422",
+    "befund": "Nach dem letzten Foto überschreibt die Bilanz den „Ansehen“-Toast; der Sprung zum gerade gespeicherten Gutschein fehlt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gespeichert-im-tab",
+    "befund": "Die Gespeichert-Meldung deckt Zeilen im Hinzufügen-Tab ab.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Eine Gespeichert-Meldung, die nichts verdeckt, „Ansehen“ auch in der Bilanz, und im Teilen-Blatt kein Versprechen „mit einem Tipp“, wenn danach doch das Formular kommt (oder eine sichtbar belegte Mitteilung, die direkt in die Prüfung führt).",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Tobias, 39, Tech-Journalist, schreibt ein App-Review für ein Online-Magazin (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Gesamtqualität, Ehrlichkeit der Erkennung, Datenschutz, Sicherheitsmodell, Details",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Den Stapel-Zustand hat das Team diesmal ordentlich aufgeräumt: Abbrechen, neue Auswahl und eigener Gutschein beenden die Reihe jetzt ausdrücklich. Die Teilen-Erweiterung mit „Bleibt auf diesem Gerät. Nichts wird hochgeladen.“ ist ein echtes Review-Argument. Beim Gegenlesen finde ich aber den nächsten stillen Verlust, diesmal beim Teilen, und das iPad-Start ist unverändert.",
+  "behoben": [
+   "cancelReading() beendet die Reihe: Rest zählt als übersprungen, danach Bilanz (Restwert/Features/Scan/ScanView.swift:311-321)",
+   "onChange(photoItems) setzt batchSaved/batchSkipped/batchUnreadable zurück (ScanView.swift:191)",
+   "Eigener Café-Gutschein in einer Reihe setzt den ganzen Stapel-Zustand zurück (ScanView.swift:457-458)",
+   "Startseite: beim Scrollen ist keine Tab-Leiste mehr über dem Radar, Radar mit eindeutiger Zeitachse bis Jahresende (start-bestand-unten)",
+   "Datenschutz der Teilen-Erweiterung ausdrücklich genannt: „Bleibt auf diesem Gerät. Nichts wird hochgeladen.“, geteilte Kopie wird nach dem Lesen gelöscht (teilen-erweiterung; ScanView.swift:432)"
+  ],
+  "offen": [
+   "iPad-Start: Wortmarke links am Rand, Suchfeld über volle Breite, Inhalt in der 700-pt-Spalte (ipad-start; bekannte Grenze)",
+   "Bilanz-Toast ersetzt beim letzten Foto den „Ansehen“-Toast (ScanView.swift:166, 422)",
+   "Kein Wallet-Pass (bekannte Grenze)"
+  ],
+  "befunde": [
+   {
+    "screen": "Restwert/Features/Scan/ScanView.swift:384-392",
+    "befund": "consumeSharedBatch(): Kommt eine Teilen-Übergabe, während ein ungespeichertes Einzel-Ergebnis aus Datei, Mail-Text oder Kamera auf dem Schirm steht (batchTotal == 0), gilt das als „nicht laufend“. Dann setzt outcome = nil das Ergebnis ohne die sonst übliche Rückfrage „Ergebnis verwerfen?“ zurück. Das ist der nächste stille Verlust, diesmal über das Teilen-Menü.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "Restwert/Features/Scan/ScanView.swift:457-461",
+    "befund": "Eigener Gutschein in einer Reihe: der Stapel wird zwar zurückgesetzt, aber ohne Bilanz. Übrige Fotos verschwinden ohne Hinweis.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Restwert/Features/Home/HomeView.swift:31-50",
+    "befund": "Radar steht unter der vollständigen Liste und reagiert nicht auf Filter (unter „Ausgegeben“ zeigt er Douglas/Amazon, liste-ausgegeben-filter). Für kleine Bestände gut, für große ein weiter Weg.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-kasse, start-bestand-unten",
+    "befund": "Die Screenshot-Reihe übernimmt Daten aus früheren Aufnahmen: gross-kasse zeigt die Testkarte „Stadler RADAR11“ ohne PIN, der XL-Knopf „PIN anzeigen“ aus Runde 9 ist damit diesmal nicht belegt. start-bestand-unten zeigt einen anderen Bestand als start-bestand.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-erweiterung",
+    "befund": "„Prüfen und mit einem Tipp speichern.“ verspricht mehr, als der Beispiel-Gutschein hält (teilen-ergebnis: „Gelesen – bitte prüfen“, Formular).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-blatt",
+    "befund": "Systemtexte „1 Photo Selected“ und „Use as Wallpaper“ auf Englisch (Simulator-Sprache, nicht die App), wirkt auf einem Review-Screenshot unsauber.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Stapel und Teilen-Übergabe an einer Stelle zentral führen: eine Übergabe darf ein offenes Einzel-Ergebnis nicht still verwerfen, und ein eigener Gutschein in der Reihe sollte eine Bilanz bekommen. Dazu ein iPad-Start mit bündiger Suchleiste in der Lesespalte, konsistente Screenshot-Bestände (PIN an der XL-Kasse wieder belegt) und für den Konkurrenzvergleich ein Wallet-Pass.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ }
+]

@@ -362,10 +362,7 @@ struct ScanView: View {
                 .confirmationDialog("Trotz Warnung hinzufügen?", isPresented: $confirmAddWithWarning, titleVisibility: .visible) {
                     Button("Hinzufügen und prüfen") { formSeed = FormSeed(outcome: outcome) }
                 } message: {
-                    let expired = outcome.warningTexts.contains { $0.contains("abgelaufen") }
-                    Text(outcome.warningTexts.joined(separator: "\n\n")
-                         + (expired ? "\n\nOft trotzdem nicht verloren: Frag beim Laden nach Einlösung oder Erstattung." : "")
-                         + "\n\nDu kannst alles im nächsten Schritt korrigieren.")
+                    Text(outcome.warningTexts.joined(separator: "\n\n") + "\n\nDu kannst alles im nächsten Schritt korrigieren.")
                 }
                 rescanOrSkip
             } else if batchTotal > 1 {
@@ -483,14 +480,13 @@ struct ScanView: View {
             return
         }
         var result = result
-        // Betrugsmuster: mehrere hohe Gutscheine in kurzer Zeit (oft auf Anweisung von Betrügern gekauft).
-        let weekAgo = Date.now.addingTimeInterval(-7 * 24 * 3600)
         // Schon gespeichert? Dann nicht doppelt anlegen, sondern öffnen anbieten.
-        if let code = result.displayCode, let dup = store.cards.first(where: { !$0.issuedByMe && !$0.isExample && !$0.number.isEmpty && plain($0.number) == plain(code) }) {
+        if let code = result.displayCode, let dup = CardQueries.duplicate(of: code, in: store.cards) {
             result.duplicateName = dup.name
             result.duplicateID = dup.id
         }
-        result.recentHighValueCount = store.cards.filter { !$0.isExample && !$0.issuedByMe && $0.value >= 100 && $0.addedOrReceived >= weekAgo }.count
+        // Betrugsmuster: mehrere hohe Gutscheine in kurzer Zeit (oft auf Anweisung von Betrügern gekauft).
+        result.recentHighValueCount = CardQueries.recentHighValueCount(store.cards)
         // Erst nach Dublette und Betrugsmuster entscheiden: beide schließen „Speichern mit einem Tipp“ aus.
         result.canSave = result.canSaveDirectly
         withAnimation(reduceMotion ? nil : .smooth) { outcome = result }

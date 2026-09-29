@@ -2,13 +2,13 @@
  {
   "persona": "Sabine K., 38, Grundschullehrerin, bekommt Gutscheine von Eltern (Papier, Stadtgutschein, handgeschrieben) und sammelt sie im Portemonnaie (simulierte Persona)",
   "gruppe": "Alltag",
-  "fokus": "Papiergutscheine per Foto scannen, Übersicht was noch drauf ist und bald abläuft",
+  "fokus": "Papiergutscheine per Foto scannen (Features/Scan, Services/Importer.swift, Services/SmartExtractor.swift), Übersicht was noch drauf ist und bald abläuft (Features/Home, Design/CardRow.swift), Einstieg (Features/Onboarding)",
   "scores": {
-   "gesamt": 10,
-   "scan": 10,
+   "gesamt": 9,
+   "scan": 9,
    "barcode_kasse": 9,
    "login_sperre": 8,
-   "verstaendlichkeit": 10,
+   "verstaendlichkeit": 9,
    "vertrauen": 9,
    "barrierefreiheit": 9
   },
@@ -21,44 +21,68 @@
    "vertrauen": 9,
    "barrierefreiheit": 9
   },
-  "erster_eindruck": "Die Eltern schicken mir die Gutscheine oft als Foto – jetzt tippe ich in der Fotos-App auf Teilen und Restwert, fertig. Der Krustenzauber-Gutschein in Schreibschrift wird erkannt, und auf der Startseite sehe ich gleich, was bald abläuft, mit Knopf für die Kasse. Die Liste kommt früher, das Radar stört nicht mehr. Für mich ist das besser als vorher.",
-  "behoben": [
-   "Startseite (start-bestand): Liste direkt nach Guthabenkarte und 'Läuft bald ab'; Radar steht darunter (start-bestand-unten). Mein Überblick ist schneller da.",
-   "start-bestand / start: Unter jeder Zeile in 'Läuft bald ab' ein Knopf 'An der Kasse zeigen' bzw. 'Code einlösen' – der nächste Schritt ist sichtbar.",
-   "start-bestand-unten: Radar ohne verwirrende '2026'-Spalte: 'Heute · Nov · Dez // 2027 · 2028 · 2029+', eine Kachel je Jahr mit eigenem Betrag.",
-   "teilen-blatt / teilen-erweiterung / teilen-ergebnis: Foto aus der Fotos-App über 'Restwert' im Teilen-Menü übergeben; Blatt mit Vorschau und drei Schritten, danach 'Krustenzauber 25,00 €' als Ergebnis.",
-   "teilen-ergebnis: gestalteter Gutschein ohne lesbares 'Gutschein'-Wort (Schreibschrift) wird erkannt, Überschrift als Ladenname 'Krustenzauber'."
-  ],
+  "erster_eindruck": "Der Einstieg ist hübsch und kurz, aber auf der letzten Seite steht bei „Gutschein scannen“ nur „Barcode oder QR-Code abfotografieren“ – mein handgeschriebener Blumenladen-Gutschein hat weder noch, also hätte ich beim ersten Start „Code eintippen“ gewählt und nie gemerkt, dass die Kamera auch Handschrift liest. Danach läuft alles wie in Runde 9: Foto, „Gelesen – bitte prüfen“, bei Papiergutscheinen ohne Code die Kachel „An der Kasse: Foto zeigen“, auf dem Start „Läuft bald ab“ mit „noch 12 Tage“. Was ich diesmal im Code gesehen habe: Fotos aus der Mediathek und PDF-Seiten werden auf dem Main Thread umgerechnet, das Lese-Fenster friert dabei kurz ein. Meine zwei kleinen Punkte aus Runde 9 sind unverändert.",
+  "behoben": [],
   "offen": [
-   "gespeichert-im-tab: Hinweis '„Douglas“ gespeichert – Ansehen' liegt weiterhin über 'Von Hand eingeben' und dem Untertitel von 'Aus einer Datei' (ScanView.swift:77 schafft nur Scroll-Platz).",
-   "ScanView.swift:166 / ScanView.swift:422: Nach dem Speichern des letzten Fotos einer Reihe ersetzt die Bilanz sofort den Hinweis mit 'Ansehen' – unverändert.",
-   "Reihen-Ende (Bilanz) weiterhin ohne Screenshot."
+   "gespeichert-im-tab: Hinweis „… gespeichert – Ansehen“ steht weiter 15 s (App/RestwertApp.swift:405, actionTitle != „Rückgängig“ → 15) und legt sich über die letzte Zeile „Von Hand eingeben“; man kann darunter scrollen (Features/Scan/ScanView.swift:77 safeAreaPadding 88), stört mich kaum.",
+   "Letztes Foto einer Reihe gespeichert: Features/Scan/ScanView.swift:164 setzt „… gespeichert – Ansehen“, :166 nextFromBatch() ersetzt ihn sofort durch die Bilanz (:402) – für den letzten Gutschein gibt es weiter keinen Sprung zum Ansehen.",
+   "Kein Stapel-Scan mit der Kamera (bekannte Grenze; über „Aus Fotos“ bis 20 Bilder vorhanden, ScanView.swift:227)."
   ],
   "befunde": [
    {
-    "screen": "teilen-ergebnis / ScanResultView.swift:241",
-    "befund": "Bei einem Papiergutschein ohne Datum (Krustenzauber) steht in der Kachel 'Gültig bis: nicht gefunden', obwohl darunter das Kaufdatum 28.09.2026 schon ausgefüllt ist und 'Davon hängt „Gültig bis“ ab' dasteht. Die gesetzliche Frist nennt erst 'Was wir geprüft haben' weiter unten (ScanResultView.swift:411-413). Die Kachel könnte gleich '31.12.2029 · gesetzlich' zeigen.",
-    "schwere": "niedrig"
+    "screen": "Einstieg, Seite 4 / Features/Onboarding/OnboardingView.swift:467-470",
+    "befund": "Die zwei Wege heißen „Gutschein scannen – Barcode oder QR-Code abfotografieren“ und „Code eintippen – Betrag, Laden und Ablaufdatum eingeben“. Für Papier- und handgeschriebene Gutscheine ohne Code führt beides in die Irre: Der Scan-Text verschweigt, dass Text und Handschrift gelesen werden (LiveScannerView.swift:8, ViewfinderTeaser sagt es später richtig: ScanView.swift:585 „Barcode und Text … werden automatisch gelesen“), und der Tipp-Weg verspricht im Titel „Code“, den mein Gutschein gar nicht hat. Ich wähle beim ersten Start den falschen Weg.",
+    "schwere": "mittel",
+    "vorschlag": "Texte angleichen: „Gutschein abfotografieren – Barcode, Text und Handschrift werden gelesen“ und „Von Hand eingeben – Laden, Guthaben und Ablaufdatum eintippen“ (gleicher Titel wie in ScanView.swift:255)."
    },
    {
-    "screen": "teilen-erweiterung / RestwertShare/ShareViewController.swift:203",
-    "befund": "Schritt 3 verspricht 'Prüfen und mit einem Tipp speichern', das Ergebnis danach (teilen-ergebnis) hat aber 'Hinzufügen' mit Formular – bei Papiergutscheinen ohne Code ist der Ein-Tipp-Weg nie möglich.",
-    "schwere": "niedrig"
+    "screen": "Aus Fotos (mehrere) / Services/Importer.swift:141-142, 217-222",
+    "befund": "analyze(image:) ist @MainActor und ruft zuerst image.normalizedCGImage; das zeichnet jedes Mediathek-Foto mit Ausrichtung ≠ .up (Hochformat-iPhone-Fotos, also fast alle) in voller Auflösung per UIGraphicsImageRenderer auf dem Main Thread neu, bevor die @concurrent-Analyse startet. Das Lese-Fenster („Wird gelesen …“, Abbrechen) steht pro Foto kurz still, bei 20 Fotos 20-mal.",
+    "schwere": "mittel",
+    "vorschlag": "normalizedCGImage in einen @concurrent-Helfer wie thumbnail(_:) (Importer.swift:150-153) verlegen – UIGraphicsImageRenderer ist laut eigenem Kommentar (:225) threadsicher."
    },
    {
-    "screen": "gespeichert-im-tab",
-    "befund": "Speichern-Hinweis verdeckt weiterhin eine Listenzeile; stört mich kaum.",
-    "schwere": "niedrig"
+    "screen": "Aus einer Datei (PDF, z. B. Stadtgutschein-Mailanhang) / Services/Importer.swift:168-183",
+    "befund": "analyze(url:) ist @MainActor; für PDFs werden bis zu 3 Seiten mit 2600 px Kantenlänge per page.thumbnail(of:) und danach thumbnailJPEG() synchron auf dem Main Thread gerendert (:181-183). Spinner und „Abbrechen“ reagieren erst, wenn alle Seiten gezeichnet sind.",
+    "schwere": "mittel",
+    "vorschlag": "Seitenrendering und JPEG in eine @concurrent static func auslagern; nur startAccessingSecurityScopedResource/PDFDocument-Öffnen bleibt oben."
+   },
+   {
+    "screen": "Ergebnis / Services/Importer.swift:39 mit Features/Scan/ScanResultView.swift:69-265",
+    "befund": "ScanOutcome.draft ist eine berechnete Eigenschaft und lässt bei jedem Zugriff TextParser.parse über den ganzen OCR-Text laufen (Schleife über alle 43 Läden, TextParser.swift:93-94, plus Regexe). Im Ergebnis wird sie pro Body-Durchlauf rund 30-mal indirekt aufgerufen: draft (:69), displayCode (:71), checks→resolvedFormat (:359, :385), displayMerchantName (:103), aiFilled (:103, :110, :142 und je Kachel in cell :256 – jeweils parse+merge), resolvedFormat (:131, :150, :216, :265). Der Body läuft direkt nach dem Erscheinen mindestens dreimal (revealed :30, fraudHintScans :31) und bei jeder Änderung des Kaufdatums. Bei langem Text (3 PDF-Seiten) ruckelt die Kachel-Animation spürbar.",
+    "schwere": "mittel",
+    "vorschlag": "draft einmal in show() (ScanView.swift:440-451) berechnen und wie canSave als gespeicherten Wert in ScanOutcome ablegen; nur in onReceived (ScanView.swift:59-60) neu rechnen."
+   },
+   {
+    "screen": "Ergebnis, Ladenname / Features/Scan/ScanResultView.swift:103 mit Services/Importer.swift:77-87",
+    "befund": "Der ✦-Hinweis am Ladennamen prüft aiFilled.contains(\"Laden\"), aber aiFilled kennt nur „Wert“, „Code“, „Gültig bis“, „PIN“ – obwohl ScanDraft.merge (ScanDraft.swift:15-23) den Laden bzw. customName sehr wohl von Apple Intelligence übernimmt. Mein handgeschriebenes „Blumen Müller“, das nur die KI erkannt hat, steht ohne ✦ da, die Legende (:142-145) fehlt, und canSaveDirectly (Importer.swift:69 aiFilled.isEmpty) zählt den KI-Laden nicht als KI-Angabe, anders als der Kommentar in :64-66 verspricht.",
+    "schwere": "niedrig",
+    "vorschlag": "In aiFilled ergänzen: if rules.merchantID == nil && rules.customName == nil && (d.merchantID != nil || d.customName != nil) { out.insert(\"Laden\") } – plus ein Test in ScanDraftTests."
    }
   ],
-  "was_fehlt_zur_10": "Nichts – die 10 bleibt, der Umbau und das Teilen aus Fotos machen es für mich noch besser. Kosmetik: bei Papiergutscheinen ohne Datum die gesetzliche Frist gleich in der Kachel zeigen, Schritt 3 im Teilen-Blatt ehrlich formulieren ('Prüfen und speichern'), Hinweis 'Ansehen' nach dem letzten Foto behalten.",
+  "performance": [
+   "Services/Importer.swift:141-142 + 217-222: Neuzeichnen des vollen Fotos (normalizedCGImage) auf dem MainActor vor der @concurrent-Analyse, pro Foto einer Mehrfachauswahl.",
+   "Services/Importer.swift:181-183: PDF-Seiten (bis 3 × 2600 px) und thumbnailJPEG synchron auf dem Main Thread.",
+   "Services/Importer.swift:39 / Features/Scan/ScanResultView.swift: ScanOutcome.draft wird pro Body-Durchlauf ~30-mal neu geparst (siehe Befund), außerdem baut warningTexts (ScanResultView.swift:428-432) für jeden Aufruf von hasWarnings/warningTexts (ScanView.swift:352, :358-359, Importer.swift:69) eine ganze ScanResultView, nur um checks() aufzurufen.",
+   "Features/Onboarding/OnboardingView.swift:177-178: .opacity(0.4) auf dem gesamten PageFrame (ScrollView inkl. schattierter Karten) für inaktive Seiten, animiert 0,3 s bei jedem Wischen – Gruppen-Opazität erzwingt einen Offscreen-Durchlauf der Nachbarseite, während das TabView ohnehin scrollt. Niedrig; besser nur copy/stage einzeln dimmen oder ganz weglassen.",
+   "Features/Onboarding/OnboardingView.swift:355-362: Die drei Zeilen gleiten per .offset innerhalb der Gruppe, auf der .compositingGroup().shadow(radius: 14) liegt – der Schatten wird während der drei Einblendungen jedes Bild neu gerastert. Niedrig; Schatten auf ein statisches RoundedRectangle hinter dem VStack legen.",
+   "Features/Home/HomeView.swift:20 + Design/CardRow.swift:39-40: HomeLists rechnet daysLeft einmal je Karte (gut), CardRow rechnet danach daysLeft und status(warnDays:) (→ nochmals daysLeft) je Zeile neu – 2 Kalenderrechnungen pro Zeile und Durchlauf; bei meinen ~10 Gutscheinen unerheblich."
+  ],
+  "codequalitaet": [
+   "Features/Scan/ScanView.swift:189, :404, :423, :434: Das Zurücksetzen der Reihe (batch/batchTotal/batchUnreadable/batchSaved/batchSkipped) steht viermal ausgeschrieben; ein resetBatch() verhindert, dass eine Stelle einen Zähler vergisst.",
+   "Features/Scan/ScanResultView.swift:428-432: warningTexts erzeugt eine Wegwerf-ScanResultView, um checks() zu erreichen; checks braucht nur outcome und könnte statisch sein. hasWarnings wird so auch aus einer Modell-Eigenschaft (Importer.swift:69 canSaveDirectly) heraus über eine View aufgerufen.",
+   "Features/Scan/ScanResultView.swift:273-275: .accessibilityElement(children: .ignore) direkt gefolgt von .accessibilityElement(children: .combine) auf derselben Kachel – der zweite Modifier überschreibt den ersten, einer ist tot.",
+   "Services/Importer.swift:77-87: aiFilled ohne „Laden“ (siehe Befund); aiFilled und canSaveDirectly liegen im App-Ziel und haben keinen Test (Tests nur in RestwertKit) – die Lücke fiele nicht auf.",
+   "Features/Onboarding/OnboardingView.swift:469: Titel „Code eintippen“, ScanView.swift:255 derselbe Weg heißt „Von Hand eingeben“ – zwei Namen für dasselbe Formular."
+  ],
+  "was_fehlt_zur_10": "Die zwei Texte auf der letzten Einstiegsseite so, dass Papier- und Handschrift-Gutscheine sich im Scan-Weg wiederfinden, und die Bildumrechnung (Foto, PDF) vom Main Thread nehmen, damit „Wird gelesen …“ nie einfriert. Dann wäre ich wieder bei 10.",
   "wuerde_nutzen": true,
-  "nps": 10
+  "nps": 9
  },
  {
   "persona": "Helga und Werner B., 70 und 72, Rentnerpaar, teilen sich ein iPhone, mittlere Schriftgröße (simulierte Persona)",
   "gruppe": "Alltag",
-  "fokus": "Geteiltes Gerät mit 'Codes erst nach Face ID zeigen', einfache Kasse, verständliche Sprache",
+  "fokus": "Geteiltes Gerät mit „Codes erst nach Face ID zeigen“ (Settings/App-Sperre), einfache Kasse (Checkout), verständliche Sprache, Einstieg (Onboarding) – verständlich und richtig animiert?",
   "scores": {
    "gesamt": 10,
    "scan": 9,
@@ -77,35 +101,40 @@
    "vertrauen": 10,
    "barrierefreiheit": 9
   },
-  "erster_eindruck": "Auf der ersten Seite steht jetzt 'Stadler – noch 11 Tage' und direkt darunter ein großer Knopf 'An der Kasse zeigen'. So müssen wir nicht mehr suchen, das ist für uns das Beste an der neuen Seite. Das Teilen aus den Fotos brauchen wir kaum, aber die Schritte 1-2-3 sind verständlich.",
-  "behoben": [
-   "start / start-bestand / kontrast-start / dunkel-start: 'Läuft bald ab' mit großem Knopf 'An der Kasse zeigen' – auch mit Kontrast (Rand um die Karte) und dunkel gut lesbar.",
-   "Guthabenkarte kompakter; '+ 1 Rabattcode (nicht in der Summe)' in einer ruhigen Zeile – die Rechnung ist klar (Stadler, KM Kaffee, Amazon, Buchladen = 145,15 €, RestwertApp.swift:343-344).",
-   "geteiltes-geraet-an / einstellungen-schutz: grüne Bestätigung 'Schutz für geteiltes Gerät ist an' unverändert gut.",
-   "kasse-code-geschuetzt: 'Geschützt – tippen und entsperren' mit Schloss, Leiste mit 'Bezahlt – Einkauf abziehen' klar."
-  ],
+  "erster_eindruck": "Der Einstieg baut sich weiterhin ruhig auf – nichts huscht vorbei, jede Seite steht erst fertig da, bevor wir weiterblättern, und mit „Bewegung reduzieren“ steht sofort alles fest. An unserer Kasse und beim geteilten iPhone ist alles wie in Runde 9: „PIN anzeigen“ ist groß und klar, und der Schutz für unser gemeinsames Gerät lässt sich mit einem Tipp einschalten. Wir haben nichts Neues gefunden, das uns stört.",
+  "behoben": [],
   "offen": [
-   "geteiltes-geraet-an: unter der schwebenden Tab-Leiste scheint weiterhin Text durch (bekannte iOS-26-Grenze).",
-   "gross-kasse / kasse: Die Screenshots zeigen jetzt die Stadler-Karte (RADAR11, ohne PIN, ohne Ladenhinweis) statt der Thalia-Beispielkarte, die das Protokoll nennt. 'PIN anzeigen' mit Rand und der Ladenhinweis bei großer Schrift sind in dieser Runde nicht per Screenshot belegt. Der Code ist seit Runde 9 unverändert (git diff 874d9a9..HEAD berührt Features/Checkout nicht), deshalb kein Punktabzug."
+   "gross-kasse: Bei Läden mit zwei Sätzen Hinweistext (z. B. IKEA/Thalia/MediaMarkt: RestwertKit/Sources/RestwertKit/Models.swift:111,112,126 – „Die Kasse scannt den Barcode auf dem Bildschirm. …“) läuft der zweite Satz noch in den 36pt-Verlauf über der Knopfleiste hinein (fadingBar in Theme.swift:376-380, genutzt in CheckoutView.swift:87) und wirkt blasser als der Rest – unverändert seit Runde 9.",
+   "geteiltes-geraet-an: Unter der schwebenden Tab-Leiste kann der Text „Nur auf diesem iPhone“ (SettingsView.swift:390) durchschimmern – bekannte iOS-26-Grenze, im Code unverändert seit Runde 9 (kein Fix in dieser Runde nötig)."
   ],
   "befunde": [
    {
-    "screen": "gross-start",
-    "befund": "Bei sehr großer Schrift füllt die Guthabenkarte fast die halbe Seite; die Zeile 'Stadler' steht erst unten, und ihr Knopf 'An der Kasse zeigen' liegt beim Öffnen unter der Tab-Leiste (man muss scrollen). Mit unserer mittleren Schrift passt es (start-bestand), für Nachbarn mit XL-Schrift nicht ganz.",
-    "schwere": "mittel"
+    "screen": "An der Kasse, Abriss-Moment / CheckoutView.swift:346-354",
+    "befund": "Beim Bezahlen reißt das ganze Kassenticket ab (0,42 s Drehung/Verschiebung/Verblassen, ausgelöst in tearOff(), Zeile 479), und genau diese Gruppe trägt noch den alten Schatten `.compositingGroup().shadow(...)` (Zeile 353-354) statt der in dieser Runde neu eingeführten schonenden Methode. Genau dieses Muster (Schatten über eine ganze, sich bewegende Gruppe) wurde im Einstieg (Theme.swift, OnboardingView.swift) diese Runde extra entfernt, weil es bei jedem Bild neu weichgezeichnet werden muss – hier an der Kasse ist es aber übrig geblieben. Für uns auf einem etwas älteren, gemeinsam genutzten iPhone könnte der Abriss dadurch leicht ruckeln.",
+    "schwere": "niedrig",
+    "vorschlag": "Wie bei den anderen Kartenschatten diese Runde: Schatten hinter das ganze Ticket auf eine deckende Grundform legen statt auf die animierte Gruppe, oder die vorhandene `.ticketShadow()`-Hilfsfunktion (Theme.swift, schon an anderer Stelle in derselben Datei bei CheckoutView.swift:691 benutzt) auch hier verwenden."
    },
    {
-    "screen": "kasse / gross-kasse (Aufnahme)",
-    "befund": "Die Kassen-Screenshots haben die Karte gewechselt (demoRadar-Bestand: RestwertApp.swift:338-351, dann sample = erste Karte, RestwertApp.swift:353). Der Fall mit PIN ist dadurch nicht mehr zu sehen; die Protokollangabe 'kasse (Thalia-Beispielkarte)' stimmt nicht.",
-    "schwere": "niedrig"
+    "screen": "Einstieg, Seite 1 „Willkommen“ / OnboardingView.swift:323-328",
+    "befund": "Der Zähler für den Beispielbetrag läuft jetzt sichtbar ruhiger, weil der Schatten nur noch auf der Ticketfläche liegt statt auf der ganzen zählenden Gruppe (vorher `.compositingGroup().shadow()` über allem inkl. Text). Für uns macht das beim ersten Start keinen Unterschied in der Geschwindigkeit, aber die Seite wirkt beim Hinsehen etwas fester, nicht flimmrig.",
+    "schwere": "niedrig",
+    "vorschlag": "Kein Fix nötig – gute Verbesserung, gleiches Muster wie oben auch am Kassenticket anwenden (siehe Befund oben)."
    },
    {
-    "screen": "teilen-blatt",
-    "befund": "Im Teilen-Menü des Simulators stehen englische Systemtexte ('1 Photo Selected', 'Use as Wallpaper') – nicht die App, verwirrt uns aber ein wenig.",
-    "schwere": "niedrig"
+    "screen": "Einstieg, Tempo aller vier Seiten / OnboardingView.swift Stepper-Zeiten (Zeilen 275, 374, 438, 479)",
+    "befund": "Die Schritte je Seite dauern zwischen 150 ms und rund 1,2 s bis zum fertigen Bild; jede Seite bleibt danach stehen, bis wir selbst weiterwischen. Für uns beide ist das genau richtig: nicht so schnell, dass wir etwas verpassen, aber auch nicht so langsam, dass wir warten müssen, bevor wir lesen können.",
+    "schwere": "niedrig",
+    "vorschlag": "So lassen."
    }
   ],
-  "was_fehlt_zur_10": "Nichts Wesentliches – für uns ist die neue Startseite besser. Feinschliff: bei XL-Schrift die Guthabenkarte noch kleiner, damit der Knopf 'An der Kasse zeigen' ohne Scrollen sichtbar ist; den Kassen-Screenshot wieder mit PIN-Karte aufnehmen.",
+  "performance": [
+   "Theme.swift:359-371 + OnboardingView.swift (WelcomePage/CollectPage/RemindPage/FirstCardPage): Schatten liegen jetzt auf der deckenden Grundfläche (`cardSurface()`), nicht mehr über `.compositingGroup().shadow()` auf der ganzen (teils zählenden/animierten) Gruppe – spart pro Bild ein erneutes Weichzeichnen der ganzen Karte. Gute, spürbare Verbesserung besonders für ältere/gemeinsam genutzte, langsamere iPhones.",
+   "CheckoutView.swift:353-354: gleiches alte Muster (Schatten über die ganze animierte Ticket-Gruppe beim Abriss) ist hier stehen geblieben, siehe Befund oben – wäre der nächste logische Ort für dieselbe Verbesserung."
+  ],
+  "codequalitaet": [
+   "CheckoutView.swift:353-354 dupliziert den Rumpf von `ticketShadow()` (Theme.swift) von Hand (`.compositingGroup().shadow(color: Color.shade, radius: 14, y: 6)`), obwohl dieselbe Datei die Hilfsfunktion an anderer Stelle schon nutzt (CheckoutView.swift:691 `.ticketShadow(radius: Shadow.float, y: -4)`). Unnötige Doppelung, in 10 Minuten auf den Helfer umstellbar."
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches – nur Feinschliff: den Verlauf beim zweizeiligen Ladenhinweis an der Kasse ganz aus dem Schatten holen, die Tab-Leiste bei geteiltem Gerät (iOS-Grenze) und den Kassenticket-Schatten beim Abriss auf dieselbe schonende Methode wie im neuen Einstieg umstellen.",
   "wuerde_nutzen": true,
   "nps": 10
  },
@@ -131,49 +160,55 @@
    "vertrauen": 10,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Rücklesung weiter 12/12, kasse-code93 zeigt sauber 'auf der Karte: Code 93'. Neu gut für die Schlange an der Kasse: der Kunde tippt auf der Startseite direkt auf 'An der Kasse zeigen' und hat den Barcode. Meine drei Aufräum-Punkte von letzter Woche sind aber alle noch da.",
+  "erster_eindruck": "Der Einstieg (OnboardingView.swift) ist wie gewohnt knapp und klar – vier Seiten, „Überspringen“ immer erreichbar, kein Konto nötig. Für meinen Bereich hat sich seit Runde 9 nichts bewegt: Beta-Runde 9 (874d9a9) hat laut Commit nur einen Test für Barcode-Namen ergänzt, aber BarcodeView.swift, BarcodeEncoder.swift, ScanResultView.swift, Importer.swift und CheckoutView.swift sind byteidentisch zu vorher (letzte Änderung war Runde 8, 0d417b5). „Als Code 128 gezeichnet (auf der Karte: Code 93)“ an der Kasse ist weiter da und lesbar, Prüfziffern-Logik für EAN-13/EAN-8/UPC-A/UPC-E sieht weiter solide aus.",
   "behoben": [
-   "barcodes/rueckgelesen.txt: weiterhin 12/12 exakt zurückgelesen (EAN-13, EAN-8, UPC-A, ITF, Code 39 mit Leerzeichen, 2x Code 128, QR, PDF417, Aztec, 2x Data Matrix).",
-   "start-bestand: 'An der Kasse zeigen' direkt aus 'Läuft bald ab' – ein Tipp weniger bis zum Barcode; Online-Code dort 'Code einlösen' (start), also richtige Aktion je Art.",
-   "kasse / kasse-code93: Barcode mittig, gleichmäßige Striche, Code-128-Hinweis unverändert gut."
+   "CheckoutView.swift:296-304: Ersatzformat-Hinweis „Als Code 128 gezeichnet (auf der Karte: …)“ mit lesbarem Namen bleibt vorhanden und unverändert korrekt",
+   "CheckoutView.swift:291, 306, 979 / CardDetailView: card.format wird durchgängig an codeDisplay/BarcodeView übergeben – Handelscode-Gruppierung (EAN-13 1-6-6, UPC-A 1-5-5-1, EAN-8 4-4) bleibt an der Kasse korrekt"
   ],
   "offen": [
-   "ios/Restwert/Services/Importer.swift:65: Doc-Kommentar sagt weiter 'gelesener oder am Code erkannter Barcode', Zeile 72-73 erlaubt nur origin == .scanned oder Online-Code.",
-   "scan-v09 / scan-v13: Code-Kachel bricht weiter zweizeilig um ('AQ7K-2ZPM4H-' / 'R8TX', 'OT-7731-5520-' / '9912').",
-   "ScanResultView.swift:265: Format im Scan-Ergebnis nur bei origin == .scanned übergeben (Vorschau-Heuristik), unverändert.",
-   "scan-v14: Online-Code '7GHK 2M9P XQ41' mit Leerzeichen gruppiert, ohne Hinweis."
+   "Importer.swift:64-66 vs. 72-73 (ScanOutcome.canSaveDirectly): Doc-Kommentar sagt weiter „gelesener oder am Code erkannter Barcode“, der Code prüft aber nur format.origin == .scanned (oder .text) – Kommentar und Code widersprechen sich weiter, unverändert seit Runde 9",
+   "ScanResultView.swift:265: Im Scan-Ergebnis wird format an codeDisplay nur bei origin == .scanned übergeben; bei am Code erkannter Art (origin == .number) greift weiter die alte Vierergruppen-Heuristik statt der Handelscode-Gruppierung. Betrifft nur die Vorschau vor dem Speichern, an der Kasse (CheckoutView) ist es korrekt",
+   "ScanResultView.swift:283-286, 312-315: codeDisplay/unbreakableGroups erlaubt Zeilenumbruch nur direkt nach einem Bindestrich (String.grouped lässt nicht-numerische Codes unverändert, keine Leerzeichen). Lange alphanumerische Codes ohne Bindestrich in der halben Kachel bleiben ohne sauberen Umbruchpunkt – unverändert seit Runde 9"
   ],
   "befunde": [
    {
-    "screen": "ios/Restwert/Services/Importer.swift:65",
-    "befund": "Veralteter Kommentar widerspricht der Regel in Zeile 72-73 (nur gelesener Barcode oder Online-Code) – seit Runde 8 offen.",
-    "schwere": "niedrig"
+    "screen": "CheckoutView.swift:306-309",
+    "befund": "An der Kasse steht der Code (ScanResultView.codeDisplay, mit Leerzeichen-Gruppen) in einer einzigen Zeile mit .lineLimit(1).minimumScaleFactor(0.5). Bei einem langen Code ohne Bindestrich (z. B. ein 16-20-stelliger Online-/Fremd-Code) kann die Schrift bis auf 50 % schrumpfen; ist der Code noch länger, wird er abgeschnitten statt umzubrechen. Genau in dem Moment, wo ich an der Kasse den Code mit dem Kunden abgleiche, will ich ihn nicht halb so klein oder mit '…' sehen.",
+    "schwere": "niedrig",
+    "vorschlag": "Ab einer Codelänge X (z. B. > 16 Zeichen) auf zweizeilige Darstellung mit fixedSize statt lineLimit(1) umschalten, wie im Scan-Ergebnis"
    },
    {
-    "screen": "scan-v09, scan-v13",
-    "befund": "Lange Codes in halber Kachel zweizeilig; beim Abgleich mit dem Papier unruhig. Die volle Breite hätte Platz (PIN-Kachel bei v13 steht schon allein).",
-    "schwere": "niedrig"
+    "screen": "Importer.swift:64-66 / 72-73",
+    "befund": "Doc-Kommentar zu canSaveDirectly nennt weiter 'gelesener oder am Code erkannter Barcode', der Code lässt aber nur origin == .scanned (bzw. .text) durch. Für Kollegen, die den Code später lesen, ist unklar, welche Regel wirklich gilt.",
+    "schwere": "niedrig",
+    "vorschlag": "Kommentarzeile 65 anpassen: 'nur wirklich gelesener Barcode (oder reiner Online-Code)'"
    },
    {
-    "screen": "kasse / gross-kasse",
-    "befund": "Die Kassen-Screenshots zeigen diesmal die Demo-Karte 'RADAR11' (Code 128, RestwertApp.swift:346) statt einer echten Handelsnummer; zur Barcode-Qualität sagen die Einzel-Screenshots barcodes/kasse-1…12 mehr. Kein App-Fehler.",
-    "schwere": "niedrig"
+    "screen": "RestwertKitTests.swift:121-123 (ean8-Test)",
+    "befund": "Der EAN-8-Test prüft nur die Modulanzahl (67), nicht hasValidChecksum(_, format: .ean8) für einen gültigen und einen mit gekippter letzter Ziffer ungültigen Code – anders als beim EAN-13-Test (Zeile 108-113), der genau das abdeckt.",
+    "schwere": "niedrig",
+    "vorschlag": "Analog zum EAN-13-Test zwei #expect-Zeilen für hasValidChecksum bei .ean8 ergänzen (gültig/eine Ziffer falsch)"
    }
   ],
-  "was_fehlt_zur_10": "Nichts Wesentliches – an der Kasse passt alles, und der neue Knopf auf der Startseite spart Zeit. Aufräumen wie in Runde 9: Kommentar in Importer.swift:65 korrigieren, lange Codes im Ergebnis über volle Kachelbreite.",
+  "performance": [],
+  "codequalitaet": [
+   "RestwertKitTests.swift:121-123: fehlender expliziter Checksum-Test für .ean8 (siehe Befund oben) – kleine Testlücke, kein Verhaltensfehler",
+   "Importer.swift:64-66: veralteter Doc-Kommentar widerspricht Zeile 72-73 (dupliziert die Beobachtung aus Runde 9, weiterhin nicht bereinigt)"
+  ],
+  "was_fehlt_zur_10": "Für meinen Bereich fehlt nichts Wesentliches – seit Runde 8 unverändert stabil, alle 11 Barcode-Arten sauber, Prüfziffern korrekt, Ersatzformat klar erklärt. Nur Kleinkram zum Aufräumen: den veralteten Kommentar in Importer.swift korrigieren, den Format-Parameter im Scan-Ergebnis auch bei origin == .number durchreichen, und an der Kasse lange Codes ohne Bindestrich zweizeilig statt schrumpfend zeigen.",
   "wuerde_nutzen": true,
   "nps": 10
  },
  {
   "persona": "Thomas R., 45, Pendler, bekommt fast nur Online-Codes per Mail (Zalando, Amazon, OTTO) (simulierte Persona)",
   "gruppe": "Alltag",
-  "fokus": "Import aus Mail-Text und PDF-Anhang, Fristen, Code online einlösen",
+  "fokus": "Import aus Mail-Text und PDF-Anhang, Fristen, Code online einlösen, Codes mit Leerzeichen",
   "scores": {
-   "gesamt": 10,
-   "scan": 10,
+   "gesamt": 9,
+   "scan": 9,
    "barcode_kasse": 10,
    "login_sperre": 8,
-   "verstaendlichkeit": 9,
+   "verstaendlichkeit": 10,
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
@@ -186,35 +221,33 @@
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Endlich: Restwert steht im Teilen-Menü und nimmt laut Code auch markierten Mail-Text und PDFs an, mit Vorschau wie 'Amazon · 25,00 €'. Auf der Startseite steht beim Zalando-Code gleich 'Code einlösen', das ist genau mein Weg. Im Simulator sehe ich den Weg aus Mail zwar nicht, aber aus Fotos klappt er.",
-  "behoben": [
-   "Teilen-Erweiterung vorhanden: markierter Text (RestwertShare/ShareViewController.swift:168-186), PDFs und bis 20 Bilder (RestwertShare-Info.plist: SupportsText, Image/File je 20); App liest Texte aus der App Group ein (Importer.swift:208). Ende-zu-Ende aus der Fotos-App belegt (teilen-blatt → teilen-erweiterung → teilen-ergebnis).",
-   "start: Online-Code in 'Läuft bald ab' mit Knopf 'Code einlösen' statt Kasse – passt zu mir.",
-   "Teilen-Blatt: 'Bleibt auf diesem Gerät. Nichts wird hochgeladen.' – beruhigend."
-  ],
+  "erster_eindruck": "Der Einstieg fühlt sich diesmal ruhiger an – die vier Seiten wechseln ohne Ruckeln, und bei „Von Hand eingeben“ steht jetzt „Laden, Guthaben und Ablaufdatum“ statt vorher extra „Code eintippen“. Mein eigentlicher Bereich – Mail-Text einfügen, PDF-Anhang importieren, Online-Code einlösen – hat sich seit Runde 9 aber nicht verändert: alles läuft weiter genauso zuverlässig, nur ist auch nichts von meinen zwei offenen Punkten dazugekommen.",
+  "behoben": [],
   "offen": [
-   "Mail-Text-Weg aus der Mail-App im Simulator nicht prüfbar (bekannte Grenze) – nur Code und Protokoll belegen ihn, kein Screenshot mit Text-Vorschau.",
-   "scan-v14: Code '7GHK 2M9P XQ41' mit Leerzeichen ohne Hinweis, ob sie beim Abtippen dazugehören.",
-   "scan-v13: OTTO-Code bricht in der Kachel um."
+   "ScanView.swift:231-233 (SourceRow „Aus dem Text einer E-Mail“ / „Text kopieren und hier einfügen“): weiterhin keine Teilen-Erweiterung für markierten Mail-Text; ich muss immer noch manuell kopieren. Für PDF-/Bild-Anhänge klappt „Teilen → Restwert“ dagegen (RestwertApp.swift:97-105, ScanView.swift:249-252) – nur reiner Text aus der Mail-App geht nicht per Teilen.",
+   "CardDetailView.swift:478 / ScanResultView.swift:265 / TextParser.swift:346: Gruppierte Online-Codes mit Buchstaben und Ziffern (z. B. „7GHK 2M9P XQ41“) werden weiterhin mit Leerzeichen angezeigt und so gespeichert (TextParser.clean() fügt bei nicht-rein-numerischen Gruppen Leerzeichen ein), ohne Hinweis, ob die Leerzeichen beim Abtippen dazugehören. „Kopieren“ löst es (kopiert 1:1), aber wer den Code von Auge abliest oder an einem anderen Gerät eintippt, weiß es weiter nicht."
   ],
   "befunde": [
    {
-    "screen": "hinzufuegen / gespeichert-im-tab / ScanView.swift:234",
-    "befund": "Die Zeile 'Aus dem Text einer E-Mail' sagt weiter 'Text kopieren und hier einfügen' – dass man jetzt in Mail markieren und über 'Teilen → Restwert' schicken kann, erfährt man hier nicht (nur bei 'Aus einer Datei' für Anhänge).",
-    "schwere": "mittel"
+    "screen": "Detail: barcodeTicket, CardDetailView.swift:478,497",
+    "befund": "Bei einem alphanumerischen Online-Code mit Leerzeichen-Gruppen zeigt die Detailkarte den Code exakt wie gespeichert (mit Leerzeichen) und der „Kopieren“-Knopf (Zeile 497) übernimmt ihn 1:1 in die Zwischenablage. Beim Einfügen im Shop ist das kein Problem, aber wenn ich den Code z. B. am Arbeits-PC von Hand abtippe (Bildschirm neben mir), bleibt offen, ob die Lücke zum Code gehört oder nur zur besseren Lesbarkeit da ist.",
+    "schwere": "niedrig",
+    "vorschlag": "Bei Codes mit eingebauten Leerzeichen (nicht rein numerisch) einen kurzen Zusatz unter dem Code zeigen, z. B. „Mit Leerzeichen eingeben“ oder „Leerzeichen weglassen“ – je nachdem, was der jeweilige Shop tatsächlich erwartet."
    },
    {
-    "screen": "ScanView.swift:52 / ScanView.swift:422",
-    "befund": "Die Reihe zählt alles als 'Foto': geteilter Mail-Text oder PDF zeigt 'Foto 1 von 2' und am Ende '2 Fotos: …', obwohl es Texte/PDFs sind. Die Erweiterung selbst unterscheidet sauber ('Mail-Text', '1 PDF', ShareViewController.swift:233-236).",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "scan-v14",
-    "befund": "Gruppierter Online-Code ohne Hinweis 'ohne Leerzeichen eingeben'; 'Code kopieren' löst es an der Online-Kasse.",
-    "schwere": "niedrig"
+    "screen": "Import: ScanView.swift:231-233",
+    "befund": "Für Mail-Text gibt es weiterhin nur „Text kopieren und hier einfügen“, keine Teilen-Aktion aus der Mail-App heraus (anders als bei PDF/Bild-Anhängen, die über „Teilen → Restwert“ ankommen, RestwertApp.swift:97-105). Bekannte Grenze, aber nach zehn Testrunden mein einziger echter Wunsch, der offen bleibt.",
+    "schwere": "niedrig",
+    "vorschlag": "Eigene Share-Extension für markierten Text ergänzen (wie in Verlauf-Dokument unter „Wünsche für später“ schon vermerkt)."
    }
   ],
-  "was_fehlt_zur_10": "Mein Hauptwunsch ist erfüllt, deshalb 10. Damit ich die App auch meinen Kollegen richtig erkläre: in 'Aus dem Text einer E-Mail' auf den Teilen-Weg hinweisen und bei geteilten Texten/PDFs nicht 'Foto' sagen; ein Screenshot der Erweiterung mit Mail-Text-Vorschau (z. B. aus Notizen geteilt) würde den Weg im Simulator belegen.",
+  "performance": [
+   "Importer.swift:39 (ScanOutcome.draft) und Importer.swift:77-87 (aiFilled) sind reine computed properties ohne Zwischenspeicherung: jeder Zugriff lässt TextParser.parse() erneut über den kompletten Text laufen (rund 15 Regex-Muster). ScanResultView.cell() (ScanResultView.swift:256) ruft outcome.aiFilled.contains(label) für jede einzelne Kachel auf (bei 6-8 Kacheln also 6-8 komplette Neu-Durchläufe pro Bildaufbau, aiFilled parst dabei sogar noch ein zweites Mal separat). Für kurze Mail-Texte kaum spürbar, bei langen, aus mehreren PDF-Seiten zusammengefügten Texten (Importer.swift:174-203) summiert sich das unnötig."
+  ],
+  "codequalitaet": [
+   "SmartExtractor.swift:14 weist Apple Intelligence an, Codes „ohne Leerzeichen“ zu liefern, während der Regel-Parser TextParser.swift:346 (clean()) bei alphanumerischen Gruppen bewusst Leerzeichen einfügt – die beiden Quellen sind damit für dasselbe Feld inkonsistent, was in ScanDraft.merge zu unterschiedlichem Verhalten je nachdem führen kann, welche Quelle gewinnt."
+  ],
+  "was_fehlt_zur_10": "Weiterhin nur der eine Wunsch: Mail-Text per Teilen direkt aus der Mail-App an Restwert übergeben, ohne ihn erst zu kopieren. Sonst nichts Neues in meinem Bereich seit Runde 9.",
   "wuerde_nutzen": true,
   "nps": 9
  },
@@ -223,12 +256,12 @@
   "gruppe": "Alltag",
   "fokus": "Geteiltes Gerät: Codes vor Kindern verstecken, Schutz nicht aus Versehen abschaltbar",
   "scores": {
-   "gesamt": 10,
+   "gesamt": 7,
    "scan": 8,
    "barcode_kasse": 9,
-   "login_sperre": 10,
-   "verstaendlichkeit": 10,
-   "vertrauen": 10,
+   "login_sperre": 7,
+   "verstaendlichkeit": 9,
+   "vertrauen": 7,
    "barrierefreiheit": 8
   },
   "scores_runde9": {
@@ -240,37 +273,49 @@
    "vertrauen": 10,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Auf dem iPad sehe ich jetzt oben gleich, was bald abläuft, und darunter meine Gutscheine – viel schneller als vorher. Der neue Knopf „An der Kasse zeigen“ macht mir erst Sorgen, aber die Kasse bleibt hinter Face ID. Und das Teilen-Blatt sagt „Bleibt auf diesem Gerät“, das beruhigt mich.",
-  "behoben": [
-   "Schutz-Einstellungen unverändert vollständig: grüne Bestätigung „Schutz für geteiltes Gerät ist an“ mit allen drei Schaltern (geteiltes-geraet-an)",
-   "Widget respektiert App-Sperre und Code-Schutz: bei Sperre „••••“ und keine Beträge (WidgetBridge.swift:47-56) – wichtig, weil es jetzt ein großes Widget mit 6 Abläufen gibt",
-   "iPad-Startseite: Liste kommt deutlich früher, Radar zeigt jetzt auch am Douglas-Stapel den Betrag („D +1 · 44 €“, ipad-start)"
-  ],
+  "erster_eindruck": "Der Einstieg ist wie gewohnt in vier kurzen Seiten ohne Konto erledigt, das passt zu meiner knappen Zeit als alleinerziehende Mutter. In den Einstellungen sehe ich sofort wieder die grüne Zeile „Schutz für geteiltes Gerät ist an“ mit allen drei Schaltern – genau die Bestätigung, die mir in Runde 9 schon gut gefallen hat. Beim genaueren Nachlesen des Codes bin ich aber auf eine Lücke gestoßen, die mich als Mutter mit zwei neugierigen Kindern am selben iPad wirklich beunruhigt: „Alles löschen“ braucht gar kein Face ID.",
+  "behoben": [],
   "offen": [
-   "iPad-Querformat weiter nicht per Screenshot belegt (Skriptgrenze, kein Abzug)",
-   "iPad-Kasse im Hochformat mit großer Leerfläche (ipad-kasse, unverändert)",
-   "Widget-Darstellung und Mitteilungs-Knopf „An der Kasse zeigen“ unter App-Sperre nur im Code prüfbar, nicht per Screenshot"
+   "iPad-Querformat weiterhin nicht visuell geprüft, nur Code gelesen (Skriptgrenze: kein Simulator/Screenshot erlaubt) – unverändert seit Runde 9.",
+   "Schwebende Tab-Leiste überdeckt beim ersten Öffnen der Einstellungen weiterhin Teile des Account-Bereichs (SettingsView.swift, accountSection ca. Zeile 389-397); Code unverändert gegenüber Runde 9, bekannte Grenze."
   ],
   "befunde": [
    {
-    "screen": "RestwertApp.swift:109-111 / Store.swift:812",
-    "befund": "Erinnerung nennt Laden und Guthaben im Klartext („… gültig bis … Jetzt einlösen.“), auch wenn „Codes erst nach Face ID“ an ist; Codes stehen nicht drin. Auf einem Familien-iPad sehen Kinder so, welche Gutscheine es gibt – für mich hinnehmbar, ein Schalter „Beträge in Mitteilungen ausblenden“ wäre nett.",
-    "schwere": "niedrig"
+    "screen": "Einstellungen / SettingsView.swift:206 (Button „Alles löschen“) + 269-271 (confirmationDialog) + Store.swift:587-598 (resetAll)",
+    "befund": "„Alles löschen“ löst nur ein einfaches Bestätigungsfenster aus (\"Alle Gutscheine, Einlösungen und Tests löschen?\") – anders als die drei Schutz-Schalter (die nur mit Face ID/Code ausgeschaltet werden können, s. guarded() Zeile 275-290) verlangt diese Aktion keine Prüfung. Ein Kind, das in den Einstellungen herumtippt, kann mit zwei Tipps ohne Face ID meinen gesamten Bestand endgültig löschen – Store.resetAll() ruft sofort save() auf, es gibt kein „Rückgängig“ wie beim einzelnen Entfernen (router.showUndo). Das ist für mich der schlimmste denkbare Fall auf einem geteilten Gerät.",
+    "schwere": "hoch",
+    "vorschlag": "Vor dem Setzen von confirmReset = true (bzw. vor dem destruktiven Button im Dialog) DeviceSecurity.guardSensitive(...) verlangen, genau wie beim Ausschalten der Schutz-Schalter."
    },
    {
-    "screen": "start-bestand / ipad-start",
-    "befund": "Neuer Schnellknopf „An der Kasse zeigen“ direkt auf der Startseite; führt zur Kasse, die bei Code-Schutz verdeckt bleibt (kasse-code-geschuetzt). Keine Lücke im Schutz erkennbar.",
-    "schwere": "niedrig"
+    "screen": "Einstellungen / SettingsView.swift:426 (Button „Daten aus iCloud löschen“) + 255-268 (confirmationDialog)",
+    "befund": "Gleiche Lücke wie bei „Alles löschen“, nur für die iCloud-Kopie: kein Face-ID-Schutz vor dem destruktiven Schritt. Laut Dialogtext bleibt zwar alles lokal erhalten, aber der Sync-Schlüssel und alle PINs im iCloud-Schlüsselbund sind danach weg – ebenfalls ohne Prüfung auslösbar.",
+    "schwere": "mittel",
+    "vorschlag": "Denselben guardSensitive()-Aufruf wie bei den Schutz-Schaltern vor die Bestätigung setzen."
    },
    {
-    "screen": "teilen-blatt",
-    "befund": "Systemblatt zeigt „1 Photo Selected“ und „Use as Wallpaper“ auf Englisch (iOS-Simulator, nicht die App).",
-    "schwere": "niedrig"
+    "screen": "Detail / CardDetailView.swift:570,576 (togglePin)",
+    "befund": "In togglePin() wird `let context = LAContext()` angelegt und zwei Zeilen später nur mit `_ = context` verworfen, ohne je benutzt zu werden – DeviceSecurity.guardSensitive() erzeugt intern ohnehin seinen eigenen LAContext. Kein Nutzereffekt, aber unnötiger toter Code direkt im sicherheitsrelevanten Pfad.",
+    "schwere": "niedrig",
+    "vorschlag": "Beide Zeilen (context anlegen und verwerfen) ersatzlos streichen."
+   },
+   {
+    "screen": "Einstellungen / SettingsView.swift:185 (Button „Einführung ansehen“)",
+    "befund": "Setzt ungeschützt onboarded = false; ein Kind, das in den Einstellungen herumtippt, kann versehentlich die ganze App in den Einstiegs-Bildschirm zurückversetzen. Nicht gefährlich (keine Daten weg, Verlassen über „Los geht's“ wieder möglich), aber verwirrend, wenn ich das iPad danach in der Hand habe und plötzlich wieder im Tutorial stehe.",
+    "schwere": "niedrig",
+    "vorschlag": "Optional: kurze Rückfrage („Einführung jetzt ansehen?“), damit ein Fehltipp nicht sofort wirkt."
    }
   ],
-  "was_fehlt_zur_10": "Nichts im Simulator-Build; der Umbau hat für mich nichts verschlechtert und der Schutz gilt auch für Widget und Schnellknopf.",
+  "performance": [
+   "OnboardingView.swift/Theme.swift (Einstieg, nicht mein Kernfokus, aber als erstes gesehen): Die Umstellung von .compositingGroup().shadow() auf der ganzen animierten Karte hin zu einem Schatten auf der deckenden Grundfläche (cardSurface(), Theme.swift:359-372) ist saubere, gut kommentierte Perf-Arbeit – der sich ändernde Zähler-Text auf der Willkommensseite muss den Weichzeichner jetzt nicht mehr bei jedem Bild neu anwerfen.",
+   "HomeView.swift:282-350 (HomeLists): eine Sortierung/Suche pro Neuaufbau der Liste, keine O(n²)-Schleifen erkennbar; für die in meinem Alltag üblichen <50 Gutscheine unkritisch."
+  ],
+  "codequalitaet": [
+   "CardDetailView.swift:570,576: toter Code (ungenutztes LAContext, s. Befund oben).",
+   "SettingsView.swift: Die Schutz-Schalter (pinLock/appLock/codeLock) laufen alle über denselben guarded()-Helfer (Zeile 275-290), aber 'Alles löschen' und 'Daten aus iCloud löschen' folgen keinem einheitlichen Schutzmuster – dieselbe Datei behandelt vergleichbar sensible Aktionen unterschiedlich streng."
+  ],
+  "was_fehlt_zur_10": "Damit es für mich wieder eine echte 10 wird, muss „Alles löschen“ (und idealerweise auch „Daten aus iCloud löschen“) denselben Face-ID-Schutz bekommen wie die drei Schutz-Schalter – sonst ist mein ganzer Gutschein-Bestand auf dem geteilten iPad nur zwei Kindertipps von einer endgültigen, nicht rückholbaren Löschung entfernt.",
   "wuerde_nutzen": true,
-  "nps": 10
+  "nps": 7
  },
  {
   "persona": "Helga M., 61, Sehschwäche, nutzt große Schrift (Dynamic Type) und „Kontrast erhöhen“ (simulierte Persona)",
@@ -294,61 +339,53 @@
    "vertrauen": 9,
    "barrierefreiheit": 9
   },
-  "erster_eindruck": "Besser: Das kleine Radar ist nicht mehr das Erste, was ich sehe, sondern oben steht groß „Stadler, noch 11 Tage“. Mit Kontrast hat die Karte jetzt einen klaren Rand. Aber bei meiner großen Schrift liegt der neue schwarze Knopf „An der Kasse zeigen“ genau unter der Tab-Leiste, und das Radar ist unten immer noch winzig.",
-  "behoben": [
-   "Radar steht nicht mehr über der Liste; „Läuft bald ab“ wächst bei XL voll mit (gross-start; HomeView.swift:29-50)",
-   "„Läuft bald ab“-Karte hat bei Kontrast erhöhen einen sichtbaren Rand (kontrast-start)",
-   "Betrag an gestapelten Radar-Marken: auf dem iPad „D +1 · 44 €“ (ipad-start) – mein Douglas-Punkt aus Runde 9 ist dort gelöst",
-   "Rote Abgelaufen-Box bei XL unverändert gut (gross/scan-v07)"
-  ],
+  "erster_eindruck": "Der Einstieg wirkt genauso ruhig und lesbar wie zuletzt: große Überschriften, viel Luft, und mit „Kontrast erhöhen“ weiterhin kräftige Ränder um jede Karte. Von den Änderungen an Schatten und Seiten-Abdunklung beim Wischen (Theme.swift, OnboardingView.swift) merke ich als Nutzerin nichts – es sieht identisch aus wie in Runde 9, wirkt aber beim Wischen etwas ruhiger/gleichmäßiger. Beim Verfallsradar und beim PIN-Knopf an der Kasse hat sich für mich nichts verändert.",
+  "behoben": [],
   "offen": [
-   "Radar-Beschriftungen wachsen weiter nur bis Bedienungshilfen 1 (ExpiryRadar.swift:75 und :95 `.dynamicTypeSize(...Self.maxType)`), und es gibt keinen Screenshot des Radars bei XL/Kontrast",
-   "Auf dem iPhone steht unter dem Stapel „a +3“ (2029+) kein Betrag – ausgerechnet dort liegen die 1.250 € Amazon (start-bestand-unten; Beschriftung wird verworfen, wenn sie breiter als die Jahresspalte ist: ExpiryRadar.swift:481)",
-   "„PIN anzeigen“ innen weiter hellgrau gefüllt (unverändert)",
-   "Rote Betrugsbox bei XL: „Zeig den Betrug bei der Polizei an“ verläuft im Nebel über „Hinzufügen“ (gross/scan-v09, unverändert)"
+   "Verfallsradar-Beschriftungen (Beträge, Monate) wachsen weiter nur bis Bedienungshilfen 1 und dann nicht mehr (ExpiryRadar.swift:74-75,95: „maxType = .accessibility1“); die Douglas-Marke bleibt bei Platzmangel weiter ohne Betrag, weil sich überlappende Beträge einfach ausblenden (ExpiryRadar.swift:433-456)",
+   "„PIN anzeigen“ an der Kasse bleibt ein hellgrau gefüllter .bordered-Knopf statt eines kräftigen Hauptknopfs; nur der dunkle Rand macht ihn als Knopf erkennbar (CheckoutView.swift:152)"
   ],
   "befunde": [
    {
-    "screen": "gross-start",
-    "befund": "Bei XL liegt der neue Knopf „An der Kasse zeigen“ beim Öffnen unter der schwebenden Tab-Leiste; man sieht nur verschwommene Schrift hinter Glas. Per Scrollen erreichbar.",
-    "schwere": "mittel"
+    "screen": "Einstieg / Theme.swift:356-372, OnboardingView.swift:174-184,320-327",
+    "befund": "Die Umstellung von „ganze Seite abdunkeln + compositingGroup().shadow() auf bewegtem Inhalt“ auf „Schleier-Overlay in Color.page + Schatten nur auf der festen Kartenfläche“ sieht bei mir optisch unverändert aus (gleiche Kontraste, gleiche Ränder mit „Kontrast erhöhen“). Für mich als Testerin kein Unterschied, aber plausibel, dass es auf einem älteren/schwächeren Handy weniger ruckelt, weil der Zähler auf der Willkommens-Karte (WelcomePage) nicht mehr bei jedem Bild die ganze Karte samt Text neu zusammensetzen und weichzeichnen muss.",
+    "schwere": "niedrig",
+    "vorschlag": "Keine Änderung nötig; ggf. auf echtem älterem Gerät mit AX5 + „Kontrast erhöhen“ gegenprüfen, ob die Kartenränder beim Wischen genauso scharf bleiben wie vorher."
    },
    {
-    "screen": "ExpiryRadar.swift:75",
-    "befund": "Radar bleibt bei Bedienungshilfen 1 gedeckelt; Monate/Beträge (12 pt skaliert) wachsen bei XL nicht weiter. Durch den Umbau liegt es jetzt unten und ist weniger wichtig, ersetzt aber keine große Textfassung.",
-    "schwere": "mittel"
+    "screen": "kontrast-start (ExpiryRadar.swift:74-75,95)",
+    "befund": "Nach wie vor wachsen die kleinen Beträge/Monate im Verfallsradar nur bis Bedienungshilfen 1, danach bleibt die Grafik gleich groß, während die Monatsliste darunter weiterwächst. Bei sehr großer Schrift wirkt das Radar dann wie ein kleiner Fremdkörper zwischen großen Texten.",
+    "schwere": "mittel",
+    "vorschlag": "Ab AX2 die Radar-Grafik durch eine reine Textliste der nächsten Ablauftermine ersetzen statt die Grafikgröße weiter zu deckeln."
    },
    {
-    "screen": "start-bestand-unten / ExpiryRadar.swift:481",
-    "befund": "Gestapelte Marke „a +3“ in 2029+ ohne Summe, weil „1.3xx €“ nicht in die Spalte passt; dafür gibt es kein Kürzel wie „1,3 T€“ oder eine zweite Zeile.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "gross-start",
-    "befund": "Guthaben-Betrag bei XL mit 34 pt (HomeView.swift:437) optisch kaum größer als die Zeile „4 Gutscheine · 1 läuft bald ab“ – lesbar, aber nicht mehr der Blickfang.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "teilen-erweiterung",
-    "befund": "Teilen-Blatt mit großen Nummern-Schritten gut lesbar; nicht bei XL aufgenommen, daher nicht prüfbar.",
-    "schwere": "niedrig"
+    "screen": "gross-kasse (CheckoutView.swift:148-154)",
+    "befund": "„PIN anzeigen“ ist weiterhin ein .bordered-Knopf mit hellgrauer Füllung – nur der Tinten-Rand zeigt, dass es ein Knopf ist. Neben dem kräftigen Hauptknopf (dunkle Füllung) wirkt er dadurch schwächer/unwichtiger, obwohl der PIN an der Kasse oft gebraucht wird.",
+    "schwere": "niedrig",
+    "vorschlag": "Knopf auf gefüllten Hintergrund umstellen (z. B. Color.fill statt reinem Rand), damit er auf den ersten Blick als Knopf und nicht nur als Rahmen erkennbar ist."
    }
   ],
-  "was_fehlt_zur_10": "Ein Verfallsradar, das bei großer Schrift mitwächst oder bei XL durch eine lesbare Textliste ersetzt wird (mit Screenshot), Beträge auch an jedem Stapel, und dass der Kasse-Knopf bei XL nicht unter der Tab-Leiste verschwindet.",
+  "performance": [
+   "Theme.swift:356-372 (cardSurface) und OnboardingView.swift:174-184,320-327,366-369,402-408,428-431,517-520: Schatten liegen jetzt auf der deckenden Kartenfläche/Overlay-Schleier statt auf einer compositingGroup() über dem gesamten (teils animierten/zählenden) Inhalt. Das vermeidet, dass Text und Symbole bei jeder Bewegung/jedem Zähler-Frame neu in eine Zwischenebene gerastert und weichgezeichnet werden müssen – sinnvoll gegen Ruckeln gerade auf älteren Geräten, ohne dass sich am Ergebnis für mich als Nutzerin etwas sichtbar ändert."
+  ],
+  "codequalitaet": [
+   "CardDetailView.swift:177-185: Die private Methode cell(_:_:tint:) ist im ganzen Feature nirgends aufgerufen (toter Pfad) – kann ersatzlos entfernt werden."
+  ],
+  "was_fehlt_zur_10": "Ein Verfallsradar, dessen Beträge/Monate bei großer Schrift wirklich mitwachsen (oder ab AX2 eine Textliste statt Grafik), sowie ein kräftiger statt nur umrandeter „PIN anzeigen“-Knopf an der Kasse.",
   "wuerde_nutzen": true,
   "nps": 9
  },
  {
   "persona": "Werner B., 67, pensionierter Kriminalhauptkommissar, früher Betrugsprävention für Senioren (simulierte Persona)",
   "gruppe": "Fachleute",
-  "fokus": "Gutscheinbetrug (Enkeltrick, falsche Behörden), Warnungen, Schutz der Codes",
+  "fokus": "Gutscheinbetrug (Enkeltrick, falsche Behörden), Warnungen ab 200 €, Musterwarnung, Schutz der Codes",
   "scores": {
-   "gesamt": 10,
+   "gesamt": 9,
    "scan": 8,
    "barcode_kasse": 9,
    "login_sperre": 9,
    "verstaendlichkeit": 10,
-   "vertrauen": 10,
+   "vertrauen": 9,
    "barrierefreiheit": 8
   },
   "scores_runde9": {
@@ -360,47 +397,63 @@
    "vertrauen": 10,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Der neue Weg über „Teilen“ läuft durch dieselbe Prüfung wie ein Scan: der Bäckerei-Gutschein kommt mit „Gelesen – bitte prüfen“ und dem Satz „Gib Gutscheincodes nie am Telefon oder per Nachricht weiter“. Keine Abkürzung am Betrugsschutz vorbei – so gehört sich das.",
+  "erster_eindruck": "Der Einstieg verspricht nichts, was die App nicht hält: kein Konto, kein Login, vier ruhige Seiten, und wer eilig ist, überspringt. Vom Betrug ist dort kein Wort – das ist in Ordnung, denn die Warnung kommt genau da, wo sie hingehört: im Scan-Ergebnis, rot ab 200 € und beim Muster ab der zweiten Karte über 100 €, jeweils mit dem Satz, was jetzt zu tun ist. Beim Nachlesen ist mir aber eine Hintertür aufgefallen: Wer nach dem Scan im Formular den Betrag ändert oder erst dort einträgt, wird nie gefragt. Genau so läuft es beim Enkeltrick – der Scan findet keinen Betrag, die Betrügerin sagt am Telefon „500 Euro“, und das Opfer tippt es ein.",
   "behoben": [
-   "Keine Regression: rote Box ab 200 € mit Handlungssatz und Musterwarnung unverändert (scan-v09, musterwarnung)",
-   "Geteilte Fotos/Mails laufen als Reihe durch die normale Scan-Auswertung mit denselben Warnungen (ScanView.swift consumeSharedBatch; teilen-ergebnis)",
-   "Teilen-Erweiterung legt Dateien nur lokal in die App Group, „Nichts wird hochgeladen“ (teilen-erweiterung)"
+   "Keine Regression: Schwelle 200 € (ScanResultView.swift:199), Handlungssatz mit Sperren und Anzeige (ScanResultView.swift:201), rote Box bei hohem Wert und beim Muster (ScanResultView.swift:415-421) unverändert",
+   "Codes bleiben geschützt: Kopieren nur lokal und befristet (CardDetailView.swift:497-498, CheckoutView.swift:466-467), Code erst nach Face ID (CardDetailView.swift:551-559), Kopier-Hinweis „nie am Telefon weitergeben“ (CardDetailView.swift:524-527)",
+   "Von Hand eingeben fragt bei hohem Wert und beim Muster nach, gleiche Schwellen wie im Scan (CardFormView.swift:722-735, Dialog :153-159)"
   ],
   "offen": [
-   "Erste Karte 100–199 € ohne Vorgeschichte weiter nur mit grauem Hinweis, ohne Rückfrage – vertretbar",
-   "Bei XL verläuft der Polizei-Satz in der roten Box im Nebel über „Hinzufügen“ (gross/scan-v09)"
+   "Erste Karte 100–199 € ohne Vorgeschichte weiter ohne Rückfrage: ScanResultView.swift:185 (redBox false), nur grauer Kasten :187, „Hinzufügen“ ohne Dialog, weil hasWarnings leer bleibt (:415-421). Vertretbar, aber die typische Enkeltrick-Karte kostet 100 €."
   ],
   "befunde": [
    {
-    "screen": "teilen-ergebnis",
-    "befund": "Krustenzauber 25 €: „Gültig bis: nicht gefunden“, Hauptknopf „Hinzufügen“ mit Formular statt Ein-Tipp-Speichern – richtig vorsichtig bei einem Gutschein ohne Code.",
-    "schwere": "niedrig"
+    "screen": "Formular nach Scan / CardFormView.swift:723",
+    "befund": "manualRisk() bricht mit `guard editing == nil, outcome == nil` ab, sobald das Formular aus einem Scan kommt („der Scan fragt selbst“). Der Scan fragt aber nur nach dem gelesenen Betrag. Fand der Scan keinen Betrag („Guthaben: nicht gefunden“, ScanResultView.swift:234) oder liest er 20 € statt 200 €, steht im Ergebnis nur der graue Allgemeinhinweis; im Formular trägt der Nutzer dann 500 € ein (valueText, :643 vorbefüllt) und speichert ohne jede Rückfrage (:747). Dasselbe beim Bearbeiten (editing != nil): 50 € gespeichert, auf 5.000 € geändert, keine Frage.",
+    "schwere": "mittel",
+    "vorschlag": "Guard aufteilen: Dubletten-Prüfung nur bei outcome == nil; Betrags-Prüfung immer, aber überspringen, wenn der Scan schon gewarnt hat, z. B. `if let o = outcome, (o.draft.value ?? 0) >= 100 { return nil }` – dann fragt das Formular genau dann, wenn der Betrag erst dort hoch wird."
    },
    {
-    "screen": "Store.swift:812",
-    "befund": "Ablauf-Erinnerung enthält Laden und Guthaben, aber keinen Code – aus Betrugssicht in Ordnung.",
-    "schwere": "niedrig"
+    "screen": "Scan-Ergebnis / ScanResultView.swift:29-32",
+    "befund": "fraudHintScans zählt bei jedem onAppear hoch, auch für „Kein Gutschein erkannt“ (die Group umfasst beide Zweige) und beim Zurückkommen vom Formular (navigationDestination, ScanView.swift:159). Drei unscharfe Fehlversuche einer Anfängerin verbrauchen die drei ausführlichen Hinweise „Keine Behörde lässt sich mit Gutscheincodes bezahlen“; beim ersten echten Gutschein steht nur noch der Einzeiler (:188-189).",
+    "schwere": "niedrig",
+    "vorschlag": "Nur zählen, wenn outcome.looksLikeVoucher, und per .task(id: outcome-ID) statt onAppear, damit ein Zurück nicht zählt."
    },
    {
-    "screen": "gross/scan-v09",
-    "befund": "Unverändert: bei XL sind „Gib den Code nicht weiter“ und „lass das Guthaben sperren“ sichtbar, die Anzeige-Empfehlung erst nach Scrollen.",
-    "schwere": "niedrig"
+    "screen": "Betrugslogik / ScanView.swift:442-448, CardFormView.swift:730-732",
+    "befund": "Die Musterregel (Gutscheine ab 100 € in den letzten 7 Tagen, ohne Beispiele und eigene Gutscheine) steht zweimal wortgleich in zwei Views, die Code-Normalisierung `plain()` für Dubletten ebenfalls. In RestwertKit gibt es dafür keine Funktion und keinen Test; in den Tests kommt addedAt nur als `== nil` vor (ScanDraftTests.swift:239). Ändert jemand eine Kopie (z. B. 14 Tage), warnen Scan und Formular verschieden, und niemand merkt es.",
+    "schwere": "mittel",
+    "vorschlag": "`CardQueries.recentHighValueCount(_ cards:, now:)` und `CardQueries.duplicate(of code:, in:)` ins Kit, mit Test: Karte 100 € vor 6 Tagen zählt, vor 8 Tagen nicht, Beispiel und issuedByMe nie, Altbestand ohne addedAt über received."
+   },
+   {
+    "screen": "Scan-Ergebnis, Nachfrage / ScanResultView.swift:426-432",
+    "befund": "warningTexts baut für jede Abfrage eine neue ScanResultView (eine View mit @AppStorage und @Environment) nur, um checks() aufzurufen. hasWarnings wird in canSaveDirectly (Importer.swift:69) und im Hinzufügen-Knopf (ScanView.swift:352) gelesen, warningTexts im Dialogtext gleich zweimal (ScanView.swift:358-359). Funktional richtig, aber die Betrugsregeln hängen so an einer View statt an einer prüfbaren Funktion.",
+    "schwere": "niedrig",
+    "vorschlag": "checks() als freie Funktion `ScanChecks.run(outcome:)` (oder Methode auf ScanOutcome) herausziehen; ScanResultView nur noch anzeigen."
    }
   ],
-  "was_fehlt_zur_10": "Nichts Wesentliches im Simulator-Build; optional eine Rückfrage schon bei der ersten Karte ab 100 €.",
+  "performance": [
+   "Importer.swift:~40: `draft` ist ein berechnetes Property und ruft jedes Mal ScanDraft.merge → TextParser.parse (Dutzende NSRegularExpression über den ganzen OCR-Text). Pro Aufbau des Ergebnisses läuft das mehrfach: ScanResultView.swift:69 (voucher), :217 (formatText), :46 (announcement), dazu displayCode (Importer.swift:~48) und über hasWarnings/warningTexts (ScanResultView.swift:429, ScanView.swift:352/358/359) nochmals 3-mal. Bei einem langen Beleg (A4-PDF) also 5–7 vollständige Parser-Läufe auf dem MainActor je Neuaufbau. Vorschlag: draft beim Abschluss von read() einmal berechnen und speichern; onReceived setzt es neu."
+  ],
+  "codequalitaet": [
+   "ScanResultView.swift:183-195: Rumpf von fraudBox ist nicht eingerückt (steht auf Funktionsebene), liest sich wie ein Einfüge-Unfall.",
+   "ScanView.swift:442 / CardFormView.swift:730: `-7 * 24 * 3600` als magische Zahl an zwei Stellen; gehört als benannte Konstante neben ScanResultView.highValue (:199) oder besser ins Kit.",
+   "CardFormView.swift:155: riskConfirmed bleibt nach „Trotzdem speichern“ true; schlägt das Speichern danach nicht durch (z. B. Validierung nach weiterer Änderung), gibt es beim zweiten Versuch keine Rückfrage mehr – harmlos, aber unnötig."
+  ],
+  "was_fehlt_zur_10": "Die Betrugsfrage muss auch dann kommen, wenn der hohe Betrag erst im Formular entsteht (nach Scan ohne Betrag oder beim Bearbeiten). Dazu die Musterregel einmal ins Kit mit Test, damit Scan und Formular garantiert gleich warnen.",
   "wuerde_nutzen": true,
-  "nps": 10
+  "nps": 9
  },
  {
   "persona": "Tarek A., 29, Deutsch als Zweitsprache (B1), Lagerlogistiker (simulierte Persona)",
   "gruppe": "Alltag",
-  "fokus": "Verständlichkeit der Warnungen und Schutztexte",
+  "fokus": "Verständlichkeit aller Texte, Warnungen und Schutztexte (Einstieg, Scan-Ergebnis, Einstellungen, Kasse)",
   "scores": {
-   "gesamt": 10,
+   "gesamt": 9,
    "scan": 8,
    "barcode_kasse": 9,
    "login_sperre": 10,
-   "verstaendlichkeit": 10,
+   "verstaendlichkeit": 9,
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
@@ -413,41 +466,80 @@
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Die Startseite ist jetzt einfacher: „Läuft bald ab“, darunter ein schwarzer Knopf „An der Kasse zeigen“ – ich weiß sofort, was ich tun soll. Beim Teilen stehen drei kurze Schritte mit Nummern, das verstehe ich gut. Die lange rote Box ist immer noch ein Block.",
-  "behoben": [
-   "Warnung mit klarer Aktion: „An der Kasse zeigen“ / „Code einlösen“ direkt unter „Läuft bald ab“ (start, start-bestand)",
-   "Radar ohne verwirrende Spalte „2026“ hinter „Dez“: Heute – Nov – Dez – 2027 – 2028 – 2029+ (start-bestand-unten)",
-   "Teilen-Blatt: „So geht es weiter“ mit drei nummerierten, kurzen Sätzen (teilen-erweiterung)",
-   "„+ 1 Rabattcode (nicht in der Summe)“ und „Nur Beispiele – dein erster Gutschein ersetzt sie“ klar (start)"
-  ],
+  "erster_eindruck": "Der Einstieg ist einfach: „Kein Gutschein verfällt mehr.“, „Alles an einem Ort.“ – kurze Sätze, ich verstehe alles. Nur der Satz über die Mitteilungen ist lang und beginnt mit „Ob wir …“, da musste ich zweimal lesen. Beim Scan-Ergebnis sind die roten Warnungen klar, aber der Text über „3 Jahre ab Ende des Kaufjahres“ und „unwirksam“ ist Amtsdeutsch. In den Einstellungen verstehe ich die Schalter, aber die Fußnoten mit „Schlüsselbund“ und „Ende-zu-Ende“ lese ich nicht zu Ende.",
+  "behoben": [],
   "offen": [
-   "Rote Box bei 1.250 € und Musterwarnung weiter ein Absatz ohne Umbruch vor „Ruf sofort …“ (scan-v09, musterwarnung)"
+   "Rote Box ab 200 € und Musterwarnung weiter ein Block ohne Umbruch vor „Ruf sofort …“ (ScanResultView.swift:417, :420; nextStep wird in :201 mit Leerzeichen angehängt)"
   ],
   "befunde": [
    {
-    "screen": "musterwarnung",
-    "befund": "Sieben Sätze in einem Block; ein Absatz vor „Ruf sofort die Firma …“ würde B1-Lesern helfen (unverändert).",
-    "schwere": "niedrig"
+    "screen": "Scan-Ergebnis / ScanResultView.swift:417, :420, :201",
+    "befund": "Frage, Urteil und Handlung stehen weiter in einem Block von sieben Sätzen („Du hast in den letzten 7 Tagen … Ruf sofort die Firma … Das geht auch online.“). Für mich als B1-Leser verschwimmt, was ich jetzt tun soll. Zusätzlich das Wort „durchzugeben“ (:187, :417) – Umgangssprache, kenne ich nicht sicher.",
+    "schwere": "mittel",
+    "vorschlag": "In :417 und :420 vor dem nächsten Schritt einen Absatz einfügen: \"… Gib nichts weiter.\\n\\n\\(Self.nextStep)\" (Label mit fixedSize zeigt Umbrüche; accessibilityLabel bleibt). „durchzugeben“ → „zu schicken oder vorzulesen“."
    },
    {
-    "screen": "start-bestand",
-    "befund": "Überschrift „Weitere“ über der Liste ist knapp; „Weitere Gutscheine“ wäre für mich eindeutiger.",
-    "schwere": "niedrig"
+    "screen": "Scan-Ergebnis / ScanResultView.swift:403",
+    "befund": "„Für gekaufte Gutscheine gelten meist 3 Jahre ab Ende des Kaufjahres, kürzere Fristen sind oft unwirksam. Frag beim Laden nach Einlösung oder Erstattung.“ – „ab Ende des Kaufjahres“, „unwirksam“, „Einlösung“, „Erstattung“ sind Amts-/Juristendeutsch. Ich verstehe nur: irgendwas mit 3 Jahren.",
+    "schwere": "mittel",
+    "vorschlag": "„Gekaufte Gutscheine gelten meist 3 Jahre, auch wenn ein kürzeres Datum draufsteht. Frag im Laden: einlösen oder Geld zurück?“"
    },
    {
-    "screen": "teilen-blatt",
-    "befund": "„1 Photo Selected“ und „Use as Wallpaper“ sind Englisch (Systemblatt im Simulator, nicht die App).",
-    "schwere": "niedrig"
+    "screen": "Scan → Hinzufügen-Dialog / ScanView.swift:358–361 mit ScanResultView.swift:401",
+    "befund": "Bei abgelaufenem Gutschein stehen im Dialog „Trotz Warnung hinzufügen?“ zwei fast gleiche Sätze direkt hintereinander: „Oft trotzdem noch einlösbar – frag im Laden nach.“ (aus :401) und dann „Oft trotzdem nicht verloren: Frag beim Laden nach Einlösung oder Erstattung.“ (:360). Das liest sich wie ein Fehler und macht den Dialog länger.",
+    "schwere": "niedrig",
+    "vorschlag": "Den Zusatz in ScanView.swift:360 streichen (die Warnung sagt es schon) oder auf „Frag im Laden: einlösen oder Geld zurück?“ kürzen."
+   },
+   {
+    "screen": "Einstellungen / SettingsView.swift:110 und :157",
+    "befund": "Zwei Fußnoten mit je 3–4 langen Sätzen und Fachwörtern: „iCloud-Schlüsselbund“, „Ende-zu-Ende verschlüsselt“, „Dateischutz des Systems, PINs eingeschlossen“, „Erweiterter Datenschutz“, „dagegen“. Ich höre nach dem ersten Satz auf zu lesen; die eigentliche Botschaft „nichts geht an uns“ geht unter.",
+    "schwere": "mittel",
+    "vorschlag": ":110 auf zwei Sätze kürzen: „Kein Konto, kein Server von uns. Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deiner iCloud – auch Apple kann sie nicht lesen.“ Rest steht schon in „So schützt Restwert deine Daten“ (:473–480). :157 analog: „Alles bleibt auf deinem iPhone. Mit iCloud-Sync zusätzlich verschlüsselt in deiner iCloud.“"
+   },
+   {
+    "screen": "Einstellungen / SettingsView.swift:99 und :412",
+    "befund": "Untertitel „Nur die Ziffern, Tippen zeigt sie“ ist ein Satz ohne Verb – welche Ziffern, wo? Und :412 „Bitte dort ‚Passwörter und Schlüsselbund‘ einschalten“ – „dort“ sagt mir nicht, wo ich hinmuss.",
+    "schwere": "niedrig",
+    "vorschlag": ":99 → „Die Zahlen unter dem Barcode bleiben versteckt. Tippen zeigt sie.“ :412 → „Schalte in den iOS-Einstellungen unter iCloud „Passwörter und Schlüsselbund“ ein.“"
+   },
+   {
+    "screen": "Einstellungen / SettingsView.swift:269",
+    "befund": "Dialog „Alle Gutscheine, Einlösungen und Tests löschen?“ – „Tests“ verstehe ich nicht (im Code: TestResult = Kassen-Tests). Im Datenschutztext (LegalView.swift:29) heißt es „Testergebnisse“, zwei Wörter für dasselbe.",
+    "schwere": "niedrig",
+    "vorschlag": "„Alle Gutscheine, Einlösungen und Kassen-Tests löschen?“ und in LegalView.swift:29 dasselbe Wort verwenden."
+   },
+   {
+    "screen": "Einstieg / OnboardingView.swift:380",
+    "befund": "Dritter Satz auf Seite 3: „Ob wir dir Mitteilungen schicken dürfen, fragen wir erst, wenn du deinen ersten Gutschein gespeichert hast.“ – 18 Wörter, beginnt mit Nebensatz „Ob …“, dann „erst, wenn“. Als B1-Leser muss ich zweimal lesen. Die zwei Sätze davor sind dagegen perfekt.",
+    "schwere": "niedrig",
+    "vorschlag": "„Wir fragen erst nach deinem ersten Gutschein, ob wir dir Mitteilungen schicken dürfen.“"
+   },
+   {
+    "screen": "Scan-Ergebnis / ScanResultView.swift:133, :307 vs. :246, :360, :363, :386",
+    "befund": "Für dieselbe Sache zwei Wörter: „Strichcode“ (:133 „Der Strichcode auf dem Gutschein ist nicht für die Kasse“, :307 „Strichcode (EAN‑13)“) und „Barcode“ (:246 Kachel „Barcode an der Kasse“, :360 „Der Barcode auf dem Gutschein wird deshalb nicht angezeigt“). In der Kachel steht dann „Barcode an der Kasse: Strichcode (EAN-13)“ – ich dachte kurz, das seien zwei verschiedene Codes.",
+    "schwere": "niedrig",
+    "vorschlag": "Ein Wort: überall „Barcode“; in :307 „Barcode (EAN‑13)“."
    }
   ],
-  "was_fehlt_zur_10": "Nichts Wesentliches; höchstens ein Absatz in der langen roten Box.",
+  "performance": [
+   "OnboardingView.swift:256 – hintere Karte trägt .shadow(radius 14) direkt auf einer Form, die per Spring rotiert und verschoben wird (:257–258); Schatten wird jeden Frame neu gerechnet. Kleine Fläche, daher gering – aber .compositingGroup() vor dem Schatten wie beim Ticket (:317) wäre konsequent.",
+   "OnboardingView.swift:177 – .opacity(0.4↔1) auf dem ganzen PageFrame (ScrollView mit mehreren compositingGroup+shadow-Karten) bei jedem Seitenwechsel; erzwingt Offscreen-Rendering der ganzen Seite während der 0,3 s. Unkritisch, nur Hinweis.",
+   "ScanResultView.swift:50 und :72 – checks(draft:merchant:) wird pro body zweimal komplett gerechnet (Ansage + Karte), dazu noch einmal über ScanOutcome.warningTexts (:430) beim Tippen auf „Hinzufügen“; enthält Prüfziffer-Berechnung. Bei ~10 Checks vernachlässigbar, aber einmal berechnen und weiterreichen wäre sauberer."
+  ],
+  "codequalitaet": [
+   "ScanResultView.swift:273–275 – .accessibilityElement(children: .ignore) und direkt danach .accessibilityElement(children: .combine): der zweite Modifier überschreibt den ersten, eine Zeile ist tot.",
+   "ScanResultView.swift:426–432 – ScanOutcome.warningTexts baut eine ScanResultView nur, um checks() aufzurufen; die Warn-Logik (Betrug ab 200 €, Muster, abgelaufen, Prüfziffer) lebt damit in einer View und ist ohne UI nicht testbar. Als reine Funktion in RestwertKit (z. B. ScanOutcome.checks()) mit Test für die vier Warnfälle.",
+   "ScanView.swift:360 und ScanResultView.swift:401/:403 – der „Oft trotzdem …“-Satz existiert dreimal in drei Varianten; ein statischer String (wie Self.nextStep in :201) hält die Wortwahl gleich.",
+   "SettingsView.swift:110, :157, :390, :475 und OnboardingView.swift:485 – „in deinem eigenen iCloud“ (Neutrum) durchgängig; Apple schreibt „in iCloud“ bzw. „deine iCloud“. Einheitlich „in deiner iCloud“ oder „in iCloud“."
+  ],
+  "was_fehlt_zur_10": "Die rechtliche 3-Jahre-Erklärung und die iCloud-Fußnoten in einfache, kurze Sätze bringen; ein Absatz vor „Ruf sofort …“ in der roten Box.",
   "wuerde_nutzen": true,
-  "nps": 10
+  "nps": 9
  },
  {
   "persona": "Timo Brandt, 31, iOS-Entwickler und erfahrener TestFlight-Beta-Tester (simulierte Persona)",
   "gruppe": "Fachleute",
-  "fokus": "Codequalität, Tests, Scan-Pipeline (Vision/Fallbacks), Sperrlogik",
+  "fokus": "Codequalität, Performance und Tests: Einstiegs-Animation (OnboardingView, cardSurface) sowie ScanOutcome/ScanResultView, Store und App-Start",
   "scores": {
    "gesamt": 8,
    "scan": 8,
@@ -466,42 +558,72 @@
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Die Teilen-Erweiterung ist sauber gebaut: Sie liest selbst nichts aus, legt die Dateien nur in die App Group, und SharedInbox ist getestet. Bei mir laufen 139/139 Tests grün. Die neue Regel für Gutscheine ohne Gutschein-Wort ist aber zu großzügig, und meine drei Architekturpunkte aus Runde 9 sind unverändert.",
+  "erster_eindruck": "Der Einstieg sieht gut aus, und die Änderung ist die richtige Richtung: Schatten auf der Grundfläche und ein Schleier statt Gruppen-Deckkraft auf der ganzen Seite. Reicht mir aber nicht ganz. Beim Tippen auf „Weiter“ springt die Illustration der alten Seite mitten im Wegschieben auf null zurück, und jede Karte blendet beim Auftritt weiterhin als Gruppe samt Schatten ein. Der Zähler auf Seite 1 formatiert in jedem Bild zweimal mit neuer Locale. Beim Scan-Ergebnis wird der OCR-Text pro body immer noch ein paar Dutzend Mal neu geparst.",
   "behoben": [
-   "Doppelter Überspringen-Knopf bei Dubletten in einer Reihe: 'Erneut scannen' nur noch einzeln, in der Reihe kein zweiter skipButton (ScanView.swift:342, Commit 874d9a9)",
-   "Unit-Test für readableSymbology (ScanDraftTests.swift 'Lesbare Namen für umgewandelte Barcode-Arten', inkl. Rückfall auf den Rohnamen)",
-   "Abbrechen in einer Fotoreihe beendet die Reihe mit Bilanz statt stillem Rest (ScanView.swift:316-321)",
-   "Neue Logik ist getestet: SharedInboxTests (Reihenfolge, genau einmal abholen), GoldenOCRTests (Krustenzauber, verlesenes Wort, Preisliste), headlineName; eigener Lauf 'Test run with 139 tests in 22 suites passed'",
-   "Startseite: Liste vor dem Radar, Radar bei Suche ausgeblendet (HomeView.swift:29-50) – für mich besser, weil ich auf dem Start meist eine bestimmte Karte suche"
+   "readableSymbology hat jetzt einen Unit-Test: ScanDraftTests.swift:244-249 (Code 93, Code93i, GS1 DataBar, Codabar, UPC-E, unbekannter Name fällt auf den Rohnamen zurück)",
+   "Doppelter Überspringen-Knopf bei Dubletten in einer Fotoreihe: ScanView.swift:326-340 zeigt in der Reihe skipButton nur einmal als Hauptknopf, „Erneut scannen“ nur bei batchTotal <= 1 (:340)",
+   "Schatten im Einstieg nicht mehr per compositingGroup über animierte Gruppen: cardSurface legt ihn auf die RoundedRectangle-Grundfläche (Theme.swift:365-372), das Willkommen-Ticket auf die TicketShape (OnboardingView.swift:323-327); inaktive Seiten per Schleier statt .opacity (OnboardingView.swift:179-183)"
   ],
   "offen": [
-   "canSaveDirectly weiter @MainActor-Computed (Importer.swift:67), aiFilled parst bei jedem Zugriff (Importer.swift:77), warningTexts baut eine ScanResultView (ScanResultView.swift:428)",
-   "Fehler der Texterkennung bleiben still leer: (try? await request.perform(on: image)) ?? [] (VoucherScanner.swift:238)",
-   "Kein XCUITest-Target (project.pbxproj: 0 Treffer für ui-testing); auch der neue Weg Teilen → App → Reihe ist nur per Screenshot belegt"
+   "canSaveDirectly ist weiter @MainActor-Computed (Importer.swift:67-75), warningTexts baut weiter eine ScanResultView-Instanz (ScanResultView.swift:428-431), aiFilled parst bei jedem Zugriff neu (Importer.swift:77-87). Siehe Befund zu draft: die Ursache sitzt eine Ebene tiefer.",
+   "Fehler der Texterkennung bleiben still leer: VoucherScanner.swift:238 `(try? await request.perform(on: image)) ?? []`",
+   "Kein XCUITest-Target: project.pbxproj enthält 0 Treffer für „UITest“, auch kein UI-Test für den Einstieg"
   ],
   "befunde": [
    {
-    "screen": "RestwertKit ScanDraft.swift:69",
-    "befund": "looksLikeVoucher akzeptiert jetzt jeden Text mit genau einem Betrag und Währung. Eigene Probe mit ScanDraft.merge + looksLikeVoucher (Skript im Scratchpad): 'Brot / 4,50 €', 'Preisschild / Kaffeemaschine / 49,99 €', 'Jetzt 10 € sparen! / Nur diese Woche', 'MENÜ DES TAGES / Schnitzel mit Pommes / 12,90 €' und 'Eintrittskarte / Konzert / 35 €' ergeben alle true, dazu headlineName als Ladenname ('Kaffeemaschine', 'Nur diese Woche'). Vorher wären das 'Kein Gutschein erkannt' gewesen. Ein Preisschild oder eine Tageskarte in einer Fotoreihe erscheint so als 'Gelesen – bitte prüfen'. Es ist ein Fehlalarm ohne Datenverlust, aber der Golden-Test deckt nur die Preisliste mit mehreren Beträgen ab.",
-    "schwere": "mittel"
+    "screen": "Einstieg / OnboardingView.swift:202-216 (Stepper), :119-122 (go)",
+    "befund": "Wahrscheinlichste sichtbare Ursache für das „Hängen“: Beim Tippen auf „Weiter“ oder „Überspringen“ ändert go(to:) die Seite in withAnimation(.smooth) (:121). Die alte Seite schiebt dann noch ca. 0,5 s sichtbar hinaus, ihr .task(id: active) setzt step aber sofort ohne Animation auf 0 (:211-215). Ticket, Liste oder Mitteilung verschwinden dadurch schlagartig mitten in der Bewegung. Die neue Seite kommt leer an und beginnt erst 150–250 ms später (erste Stepper-Pause). Für Nutzer sieht das nach Ruckeln aus. Beim Wischen fällt es weniger auf, weil die Auswahl erst nach dem Einrasten wechselt.",
+    "schwere": "mittel",
+    "vorschlag": "Zurücksetzen verzögern: im `guard active else`-Zweig erst `try? await Task.sleep(for: .milliseconds(450))`, dann bei `!Task.isCancelled` zurücksetzen (die Task wird bei Rückkehr abgebrochen). Alternativ nur in onDisappear zurücksetzen. Erste Pause der Zielseite kürzen (150 → 0–50 ms)."
    },
    {
-    "screen": "ScanView.swift:384-391 (consumeSharedBatch)",
-    "befund": "running verlangt batchTotal > 0. Nach einem einzelnen Kamera- oder Datei-Scan ist batchTotal 0. Kommt dann eine Teilen-Übergabe, setzt der else-Zweig outcome = nil: Ein ungespeichertes Ergebnis verschwindet ohne die sonst übliche Rückfrage 'Ergebnis verwerfen?'. Das passiert z. B., wenn man mitten im Prüfen in die Fotos-App wechselt, teilt und zurückkommt.",
-    "schwere": "mittel"
+    "screen": "Einstieg / OnboardingView.swift:265-271, :405-408, :431-434, :520-526",
+    "befund": "Der Schleier ersetzt nur die Deckkraft der ganzen Seite. Jede Karte blendet beim Auftritt weiterhin per .opacity als Gruppe ein: das Ticket (:268, Schatten-Hintergrund :323-327), die Mitteilung (.cardSurface(shadow: Shadow.float) + .opacity :405-407), die Zalando-Zeile (:431-432) und die beiden Optionen auf Seite 4 (.cardSurface() :520 + .opacity :525). Gruppen-Deckkraft über Text, Fläche und Schatten braucht dieselbe Zwischenebene, die der Schleier vermeiden sollte, und zwar für 0,4–0,7 s in jedem Bild, genau während des Auftritts. Auf Seite 1 überlappt das mit dem Zähler: Die Feder läuft ab 150 ms 0,7 s mit Nachschwingen, der Zähler startet bei 650 ms.",
+    "schwere": "mittel",
+    "vorschlag": "Karten ohne .opacity auftreten lassen (nur offset/scale, aus der Bühne heraus) oder nur den Inhalt einblenden und den Schatten über die Schattenfarbe mitblenden. Beim Ticket step 2 von 500 auf 750 ms verschieben, damit Feder und Zähler nicht zusammenfallen. Mit Instruments ‚Core Animation → Offscreen-Rendered‘ gegenprüfen."
    },
    {
-    "screen": "RestwertKit SharedInbox.swift:22 / RestwertShare/ShareViewController.swift:129",
-    "befund": "pending() filtert '.part'-Dateien, und der Test prüft das. Die Erweiterung schreibt aber nie über eine .part-Datei, sondern kopiert direkt mit copyItem (nicht atomar). Die Absicherung gegen halb geschriebene Dateien ist also nur getestet, nicht benutzt.",
-    "schwere": "niedrig"
+    "screen": "Einstieg Seite 1 / OnboardingView.swift:297-300, Theme.swift:491-535, Models.swift:496-498",
+    "befund": "Der Zähler läuft über TimelineView(.animation) in jedem Bildschirmbild. Pro Bild erzeugt AmountText zweimal eine neue Locale(identifier: \"de_DE\") samt FormatStyle: in parts (Theme.swift:497) und in .accessibilityLabel(value.euro) (Theme.swift:532, Models.swift:497). Dazu baut es ein AttributedString je Ziffer (:502-520) und setzt Text mit .minimumScaleFactor(0.5) (mehrere Mess-Durchläufe) und einer contentTransition, deren Wert sich in jedem Bild ändert. Das Label berechnet es umsonst, weil der Eltern-ZStack children: .ignore setzt (OnboardingView.swift:272). Außerdem läuft die Timeline 100 ms über das Zählende hinaus: Das Zählen dauert 0,8 s (:252), step 3 kommt aber erst 900 ms nach step 2 (:275).",
+    "schwere": "mittel",
+    "vorschlag": "In AmountText `private static let de = Locale(identifier: \"de_DE\")` und das FormatStyle statisch halten. Während des Zählens einen Parameter `counting: true` übergeben, der contentTransition, minimumScaleFactor und accessibilityLabel weglässt. TimelineView bei t >= 1 pausieren (paused: step != 2 || countDone) oder `.animation(minimumInterval: 1/60)` setzen."
    },
    {
-    "screen": "RestwertShare/ShareViewController.swift:58",
-    "befund": "providers.prefix(20) wirft alles ab dem 21. Anhang still weg. Die Aktivierungsregel erlaubt 20 Bilder UND 20 Dateien (RestwertShare-Info.plist), gemischt also bis zu 40. Die Erfolgsmeldung sagt nichts über Weggelassenes.",
-    "schwere": "niedrig"
+    "screen": "Scan-Ergebnis / Importer.swift:37, :42-49, :77-87, :90, :95; ScanResultView.swift:26, :40, :69-72, :103, :110, :131, :142, :150, :256, :265, :359, :385, :428-431",
+    "befund": "Ursache für die offenen Punkte aus Runde 9: `draft` ist eine Computed Property, die bei jedem Zugriff ScanDraft.merge ausführt, also TextParser.parse samt Regex über den ganzen OCR-Text. displayCode, displayMerchantName, looksLikeVoucher und resolvedFormat rechnen sie jeweils neu, aiFilled sogar zweifach (parse + merge). Ein body von ScanResultView greift darauf ca. 25–35 Mal zu (Stellen links gezählt; pro Kachel noch einmal aiFilled bis zu 2×, :256). Dazu kommen die announcement-Ansage (:46-50) und warningTexts mit eigener View-Instanz. Nutzer merken das bei langen Kassenbons beim Einblenden des Ergebnisses und bei jeder Änderung von „Wann gekauft?“ (DatePicker :321 → ScanView.swift:57-61 → canSaveDirectly mit weiteren ca. 8 Parses), jeweils auf dem MainActor.",
+    "schwere": "mittel",
+    "vorschlag": "Ein gespeichertes `var derived: Derived` (draft, displayCode, resolvedFormat, aiFilled, warnings, looksLikeVoucher) an ScanOutcome, gesetzt per `mutating func refresh()` an den zwei Stellen, die schon canSave setzen (ScanView.swift:60, :450). checks() als statische Funktion auf (outcome, draft) herauslösen, dann entfällt die View-Instanz in warningTexts. Ein Test, dass derived nach refresh() mit den Computed-Werten übereinstimmt."
+   },
+   {
+    "screen": "App-Start / RestwertApp.swift:43-55, Store.swift:71-77, WidgetBridge.swift:37-38, SettingsView.swift:251-252",
+    "befund": "Doppelte Arbeit bei jedem Aktivwerden. RestwertApp ruft WidgetBridge.update(cards:total:) direkt auf (:50). Gleichzeitig ruft der didBecomeActive-Beobachter im Store refreshWidget() auf (Store.swift:76). Das Widget wird also zweimal geschrieben, und jedes Mal wird die alte widget.json gelesen und dekodiert. Der Parameter `total` wird in WidgetBridge.update ignoriert (:37-38), trotzdem rechnen drei Aufrufer store.total auf dem MainActor aus. reloadIfNeeded läuft ebenfalls zweimal (RestwertApp:48 und über syncNow in CloudSync.swift:80). Beim Kaltstart fällt das in die ersten Einstiegs-Animationen.",
+    "schwere": "niedrig",
+    "vorschlag": "RestwertApp.swift:50 streichen (der Store-Beobachter deckt das ab), den `total`-Parameter entfernen und die Settings-Aufrufe auf store.refreshWidget() umstellen."
+   },
+   {
+    "screen": "Einstieg / OnboardingView.swift:260-262, :200-204, :306-308",
+    "befund": "Kleinere Punkte aus der Umstellung. (1) Die hintere Karte auf Seite 1 nutzt noch das Literal `.shadow(radius: 14, y: 6)` statt Shadow.card. Sie hat auch keinen ContrastEdge: Bei „Kontrast erhöhen“ fehlt ihr als einziger Karte der Rand. (2) Die Stepper-Doku sagt „Millisekunden bis zu jedem Schritt“, gemeint sind aber Pausen zwischen den Schritten. Das Ticket-Ende liegt bei 1550 ms, nicht bei 900. (3) Die Abrisslinie hat dauerhaft eine Maske mit GeometryReader, die nur die Breite animiert. Das kostet eine eigene Ebene und in jedem Animationsbild ein neues Layout.",
+    "schwere": "niedrig",
+    "vorschlag": "Die hintere Karte als leere Fläche mit .cardSurface() bauen. Die Doku in „Pause vor jedem Schritt (ms)“ ändern. Maske: `.mask(alignment: .leading) { Rectangle().scaleEffect(x: step >= 3 ? 1 : 0, anchor: .leading) }` (reine Transformation, kein GeometryReader)."
    }
   ],
-  "was_fehlt_zur_10": "Die Ein-Betrag-Regel enger fassen (z. B. nur mit Schmuck-/Überschrift-Merkmalen oder ohne Preis-/Menü-Wörter) und mit Negativfällen testen. Ein laufendes Einzelergebnis nicht still durch eine Teilen-Übergabe verwerfen. .part wirklich nutzen oder entfernen. warningTexts/aiFilled/canSaveDirectly beim Erzeugen berechnen, Texterkennungsfehler als eigenen Zustand führen und einen XCUITest für Scan → Speichern → Kasse anlegen.",
+  "performance": [
+   "Geprüft und in Ordnung: cardSurface mit Schatten auf der Grundfläche (Theme.swift:365-372), der Schleier für inaktive Seiten (OnboardingView.swift:179-183), die hintere Karte mit Schatten auf der Form (:260-262). Kein Schatten mehr auf compositingGroup über animierten Gruppen im Einstieg",
+   "onGeometryChange-Schleife geprüft (OnboardingView.swift:304 → tearY → TicketShape :324): Sie feuert nur bei geänderter Höhe. Weil die Bühne bei xxLarge gedeckelt ist (:148), passt der Betrag, und minimumScaleFactor greift nicht. Beim Zählen ändert sich die Höhe also nicht, eine Schleife entsteht nicht. onScrollGeometryChange (:160-165) liefert nur Bool, also keine Aktion pro Frame",
+   "Stepper über Task.sleep auf dem MainActor (OnboardingView.swift:217-221): Die Pausen summieren sich, und wenn der Hauptthread beim Kaltstart belegt ist (Store.load, Beobachter, Widget), verschiebt sich jeder Schritt. PhaseAnimator/KeyframeAnimator oder eine einzige Startzeit mit festen Offsets wären robuster",
+   "Gruppen-Deckkraft beim Auftritt aller Einstiegs-Karten (:268, :407, :432, :525) bleibt die verbliebene Offscreen-Ursache während der Animation",
+   "AmountText erzeugt pro Aufruf zweimal eine Locale (Theme.swift:497, :532): im Zähler in jedem Bild, aber auch überall sonst, wo Beträge in Listen neu gezeichnet werden",
+   "ScanOutcome.draft ohne Cache: ca. 25–35 TextParser-Läufe pro body von ScanResultView (Importer.swift:37, ScanResultView.swift:26-265)"
+  ],
+  "codequalitaet": [
+   "WidgetBridge.update(cards:total:) hat einen toten Parameter `total` (WidgetBridge.swift:37-38), Aufrufer RestwertApp.swift:50 und SettingsView.swift:251-252",
+   "Zwei Wege für dieselbe Widget-Auffrischung beim Aktivwerden (RestwertApp.swift:50 und Store.swift:71-77); die Store-Doku (:292) beschreibt genau diesen Zweck",
+   "Magische Verzögerung nach dem Einstieg: Task.sleep(550 ms) für den Tab-Wechsel (RestwertApp.swift:150-153) ist an .smooth(duration: 0.5) (:147) gekoppelt, ohne gemeinsame Konstante",
+   "Stepper-Doku „Millisekunden bis zu jedem Schritt“ (OnboardingView.swift:204) ist missverständlich, die Werte sind Pausen",
+   "Schatten-Literal statt Shadow.card (OnboardingView.swift:262) direkt nach einer Umstellung, die genau diese Konstanten einführt",
+   "Keine Tests für den Einstieg (Stepper-Reset, reduceMotion-Endzustand) und kein XCUITest-Target"
+  ],
+  "was_fehlt_zur_10": "Die alte Seite erst zurücksetzen, wenn sie aus dem Bild ist, die Karten ohne Gruppen-Deckkraft auftreten lassen und den Zähler ohne neue Locale pro Bild laufen lassen. Dazu ScanOutcome einmal ableiten und speichern statt dutzendfach zu parsen, plus ein XCUITest für Einstieg → Scan → Speichern.",
   "wuerde_nutzen": true,
   "nps": 8
  },
@@ -527,50 +649,61 @@
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Das ist für die Praxis die beste Änderung seit Langem: 'An der Kasse zeigen' direkt auf der Startseite und in der Erinnerung. So steht der Barcode mit einem Tipp da, während die Schlange wartet. An der Kasse selbst hat sich aber nichts geändert, und meine beiden Punkte aus Runde 9 sind noch offen.",
-  "behoben": [
-   "Kürzerer Weg zum Barcode: Knopf 'An der Kasse zeigen' unter jeder bald ablaufenden Zeile (HomeView.swift:152-169; start-bestand.png, start.png mit 'Code einlösen' für Zalando online und 'An der Kasse zeigen' für IKEA)",
-   "Erinnerung mit Aktion 'An der Kasse zeigen' (.foreground), öffnet Detail und darüber die Kasse (Store.swift:846-855, RestwertApp.swift:135-138)",
-   "Unit-Test für die lesbaren Barcode-Namen jetzt vorhanden (ScanDraftTests readableSymbologies)",
-   "Startseite: Knopf in hell, dunkel und bei Kontrast gut abgesetzt (start-bestand, dunkel-start, kontrast-start)"
-  ],
+  "erster_eindruck": "Der Einstieg zeigt gleich ein Ticket mit Zähler und Ablauf-Radar – nachvollziehbar erklärt, kein Konto nötig. An meinem eigentlichen Feld, der Kasse, hat sich seit Runde 9 im Code nichts geändert (BarcodeView.swift, CheckoutView.swift, BarcodeEncoder.swift unverändert laut Git-Log): Pixelraster, Ruhezone und die dokumentierte 12/12-Rücklesung stehen weiter wie gemessen. Die beiden alten Punkte aus Runde 9 sind unverändert offen, dazu habe ich zwei neue Kleinigkeiten gefunden: eine unzwischengespeicherte Doppelberechnung beim Ersatzformat-Hinweis und eine im Vergleich zur Norm leicht knappe Ruhezone bei EAN-13.",
+  "behoben": [],
   "offen": [
-   "Vollbild (FullBarcode, CheckoutView.swift:966 ff.) zeigt den Hinweis 'Als Code 128 gezeichnet …' weiter nicht",
-   "Kein Unit-Test für die Modulzahl aus modules(of:) (BarcodeView.swift:81); in den Tests 0 Treffer",
-   "GS1-128/FNC1 beim Neuzeichnen (Hinweis, im Simulator nicht prüfbar)"
+   "Vollbild (FullBarcode, CheckoutView.swift:966-1004) zeigt den Hinweis 'Als Code 128 gezeichnet …' weiter nicht – unverändert seit Runde 9.",
+   "Weiter kein Unit-Test, der die Modulzahl von modules(of:) (BarcodeView.swift:81-91) gegen die erwartete Länge (z. B. Code 128 = 11·Zeichen+35) prüft – BarcodeRoundTripTests.swift hat weiter nur Rücklese-Tests, keinen Modulzahl-Test."
   ],
   "befunde": [
    {
-    "screen": "CheckoutView.swift:966 (FullBarcode)",
-    "befund": "Seit Runde 8 unverändert: Im Vollbild fehlt der Hinweis auf das Ersatzformat. Gerade dorthin geht der Kassierer, wenn der Scanner nicht liest.",
-    "schwere": "niedrig"
+    "screen": "CheckoutView.swift:966-1004 (FullBarcode)",
+    "befund": "Im Vollbild-Barcode (quer, Ruhezone, für schwierige Scanner) stehen nur Barcode und Ziffern, aber nicht der Ersatzformat-Hinweis, den ticket() bei Zeile 296-304 an der normalen Kasse zeigt. Genau wenn der Kassierer wegen eines schlechten Scans ins Vollbild wechselt, fehlt dort die Info, dass es sich um Code 128 statt des Originals handelt.",
+    "schwere": "niedrig",
+    "vorschlag": "Dieselbe Bedingung/Label wie in ticket() (Zeile 296-304) auch in FullBarcode unter dem Code einblenden."
    },
    {
-    "screen": "BarcodeView.swift:81-91",
-    "befund": "modules(of:) nimmt weiter 1 Pixel pro Modul aus dem CIFilter an und ist nicht getestet. Ändert Apple das Verhalten, fällt es nicht auf.",
-    "schwere": "niedrig"
+    "screen": "BarcodeRoundTripTests.swift (72 Zeilen, komplett gelesen)",
+    "befund": "Die Rücklese-Tests prüfen nur, ob Vision den richtigen Inhalt erkennt, nicht die Modulzahl/Struktur von modules(of:) (BarcodeView.swift:81-91), das 1 Pixel pro Modul aus dem Core-Image-Ausgang liest. Eine künftige Änderung an Apples Code-128-Generator (z. B. andere Ruhezone im Bild) würde erst beim Rücklesen auffallen, nicht in den Unit-Tests.",
+    "schwere": "niedrig",
+    "vorschlag": "Test ergänzen, der für ein paar bekannte Code-128-Inhalte die Länge des zurückgegebenen [Bool]-Arrays gegen die erwartete Modulzahl prüft."
    },
    {
-    "screen": "gross-start.png",
-    "befund": "Bei großer Schrift liegt der neue Knopf 'An der Kasse zeigen' beim Öffnen unter der schwebenden Tab-Leiste und ist nur verschwommen zu sehen. Man muss erst scrollen. Er funktioniert, ist aber genau dort am schwächsten, wo er am meisten hilft.",
-    "schwere": "niedrig"
+    "screen": "BarcodeView.swift:71-78 (drawnAsCode128) und Aufrufstellen BarcodeView.swift:127, CheckoutView.swift:297",
+    "befund": "drawnAsCode128() ruft BarcodeEncoder.payload() und .modules(for:format:) bei jedem Aufruf frisch auf, ohne den NSCache aus BarcodeRenderer.cached() (Zeilen 17-31) zu nutzen. Für dieselbe Karte wird das bei jedem Neuzeichnen zweimal getan: einmal in BarcodeView.accessibilityName (Zeile 127) und separat noch einmal in CheckoutView.ticket() (Zeile 297) für den Hinweistext. Für EAN/ITF/Code 39 ist die Kodierung selbst billig, aber es ist doppelte, unzwischengespeicherte Arbeit genau an der Stelle, die sonst konsequent cacht.",
+    "schwere": "niedrig",
+    "vorschlag": "Das Ergebnis von drawnAsCode128 in den vorhandenen Cache-Eintrag (Entry) mit aufnehmen, statt payload/modules erneut zu berechnen."
+   },
+   {
+    "screen": "BarcodeView.swift:150",
+    "befund": "Die Ruhezone ist für alle Symbologien pauschal 10 Module links und rechts (padded = 10 false + Module + 10 false). Für EAN-13 verlangt die Norm eher eine asymmetrische Ruhezone (11 Module links, 7 rechts) – hier liegt die linke Seite mit 10 Modulen leicht unter dem üblichen Richtwert. In der Praxis liest Vision das laut Nachweis-Dokument weiter 12/12 exakt, ein älterer Laserscanner mit knapperer Toleranz könnte an der linken Kante aber eher zicken.",
+    "schwere": "niedrig",
+    "vorschlag": "Für EAN-13 die linke Ruhezone auf 11 Module anheben (rechts reichen 10/7)."
    }
   ],
-  "was_fehlt_zur_10": "Den Ersatzformat-Hinweis auch im Vollbild zeigen und einen Unit-Test für die Modulzahl im Code-128-Pfad anlegen (11·n+35). Mehr brauche ich an der Kasse nicht.",
+  "performance": [
+   "BarcodeRenderer.cached (BarcodeView.swift:17-31): Encoder- bzw. Core-Image-Ergebnis liegt im NSCache und wird nicht bei jedem Neuzeichnen neu berechnet – das gilt weiter, gute Lösung.",
+   "drawnAsCode128 (BarcodeView.swift:71-78) läuft am Cache vorbei und wird pro Bildaufbau zweimal aufgerufen (BarcodeView.swift:127 und CheckoutView.swift:297) – für 1D-Codes unkritisch, aber unnötig doppelt (siehe Befund oben).",
+   "CheckoutView.swift:353-354: Das Ticket (inkl. Barcode) trägt .compositingGroup().shadow() auf der ganzen Fläche, die während der Abriss-Animation (torn, Zeile 349-351, ~420 ms) bewegt wird – dabei wird der Schatten in jedem Bild neu weichgezeichnet. Laut dem gerade überarbeiteten Kommentar in Theme.swift:342-372 (unveröffentlichter Arbeitsstand) ist genau das für Flächen ohne einfache Grundform wie den gezackten Bon aber die vorgesehene, akzeptierte Lösung (ticketShadow) – also kein neuer Fehler, nur ein bewusster, zeitlich kurzer Trade-off, den ich der Vollständigkeit halber notiere."
+  ],
+  "codequalitaet": [
+   "BarcodeView.swift:71-78 dupliziert im Kern die Logik aus payload()/modules() (BarcodeEncoder.swift), statt das gecachte Ergebnis von cached() wiederzuverwenden – zwei Stellen, die bei einer Änderung an der Kodierung synchron bleiben müssen."
+  ],
+  "was_fehlt_zur_10": "Den Ersatzformat-Hinweis auch im Vollbild zeigen und einen Modulzahl-Test für den Code-128-Rücklesepfad ergänzen – beides aus Runde 9 weiter offen, beides in unter 10 Minuten machbar.",
   "wuerde_nutzen": true,
   "nps": 9
  },
  {
-  "persona": "Svenja Albrecht, 36, QA-Testerin, testet systematisch im Simulator (simulierte Persona)",
+  "persona": "Svenja Albrecht, 36, QA-Testerin, testet systematisch (simulierte Persona)",
   "gruppe": "Fachleute",
-  "fokus": "Nachweise gegen Protokoll abgleichen, Testfälle v01–v14, Konsistenz von Texten und Zuständen",
+  "fokus": "Zustände und Übergänge Einstieg → erster Gutschein (Onboarding → Scan/Add), Speichern-Hinweis (Toast, App/RestwertApp.swift), Fotoreihen-Bilanz (Features/Scan/ScanView.swift), Konsistenz von Texten und Zuständen, Randfälle (leere Eingaben, abgelaufene Daten, 0-€-Werte, Dubletten), Testabdeckung RestwertKit/Tests",
   "scores": {
    "gesamt": 8,
    "scan": 8,
    "barcode_kasse": 9,
    "login_sperre": 9,
    "verstaendlichkeit": 9,
-   "vertrauen": 8,
+   "vertrauen": 9,
    "barrierefreiheit": 8
   },
   "scores_runde9": {
@@ -582,58 +715,60 @@
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Den Teilen-Weg kann ich nachvollziehen: Blatt der Fotos-App, Restwert-Blatt mit Vorschau und drei Schritten, dann Krustenzauber 25,00 € in der App (mit 'Fotos' als Rücksprung). Die neue Startseite ist klarer. Aber 'start-bestand-unten' ist nicht der gescrollte 'start-bestand', und zwei Punkte von mir aus Runde 9 fehlen weiter.",
+  "erster_eindruck": "Der Einstieg liest sich diesmal wie ein sauber durchgetesteter Ablauf: vier Seiten mit klaren Zustandsübergängen (Stepper, Punkte, Überspringen aus/an), und der (noch ungetrackte) Performance-Umbau im Onboarding-Code trifft genau das teure Muster, auf das ich achten sollte – Schatten liegt jetzt auf der Fläche statt per compositingGroup über die ganze animierte Karte. Mein liebster Fund aus Runde 9, der doppelte 'Überspringen'-Knopf bei Dubletten in einer Fotoreihe, ist im Code jetzt wirklich weg, und die Namenstabelle für Barcode-Arten hat endlich einen Unit-Test. Was mich als Testerin weiter stört: Der Speichern-Toast zeigt laut Debug-Kommentar 'Nächsten scannen', im echten Code aber immer 'Ansehen', und die zentrale Speichern-/Dubletten-/Warnungslogik liegt weiter außerhalb von RestwertKit, wo ich sie automatisiert testen könnte.",
   "behoben": [
-   "Doppelter Überspringen-Knopf bei Dubletten behoben (ScanView.swift:329-342: in der Reihe nur skipButton oben, 'Erneut scannen' nur einzeln)",
-   "Unit-Test für die Namenstabelle (ScanDraftTests readableSymbologies: code93, Code93i, GS1DataBarExpanded, codabar, UPCE, unbekannt)",
-   "Protokoll Punkt 7 belegt: teilen-blatt (Restwert im Teilen-Menü), teilen-erweiterung ('1 Foto für Restwert bereit', Vorschau, drei Schritte, 'Bleibt auf diesem Gerät'), teilen-ergebnis ('Krustenzauber', 'Guthaben 25,00 €', 'Foto zeigen')",
-   "Protokoll Punkt 1/2 belegt: start-bestand zeigt Guthaben kompakt, '+ 1 Rabattcode (nicht in der Summe)' in einer Zeile, 'Läuft bald ab' mit Knopf, darunter Filter und Liste",
-   "Protokoll Punkt 5 belegt: Radar in start-bestand-unten mit Achse 'Heute · Nov · Dez // 2027 · 2028 · 2029+', keine '2026'-Spalte hinter Dez",
-   "139/139 Tests auf meinem Mac grün (Protokoll sagt 139)"
+   "Doppelter 'Überspringen'-Knopf bei Dubletten in einer Fotoreihe behoben: Der duplicateID-Zweig ruft jetzt nur noch skipButton auf (primär), rescanOrSkip entfällt dort ganz (ScanView.swift:326-340)",
+   "Unit-Test für die Barcode-Namenstabelle ergänzt: readableSymbology für code93, GS1DataBarExpanded, codabar, UPCE und unbekannte Werte (ScanDraftTests.swift:244-249) – schließt den Runde-9-Punkt zur Namenstabelle"
   ],
   "offen": [
-   "'Prüfen und ändern' und 'Überspringen – nächstes Foto' stehen weiter nebeneinander im HStack (ScanView.swift:346-350), der Umbruch aus Runde 9 ist nicht behandelt",
-   "Kein Screenshot der Abschlussbilanz ('5 Fotos: 3 gespeichert, …')",
-   "Speichern-Nachweis weiter per Startparameter, kein Knopf-Nachweis (kein XCUITest)",
-   "Mehrfachauswahl weiter per -demoImportBatch statt über den Fotos-Picker (der Teilen-Weg aus der Fotos-App ist jetzt aber ein echter Ende-zu-Ende-Nachweis für 1 Foto)"
+   "Nebenknopf 'Überspringen – nächstes Foto' steht weiterhin in einer HStack neben 'Prüfen und ändern' (ScanView.swift:344-348) – am Umbruchrisiko bei großer Schrift hat sich nichts geändert, ohne Simulator nicht visuell nachprüfbar",
+   "Kein XCUITest-Target im Projekt gefunden – 'Speichern' (autoSave) und die Mehrfachauswahl aus dem echten Fotos-Picker sind weiterhin nur über Debug-Parameter (-demoAutoSave, -demoImportBatch), nicht über einen echten Knopfdruck/Picker belegt",
+   "Abschlussmeldung der Fotoreihen-Bilanz ('X Fotos: … gespeichert, … übersprungen, … nicht lesbar', ScanView.swift:396-403) weiterhin ohne Screenshot-Nachweis"
   ],
   "befunde": [
    {
-    "screen": "start-bestand.png vs. start-bestand-unten.png",
-    "befund": "Laut Protokoll ist 'start-bestand-unten' derselbe Bestand nach unten gescrollt. Oben stehen '4 Gutscheine' mit 145,15 € (Stadler, KM Kaffee, Amazon 70, Buchladen + Zalando-Code). Unten erscheinen zusätzlich Douglas 50,00 €, zweimal 'Café am Markt · ausgegeben' und Amazon 1.250,00 € bis 28.09.2036. Das ist ein anderer Datenstand (auch anderer Zeitstempel, 15:02 statt 14:47). Die Summe in der Guthabenkarte passt damit nicht zur unten sichtbaren Liste.",
-    "schwere": "mittel"
+    "screen": "App/RestwertApp.swift:255-262 vs. Features/Scan/ScanView.swift:164",
+    "befund": "Der Debug-Demoschalter '-demoSavedToast' zeigt für den Speichern-Toast die Aktion 'Nächsten scannen' und springt zur Kamera zurück (RestwertApp.swift:258-261, Kommentar: 'Screenshot des Stapel-Scans'). Der echte Speichern-Pfad in ScanView.swift setzt aber immer actionTitle 'Ansehen' und öffnet die Detailansicht (Zeile 164) – auch mitten in einer Fotoreihe, während im Hintergrund schon das nächste Foto gelesen wird. Der für Screenshots gedachte Zustand existiert im Produktcode gar nicht mehr; ein für App-Store-Screenshots erzeugtes Bild würde also einen Zustand zeigen, den echte Nutzer nie sehen.",
+    "schwere": "niedrig",
+    "vorschlag": "Den '-demoSavedToast'-Zweig entfernen oder Text/Aktion an den echten Toast (Zeile 164) angleichen, damit Demo und Produktionscode nicht auseinanderlaufen."
    },
    {
-    "screen": "RestwertKit ScanDraft.swift:69",
-    "befund": "Nachgeprüft mit eigenem Skript: Ein Text mit genau einem Betrag gilt jetzt als Gutschein ('Brot 4,50 €', Tageskarte 'Schnitzel mit Pommes 12,90 €', Werbung 'Jetzt 10 € sparen!' → true, Ladenname 'Nur diese Woche'). Der Testfall v11-Stil 'Kein Gutschein erkannt' greift damit bei Einzelpreis-Fotos nicht mehr. Es gibt nur einen Negativtest mit mehreren Beträgen.",
-    "schwere": "mittel"
+    "screen": "Features/Scan/ScanView.swift:344-348",
+    "befund": "In der HStack aus 'Prüfen und ändern' und dem Nebenknopf (rescanOrSkip) steht in einer Fotoreihe weiterhin 'Überspringen – nächstes Foto' direkt neben 'Prüfen und ändern' – derselbe Aufbau, den ich in Runde 9 als Umbruchrisiko markiert hatte. Anders als im Dubletten-Zweig (dort inzwischen ausdrücklich als Kommentar begründet: 'Untereinander … bräche nebeneinander zweizeilig um', Zeile 337) wurde dieser Fall nicht mit angefasst.",
+    "schwere": "niedrig",
+    "vorschlag": "Wie im Dubletten-Zweig (Zeile 337-340) beide Knöpfe untereinander statt in einer HStack anordnen."
    },
    {
-    "screen": "start-bestand-unten.png (Verfallsradar)",
-    "befund": "Die Spalte '2029+' mit +3 (darunter Amazon 1.250 €) zeigt als einzige keinen Betrag. Gerade das meiste Geld steht ohne Zahl da, die Summe passt offenbar nicht in die Spalte (ExpiryRadar.swift: Bündelsumme wird ausgeblendet, wenn sie Nachbarn berührt).",
-    "schwere": "niedrig"
+    "screen": "Services/Importer.swift:11-106, Features/Scan/ScanResultView.swift:426-435",
+    "befund": "Die komplette Entscheidungslogik für 'Speichern mit einem Tipp' (canSaveDirectly), Dubletten-Erkennung (duplicateID) und Betrugs-/Ablauf-Warnungen (warningTexts/hasWarnings) liegt im App-Target (ios/Restwert), nicht in RestwertKit. Da ios/Packages/RestwertKit/Tests nur das Paket testet und kein XCUITest-Target existiert, hat dieser für Nutzer zentrale Entscheidungsbaum (0-€-Werte, abgelaufene Daten, Dubletten, Betrugsmuster) keinen einzigen automatisierten Test. Positiv geprüft per Hand: 0-€ wird in CardFormView.validate() abgefangen ('(value ?? 0) <= 0', Zeile 704) und autoSave speichert nur bei leerem validate() (CardFormView.swift:178) – das Zusammenspiel ist korrekt, aber nur durch Lesen, nicht durch einen Test belegt.",
+    "schwere": "mittel",
+    "vorschlag": "ScanOutcome/canSaveDirectly/warningTexts als reine, parametrisierte Funktionen nach RestwertKit verschieben (oder zumindest so extrahieren), damit 0-€, abgelaufen und Dubletten-Fälle unit-testbar werden."
    },
    {
-    "screen": "ExpiryRadar.swift:509-511",
-    "befund": "Die VoiceOver-Zusammenfassung sagt weiter 'Zeitachse: nächste 90 Tage', obwohl die Achse jetzt bis Silvester reicht (horizon bis 125 Tage, :364-367).",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "teilen-ergebnis.png",
-    "befund": "'Gültig bis: nicht gefunden' direkt über 'Wann gekauft oder bekommen? Davon hängt „Gültig bis“ ab.' mit gesetztem Datum 28.09.2026. Aus Nutzersicht widersprüchlich: Das Kaufdatum steht fest, aber die Kachel rechnet keine Frist (z. B. gesetzliche 3 Jahre) und erklärt auch nicht, warum.",
-    "schwere": "niedrig"
+    "screen": "Design/Theme.swift:359-371 (cardSurface), Features/Onboarding/OnboardingView.swift (WelcomePage/CollectPage/RemindPage/FirstCardPage)",
+    "befund": "Der (laut git status noch uncommittete) Umbau ersetzt '.compositingGroup().shadow(...)' auf ganzen animierten Karten durch einen Schatten direkt auf der deckenden Hintergrundfläche. Das trifft exakt das im Testauftrag genannte teure Muster (Schatten auf großen animierten Gruppen) – besonders wirksam bei WelcomePage, wo der Betrag über TimelineView jedes Bild neu zählt (Zeile ~296-327) und vorher die ganze Gruppe inkl. Text bei jedem Bild neu weichgezeichnet werden musste.",
+    "schwere": "niedrig",
+    "vorschlag": "Nach Verifikation committen; dieselbe Umstellung ggf. auch für Features/Bon/BonView.swift:320-336 und Features/Checkout/CheckoutView.swift:353 prüfen (dort weiterhin compositingGroup()+shadow, außerhalb meines heutigen Fokus nicht tief geprüft)."
    }
   ],
-  "was_fehlt_zur_10": "Screenshots aus einem einzigen Datenstand (start-bestand und -unten konsistent). Negativtests für die Ein-Betrag-Regel (Preisschild, Speisekarte, Werbung) und die Regel enger fassen. Nebenknöpfe in der Reihe untereinander, Screenshot der Abschlussbilanz, Betrag auch für die Jahresspalte '2029+' und ein Speichern-Nachweis über den echten Knopf (XCUITest).",
+  "performance": [
+   "Theme.swift:359-371 / OnboardingView.swift (WelcomePage etc.): Schatten jetzt auf der Hintergrundfläche statt per compositingGroup() über die ganze animierte Gruppe – genau das gesuchte teure Muster, hier im Fokusbereich behoben (siehe Befund oben)",
+   "Im Fokusbereich (Onboarding, ScanView, RestwertApp-Toast) keine O(n²)-Schleifen oder blockierende MainActor-Arbeit gefunden; store.cards.filter-Aufrufe in ScanView.show() und CardFormView.manualRisk() sind O(n) und für realistische Kartenanzahlen unkritisch"
+  ],
+  "codequalitaet": [
+   "Services/Importer.swift:11-106 / Features/Scan/ScanView.swift: Entscheidungslogik (canSaveDirectly, duplicateID, warningTexts) sitzt im App-Target statt in RestwertKit → nicht unit-testbar (Detail siehe Befund oben)",
+   "App/RestwertApp.swift:255-262: veralteter Demo-Zweig '-demoSavedToast', dessen Toast-Text/Aktion nicht mehr zum echten Code in ScanView.swift:164 passt (Detail siehe Befund oben)"
+  ],
+  "was_fehlt_zur_10": "Ein XCUITest-Target (oder zumindest nach RestwertKit ausgelagerte, testbare Entscheidungsfunktionen) für Speichern/Dubletten/Warnungen, sowie ein Abgleich des Demo-Toasts mit dem echten Verhalten – dann sind auch die letzten 'offen'-Punkte aus Runde 9 mit echtem statt simuliertem Nachweis geschlossen.",
   "wuerde_nutzen": true,
   "nps": 8
  },
  {
   "persona": "Markus Weidner, 42, IT-Administrator, datenschutzbewusst (simulierte Persona)",
   "gruppe": "Fachleute",
-  "fokus": "Datenfluss, Speicherung, Zwischenablage, Logs, App-Sperre und Code-Schutz",
+  "fokus": "Datenfluss, Speicherung (Store.swift, Dateischutz), Zwischenablage, Logs, App-Sperre und Code-Schutz, iCloud-Sync und Datenschutztexte (App und Webseite)",
   "scores": {
-   "gesamt": 8,
+   "gesamt": 9,
    "scan": 8,
    "barcode_kasse": 9,
    "login_sperre": 9,
@@ -650,180 +785,74 @@
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Gut ist, dass die Teilen-Übergabe im Datenschutztext steht, in der App und auf der Website, dass bewusst keine Server-Pushes kommen und dass die Zahl am App-Symbol abschaltbar ist. Die Dateien der Erweiterung liegen aber ohne den Dateischutz, den die App selbst überall nutzt. Wird eine Reihe abgebrochen, bleiben Kopien liegen. Meine beiden Punkte aus den Vorrunden sind unverändert.",
-  "behoben": [
-   "Datenschutztext nennt die Teilen-Übergabe über den gemeinsamen Ordner, 'die App holt es dann ab und löscht es dort. Nichts davon wird hochgeladen.' (LegalView.swift:31, server/public/datenschutz.html:33)",
-   "Teilen-Erweiterung fragt nie selbst nach Mitteilungen und schickt nur bei schon erteilter Erlaubnis eine lokale Mitteilung (ShareViewController.swift notifyReady); keine Server-Pushes",
-   "Widget groß zeigt Beträge nur, wenn nicht gesperrt (RestwertWidget.swift large: s.locked == false); Zahl am App-Symbol abschaltbar (SettingsView.swift 'Zahl am App-Symbol')",
-   "'An der Kasse zeigen' aus der Mitteilung geht über den normalen Router (RestwertApp.swift:135-138), App-Sperre bleibt davor",
-   "Startseite: für mich neutral bis besser, nichts Neues wird ohne Tipp offengelegt"
-  ],
+  "erster_eindruck": "Der Einstieg verlangt weiterhin kein Konto; „Wiederherstellen“ schaltet nur den iCloud-Abgleich ein (OnboardingView.swift:479-485), das gefällt mir. Der Datenfluss ist sauber: Datei mit completeFileProtection (Store.swift:230), Zwischenablage localOnly mit Ablauf (CardDetailView.swift:497-498, CheckoutView.swift:466-467), Sync AES-GCM mit Schlüssel im iCloud-Schlüsselbund, PINs nie in der Datenbank (CloudSync.swift:11-13, 316-338). Was mich stört: Die Webseite behauptet „gleicher Text wie in der App“, sagt bei der Zwischenablage aber etwas anderes als die App und als der Code. Meine Runde-9-Punkte sind alle noch offen.",
+  "behoben": [],
   "offen": [
-   "Empfänger und Gruß gehen weiter mit Export und iCloud-Sync, ohne Hinweis im Ausgeben-Screen (IssueVoucherView.swift:63, :101) oder im Datenschutztext",
-   "manualRisk meldet weiter nur die erste Auffälligkeit, Dublette vor Betrugssatz (CardFormView.swift:722-735)",
-   "Ohne iPhone-Code bleibt die Sperre bewusst abschaltbar (bekannte Grenze)"
+   "Empfänger und Gruß (IssueVoucherView.swift:61, :63 → GiftCard.issuedTo/greeting, Models.swift:278-279) gehen weiter verschlüsselt mit Sync (CloudPayload.seal entfernt nur das Foto, CloudPayload.swift:21-23) und Sicherung, werden aber weder im Ausgeben-Screen noch in den Datenschutztexten (LegalView.swift:38-44, SettingsView.swift:110) genannt",
+   "manualRisk meldet weiter nur die erste Auffälligkeit, Dublette verdrängt den Betrugssatz (CardFormView.swift:722-736)",
+   "Altbestände ohne addedAt fallen aufs Kaufdatum zurück (Models.swift:286) – bekannte Grenze",
+   "Ohne iPhone-Code bleibt die Sperre bewusst abschaltbar („Sperre ausschalten und öffnen“, RestwertApp.swift:623-625) – bekannte Grenze"
   ],
   "befunde": [
    {
-    "screen": "RestwertShare/ShareViewController.swift:69, :129, :144",
-    "befund": "Die Erweiterung schreibt Mail-Text (.atomic), kopierte Fotos/PDFs (copyItem) und JPEGs ohne .completeFileProtection in die App Group. Die App selbst schreibt ihre Daten überall mit .completeFileProtection (Store.swift:230, Persistence.swift:93). Ein geteilter Gutschein mit Code und PIN liegt also bis zum nächsten Öffnen der App mit dem schwächeren Standardschutz im Gruppenordner. Wie lange, bestimmt allein der Nutzer.",
-    "schwere": "mittel"
+    "screen": "site/datenschutz.html:30 vs. LegalView.swift:54 / Theme.swift:583",
+    "befund": "Die Webseite sagt: Code aus der Gutschein-Ansicht „verschwindet nach zwei Minuten“, an der Kasse nach zehn. Der Code nutzt an beiden Stellen dieselbe Clipboard.lifetime = 600 s (CardDetailView.swift:498, CheckoutView.swift:467), und der App-Text sagt korrekt „zehn Minuten – in der Gutschein-Ansicht wie an der Kasse“. Die Webseite trägt aber die Zeile „gleicher Text wie in der App“. Als Nutzer, der beides liest, weiß ich nicht mehr, was gilt – und die veröffentlichte Erklärung verspricht weniger Lebensdauer, als die App hat. Nebenbei: Beide Texte sagen „liegen in einer Datei“, Fotos liegen inzwischen aber als eigene Dateien daneben (Persistence.swift:98-100, Store.swift:136), gleicher Dateischutz.",
+    "schwere": "mittel",
+    "vorschlag": "Absatz „Zwischenablage“ in datenschutz.html auf den Wortlaut von LegalView.swift:54 setzen; in beiden Texten „in einer Datei“ → „in Dateien im Bereich der App“. Idealerweise die Webseite aus LegalView generieren, damit sie nicht wieder auseinanderlaufen."
    },
    {
-    "screen": "ScanView.swift:319, :447, :458 / RestwertApp.swift:308-309",
-    "befund": "Die App verschiebt die Übergabe nach tmp/shared-inbox und löscht eine Datei erst nach dem Lesen (ScanView.swift:431). Bei Abbrechen einer Reihe (batch = []), 'Erneut scannen' oder beim eigenen Café-Gutschein mitten in der Reihe werden die restlichen Kopien verworfen, aber nicht gelöscht. Sie bleiben bis zur Systembereinigung liegen. Das widerspricht dem Satz 'holt es ab und löscht es' zwar nicht wörtlich, aber im Geist.",
-    "schwere": "niedrig"
+    "screen": "Store.swift:622-626 (csvFile) vs. SettingsView.swift:338-348 (writeCSV)",
+    "befund": "Store.csvFile() wird nirgends mehr aufgerufen (einziger Treffer ist der Doc-Kommentar in SettingsView.swift:337), schreibt die CSV mit allen Codes aber ohne .completeFileProtection ins Temp-Verzeichnis und nimmt Beispielkarten mit. Die aktive Variante writeCSV macht beides richtig. Ein toter, schwächerer Pfad, der beim nächsten Umbau versehentlich wieder benutzt werden kann.",
+    "schwere": "niedrig",
+    "vorschlag": "Store.csvFile() löschen und den Kommentar in SettingsView.swift:337 anpassen."
    },
    {
-    "screen": "IssueVoucherView.swift:63, :101",
-    "befund": "Seit Runde 7 unverändert: Empfänger und Gruß sind für ein Café Kundendaten, werden gespeichert, exportiert und synchronisiert, aber nirgends erwähnt.",
-    "schwere": "niedrig"
+    "screen": "WidgetBridge.swift:47 vs. SettingsView.swift:268 und RestwertApp.swift:511",
+    "befund": "Das Widget maskiert Beträge, sobald der rohe UserDefaults-Wert „codeLock“ true ist. Die Einstellungen zeigen den Schalter über guarded() aber als aus, sobald kein Gerätecode mehr da ist (value && hasPasscode), und DeviceSecurity.codeLockActive gilt ebenfalls nur mit Code. Wer den iPhone-Code entfernt, sieht im Widget „••••“ ohne Beträge, während in Restwert beide Schutzschalter aus stehen – und findet keinen Weg, das Widget wieder freizuschalten.",
+    "schwere": "niedrig",
+    "vorschlag": "In WidgetBridge.write dieselbe Regel wie DeviceSecurity.codeLockActive verwenden (codeLock && Gerätecode vorhanden) oder beim Ausschalten in guarded() den Wert auch in UserDefaults auf false setzen."
    },
    {
-    "screen": "CardFormView.swift:726-734",
-    "befund": "Unverändert: Bei 'Von Hand eingeben' verdrängt der Dublettentext den Betrugssatz.",
-    "schwere": "niedrig"
+    "screen": "Store.swift:173-183 (keepBrokenCopy)",
+    "befund": "Eine nicht dekodierbare Datei wird mit FileManager.copyItem als „.broken“-Kopie gesichert. Sie enthält alle Codes und PINs, bekommt aber keine ausdrückliche Schutzklasse; ohne Data-Protection-Entitlement (im Repo keins gefunden) fällt eine neue Datei auf den Verzeichnis-Standard zurück, nicht auf .complete wie das Original (Store.swift:230). Das ist der einzige Ort, an dem Gutscheindaten ohne die sonst konsequente Schutzklasse liegen könnten.",
+    "schwere": "niedrig",
+    "vorschlag": "Nach copyItem: try fm.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: target.path) – zwei Zeilen, dann ist es eindeutig."
+   },
+   {
+    "screen": "CloudSync.swift:286-295 (SyncedKeychain.set)",
+    "befund": "Sync-Schlüssel und alle PINs liegen im iCloud-Schlüsselbund mit kSecAttrAccessibleAfterFirstUnlock, die lokale Datei dagegen mit completeFileProtection (nur bei entsperrtem Gerät lesbar). Damit sind die PINs auf einem gesperrten, aber einmal entsperrten Gerät eine Stufe schwächer geschützt als die Datei, aus der sie stammen. Für den Nutzer unsichtbar, aber der Datenschutztext („Dateischutz des Systems, PINs eingeschlossen“, SettingsView.swift:157) liest sich strenger.",
+    "schwere": "niedrig",
+    "vorschlag": "kSecAttrAccessibleWhenUnlocked verwenden (für synchronisierbare Einträge erlaubt); publishPins läuft ohnehin nur nach einem Speichern aus dem Vordergrund. Falls Hintergrund-Sync nötig wird, bewusst dokumentieren."
+   },
+   {
+    "screen": "CloudSync.swift:234-238 / Models.swift:480-481 / LegalView.swift:38-44",
+    "befund": "Neben Gutscheinen gehen auch Testergebnisse (TestResult mit Filiale „store“ und Freitext „note“) verschlüsselt in die iCloud-Datenbank. Der Abschnitt „iCloud-Sync“ spricht nur von „deine Gutscheine“; der Abschnitt „Auf deinem iPhone“ nennt Testergebnisse dagegen ausdrücklich. Zusammen mit Empfänger/Gruß aus Runde 9: Was mitgeht, ist technisch sauber, steht aber nirgends vollständig.",
+    "schwere": "niedrig",
+    "vorschlag": "Ein Satz im Sync-Abschnitt (App und Webseite): „Mit gehen alle Angaben eines Gutscheins außer dem Foto – auch Notizen, Empfänger und Gruß bei selbst ausgegebenen Gutscheinen sowie Testergebnisse.“ Plus ein Halbsatz unter den Feldern in IssueVoucherView.swift:63."
    }
   ],
-  "was_fehlt_zur_10": "Die Erweiterung schreibt mit .completeFileProtection (bzw. setzt den Schutz für den Inbox-Ordner). Abgebrochene Reihen löschen ihre Kopien in tmp/shared-inbox. Ein Satz zu Empfänger/Gruß beim Ausgeben und im Datenschutztext, und bei 'Von Hand eingeben' Dublette und Betrugssatz zusammen.",
-  "wuerde_nutzen": true,
-  "nps": 8
- },
- {
-  "persona": "Mara Lindqvist, 33, UX-Designerin in einer Hamburger Produktagentur, achtet auf Hierarchie und Konsistenz (simulierte Persona)",
-  "gruppe": "Fachleute",
-  "fokus": "Visuelle Hierarchie, Ergebnis-Screen, Konsistenz zwischen Scan, Detail und Kasse; Ein-Tipp-Speichern, Gutschein ausgeben, iPad; neue Startseite und Teilen-Weg",
-  "scores": {
-   "gesamt": 9,
-   "scan": 9,
-   "barcode_kasse": 9,
-   "login_sperre": 9,
-   "verstaendlichkeit": 9,
-   "vertrauen": 9,
-   "barrierefreiheit": 8
-  },
-  "scores_runde9": {
-   "gesamt": 9,
-   "scan": 9,
-   "barcode_kasse": 9,
-   "login_sperre": 9,
-   "verstaendlichkeit": 9,
-   "vertrauen": 9,
-   "barrierefreiheit": 8
-  },
-  "erster_eindruck": "Die neue Startseite ist klar besser: Guthabenkarte kompakter, darunter sofort das Dringende mit einem echten nächsten Schritt, danach die Liste – das Radar ist endlich Überblick statt Hindernis, und ‚Heute · Nov · Dez // 2027 · 2028 · 2029+‘ liest sich eindeutig. Das Teilen-Blatt ist ruhig und gut gegliedert. Aber meine eigenen vier Punkte aus Runde 9 sind wortgleich noch da, und unter dem Ausgegeben-Filter zeigt das Radar jetzt fremde Karten.",
-  "behoben": [
-   "Nebenbei: Startseite neu geordnet – Liste beginnt auf dem iPhone schon im ersten Bildschirm (start-bestand, ‚Weitere‘ bei y≈1470 px von 2000 angezeigt), Radar darunter (start-bestand-unten)",
-   "Nebenbei: Guthabenkarte kompakter, Rabattcode-Hinweis in einer ruhigen Zeile (start, start-bestand)",
-   "Nebenbei: Radar ohne verwirrende ‚2026‘-Spalte hinter ‚Dez‘, eine Kachel je Jahr mit eigenem Betrag (start-bestand-unten, ipad-start)",
-   "Nebenbei: Teilen-Erweiterung mit Vorschau, drei nummerierten Schritten und Datenschutz-Zeile – sauberer Aufbau (teilen-erweiterung)"
+  "performance": [
+   "CloudSync.swift:186-207: fetchAll liest bei jedem Abgleich die komplette Zone (Change-Token wird nicht gespeichert) und entschlüsselt alle Datensätze neu; da schedulePush nach jeder Änderung mit 2 s Verzögerung feuert (CloudSync.swift:60-68), bedeutet jede Bearbeitung einen Voll-Download. Für wenige hundert Einträge laut Kommentar okay, aber ein gespeichertes CKServerChangeToken (UserDefaults) würde Netz und Akku sparen.",
+   "Positiv: Speichern kodiert und schreibt off-main auf einer seriellen Queue (Store.swift:224-247); WidgetBridge vergleicht Fingerprints und lässt Datei und Timeline bei unverändertem Stand in Ruhe (WidgetBridge.swift:62-66)."
   ],
-  "offen": [
-   "iPad-Start: Wortmarke an der linken Bildschirmkante und Suchfeld über volle Breite, Inhalt auf Lesebreite – weiter zwei linke Kanten (ipad-start, als Grenze dokumentiert)",
-   "‚· ausgegeben‘ weiter als eigene dritte Zeile mit führendem Punkt (liste-ausgegeben-filter, start-bestand-unten; Design/CardRow.swift:117)",
-   "gross-eigener-gutschein-einloesen: schwarze Meldung ‚Dein Gutschein: noch 25,00 € offen‘ klebt ohne Lücke auf dem schwarzen Einlöse-Knopf",
-   "Code-Kachel halbe Breite bricht mitten im Code um: ‚AQ7K–2ZPM4H– / R8TX‘ (scan-v09)",
-   "gross-dublette: drei volle Knöpfe belegen bei XL rund ein Drittel der Höhe"
+  "codequalitaet": [
+   "SettingsView.swift:246-250: Nach cloud.deleteCloudData() (ruft bereits SyncedKeychain.deleteAll(), CloudSync.swift:165) werden „cloud-key“ und alle PIN-Einträge noch einmal einzeln gelöscht – redundant, und die Einzelschleife erreicht ohnehin nur IDs, die deleteAll längst abgedeckt hat.",
+   "Store.swift:102, 117, 209, 238: Fehler gehen per print() raus, WidgetBridge.swift:43, 70 nutzt Logger mit privacy-Annotation. Inhaltlich unkritisch (Datei- und Encoding-Fehler, keine Gutscheindaten), aber für Console-Diagnose beim Tester wäre ein Logger(subsystem: \"de.restwert.app\", category: \"store\") einheitlich und filterbar.",
+   "WidgetBridge.swift:36-38: Parameter total ist laut Kommentar unbenutzt, SettingsView.swift:239-240 übergibt store.total trotzdem noch – toter Parameter samt totem Aufruf.",
+   "Store.swift:622-626: csvFile() ist tot (siehe Befund) – entfernen."
   ],
-  "befunde": [
-   {
-    "screen": "liste-ausgegeben-filter / Features/Home/HomeView.swift:45",
-    "befund": "Durch den Umbau steht das Verfallsradar direkt unter der gefilterten Liste, ignoriert aber den Filter: unter ‚Ausgegeben · 50,00 € noch offen‘ zeigt es Douglas 50 € und Amazon – eine Nachbarschaft, die fälschlich Zugehörigkeit suggeriert. Früher (Radar oben) fiel das nicht auf. Radar bei aktivem Filter ausblenden oder mitfiltern.",
-    "schwere": "mittel"
-   },
-   {
-    "screen": "start / start-bestand",
-    "befund": "Die ‚An der Kasse zeigen‘-Kapseln sind vollflächig schwarz wie der Primärknopf im Scan-Ergebnis. Bei zwei bald ablaufenden (start) stehen zwei gleich schwere schwarze Knöpfe untereinander direkt unter der gelben Karte – der Bereich wirkt lauter als nötig; eine Sekundär-Kapsel (Umriss) würde die Hierarchie halten.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "start-bestand-unten",
-    "befund": "Beim Scrollen laufen Zeilen sichtbar hinter Wortmarke und Suchfeld durch (Amazon/Buchladen halbtransparent hinter ‚Restwert‘, Douglas-Zeile vom Suchfeld angeschnitten) – kein klarer Kopfbereich.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "ipad-start",
-    "befund": "Unverändert zwei linke Kanten (Wortmarke x≈15 pt, Inhalt zentriert auf ~700 pt).",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "gross-eigener-gutschein-einloesen",
-    "befund": "Meldung und Hauptknopf ohne Abstand in gleicher Tinte, wirkt wie ein zweiteiliger Knopf.",
-    "schwere": "niedrig"
-   }
-  ],
-  "was_fehlt_zur_10": "Radar bei aktivem Filter ausblenden oder mitfiltern; iPad-Startseite mit Wortmarke und Suchfeld auf der Lesebreite; bei XL Abstand zwischen Einlöse-Meldung und Einlöse-Knopf; Code-Kachel über volle Breite; ‚ausgegeben‘ ohne führenden Punkt hinter dem Datum.",
+  "was_fehlt_zur_10": "Webseiten-Datenschutztext auf den App-Stand bringen (Zwischenablage zehn Minuten, Fotos als eigene Dateien) und einmal vollständig nennen, welche Felder mit Sync und Sicherung gehen (Empfänger, Gruß, Notizen, Testergebnisse). Dazu die zwei Zwei-Zeilen-Fixes: Schutzklasse der .broken-Kopie und toten csvFile-Pfad entfernen.",
   "wuerde_nutzen": true,
   "nps": 9
  },
  {
-  "persona": "Jule Okafor, 30, Community-Managerin für Beta-Programme bei einem Fintech, liest Feedback von Hunderten Testern (simulierte Persona)",
+  "persona": "Mara Lindqvist, 33, UX-Designerin in einer Hamburger Produktagentur, achtet auf Hierarchie und Konsistenz (simulierte Persona)",
   "gruppe": "Fachleute",
-  "fokus": "Was Beta-Tester typischerweise melden würden: Verwirrung, Vertrauen, Erklärtexte, Support-Last; neue Startseite, Teilen-Erweiterung",
-  "scores": {
-   "gesamt": 10,
-   "scan": 9,
-   "barcode_kasse": 9,
-   "login_sperre": 9,
-   "verstaendlichkeit": 9,
-   "vertrauen": 10,
-   "barrierefreiheit": 9
-  },
-  "scores_runde9": {
-   "gesamt": 10,
-   "scan": 9,
-   "barcode_kasse": 9,
-   "login_sperre": 9,
-   "verstaendlichkeit": 9,
-   "vertrauen": 10,
-   "barrierefreiheit": 9
-  },
-  "erster_eindruck": "‚Wie bekomme ich das Foto aus meiner Galerie rein?‘ war eine der häufigsten Fragen – das Teilen-Menü mit ‚1 Foto für Restwert bereit‘ und drei Schritten beantwortet sie, und der Krustenzauber-Gutschein wird jetzt erkannt statt abgelehnt. Der ‚An der Kasse zeigen‘-Knopf direkt bei ‚noch 11 Tage‘ spart Leuten den Umweg. Meine drei Kleinigkeiten stehen noch, dazu ein neuer Kandidat fürs Ticketsystem: das Radar unter dem Ausgegeben-Filter.",
-  "behoben": [
-   "Nebenbei: Teilen aus der Fotos-App im Simulator durchgängig belegt (teilen-blatt → teilen-erweiterung → teilen-ergebnis), ‚Bleibt auf diesem Gerät. Nichts wird hochgeladen.‘ beugt Datenschutz-Fragen vor",
-   "Nebenbei: Gestalteter Bäckerei-Gutschein ohne lesbares Gutschein-Wort wird als ‚Krustenzauber · 25,00 €‘ gelesen statt ‚Kein Gutschein‘ (teilen-ergebnis) – echter Fehlerbericht behoben",
-   "Nebenbei: Warnung mit Aktion (‚An der Kasse zeigen‘, online ‚Code einlösen‘) direkt unter bald ablaufenden Gutscheinen (start, start-bestand)"
-  ],
-  "offen": [
-   "Meldung ‚„Douglas“ gespeichert – Ansehen‘ verdeckt weiter ‚Von Hand eingeben‘ (gespeichert-im-tab)",
-   "‚Dein Gutschein: noch 25,00 € offen‘ aus Laden-Sicht doppeldeutig (Features/Scan/ScanView.swift:461)",
-   "‚Nicht angenommen‘ vs. ‚Hat nicht geklappt‘ (Features/Checkout/CheckoutView.swift:187, :216)",
-   "Screenshot der Mehrfach-Bilanz fehlt weiterhin"
-  ],
-  "befunde": [
-   {
-    "screen": "liste-ausgegeben-filter / Features/Home/HomeView.swift:45",
-    "befund": "Café-Betreiber filtert ‚Ausgegeben‘ und sieht direkt darunter ein Radar mit Douglas und Amazon (eigene Gutscheine, Filter wird ignoriert). Erwartbares Ticket: ‚Warum stehen meine Privatgutscheine bei den ausgegebenen?‘",
-    "schwere": "mittel"
-   },
-   {
-    "screen": "teilen-erweiterung",
-    "befund": "Schritt 2 ‚Öffne Restwert‘ ist ein manueller App-Wechsel; die Mitteilung kommt nur, wenn Mitteilungen schon erlaubt sind (RestwertShare/ShareViewController.swift:96). Wer sie abgelehnt hat, muss selbst daran denken – ehrlich erklärt, aber ein Drop-off-Punkt.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "start-bestand vs. start-bestand-unten",
-    "befund": "Die beiden Screenshots zeigen offenbar unterschiedliche Datenstände (oben 4 Gutscheine/145,15 € ohne Chip ‚Ausgegeben‘, unten zusätzlich Douglas 50 €, zwei Café-Karten, Amazon 1.250 €). Für Release-Notes verwirrend; Aufnahme mit einem Stand wiederholen.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "teilen-blatt",
-    "befund": "Systemblatt zeigt ‚1 Photo Selected‘ und ‚Use as Wallpaper‘ auf Englisch – Simulator-Sprache, nicht die App; in Support-Doku nicht so zeigen.",
-    "schwere": "niedrig"
-   }
-  ],
-  "was_fehlt_zur_10": "Nichts Wesentliches. Feinschliff: Radar bei Filter ausblenden, Toast ohne Überdeckung, ‚Dein Gutschein‘ eindeutig, Screenshot der Mehrfach-Bilanz.",
-  "wuerde_nutzen": true,
-  "nps": 10
- },
- {
-  "persona": "Tobias Brandt, 40, Accessibility-Beta-Tester, stark sehbehindert, nutzt VoiceOver und große Schrift, prüft mit dem Accessibility Inspector im Simulator (simulierte Persona)",
-  "gruppe": "Fachleute",
-  "fokus": "VoiceOver-Labels, Überschriften-Struktur, Dynamic Type, Tippziele, Ansagen; neue Startseite bei XL",
+  "fokus": "Einstieg (Choreografie der vier Seiten, Stepper-Timing, Dimmen inaktiver Seiten, Knopfzone); visuelle Hierarchie in Scan-Ergebnis, Detail und Kasse; Konsistenz der Bausteine in Design/ (Theme.swift, CardRow.swift)",
   "scores": {
    "gesamt": 8,
    "scan": 9,
-   "barcode_kasse": 9,
+   "barcode_kasse": 8,
    "login_sperre": 9,
    "verstaendlichkeit": 9,
    "vertrauen": 9,
@@ -836,68 +865,184 @@
    "login_sperre": 9,
    "verstaendlichkeit": 9,
    "vertrauen": 9,
-   "barrierefreiheit": 9
+   "barrierefreiheit": 8
   },
-  "erster_eindruck": "Grundsätzlich ist die neue Reihenfolge für mich besser: weniger Radar oben, die Liste kommt früher, und der Kasse-Knopf hat ein Label mit Ladennamen. Bei XL sehe ich aber auf der Startseite den neuen Knopf gar nicht – er liegt unter der Tab-Leiste –, und er ist mit 40 pt kleiner als alle anderen Tippziele. Keiner meiner fünf Punkte aus Runde 9 ist erledigt.",
-  "behoben": [
-   "Nebenbei: Kasse-Kurzknopf mit sprechendem VoiceOver-Label ‚An der Kasse zeigen: Stadler‘ (Features/Home/HomeView.swift:168), Abschnittstitel als Überschrift (HomeView.swift:117)",
-   "Nebenbei: Radar mit eigener Zusammenfassung für VoiceOver, weiter unten und damit nicht mehr vor der Liste (Design/ExpiryRadar.swift:165)",
-   "gross-kasse: der verblasste Hinweis im Verlauf ist im aktuellen Screenshot (Stadler, ohne PIN) nicht mehr zu sehen – anderer Gutschein, daher nicht abschließend geprüft"
-  ],
+  "erster_eindruck": "Der Einstieg wirkt aufgeräumt: vier Seiten mit exakt gleich hoher Aktionszone, und das Dimmen der inaktiven Seiten läuft jetzt über einen Papier-Schleier statt über eine Deckkraft-Gruppe auf der ganzen Seite – genau das teure Muster, auf das ich achte, wurde hier vermieden, ohne dass es optisch anders wirkt. Ein kleiner Ruckler bleibt: die Erinnern-Seite startet ihre erste Bewegung 100 ms später als die anderen drei. Enttäuscht war ich, als ich weiterging – die Karten in Detail und an der Kasse haben nach wie vor keinen Schatten, während dieselbe Fläche in Scan-Ergebnis und jetzt auch im Einstieg über die neue `cardSurface()`-Regel einen bekommt. Und meine vier Punkte aus Runde 9 sind unverändert, allen voran der Toast, der bei großer Schrift weiter ohne Abstand auf dem Einlöse-Knopf sitzt.",
+  "behoben": [],
   "offen": [
-   "Kein dokumentierter Accessibility-Inspector-Audit inkl. VoiceOver-Reihenfolge (weiter als Grenze genannt)",
-   "VoiceOver-Label der Ausgeben-Karte ohne ‚gültig bis‘ und Gruß (Features/Issue/IssueVoucherView.swift:177)",
-   "gross-ausgeben: Knopf ‚Gutschein teilen oder drucken‘ läuft unter den Bildschirmrand, keine feste Leiste",
-   "gross-eigener-gutschein-einloesen: Meldung und Einlöse-Knopf ohne Abstand, gleiche Farbe",
-   "gross-dublette: drei volle Knöpfe"
+   "„· ausgegeben“ startet weiter als eigene Zeile mit führendem Trennpunkt, Code unverändert (Design/CardRow.swift:117)",
+   "Toast „Dein Gutschein: noch X € offen“ sitzt bei großer Schrift weiter ohne Abstand auf dem schwarzen Einlöse-Knopf – fester Abstand von 96 pt zum unteren Rand wächst nicht mit der Schrift (App/RestwertApp.swift:211-213)",
+   "Code-Kachel bricht weiterhin mitten im Code um, obwohl die Nachbarkachel kürzer ist (Features/Scan/ScanResultView.swift:265)",
+   "Bei einer erkannten Dublette stehen weiterhin drei volle 56-pt-Knöpfe übereinander, die bei XL über ein Viertel der Höhe belegen (Features/Scan/ScanView.swift:326-340)",
+   "iPad-Start: Wortmarke an der linken Bildschirmkante, Inhalt zentriert auf Lesebreite – weiterhin zwei linke Kanten, als Grenze dokumentiert (Features/Home/HomeView.swift:74)"
   ],
   "befunde": [
    {
-    "screen": "Features/Home/HomeView.swift:162",
-    "befund": "Neuer Kurzknopf ‚An der Kasse zeigen‘/‚Code einlösen‘ mit .frame(minHeight: 40) – unter den 44 pt, die das Projekt selbst als Layout.tap festlegt (Design/Theme.swift:145).",
-    "schwere": "mittel"
+    "screen": "Detail & Kasse / Features/Detail/CardDetailView.swift:322,363,422,467,539; Features/Checkout/CheckoutView.swift:71",
+    "befund": "Archiv-Hinweis, Erinnerung, Aufbewahrungsort, Code-Kachel und Foto-Ticket in Detail sowie die Filiale/Notiz-Karte an der Kasse sitzen auf `.background(Color.surface, in: .rect(...)).modifier(ContrastEdge())` – ganz ohne Schatten. Dieselbe weiße Fläche bekommt in Scan-Ergebnis (ScanResultView.swift:65/160/176) und jetzt auch im neu aufgeräumten Einstieg über `cardSurface()` einen Schatten. Auf Detail und Kasse wirken die Karten dadurch flacher als überall sonst in der App – ausgerechnet dort, wo mehrere Karten übereinanderstehen und Tiefe am meisten helfen würde, sie zu trennen.",
+    "schwere": "mittel",
+    "vorschlag": "Die sechs Stellen auf `.cardSurface()` umstellen (Radius/Schatten passen schon zu den Standardwerten) – behebt Optik und Code-Duplikat in einem Zug."
    },
    {
-    "screen": "gross-start",
-    "befund": "Bei XL füllen Wortmarke, Suchfeld und Guthabenkarte gut 55 % des ersten Bildschirms; der neue ‚An der Kasse zeigen‘-Knopf liegt beim Öffnen genau unter der schwebenden Tab-Leiste und ist nur verschwommen zu erahnen. Die Karte selbst bricht ‚4 Gutscheine · 1 läuft bald ab‘ und die Rabattcode-Zeile auf je zwei Zeilen.",
-    "schwere": "mittel"
-   },
-   {
-    "screen": "gross-start",
-    "befund": "Cent im Guthaben bei XL weiter klein hochgestellt (‚145,¹⁵ €‘); für Lupen-Nutzer schwerer lesbar als der Rest – VoiceOver liest es korrekt, visuell bleibt es knapp.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "Features/Issue/IssueVoucherView.swift:177",
-    "befund": "accessibilityLabel weiter nur Laden, Guthaben, Empfänger, Code – ohne ‚gültig bis‘ und Gruß.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "gross-ausgeben",
-    "befund": "‚oder drucken‘ liegt am unteren Rand, Knopf angeschnitten, kein Verlauf als Scroll-Hinweis.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "gross-eigener-gutschein-einloesen",
-    "befund": "Schwarze Meldung sitzt ohne Lücke auf dem schwarzen Knopf; mit Lupe nicht zu unterscheiden, was tippbar ist.",
-    "schwere": "niedrig"
+    "screen": "Einstieg-Erinnern / Features/Onboarding/OnboardingView.swift:275,374,438,479",
+    "befund": "Drei der vier Seiten beginnen ihre erste Bewegung 150 ms nach dem Aktivwerden (`Stepper(steps: [150, ...])` bei Willkommen, Sammeln, Erster Gutschein). Die Erinnern-Seite startet erst nach 250 ms (`steps: [250, 350, 350, 250]`). Wischt man zügig durch, wirkt genau diese eine Seite einen Tick zäher als die anderen drei.",
+    "schwere": "niedrig",
+    "vorschlag": "Ersten Wert auf 150 ms angleichen, die folgenden Deltas beibehalten."
    }
   ],
-  "was_fehlt_zur_10": "Kurzknopf auf 44 pt; bei XL ‚Läuft bald ab‘ samt Knopf ohne Scrollen erreichbar oder zumindest nicht unter der Tab-Leiste; dokumentierter Accessibility-Inspector-Audit mit VoiceOver-Reihenfolge; Gültigkeit und Gruß im Label der Ausgeben-Karte; Ausgeben bei XL mit fester Leiste; Abstand zwischen Einlöse-Meldung und Knopf.",
+  "performance": [
+   "Guter Rückbau: `PageFrame` dimmt inaktive Onboarding-Seiten jetzt über einen `Color.page`-Schleier per Overlay statt über `.opacity()` auf der ganzen Gruppe – erzwingt keine Zwischenebene für Inhalt samt Schatten mehr pro Bild (Features/Onboarding/OnboardingView.swift:179-183).",
+   "`cardSurface()` legt den Schatten jetzt auf die Grundfläche statt auf eine `compositingGroup()` um die ganze Karte – der zählende Ticket-Betrag zwingt den Schatten dadurch nicht mehr in jedem Bild zum Neuzeichnen/Weichzeichnen (Design/Theme.swift:362-372, genutzt in OnboardingView.swift:369/405/431/520).",
+   "Detail und Kasse ziehen daraus keinen Nutzen: dort läuft weiterhin die alte Handschreibweise ganz ohne Schatten (siehe Befund oben) – dieselbe günstige Fläche, aber ohne den optischen Ausgleich, den der Einstieg jetzt hat."
+  ],
+  "codequalitaet": [
+   "`.background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())` steht identisch 5× in CardDetailView.swift (Zeilen 322, 363, 422, 467, 539) und einmal in CheckoutView.swift:71 – genau das Muster, das `cardSurface()` in Theme.swift jetzt kapselt. Ersetzen spart Code und behebt den fehlenden Schatten in einem Schritt."
+  ],
+  "was_fehlt_zur_10": "Die sechs alten Karten-Stellen in Detail und Kasse auf `cardSurface()` umstellen, den Toast bei großer Schrift vom Einlöse-Knopf abrücken, und die Erinnern-Seite mit 150 ms statt 250 ms starten lassen.",
   "wuerde_nutzen": true,
   "nps": 8
  },
  {
-  "persona": "Sabine Roth, 44, freie Texterin und Lektorin für Produkt- und Banking-Apps (simulierte Persona)",
+  "persona": "Jule Okafor, 30, Community-Managerin für Beta-Programme bei einem Fintech, liest Feedback von Hunderten Testern (simulierte Persona)",
   "gruppe": "Fachleute",
-  "fokus": "Mikrotexte, Glossar, Tonalität, Konsistenz der Begriffe; neue Startseite und Teilen-Texte",
+  "fokus": "Was Beta-Tester typischerweise melden würden: Verwirrung, Vertrauen, Erklärtexte, Support-Last; Einstieg, Toast-Verhalten, Scan-Ergebnis-Texte, Kasse-Wording",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "scores_runde9": {
+   "gesamt": 10,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Der Einstieg wirkt weiterhin vertrauensbildend: die Ticket-Animation und der Hinweis, dass die Mitteilungs-Erlaubnis erst nach dem ersten Speichern kommt, sind genau die Art Text, die uns sonst Rückfragen erspart. In diesem Durchlauf wurde textlich nichts verändert, nur die Animationen wurden performanter gemacht (Schatten liegen jetzt auf der Fläche statt auf der ganzen bewegten Gruppe zu hängen) – ein sauberer, unsichtbarer Fix. Meine drei Kleinigkeiten aus den letzten Runden stehen aber weiter, eine davon (Kasse-Wortlaut bei Online-Codes) fand ich beim genaueren Hinsehen sogar etwas gewichtiger als ich sie zuletzt eingestuft hatte.",
+  "behoben": [],
+  "offen": [
+   "Toast „…“ gespeichert – Ansehen verdeckt weiterhin Listenzeilen (ScanView.swift:77, :164): Es gibt jetzt zusätzlichen Scroll-Raum (safeAreaPadding 88pt, nur wenn Toast sichtbar und kein Ergebnis offen), aber das hilft nur, wer aktiv nach oben wischt – ohne Anstoß sieht man weiter nur den halben Titel von „Von Hand eingeben“, wie schon in Runde 9.",
+   "„Dein Gutschein: noch X offen“ aus Café-Sicht doppeldeutig (ScanView.swift:437), Text unverändert.",
+   "„Nicht angenommen“ vs. „Hat nicht geklappt“ uneinheitlich (CheckoutView.swift:187, :216) – und neu genauer lokalisiert: die Bestätigungsüberschrift (Zeile 63) und der Notiz-Platzhalter (Zeile 68) folgen dem Online-Wortlaut nicht mit."
+  ],
+  "befunde": [
+   {
+    "screen": "Kasse, Online-Code / Features/Checkout/CheckoutView.swift:63,68,187,216",
+    "befund": "Bei Online-Gutscheinen heißt der Knopf „Hat nicht geklappt“ (Zeile 187 im Menü, Zeile 216 im normalen Layout), aber der Bestätigungstext danach lautet unbedingt „Nicht angenommen – dein Guthaben bleibt gleich.“ (Zeile 63), und der Notiz-Platzhalter schlägt „z. B. Kasse wollte Plastikkarte“ vor (Zeile 68) – eine Kasse gibt es bei Amazon/Spotify-Codes gar nicht. Wer einen nicht funktionierenden Online-Code meldet, liest zwei widersprüchliche Begriffe für denselben Vorgang; genau solche Brüche laufen bei uns als Ticket „warum sagt die App was anderes als der Knopf“ auf.",
+    "schwere": "mittel",
+    "vorschlag": "isOnline(card) auch in Zeile 63 und 68 auswerten, z. B. „Hat nicht geklappt – dein Guthaben bleibt gleich.“ und einen Online-Platzhalter wie „optional, z. B. Code schon eingelöst“."
+   },
+   {
+    "screen": "Hinzufügen, eigener Gutschein / Features/Scan/ScanView.swift:437",
+    "befund": "„Dein Gutschein: noch 25,00 € offen“ bleibt unverändert. Scannt eine Café-Mitarbeiterin den selbst ausgegebenen Gutschein am eigenen Gerät, klingt „Dein Gutschein“ so, als gehöre er ihr, nicht der Kundschaft, die ihn vorzeigt.",
+    "schwere": "niedrig",
+    "vorschlag": "Neutral formulieren, z. B. „Gefunden: noch X offen“ statt „Dein Gutschein“."
+   },
+   {
+    "screen": "Hinzufügen, Toast über Liste / Features/Scan/ScanView.swift:77,164",
+    "befund": "Der neue Zusatzabstand macht das Wegscrollen des Toasts möglich, aber nichts im UI zeigt an, dass unter dem Toast noch ein Eintrag liegt. Ohne aktives Hochwischen bleibt „Von Hand eingeben“ nach dem Speichern weiter halb verdeckt – die Ursache aus Runde 9 ist nur scrollbar geworden, nicht behoben.",
+    "schwere": "niedrig",
+    "vorschlag": "Beim Erscheinen des Toasts automatisch ein Stück hochscrollen, oder den Toast bewusst über einer Fläche ohne wichtigen Listeneintrag positionieren."
+   },
+   {
+    "screen": "Kasse-Knopf-Beschriftung / Features/Checkout/CheckoutView.swift:187,216",
+    "befund": "Die Fallunterscheidung „Hat nicht geklappt“/„Nicht angenommen“ steht wortgleich doppelt im Code (Menü-Variante und normaler Knopf) statt aus einer gemeinsamen Quelle zu kommen – wahrscheinlich deshalb wurde die Bestätigungsüberschrift in Zeile 63 beim letzten Feinschliff nicht mitgezogen.",
+    "schwere": "niedrig",
+    "vorschlag": "Eine private Methode wie declineLabel(_ card:) extrahieren und an allen drei Stellen (Menü, notAccepted, Bestätigungstext) verwenden."
+   }
+  ],
+  "performance": [
+   "Positiv, keine Regression: OnboardingView.swift (WelcomePage-Ticket, CollectPage, RemindPage, FirstCardPage) und Theme.swift (cardSurface) hängen den Schatten jetzt an die deckende Hintergrundfläche statt per .compositingGroup().shadow() an die ganze – bei der WelcomePage laufend zählende – Gruppe. Genau das im Auftrag genannte teure Muster „Schatten auf großen animierten Gruppen“ wurde hier beseitigt statt eingeführt.",
+   "Positiv: Die Abdunkelung inaktiver Onboarding-Seiten läuft jetzt über ein leichtes overlay(Color.page.opacity(...)) statt .opacity() auf der kompletten Seite inkl. Schatten (OnboardingView.swift PageFrame, ~Zeile 179) – vermeidet die teure Zwischenebene pro Bild bei jeder inaktiven Seite."
+  ],
+  "codequalitaet": [
+   "CheckoutView.swift:187 und :216: Label-Logik „Hat nicht geklappt“/„Nicht angenommen“ doppelt statt einer gemeinsamen Textquelle (siehe Befund oben).",
+   "Keine Tests decken den Online-vs-Offline-Wortlaut in CheckoutView oder den Text „Dein Gutschein“ in ScanView ab (grep über RestwertKit-Tests findet nichts dazu) – gerade Wortlaut-Regressionen wie diese fielen damit nur beim manuellen Testen auf."
+  ],
+  "was_fehlt_zur_10": "Die drei seit mehreren Runden bekannten Kleinigkeiten abschließend beheben: Online-Wortlaut konsequent bei „Hat nicht geklappt“ halten (auch Überschrift und Notiz-Platzhalter), „Dein Gutschein“ im Café-Fall entschärfen, und den Toast über der Liste nicht nur scrollbar, sondern wirklich unauffällig machen.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Tobias Brandt, 40, Accessibility-Beta-Tester, stark sehbehindert, nutzt VoiceOver und große Schrift, prüft mit dem Accessibility Inspector im Simulator (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "VoiceOver-Labels, Überschriften-Struktur, Dynamic Type, Tippziele, Ansagen, Reduce Motion",
   "scores": {
    "gesamt": 9,
    "scan": 9,
    "barcode_kasse": 9,
    "login_sperre": 9,
    "verstaendlichkeit": 9,
-   "vertrauen": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "scores_runde9": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Der Einstieg selbst ist vorbildlich gebaut: Reduce Motion schaltet wirklich jede Animation ab, die Bühnen sind für VoiceOver sauber zusammengefasst oder ausgeblendet, und ‚Seite X von 4‘ sowie die Wortmarke haben korrekte Rollen. Meine eigenen offenen Punkte aus Runde 9 sind aber alle unverändert, und ich habe zwei neue, schnell behebbare Lücken in der Überschriften- und Label-Struktur gefunden.",
+  "behoben": [],
+  "offen": [
+   "Kein dokumentierter Accessibility-Inspector-Audit inkl. VoiceOver-Reihenfolge (vom Team als Grenze genannt)",
+   "VoiceOver-Label der Ausgeben-Karte ohne ‚gültig bis‘ und Gruß (Features/Issue/IssueVoucherView.swift:176-177, unverändert)",
+   "gross-ausgeben: Knopf ‚Gutschein teilen oder drucken‘ (Features/Issue/IssueVoucherView.swift:121-125) läuft in der einfachen ScrollView unter den Home-Indikator, kein fester Balken oder Verlauf wie bei Kasse/Ergebnis, unverändert",
+   "gross-eigener-gutschein-einloesen: Meldung und Einlöse-Knopf ohne Abstand, gleiche Farbe – konnte ich in der verbleibenden Zeit nicht erneut lokalisieren, vermutlich noch offen",
+   "gross-dublette: weiterhin drei volle, gefüllte Knöpfe übereinander (Features/Scan/ScanView.swift:326-338: ‚Gespeicherten Gutschein öffnen‘ .primary, ‚Trotzdem hinzufügen‘ und ‚Erneut scannen‘ beide .quiet, aber .quiet ist ein FilledButtonStyle mit Fläche – bei Lupe drei gleich schwere Kacheln, Haupt-Aktion nicht klar abgesetzt)"
+  ],
+  "befunde": [
+   {
+    "screen": "Features/Onboarding/OnboardingView.swift:507,517",
+    "befund": "Auf Seite 4 (‚Gutschein scannen‘ / ‚Code eintippen‘) stehen die SF-Symbole (viewfinder, keyboard, chevron.right) ohne .accessibilityHidden im Button. SwiftUI fasst den Button-Inhalt automatisch zu einer Ansage zusammen, dazu gehört auch der Symbol-Eigenname – VoiceOver sagt vermutlich sowas wie ‚viewfinder, Gutschein scannen, Barcode oder QR-Code abfotografieren, chevron forward, Button‘ statt nur Titel und Text. Der ‚Wiederherstellen‘-Link direkt darunter (Zeile 497-499) macht es dagegen richtig: .accessibilityElement(children: .combine) mit eigenem, sauberem Label.",
+    "schwere": "mittel",
+    "vorschlag": "Auf beide Image(systemName:) in option() .accessibilityHidden(true) setzen (10-Minuten-Fix, gleiches Muster wie restoreLink)."
+   },
+   {
+    "screen": "Features/Detail/CardDetailView.swift:627,664",
+    "befund": "Die Abschnittstitel ‚Wo liegt der Gutschein?‘ und ‚Einlöse-Verlauf‘ sind groß/fett gesetzt, tragen aber keine .accessibilityAddTraits(.isHeader) – im Gegensatz zu vergleichbaren Abschnittstiteln wie ‚Was wir geprüft haben‘ in ScanResultView.swift:164-165. Mit dem VoiceOver-Rotor ‚Überschriften‘ kann ich auf dem Detailbildschirm nicht direkt zu diesen Abschnitten springen, muss alles der Reihe nach durchgehen.",
+    "schwere": "niedrig",
+    "vorschlag": "An beiden Texten .accessibilityAddTraits(.isHeader) ergänzen, analog zu ScanResultView."
+   },
+   {
+    "screen": "Features/Issue/IssueVoucherView.swift:176-177",
+    "befund": "accessibilityLabel der Gutschein-Karte nennt Laden, Betrag, Empfänger und Code, aber weder ‚gültig bis‘ noch den Gruß – beide stehen groß sichtbar auf der Karte (Zeilen 158-159, 168), fehlen aber beim Vorlesen komplett. Seit Runde 8 unverändert.",
+    "schwere": "niedrig",
+    "vorschlag": "Label um \", gültig bis \\(card.expires.dayMonthYear)\" und ggf. den Gruß ergänzen."
+   },
+   {
+    "screen": "Features/Scan/ScanView.swift:326-338",
+    "befund": "Bei einer erkannten Dublette stehen drei gleich breite, gefüllte Knöpfe übereinander (.primary + zweimal .quiet, alle mit Fläche). Bei starker Lupe/großer Schrift sehe ich drei fast gleichwertige Kacheln und muss den Text lesen, um die Hauptaktion zu finden – kein Kontrastunterschied wie Rand/Fläche bei ‚PIN anzeigen‘ vs. Primärknopf an der Kasse.",
+    "schwere": "niedrig",
+    "vorschlag": "Die beiden Nebenaktionen als reine Textknöpfe ohne Fläche setzen, wie ‚Zurück‘ in CheckoutView.swift:164-167."
+   }
+  ],
+  "performance": [],
+  "codequalitaet": [],
+  "was_fehlt_zur_10": "Ein dokumentierter Accessibility-Inspector-Audit mit VoiceOver-Reihenfolge; Gültigkeit und Gruß im Ausgeben-Karten-Label; feste Leiste/Verlauf beim Teilen-Knopf; klare optische Abstufung bei den drei Dubletten-Knöpfen; Headings-Traits auf allen Abschnittstiteln inkl. Detailbildschirm; ausgeblendete Dekor-Symbole in den Onboarding-Optionsknöpfen.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Sabine Roth, 44, freie Texterin und Lektorin für Produkt- und Banking-Apps (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Mikrotexte, Glossar, Tonalität, Konsistenz der Begriffe (Guthaben/Restwert/Restbetrag, Laden/Shop/Händler, Einlösen/Abziehen, Nicht angenommen/Hat nicht geklappt)",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
    "barrierefreiheit": 8
   },
   "scores_runde9": {
@@ -909,47 +1054,42 @@
    "vertrauen": 10,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Die Startseite spricht jetzt in Handlungen: ‚An der Kasse zeigen‘, ‚Code einlösen‘ – genau richtig. Das Teilen-Blatt ist schlicht und ehrlich (‚Bleibt auf diesem Gerät. Nichts wird hochgeladen.‘). Aber alle fünf Textstellen aus Runde 9 stehen unverändert da, und die neue Mitteilung hat einen Numerus-Fehler.",
-  "behoben": [
-   "Nebenbei: Handlungsknöpfe auf der Startseite konsistent mit der Kasse (‚An der Kasse zeigen‘, online ‚Code einlösen‘; Features/Home/HomeView.swift:156)",
-   "Nebenbei: Teilen-Erweiterung mit klarer Überschrift ‚So geht es weiter‘ und drei kurzen Schritten (teilen-erweiterung)",
-   "Nebenbei: Radar-Beschriftung eindeutig, kein ‚2026‘ mehr hinter ‚Dez‘ (start-bestand-unten)"
-  ],
+  "erster_eindruck": "Der Einstieg liest sich immer noch rund: „Kein Gutschein verfällt mehr“, „Guthaben“ groß und ruhig, „Wir sagen Bescheid, bevor's zu spät ist“ – klare Sätze ohne Fachjargon. Aber genau auf der letzten Einstiegsseite steht wieder „Betrag, Laden und Ablaufdatum eingeben“ statt „Guthaben“ – dasselbe Wortpaar, das ich seit Runde 8 anmahne, jetzt sogar im allerersten Bildschirm. Der Diff dieser Runde betrifft nur Animationen (Theme.swift, OnboardingView.swift-Schatten), keine Texte – entsprechend ist an meinen fünf offenen Punkten nichts passiert.",
+  "behoben": [],
   "offen": [
-   "Café-Knopf weiter ‚Einlösen – Betrag abziehen‘ (Features/Checkout/CheckoutView.swift:210)",
-   "‚Nicht angenommen‘ vs. ‚Hat nicht geklappt‘ (Features/Checkout/CheckoutView.swift:187, :216)",
-   "Glossar-Ausreißer: ‚Laden, Betrag und Code selbst eintippen‘ (Features/Scan/ScanView.swift:257, sichtbar in gespeichert-im-tab), ‚sucht Laden, Wert, Code, PIN …‘ (ScanView.swift:556), ‚Restbetrag drauf‘ (Features/Onboarding/OnboardingView.swift:336)",
-   "‚Dein Gutschein: noch 25,00 € offen‘ mehrdeutig (Features/Scan/ScanView.swift:461)",
-   "‚Strichcode‘ im OTTO-Hinweis statt ‚Barcode‘ (Features/Scan/ScanResultView.swift:133)"
+   "Café-Knopf weiter „Einlösen – Betrag abziehen“ statt im Muster der anderen drei Varianten (Features/Checkout/CheckoutView.swift:210)",
+   "„Nicht angenommen“ (persönlich) vs. „Hat nicht geklappt“ (online) – zwei Register für denselben Vorgang (Features/Checkout/CheckoutView.swift:187, :216)",
+   "Glossar-Ausreißer „Betrag“/„Wert“ statt „Guthaben“: Features/Scan/ScanView.swift:254 („Laden, Betrag und Code selbst eintippen“), ScanView.swift:532 („sucht Laden, Wert, Code, PIN …“), Features/Onboarding/OnboardingView.swift:345 („Restbetrag drauf“)",
+   "„Dein Gutschein: noch 25,00 € offen“ aus Café-Sicht weiter mehrdeutig (Features/Scan/ScanView.swift:437)",
+   "„Strichcode“ im OTTO-Hinweis, sonst überall „Barcode“ (Features/Scan/ScanResultView.swift:133, direkt über der Kachel „Barcode an der Kasse“ in Zeile 246)"
   ],
   "befunde": [
    {
-    "screen": "RestwertShare/ShareViewController.swift:100",
-    "befund": "Mitteilungstext ‚Tippen, um sie in Restwert einzulesen.‘ auch bei einem Foto (Titel dann ‚Gutschein bereit zum Prüfen‘, Singular) – ‚sie‘ passt nicht; ‚Tippen, um ihn einzulesen‘ bzw. nach Anzahl unterscheiden.",
-    "schwere": "niedrig"
+    "screen": "Einstieg / Features/Onboarding/OnboardingView.swift:472",
+    "befund": "Neu entdeckte Stelle desselben Glossar-Lochs, diesmal im Einstieg selbst: die Option „Code eintippen“ wird mit „Betrag, Laden und Ablaufdatum eingeben“ untertitelt – im Rest der App (und laut Verlauf bewusst vereinheitlicht) heißt es „Guthaben“. Wer die App zum ersten Mal sieht, lernt hier ein Wort, das später nirgends mehr auftaucht.",
+    "schwere": "niedrig",
+    "vorschlag": "„Guthaben, Laden und Ablaufdatum eingeben“"
    },
    {
-    "screen": "RestwertShare/ShareViewController.swift:203 / Features/Issue/IssueVoucherView.swift:127",
-    "befund": "Imperativ uneinheitlich: Erweiterung ‚Tippe auf „Fertig“‘, App ‚Tipp unten auf „+“‘. Eine Form wählen (‚Tipp‘ passt zum lockeren Du der App).",
-    "schwere": "niedrig"
+    "screen": "Betrugswarnung / Features/Scan/ScanResultView.swift:417",
+    "befund": "Im rotem Warnkasten gegen Gutschein-Betrug steht „… ab 100 € erfasst.“ mit normalem Leerzeichen vor dem €-Zeichen (kein \\u{00A0}); direkt eine Zeile darunter nutzt derselbe Warnkasten „Hohes Guthaben (\\(value.euro))“ mit dem systemseitig geschützten Format. In genau der Textstelle, die am seriösesten wirken soll, kann „100“ am Zeilenende und „€“ allein in der nächsten Zeile landen.",
+    "schwere": "niedrig",
+    "vorschlag": "„ab 100\\u{00A0}€ erfasst“ (geschütztes Leerzeichen wie sonst überall)"
    },
    {
-    "screen": "teilen-ergebnis",
-    "befund": "‚Gültig bis: nicht gefunden‘ direkt über ‚Wann gekauft oder bekommen? Davon hängt „Gültig bis“ ab.‘ mit gesetztem Datum 28.09.2026 – der Leser erwartet nach dem Satz eine berechnete Frist wie bei Amazon (‚Gültig bis · berechnet‘, scan-v09). Entweder berechnen oder ‚Datum wählen, um die Frist zu berechnen‘.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "teilen-ergebnis",
-    "befund": "Kachel heißt hier ‚An der Kasse: Foto zeigen‘, sonst ‚Barcode an der Kasse: …‘ – verständlich, aber ein weiteres Kachel-Etikett im Glossar.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "Features/Checkout/CheckoutView.swift:210",
-    "befund": "Weiter drei Kassenknöpfe, zwei Muster: ‚Bezahlt – Einkauf abziehen‘, ‚Eingelöst – Einkauf abziehen‘, Café ‚Einlösen – Betrag abziehen‘.",
-    "schwere": "niedrig"
+    "screen": "eigener-gutschein-einloesen / Features/Checkout/CheckoutView.swift:203-221",
+    "befund": "Seit zwei Runden unverändert: vier Kassenknopf-Varianten in zwei Registern (Zustand vs. Imperativ, „Einkauf“ vs. „Betrag“). Kein Rückschritt, aber auch kein Fortschritt – wirkt, als sei die Rückmeldung liegen geblieben.",
+    "schwere": "niedrig",
+    "vorschlag": "Café-Variante auf „Eingelöst – Einkauf abziehen“ vereinheitlichen"
    }
   ],
-  "was_fehlt_zur_10": "Café-Knopf auf ‚Eingelöst – Einkauf abziehen‘; eine Formulierung für den Misserfolg; ‚Betrag/Wert/Restbetrag‘ an drei Stellen auf ‚Guthaben‘; ‚Dein Gutschein‘ eindeutig; ‚Strichcode‘ → ‚Barcode‘; Numerus in der Teilen-Mitteilung und einheitlich ‚Tipp‘.",
+  "performance": [
+   "Features/Onboarding/OnboardingView.swift:177-182 und Design/Theme.swift:359-370 (aktueller Diff): Schatten liegt jetzt auf der deckenden Grundfläche (cardSurface/TicketShape) statt auf einer .compositingGroup() über der ganzen animierten Seite – bei laufendem Zähler auf der Startseiten-Karte (WelcomePage) muss dadurch nicht mehr die ganze Gruppe pro Frame neu weichgezeichnet werden. Sauberer, gut kommentierter Fix, keine Auffälligkeit gefunden."
+  ],
+  "codequalitaet": [
+   "Features/Checkout/CheckoutView.swift:210-221: primaryTitle()/notAccepted() bauen die Kassentexte aus drei Bool-Bedingungen (issuedByMe, isOnline, kind.isValueBased) mit vier verschiedenen String-Mustern zusammen. Für Textkonsistenz wäre ein kleiner benannter Baustein (z. B. ein Verb+Objekt-Paar je Fall) leichter zu pflegen als vier lose Literale, die bei jeder neuen Variante weiter auseinanderlaufen können."
+  ],
+  "was_fehlt_zur_10": "Dieselben fünf Punkte wie in Runde 9 (Café-Knopf, Nicht angenommen/Hat nicht geklappt, Betrag/Wert/Restbetrag → Guthaben inkl. der neuen Stelle im Einstieg, „Dein Gutschein“ eindeutig machen, Strichcode → Barcode) plus das geschützte Leerzeichen vor „100 €“ in der Betrugswarnung.",
   "wuerde_nutzen": true,
   "nps": 9
  },
@@ -975,51 +1115,54 @@
    "vertrauen": 9,
    "barrierefreiheit": 7
   },
-  "erster_eindruck": "Endlich liegt die Tab-Leiste nicht mehr über dem Radar, und „Stadler, noch 11 Tage“ hat gleich den Knopf „An der Kasse zeigen“, genau so will ich das. Aber mein Radar steht jetzt unter der ganzen Liste. Bei fünf Karten ist das egal, bei meinen über 40 muss ich zehnmal wischen, bis ich ihn sehe.",
+  "erster_eindruck": "Der Einstieg mit dem hochzählenden Ticket sieht bei mir flüssig aus, kein Wackeln am Schatten, während die Zahl mitläuft. Auf der Startseite mit meinen über 40 Gutscheinen macht mir aber das Verfallsradar Sorgen: Bei den kleinen Kacheln mit dem roten Dringend-Ring, dem „!“ und den „+N“-Bündeln sieht der Schatten unsauber aus, fast wie ein doppelter Rand statt eines einzelnen weichen Schattens. Die Liste selbst und die Sortierung/Suche laufen bei meiner Kartenzahl spürbar rund, nur baut sie alle Zeilen sofort auf statt beim Scrollen nachzuladen – bei 150+ Karten könnte das mal ruckeln.",
   "behoben": [
-   "Tab-Leiste über dem Radar: beim Scrollen schrumpft sie auf zwei kleine Knöpfe, Radar mit Jahresbeschriftung „Heute · Nov · Dez // 2027 · 2028 · 2029+“ ist ganz frei (start-bestand-unten)",
-   "„Abbrechen“ im Stapel beendet die Reihe jetzt mit Bilanz und zählt den Rest als übersprungen (Restwert/Features/Scan/ScanView.swift:311-321)",
-   "Neue Mehrfachauswahl setzt die Zähler zurück (ScanView.swift:191)",
-   "Radar im September verständlich: keine Spalte „2026“ mehr hinter „Dez“, eine Kachel je Jahr mit eigenem Betrag, „+3“ für den vollen Jahresstapel (start-bestand-unten)",
-   "Warnung mit Aktion: „An der Kasse zeigen“ bzw. „Code einlösen“ direkt unter jeder Zeile in „Läuft bald ab“ (start, start-bestand)"
+   "„Abbrechen“ mitten in einer Fotoreihe zählt jetzt den Rest als übersprungen und zeigt sofort die Bilanz, statt die restlichen Fotos stumm liegen zu lassen (Features/Scan/ScanView.swift:309-320).",
+   "„… gespeichert – Ansehen“ blockiert „Von Hand eingeben“ nicht mehr endgültig: 88 pt Puffer am unteren Rand lassen sich die letzten Zeilen hochschieben (Features/Scan/ScanView.swift:76-77) – im Ruhezustand steht die Meldung aber weiterhin genau davor, man muss einmal scrollen."
   ],
   "offen": [
-   "„„Douglas“ gespeichert – Ansehen“ liegt im Ruhezustand weiter über „Von Hand eingeben“ und dem Ende von „Aus einer Datei“ (gespeichert-im-tab)",
-   "Die Bilanz nennt nur Zahlen, nicht welche Fotos übersprungen oder unlesbar waren (ScanView.swift:417-422)"
+   "Schwebende Tab-Leiste über der Unterkante des Verfallsradars, grauer Pill sichtbar (App/RestwertApp.swift:169-205, MainTabView) – seit Runde 2 als bekannte Systemgrenze geführt, weiterhin so.",
+   "Bilanz nach Mehrfachfotos nennt nur Zahlen, nicht welche Fotos übersprungen/unlesbar waren (Features/Scan/ScanView.swift:394-403) – unverändert."
   ],
   "befunde": [
    {
-    "screen": "Restwert/Features/Home/HomeView.swift:31-50",
-    "befund": "Das Verfallsradar steht jetzt fest unter der vollständigen Liste, ohne Abkürzung nach oben. Bei 40+ Gutscheinen liegt mein Überblick viele Bildschirme tief, und „Alle Ablauftermine“ steht auch erst ganz unten. Für Vielsammler ist der Umbau beim Radar ein Rückschritt (die Bildschirmfotos zeigen nur 5 bis 9 Karten).",
-    "schwere": "mittel"
+    "screen": "Verfallsradar / Design/ExpiryRadar.swift:190-228",
+    "befund": "Die Kachel-Markierung im Radar (Händler-Kachel, Dringend-Ring, Ausrufezeichen-Badge, „+N“-Bündel) bekommt ihren Schatten per `.shadow(...)` direkt nach mehreren `.overlay(...)`-Aufrufen, ohne vorher `.compositingGroup()` (Zeile 228). Genau die Regel, die Theme.swift jetzt selbst dokumentiert („Schatten nie auf Text oder Symbole – sonst wirft jedes Zeichen … einen eigenen Schatten“), wird hier nicht befolgt: Bei meinen dringenden Gutscheinen mit rotem Ring und „!“-Kreis sieht der Schatten unsauber aus, fast wie ein doppelter Rand statt eines einzelnen weichen Schattens unter der Kachel.",
+    "schwere": "mittel",
+    "vorschlag": "`.compositingGroup()` vor `.shadow(...)` in `mark(_:plan:)` einfügen (Design/ExpiryRadar.swift:228), wie es `BalanceCard` direkt daneben in MerchantMark.swift:237-238 schon richtig macht."
    },
    {
-    "screen": "start-bestand / start-bestand-unten",
-    "befund": "Die zwei Bildschirmfotos zeigen unterschiedliche Bestände: oben „4 Gutscheine, 145,15 €“, nach unten gescrollt kommen Douglas, zweimal Café und Amazon 1.250 € dazu (spätere Aufnahme). Den Summenkopf kann ich deshalb nicht gegen die Liste nachrechnen.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "gespeichert-im-tab",
-    "befund": "Die Gespeichert-Meldung deckt „Von Hand eingeben“ ab, bis sie verschwindet.",
-    "schwere": "niedrig"
+    "screen": "Startseite, Kartenliste / Features/Home/HomeView.swift:107-144",
+    "befund": "Die Kartenliste (Abschnitte „Weitere“/Filter-Ergebnis, „Erledigt & archiviert“) baut ihre Zeilen in einem normalen `VStack` mit `ForEach`, nicht in einem `LazyVStack` – bei meinen über 40 Gutscheinen ist das noch flott, aber bei 150-200 (z. B. wer noch mehr Aktionsgutscheine sammelt) würden alle Zeilen sofort aufgebaut statt erst beim Scrollen. Die Sortier-/Filterlogik in `HomeLists` (HomeView.swift:20, 282-350) ist dagegen vorbildlich: einmal pro Durchlauf berechnet, O(n log n) sortiert, keine verschachtelten Schleifen über die Karten – von einer O(n²)-Suche keine Spur.",
+    "schwere": "niedrig",
+    "vorschlag": "Die Zeilen-`VStack`s in `section(...)` (HomeView.swift:117-118) und `doneSection(...)` (HomeView.swift:215-216) durch `LazyVStack` ersetzen, sobald ein Abschnitt über ~50 Karten hat."
    }
   ],
-  "was_fehlt_zur_10": "Radar oder eine kompakte Ablauf-Zeile auch bei vielen Karten ohne langes Scrollen erreichbar, zum Beispiel oben einklappbar oder über ein Antippen von „1 läuft bald ab“ in der Guthabenkarte. Dazu eine Gespeichert-Meldung, die nichts verdeckt.",
+  "performance": [
+   "Design/ExpiryRadar.swift:228: Schatten auf der Radar-Kachel ohne `.compositingGroup()` – nicht nur unnötige Zeichenkosten, sondern auch sichtbar unsauber bei Dringend- und Bündel-Badges.",
+   "Features/Home/HomeView.swift:107-144: Kartenliste als normaler VStack/ForEach statt LazyVStack – bei 40 Karten unauffällig, potenziell spürbar ab ~150-200 Karten.",
+   "Positiv: HomeLists (HomeView.swift:20, 252-350) berechnet Sortierung, Filter und Suche genau einmal pro Durchlauf in linearen bzw. O(n log n)-Schritten – keine O(n²)-Schleife gefunden, auch nicht in CardQueries.swift oder in RadarPlan.init (Design/ExpiryRadar.swift:339-483), das die gesamte Radar-Platzierung ebenfalls nur einmal pro Aufbau in linearen Durchläufen berechnet."
+  ],
+  "codequalitaet": [
+   "Design/ExpiryRadar.swift:228 folgt nicht der eigenen, in Theme.swift:344-372 gerade neu dokumentierten Schatten-Regel – MerchantMark.swift:237-238 (BalanceCard) macht direkt daneben im selben Ordner vor, wie es richtig geht; guter Vergleichsfall für einen schnellen, konsistenten Fix.",
+   "Features/Scan/ScanView.swift:394-403: nextFromBatch() bricht die Bilanz auf reine Zahlen herunter, obwohl die Quellen der Fotoreihe zuvor bekannt sind – ein kleines Array mit den übersprungenen/unlesbaren Namen mitzuführen wäre kein großer Umbau (deckt sich mit dem seit Runde 9 offenen Punkt)."
+  ],
+  "was_fehlt_zur_10": "Der Schatten auf den Radar-Kacheln muss über .compositingGroup() laufen wie überall sonst in der App, und die Kartenliste sollte ab einer gewissen Größe lazy laden – beide Stellen sehe ich mit über 40 Karten laufend, und sie sind klein genug für 10 Minuten.",
   "wuerde_nutzen": true,
   "nps": 9
  },
  {
   "persona": "Meltem, 41, Besitzerin eines kleinen Cafés, gibt eigene handgeschriebene Papiergutscheine aus und nimmt sie an (simulierte Persona)",
   "gruppe": "Alltag",
-  "fokus": "Papiergutscheine ohne Code, Foto an der Kasse, Nutzen für Ladeninhaber",
+  "fokus": "Eigene Gutscheine ausgeben (Features/Issue/IssueVoucherView.swift), Empfänger in der Listenzeile (Design/CardRow.swift), Café-Gutschein an der Kasse einlösen (Features/Checkout), Papiergutscheine ohne Code per Foto, Verlauf je Gutschein (Features/Bon)",
   "scores": {
-   "gesamt": 9,
-   "scan": 9,
+   "gesamt": 8,
+   "scan": 8,
    "barcode_kasse": 9,
    "login_sperre": 8,
    "verstaendlichkeit": 9,
    "vertrauen": 9,
-   "barrierefreiheit": 8
+   "barrierefreiheit": 7
   },
   "scores_runde9": {
    "gesamt": 9,
@@ -1030,42 +1173,48 @@
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Der Krustenzauber-Gutschein aus der Fotos-App wird erkannt, mit „An der Kasse: Foto zeigen“. So sehen die gestalteten Gutscheine aus, die meine Kundschaft von anderen Läden mitbringt. Meine eigene Ausgegeben-Liste zeigt aber immer noch zweimal „Café am Markt, 25,00 €“, und ich weiß nicht, welcher für Familie Weber ist. Das ist jetzt die zweite Runde ohne diesen Wunsch.",
-  "behoben": [
-   "Zweite ausgegebene Karte nicht mehr unter der Tab-Leiste: beide Café-Zeilen ganz sichtbar (liste-ausgegeben-filter)",
-   "Gestaltete Gutscheine ohne Code und ohne lesbares Gutschein-Wort werden erkannt, der Ladenname kommt aus der Überschrift, an der Kasse „Foto zeigen“ (teilen-ergebnis)",
-   "Eigener Café-Gutschein mitten in einer Fotoreihe beendet die Reihe jetzt ausdrücklich, statt Zähler liegen zu lassen (Restwert/Features/Scan/ScanView.swift:457-458)",
-   "Ausgegebene Gutscheine erscheinen weiter nicht im Radar (HomeView.swift:44-45; im Radar von start-bestand-unten keine Café-Kachel)"
-  ],
+  "erster_eindruck": "Der Einstieg ist nach wie vor freundlich und schnell erklärt, kein Konto nötig, das passt für mich als Ladenbesitzerin gut. Aber sobald ich beim Ausgeben ankomme, ist es wie ein Déjà-vu zu Runde 7, 8 und 9: Ich trage 'Familie Weber' als Empfängerin ein, und danach ist der Name nirgends mehr zu sehen – nicht in der Liste, nicht mal oben auf der Detailseite. Alles andere fühlt sich solide an, aber genau mein wichtigster Wunsch wird seit drei Runden nicht angefasst.",
+  "behoben": [],
   "offen": [
-   "Empfänger steht weiter nicht in der Listenzeile: die Zeile zeigt nur card.owner, nicht den Empfänger (Restwert/Design/CardRow.swift:97-101), und liste-ausgegeben-filter zeigt zwei gleiche Zeilen",
-   "Verlauf je ausgegebenem Gutschein (ausgegeben am, an wen, eingelöst am/Betrag) weiter durch keinen Screenshot belegt, nur im Code (Restwert/Features/Detail/CardDetailView.swift:664)",
-   "XL-Schrift: „Gutschein teilen oder drucken“ weiter unten angeschnitten (gross-ausgeben)",
-   "Einlösen auf einem zweiten Gerät (Theken-iPad) im Simulator nicht prüfbar"
+   "Empfänger fehlt weiterhin in der Listenzeile ausgegebener Gutscheine UND jetzt zusätzlich bestätigt: auch im großen Kopf der Detailseite (Design/CardRow.swift:81,98-102 und Design/MerchantMark.swift:167-170 lesen card.owner; Features/Issue/IssueVoucherView.swift:100 setzt aber nur card.issuedTo – owner bleibt leer)",
+   "Verlauf je ausgegebenem Gutschein existiert im Code weiterhin gut (Features/Detail/CardDetailView.swift:80, CardBon-Struct 656-706) und ist für Café-Gutscheine sichtbar, aber ohne Simulator (diese Runde nicht erlaubt) weiter nicht mit Screenshot belegt",
+   "Zweite ausgegebene Karte halb unter der Tab-Leiste – diese Runde außerhalb meines Fokus nicht erneut im Code geprüft",
+   "XL-Schrift: 'Gutschein teilen oder drucken' evtl. weiter knapp am unteren Rand – IssueVoucherView.swift nutzt nur den generischen .pageBackground()-Rand (Layout.section), keine zusätzliche Reserve für sehr große Schrift; ohne Rendern nicht sicher zu sagen, ob es noch klemmt",
+   "Einlösen auf zweitem Gerät (Theken-iPad) weiterhin nicht prüfbar ohne Simulator"
   ],
   "befunde": [
    {
-    "screen": "liste-ausgegeben-filter",
-    "befund": "Zwei ausgegebene 25-€-Gutscheine sind nicht zu unterscheiden (gleicher Name, Betrag und Ablauf; kein Empfänger in der Zeile).",
-    "schwere": "niedrig"
+    "screen": "Design/CardRow.swift:81,98-102 + Design/MerchantMark.swift:167-170 (BalanceCard, Detailkopf)",
+    "befund": "Wenn ich einen eigenen Gutschein ausgebe, trage ich bei 'Für wen?' z. B. 'Familie Weber' ein. IssueVoucherView.swift:100 speichert das in card.issuedTo. Aber die Listenzeile (CardRow.swift:98) UND der große Kopf auf der Detailseite (MerchantMark.swift:168) fragen beide card.owner ab, das bei ausgegebenen Gutscheinen immer leer bleibt. Der Empfänger ist also an keiner Stelle in der App zu sehen, außer wenn ich mir noch mal das geteilte Gutscheinbild ansehe. Auch VoiceOver liest ihn nicht vor (CardRow.swift:81 nutzt ebenfalls card.owner). Interessant: Models.swift:428-429 migriert beim Einlesen alter Backups sogar ausdrücklich owner nach issuedTo – der Code weiß also, dass issuedTo das richtige Feld ist, nur die Anzeige wurde beim Feldwechsel nie nachgezogen.",
+    "schwere": "hoch",
+    "vorschlag": "card.issuedTo (mit Fallback auf card.owner für alte Karten) an den drei Stellen anzeigen: CardRow.swift:81 und :98-102, MerchantMark.swift:168. Zusammen ein 10-Minuten-Fix, der meinen seit Runde 7 offenen Hauptwunsch endlich erfüllt."
    },
    {
-    "screen": "liste-ausgegeben-filter",
-    "befund": "Mit Filter „Ausgegeben“ zeigt das Radar darunter Douglas und Amazon, also Karten, die gar nicht im Filter sind, und die Guthabenkarte oben „1.300,00 €, 2 Gutscheine“. Für mich als Ladeninhaberin wirkt die Seite in dieser Ansicht widersprüchlich.",
-    "schwere": "niedrig"
+    "screen": "Features/Checkout/CheckoutView.swift:66 und KeypadView top():645",
+    "befund": "Beim Einlösen eines eigenen Café-Gutscheins fragt die App weiterhin nach 'Filiale' bzw. 'Filiale (für deinen Verlauf)'. Ich habe nur einen Standort, das Feld ist für mich bedeutungslos und ich würde lieber den Namen der Kundin eintragen können.",
+    "schwere": "niedrig",
+    "vorschlag": "Für issuedByMe-Karten das Feld in 'Kunde/Notiz' umbenennen oder ganz weglassen."
    },
    {
-    "screen": "Restwert/Features/Scan/ScanView.swift:457-461",
-    "befund": "Eigener Gutschein in einer Fotoreihe: die restlichen Fotos werden ohne Bilanz verworfen. Die Meldung sagt nur „Dein Gutschein: noch … offen“, nicht dass die übrigen Fotos nicht gelesen wurden.",
-    "schwere": "niedrig"
+    "screen": "Features/Bon/BonView.swift:20-40 (filteredLines/days) + RestwertKit/CardQueries.swift:31-34 (bonLines)",
+    "befund": "store.bonLines baut bei jedem Zugriff per flatMap über ALLE Karten samt ihrer Historie neu auf und sortiert neu; BonView.body ruft das über filteredLines() bei jedem Neuzeichnen auf (z. B. schon beim Wechsel des Zeitraum-Chips). Bei vielen ausgegebenen Gutscheinen mit mehreren Teileinlösungen (typisch für ein Café mit vielen kleinen Gutscheinen) wächst diese Arbeit mit jedem Bild.",
+    "schwere": "niedrig",
+    "vorschlag": "bonLines zwischenspeichern und nur neu berechnen, wenn store.cards sich ändert, statt bei jedem body-Aufruf neu zu berechnen."
    },
    {
-    "screen": "gross-ausgeben",
-    "befund": "XL: Teilen-Knopf unten angeschnitten, „oder drucken“ liegt am Rand.",
-    "schwere": "niedrig"
+    "screen": "Features/Issue/IssueVoucherView.swift:51-84 (Formular)",
+    "befund": "Das Ausgabe-Formular selbst ist für mich als Café-Besitzerin gut verständlich: Laden, Betrag, Empfänger optional, Gruß optional, gesetzliche Mindestlaufzeit vorausgefüllt. Keine neuen Probleme hier gefunden.",
+    "schwere": "niedrig",
+    "vorschlag": "-"
    }
   ],
-  "was_fehlt_zur_10": "Empfänger („für Familie Weber“) in der Zeile ausgegebener Gutscheine und ein Screenshot der Detailansicht eines ausgegebenen Gutscheins nach Teil-Einlösung mit Verlauf (ausgegeben am, an wen, eingelöst am/Betrag). Dazu der XL-Teilen-Knopf ganz sichtbar.",
+  "performance": [
+   "Features/Bon/BonView.swift:40 (filteredLines() im body) + RestwertKit/CardQueries.swift:31-34: bonLines wird bei jedem Neuzeichnen komplett neu aus allen Karten und ihrer Historie gebaut und sortiert, statt zwischengespeichert zu werden."
+  ],
+  "codequalitaet": [
+   "Design/CardRow.swift:81/98 und Design/MerchantMark.swift:168 lesen card.owner, obwohl Features/Issue/IssueVoucherView.swift:100 und der Migrations-Code in Models.swift:428-429 klar zeigen, dass issuedTo das für ausgegebene Gutscheine zuständige Feld ist – zwei parallele, nicht synchronisierte Felder für denselben Zweck (owner vs. issuedTo)."
+  ],
+  "was_fehlt_zur_10": "card.issuedTo endlich in CardRow.swift und MerchantMark.swift (BalanceCard) statt card.owner anzeigen, inklusive VoiceOver-Text – das ist mein seit Runde 7 unveränderter Hauptwunsch. Dazu ein Screenshot des Einlöse-Verlaufs (CardBon) für einen teilweise eingelösten Café-Gutschein, sobald der Simulator wieder frei ist.",
   "wuerde_nutzen": true,
   "nps": 8
  },
@@ -1076,7 +1225,7 @@
   "scores": {
    "gesamt": 9,
    "scan": 10,
-   "barcode_kasse": 10,
+   "barcode_kasse": 9,
    "login_sperre": 9,
    "verstaendlichkeit": 9,
    "vertrauen": 9,
@@ -1091,52 +1240,51 @@
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Teilen aus Fotos direkt an Restwert ist genau mein Weg: Screenshot, teilen, fertig. Und auf dem Start drücke ich bei der Karte, die bald abläuft, sofort „An der Kasse zeigen“, ohne erst ins Detail. Nervig: Nach dem Teilen muss ich Restwert noch selbst öffnen, und meine zwei alten Kleinigkeiten sind wieder genau gleich.",
+  "erster_eindruck": "Der Einstieg lässt sich mit 'Überspringen' in einem Tipp zur letzten Seite springen, und die kleinen Animationen blockieren nie den 'Weiter'-Knopf – ich kann so schnell tippen, wie ich will. Screenshot rein, 'Speichern' – fertig, kein Formular, das mich aufhält. Von meinen zwei alten Kleinigkeiten ist die nervigere (Abbrechen mitten im Fotostapel) jetzt weg, die andere zwei stehen aber immer noch genauso da wie in Runde 9.",
   "behoben": [
-   "„Abbrechen“ im Stapel beendet die Reihe sauber mit Bilanz, kein „Foto 3 von 5“ mehr beim nächsten Einzel-Import (Restwert/Features/Scan/ScanView.swift:311-321)",
-   "Zähler werden bei neuer Mehrfachauswahl zurückgesetzt (ScanView.swift:191)",
-   "Ein Tipp vom Start zur Kasse: Knopf „An der Kasse zeigen“ bzw. „Code einlösen“ unter jeder bald ablaufenden Karte (start, start-bestand)"
+   "'Abbrechen' mitten im Fotostapel setzt den Stapel jetzt wirklich zurück: der Rest zählt als übersprungen, batch wird geleert und die Bilanz erscheint sofort – vorher blieb 'Foto 3 von 5' hängen und ein danach importierter Mail-Text zeigte fälschlich 'Überspringen – nächstes Foto' (ios/Restwert/Features/Scan/ScanView.swift:309-320, vgl. vorher 308-313)",
+   "Doppelter Überspringen-Knopf bei einer Dublette in einer Fotoreihe entfernt: 'Erneut scannen' erscheint jetzt nur noch einzeln, nicht mehr zusätzlich zum bereits oben stehenden Überspringen-Knopf (ios/Restwert/Features/Scan/ScanView.swift:333-340)"
   ],
   "offen": [
-   "„„Douglas“ gespeichert – Ansehen“ verdeckt im Ruhezustand weiter „Von Hand eingeben“ und die zweite Zeile von „Aus einer Datei“ (gespeichert-im-tab), jetzt die dritte Runde",
-   "Letztes Foto im Stapel übers Formular gespeichert: der Toast „… gespeichert – Ansehen“ (ScanView.swift:166) wird sofort von der Bilanz ohne „Ansehen“ ersetzt (ScanView.swift:422)"
+   "„„Douglas“ gespeichert – Ansehen“ verdeckt im Ruhezustand von 'Hinzufügen' weiterhin 'Von Hand eingeben' und die zweite Zeile von 'Aus einer Datei' – der Toast hängt fest unten (RestwertApp.swift:208-217, .padding(.bottom, 96)), unverändert seit Runde 9",
+   "Letztes Foto im Stapel übers Formular gespeichert: Der 'gespeichert – Ansehen'-Toast wird sofort von der Bilanz-Meldung (undo: nil, kein 'Ansehen') überschrieben – ich kann den gerade gespeicherten Gutschein nicht mehr direkt öffnen (ios/Restwert/Features/Scan/ScanView.swift:159-167 → 394-405), unverändert seit Runde 9"
   ],
   "befunde": [
    {
-    "screen": "teilen-erweiterung / teilen-ergebnis",
-    "befund": "Schritt 3 verspricht „Prüfen und mit einem Tipp speichern.“ (RestwertShare/ShareViewController.swift:205), aber der geteilte Krustenzauber-Gutschein landet bei „Gelesen – bitte prüfen“ mit „Hinzufügen“ und Formular. Das Versprechen stimmt nur für sicher erkannte Gutscheine.",
-    "schwere": "niedrig"
+    "screen": "ios/Restwert/App/AppIntents.swift:208-223, ios/Restwert/App/RestwertApp.swift:107-111, ios/RestwertWidget/RestwertWidget.swift:183,220",
+    "befund": "Widget-Tipp, 'Gutschein öffnen' per Siri/Kurzbefehl und die widgetURL restwert://card/<id> springen alle nur zur Kartendetailseite (showCard setzt homePath=[.card(id)]). Für 'schnell an die Kasse' brauche ich von da noch einen zweiten Tipp auf 'An der Kasse zeigen' (CardDetailView.swift:103-107) – vom Homescreen-Widget bis zum Barcode sind das 2 Tipps statt 1.",
+    "schwere": "niedrig",
+    "vorschlag": "Eigenen Deep-Link/Intent für die Kasse ergänzen (z. B. restwert://checkout/<id>, in openImport(url:) behandelt) und im Widget oder als zweiten Kurzbefehl 'An der Kasse zeigen' anbieten."
    },
    {
-    "screen": "teilen-erweiterung",
-    "befund": "Nach dem Teilen sind es noch zwei Schritte (Fertig, Restwert selbst öffnen). Laut Protokoll dürfen Erweiterungen die App nicht öffnen; die Mitteilung „Gutschein bereit zum Prüfen“ ist im Simulator nicht per Screenshot belegt.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "Restwert/Features/Scan/ScanView.swift:166, 422",
-    "befund": "Nach dem letzten Foto überschreibt die Bilanz den „Ansehen“-Toast; der Sprung zum gerade gespeicherten Gutschein fehlt.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "gespeichert-im-tab",
-    "befund": "Die Gespeichert-Meldung deckt Zeilen im Hinzufügen-Tab ab.",
-    "schwere": "niedrig"
+    "screen": "ios/Restwert/Features/Scan/ScanResultView.swift:426-432",
+    "befund": "warningTexts legt bei jedem Aufruf eine komplette, sofort wieder verworfene ScanResultView-Instanz an, nur um die eigentlich reine Funktion checks(draft:merchant:) aufzurufen. Passiert bei jedem Scan-Ergebnis (ScanView.swift:352, 358) zusätzlich zum eigentlichen View-Body.",
+    "schwere": "niedrig",
+    "vorschlag": "checks(...) als freie Funktion/static auf CardDraft oder ScanOutcome verschieben, statt sie über eine Wegwerf-View aufzurufen."
    }
   ],
-  "was_fehlt_zur_10": "Eine Gespeichert-Meldung, die nichts verdeckt, „Ansehen“ auch in der Bilanz, und im Teilen-Blatt kein Versprechen „mit einem Tipp“, wenn danach doch das Formular kommt (oder eine sichtbar belegte Mitteilung, die direkt in die Prüfung führt).",
+  "performance": [
+   "Onboarding-Karten (WelcomePage-Ticket, CollectPage, RemindPage, FirstCardPage) werfen ihren Schatten jetzt auf die deckende Hintergrundfläche statt per .compositingGroup().shadow() auf die ganze animierte/zählende Gruppe (ios/Restwert/Design/Theme.swift cardSurface, ios/Restwert/Features/Onboarding/OnboardingView.swift z. B. Zeilen 320-327 Ticket, 366-371 CollectPage) – genau das teure Muster 'Schatten auf großer animierter Gruppe', das bei jedem Zähler-Frame neu weichgezeichnet werden müsste, ist damit behoben.",
+   "Die Stepper in OnboardingView (Zeilen 275, 374, 438, 479) blockieren 'Weiter'/'Überspringen' nie – Seitenwechsel ist unabhängig von den Millisekunden-Schritten, ich kann beliebig schnell durchtippen (Summe der Schritte je Seite: Seite 1 ≈1550 ms, Seite 2 ≈470 ms, Seite 3 ≈1200 ms, Seite 4 ≈290 ms, aber rein kosmetisch)."
+  ],
+  "codequalitaet": [
+   "ScanResultView.swift:430 baut für warningTexts eine ScanResultView nur als Umweg zu checks(...); siehe Befund oben.",
+   "Inaktive Onboarding-Seiten werden jetzt per Papier-Schleier (.overlay mit Color.page) statt .opacity gedimmt (OnboardingView.swift:176-183) – vermeidet, dass SwiftUI die ganze Seite inkl. Schatten für die Opacity in eine Zwischenebene zwingt; guter, gut kommentierter Trade-off."
+  ],
+  "was_fehlt_zur_10": "Die beiden alten Kleinigkeiten beim Mehrfach-Speichern (Ansehen-Toast verschwindet am Stapelende, Toast verdeckt Zeilen im Hinzufügen-Tab) endlich fixen, und vom Widget/Siri aus mit einem Tipp direkt an die Kasse statt erst zur Detailseite kommen – dann geht wirklich alles in Sekunden.",
   "wuerde_nutzen": true,
   "nps": 10
  },
  {
   "persona": "Tobias, 39, Tech-Journalist, schreibt ein App-Review für ein Online-Magazin (simulierte Persona)",
   "gruppe": "Fachleute",
-  "fokus": "Gesamtqualität, Ehrlichkeit der Erkennung, Datenschutz, Sicherheitsmodell, Details",
+  "fokus": "Gesamtqualität, Ehrlichkeit der Erkennung (SmartExtractor), Datenschutz, Sicherheitsmodell, Startzeit/Performance beim App-Start, Einstieg (Onboarding)",
   "scores": {
    "gesamt": 9,
    "scan": 9,
    "barcode_kasse": 9,
    "login_sperre": 9,
-   "verstaendlichkeit": 9,
+   "verstaendlichkeit": 8,
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
@@ -1149,52 +1297,42 @@
    "vertrauen": 9,
    "barrierefreiheit": 8
   },
-  "erster_eindruck": "Den Stapel-Zustand hat das Team diesmal ordentlich aufgeräumt: Abbrechen, neue Auswahl und eigener Gutschein beenden die Reihe jetzt ausdrücklich. Die Teilen-Erweiterung mit „Bleibt auf diesem Gerät. Nichts wird hochgeladen.“ ist ein echtes Review-Argument. Beim Gegenlesen finde ich aber den nächsten stillen Verlust, diesmal beim Teilen, und das iPad-Start ist unverändert.",
-  "behoben": [
-   "cancelReading() beendet die Reihe: Rest zählt als übersprungen, danach Bilanz (Restwert/Features/Scan/ScanView.swift:311-321)",
-   "onChange(photoItems) setzt batchSaved/batchSkipped/batchUnreadable zurück (ScanView.swift:191)",
-   "Eigener Café-Gutschein in einer Reihe setzt den ganzen Stapel-Zustand zurück (ScanView.swift:457-458)",
-   "Startseite: beim Scrollen ist keine Tab-Leiste mehr über dem Radar, Radar mit eindeutiger Zeitachse bis Jahresende (start-bestand-unten)",
-   "Datenschutz der Teilen-Erweiterung ausdrücklich genannt: „Bleibt auf diesem Gerät. Nichts wird hochgeladen.“, geteilte Kopie wird nach dem Lesen gelöscht (teilen-erweiterung; ScanView.swift:432)"
-  ],
+  "erster_eindruck": "Der Einstieg wirkt diesmal ruhiger: die Karten-Animation auf Seite 1 zählt weich hoch, ohne dass ich ein Stottern sehe – im Diff sehe ich auch gleich, warum: die Schatten liegen jetzt auf der Fläche statt per compositingGroup() auf dem ganzen (sich ändernden) Inhalt, genau das teure Muster, vor dem ich in jedem Performance-Review warne. Für diese Ausgabe habe ich tiefer gegraben, wie ehrlich die KI-Erkennung wirklich ist – und bin positiv überrascht: Es gibt tatsächlich eine harte Gegenprobe gegen den erkannten Text, nicht nur ein Prompt-Versprechen. Sicherheitsmodell und Verschlüsselung sind ebenfalls vorbildlich dokumentiert und umgesetzt. Einen echten Kritikpunkt finde ich erst beim genauen Nachvollziehen des „Wiederherstellen“-Wegs im letzten Onboarding-Schritt.",
+  "behoben": [],
   "offen": [
-   "iPad-Start: Wortmarke links am Rand, Suchfeld über volle Breite, Inhalt in der 700-pt-Spalte (ipad-start; bekannte Grenze)",
-   "Bilanz-Toast ersetzt beim letzten Foto den „Ansehen“-Toast (ScanView.swift:166, 422)",
-   "Kein Wallet-Pass (bekannte Grenze)"
+   "Tab-Leiste überlappt die Radar-Unterkante auf „Start“ (unverändert, HomeView.swift nicht Teil dieses Branches)",
+   "iPad-Start: Wortmarke links am Rand, Suchfeld über volle Breite statt in der 700-pt-Spalte (unverändert)",
+   "Kein Wallet-Pass (kein PassKit/PKAddPassesViewController im Code, weiter bekannte Grenze)"
   ],
   "befunde": [
    {
-    "screen": "Restwert/Features/Scan/ScanView.swift:384-392",
-    "befund": "consumeSharedBatch(): Kommt eine Teilen-Übergabe, während ein ungespeichertes Einzel-Ergebnis aus Datei, Mail-Text oder Kamera auf dem Schirm steht (batchTotal == 0), gilt das als „nicht laufend“. Dann setzt outcome = nil das Ergebnis ohne die sonst übliche Rückfrage „Ergebnis verwerfen?“ zurück. Das ist der nächste stille Verlust, diesmal über das Teilen-Menü.",
-    "schwere": "mittel"
+    "screen": "Features/Onboarding/OnboardingView.swift:114-117, 474, 483-500 (restore())",
+    "befund": "Tippt man auf „Wiederherstellen“, setzt restore() nur cloud.isEnabled = true und springt sofort auf den Start (onFinish(.browse)) – ohne jede Rückmeldung, dass gerade synchronisiert wird. Ein Sync-Status existiert nur in SettingsView (grep zeigt CloudSync.State nirgendwo in Features/Home). Ein zurückkehrender Nutzer mit echten Gutscheinen in iCloud landet also erstmal auf einem leeren oder Beispiel-Start und muss selbst wissen, dass er in die Einstellungen schauen soll, um zu sehen, ob/dass etwas passiert. Für den wichtigsten Vertrauensmoment des Einstiegs (\"meine echten Gutscheine sind noch da\") ist das zu leise.",
+    "schwere": "mittel",
+    "vorschlag": "Kurzer Toast/Spinner „Wird synchronisiert …“ beim Wechsel auf Start nach restore(), z. B. über router.showUndo-ähnlichen Toast oder ein dezentes Banner, solange cloud.state == .syncing."
    },
    {
-    "screen": "Restwert/Features/Scan/ScanView.swift:457-461",
-    "befund": "Eigener Gutschein in einer Reihe: der Stapel wird zwar zurückgesetzt, aber ohne Bilanz. Übrige Fotos verschwinden ohne Hinweis.",
-    "schwere": "niedrig"
+    "screen": "Features/Onboarding/OnboardingView.swift:470-473, 503-527 (option()) und 474, 483-500 (restoreLink)",
+    "befund": "Auf der letzten Seite steuert `shown` (aus dem Stepper, step >= 1/2) nur .opacity und .offset der Buttons „Gutschein scannen“, „Code eintippen“ und „Wiederherstellen“ – anders als beim „Überspringen“-Knopf im Header (Zeile 60-62), der zusätzlich .disabled(...) und .accessibilityHidden(...) passend zum Sichtzustand bekommt. Solange `shown` false ist, bleiben die Buttons trotzdem antippbar und für VoiceOver erreichbar, nur unsichtbar/leicht versetzt positioniert. In der kurzen Stepper-Verzögerung (150/140 ms) könnte ein schneller Tipper oder ein VoiceOver-Nutzer, der sofort weiterswipt, eine Aktion auslösen, bevor sie sichtbar ist.",
+    "schwere": "niedrig",
+    "vorschlag": "Analog zum Header .disabled(!shown) und .accessibilityHidden(!shown) auf option() und restoreLink ergänzen."
    },
    {
-    "screen": "Restwert/Features/Home/HomeView.swift:31-50",
-    "befund": "Radar steht unter der vollständigen Liste und reagiert nicht auf Filter (unter „Ausgegeben“ zeigt er Douglas/Amazon, liste-ausgegeben-filter). Für kleine Bestände gut, für große ein weiter Weg.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "gross-kasse, start-bestand-unten",
-    "befund": "Die Screenshot-Reihe übernimmt Daten aus früheren Aufnahmen: gross-kasse zeigt die Testkarte „Stadler RADAR11“ ohne PIN, der XL-Knopf „PIN anzeigen“ aus Runde 9 ist damit diesmal nicht belegt. start-bestand-unten zeigt einen anderen Bestand als start-bestand.",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "teilen-erweiterung",
-    "befund": "„Prüfen und mit einem Tipp speichern.“ verspricht mehr, als der Beispiel-Gutschein hält (teilen-ergebnis: „Gelesen – bitte prüfen“, Formular).",
-    "schwere": "niedrig"
-   },
-   {
-    "screen": "teilen-blatt",
-    "befund": "Systemtexte „1 Photo Selected“ und „Use as Wallpaper“ auf Englisch (Simulator-Sprache, nicht die App), wirkt auf einem Review-Screenshot unsauber.",
-    "schwere": "niedrig"
+    "screen": "Services/SmartExtractor.swift:22-42",
+    "befund": "Die Datei behauptet in der Anweisung an das Modell nur „Übernimm nur Angaben, die wirklich im Text stehen. Erfinde nichts.“ – das ist ein Prompt, kein Beweis. Die eigentliche Ehrlichkeits-Garantie (Gegenprobe jedes Feldes gegen den Originaltext: onOneLine/amountAppears/percentAppears/dateAppears) liegt vollständig in ScanDraft.merge (RestwertKit/ScanDraft.swift:10-36) und wird von SmartExtractor.swift mit keinem Kommentar referenziert. Wer künftig SmartExtractor.extract() an einer neuen Stelle direkt verwendet (z. B. ohne über ScanOutcome.draft zu gehen), verliert die Prüfung stillschweigend – aktuell tun das alle Aufrufer richtig (Importer.swift, ScanView.swift, LiveScannerView.swift gehen alle über `draft`), aber das ist nirgends erzwungen oder dokumentiert.",
+    "schwere": "niedrig",
+    "vorschlag": "Kommentar in SmartExtractor.swift ergänzen: „Die Gegenprobe gegen den Text passiert in ScanDraft.merge, nicht hier – extract() liefert ungeprüfte Rohfelder.“ Optional: CardDraft/VoucherFields so kapseln, dass er nur über merge() erreichbar ist."
    }
   ],
-  "was_fehlt_zur_10": "Stapel und Teilen-Übergabe an einer Stelle zentral führen: eine Übergabe darf ein offenes Einzel-Ergebnis nicht still verwerfen, und ein eigener Gutschein in der Reihe sollte eine Bilanz bekommen. Dazu ein iPad-Start mit bündiger Suchleiste in der Lesespalte, konsistente Screenshot-Bestände (PIN an der XL-Kasse wieder belegt) und für den Konkurrenzvergleich ein Wallet-Pass.",
+  "performance": [
+   "Positiv, genau mein Fokus diese Runde: Der Diff auf diesem Branch ersetzt in OnboardingView.swift (WelcomePage:318-325, CollectPage:366-369, RemindPage:402-405/428-431, FirstCardPage:517-520) .compositingGroup().shadow(...) auf sich änderndem Inhalt durch Shadow.card auf der reinen Hintergrundfläche (neues cardSurface() in Design/Theme.swift:362-372). Genau das vermeidet, dass der tickende Betragszähler (WelcomePage, TimelineView mit bis zu 120 Hz) jedes Bild eine komplette Offscreen-Rasterisierung samt Weichzeichnung der ganzen Karte auslöst – vorher lag der Schatten auf derselben Gruppe wie der sich ändernde Text.",
+   "App/RestwertApp.swift + App/Store.swift: Store() wird synchron im App-Init erzeugt und lädt synchron restwert.json (Store.swift:92-121) – bewusst klein gehalten, weil Fotos separat und asynchron über loadPhotos()/PhotoFiles nachgeladen werden (Store.swift:136-146, io-Queue). WidgetBridge.update (App/WidgetBridge.swift:37-73) läuft komplett auf einer Utility-Queue und schreibt nur bei echter Änderung (Fingerprint-Vergleich Zeile 62-66) – kein unnötiges reloadAllTimelines(). Für den Kaltstart selbst kein teures synchrones Muster gefunden."
+  ],
+  "codequalitaet": [
+   "RestwertKit/ScanDraft.swift:10-36 (merge) ist vorbildlich: jedes KI-Feld (Shop, Betrag, Prozent, PIN, Datum, Code) wird einzeln gegen den erkannten Text geprüft, bevor es in den Entwurf darf – das ist die eigentliche Antwort auf „wird KI-Ausgabe gegen den Text geprüft?“, nur eben nicht in SmartExtractor.swift selbst sichtbar (siehe Befund oben).",
+   "Services/SmartExtractor.swift:51 begrenzt KI-Beträge hart auf 5000 €, während RestwertKit/Models.swift:541 maxMoney = 100.000 für regulär eingegebene Beträge erlaubt – bewusst engere Grenze für KI-Schätzungen, sinnvoll, aber ohne Kommentar, warum die Zahl von maxMoney abweicht."
+  ],
+  "was_fehlt_zur_10": "Sichtbare Rückmeldung während/nach „Wiederherstellen“ im Onboarding, die Sicht-/Interaktionslogik der letzten Onboarding-Seite konsequent wie im Header (disabled+accessibilityHidden) durchziehen, und die Text-Gegenprobe der KI-Erkennung als Garantie direkt in SmartExtractor.swift dokumentieren statt sie implizit in ScanDraft.merge zu verstecken. Dazu weiter: Tab-Leiste/Radar auf dem Start, iPad-Layout, Wallet-Pass.",
   "wuerde_nutzen": true,
   "nps": 9
  }

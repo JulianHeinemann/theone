@@ -26,7 +26,7 @@ struct PrivacyPolicyView: View {
             "Restwert hat kein Konto und keinen eigenen Server. Die App enthält keine Tracker, keine Analyse- und keine Werbe-Software. Wir erfahren nicht, welche Gutscheine du hast.",
         ]),
         LegalSection(title: "Auf deinem \(Device.name)", paragraphs: [
-            "Gutscheine, Fotos, PINs, Einlösungen und Testergebnisse liegen in einer Datei im Bereich der App. iOS verschlüsselt sie, solange das \(Device.name) gesperrt ist.",
+            "Gutscheine, Fotos, PINs, Einlösungen und Kassen-Tests liegen in einer Datei im Bereich der App. iOS verschlüsselt sie, solange das \(Device.name) gesperrt ist.",
             "Für das Widget legt die App eine kurze Übersicht (Name, Betrag, Ablaufdatum – keine Codes, keine PINs) in einem gemeinsamen Ordner von App und Widget auf demselben Gerät ab.",
             "Was du über „Teilen“ an Restwert gibst (Foto, PDF, markierter Mail-Text), liegt bis zum nächsten Öffnen der App in diesem gemeinsamen Ordner auf deinem Gerät; die App holt es dann ab und löscht es dort. Nichts davon wird hochgeladen.",
             "Stellst du als Laden eigene Gutscheine aus, speichert Restwert Empfänger und Gruß beim jeweiligen Gutschein – wie alle Gutscheindaten auf deinem Gerät, in deinem Export und (falls eingeschaltet) verschlüsselt in deinem iCloud-Sync; dazu im Gutscheinbild, das du selbst teilst.",

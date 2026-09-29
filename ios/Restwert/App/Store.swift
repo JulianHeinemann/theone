@@ -180,6 +180,8 @@ final class Store {
             target = fileURL.appendingPathExtension("\(stamp).broken")
         }
         try fm.copyItem(at: fileURL, to: target)
+        // Die Kopie enthält Codes und PINs: ausdrücklich dieselbe Schutzklasse wie das Original.
+        try fm.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: target.path)
     }
 
     nonisolated private static let io = DispatchQueue(label: "de.restwert.store.io", qos: .userInitiated)
@@ -616,13 +618,6 @@ final class Store {
         else { return nil }
         let url = URL.temporaryDirectory.appending(path: "Restwert-Sicherung-\(Date.now.formatted(.iso8601.year().month().day())).restwert.json")
         return (try? data.write(to: url, options: .completeFileProtection)).map { url }
-    }
-
-    /// Lesbare Liste für Tabellen (ohne PINs), Excel-tauglich mit deutschen Zahlen.
-    func csvFile() -> URL? {
-        let url = URL.temporaryDirectory.appending(path: "Restwert-Gutscheine.csv")
-        let text = CardQueries.csv(cards, warnDays: warnDays)
-        return (try? Data(("\u{FEFF}" + text).utf8).write(to: url)).map { url }
     }
 
     /// Sicherung einspielen; neuere Stände gewinnen, nichts wird doppelt angelegt. Hier bereits entfernte Gutscheine
