@@ -211,6 +211,9 @@ struct SettingsView: View {
                 } label: {
                     Label("So schützt Restwert deine Daten", systemImage: "lock.shield")
                 }
+                Link(destination: URL(string: "https://julianheinemann.github.io/theone/support.html")!) {
+                    Label("Hilfe & Kontakt", systemImage: "questionmark.circle")
+                }
                 NavigationLink {
                     PrivacyPolicyView()
                 } label: {

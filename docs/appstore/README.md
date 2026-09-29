@@ -31,7 +31,7 @@ Die Seiten liegen in `site/` und werden vom Workflow „Webseite“ veröffentli
 
 ## Werbetext (170)
 
-Kein Gutschein verfällt mehr: Restwert zeigt, was noch drauf ist, erinnert vor dem Ablauf und zeigt den Code an der Kasse groß. Ohne Konto, ohne Tracker.
+Kein Gutschein verfällt mehr: Restwert zeigt, was noch drauf ist, erinnert vor dem Ablauf und zeigt den Code an der Kasse groß. Kein Konto nötig, keine Tracker.
 
 ## Beschreibung (4000)
 
@@ -54,7 +54,7 @@ RECHTZEITIG ERINNERT
 Vor dem Ablauf bekommst du eine Mitteilung. Wann, stellst du selbst ein. Ohne Spam, versprochen.
 
 DEINE DATEN BLEIBEN BEI DIR
-• Kein Konto, keine Werbung, keine Tracker
+• Kein Konto nötig – optional „Mit Apple anmelden“, nur auf deinem Gerät; keine Werbung, keine Tracker
 • Kein Server von uns: Wir sehen deine Gutscheine nie
 • Texterkennung läuft auf dem iPhone
 • Optionaler iCloud-Sync, vorher auf dem iPhone verschlüsselt
@@ -68,7 +68,7 @@ AUSSERDEM
 
 ## Stichwörter (100)
 
-`gutschein,geschenkkarte,guthaben,rabattcode,restguthaben,ablauf,erinnerung,stadtgutschein,wallet`
+`geschenkkarte,guthaben,rabattcode,restguthaben,ablauf,erinnerung,stadtgutschein,coupon,barcode,rückseite`
 
 ## Neu in dieser Version
 
@@ -96,7 +96,7 @@ In `Restwert-Info.plist` steht `ITSAppUsesNonExemptEncryption = NO`. Die App nut
 
 ## Hinweise für die Prüfung (App Review Information)
 
-- Anmeldung: nicht nötig, die App hat kein Konto.
+- Anmeldung: nicht nötig. „Mit Apple anmelden“ ist optional (Einstieg Seite 4 mit „Später“ überspringbar, Einstellungen → Konto), legt kein Server-Konto an und fragt nur den Namen ab; Kennung und Name bleiben auf dem Gerät. „Abmelden“ bzw. „Alles löschen“ entfernen sie – daher keine Kontolöschung nach 5.1.1(v) nötig. Alle Funktionen gehen ohne Anmeldung.
 - Beim ersten Start zeigt die App Beispiel-Gutscheine. Damit lassen sich alle Funktionen ohne eigene Daten ausprobieren (Detail, „An der Kasse zeigen“, Einkauf abziehen, Verfallsradar).
 - Scannen braucht eine Kamera. Alternativ „Hinzufügen → Aus dem Text einer E-Mail“ mit z. B. „Thalia Gutschein 25,00 € Code 6300981274561234 gültig bis 31.12.2027“.
 - iCloud-Sync ist optional und in den Einstellungen abschaltbar.
@@ -104,7 +104,7 @@ In `Restwert-Info.plist` steht `ITSAppUsesNonExemptEncryption = NO`. Die App nut
 
 ## Vor dem Einreichen – nur du
 
-1. **Apple-Konto:** App-ID `de.restwert.app` mit iCloud (Container `iCloud.de.restwert.app`) und App Groups (`group.de.restwert.app`); Widget-ID `de.restwert.app.widget` mit derselben App-Gruppe. Am einfachsten in Xcode unter „Signing & Capabilities“ das Team wählen und die Häkchen setzen.
+1. **Apple-Konto:** App-ID `de.restwert.app` mit iCloud (Container `iCloud.de.restwert.app`), App Groups (`group.de.restwert.app`) und „Sign in with Apple“; Widget-ID `de.restwert.app.widget` und Teilen-Erweiterung `de.restwert.app.share` mit derselben App-Gruppe. CloudKit-Schema in die Produktion übernehmen. Am einfachsten in Xcode unter „Signing & Capabilities“ das Team wählen und die Häkchen setzen.
 2. **CloudKit-Schema:** Einmal eine Debug-Version mit eingeschaltetem Sync laufen lassen, dann im CloudKit-Dashboard (icloud.developer.apple.com) das Schema von „Development“ nach **„Production“ deployen**. Ohne diesen Schritt funktioniert der Sync in der Store-Version nicht.
 3. **Impressum und Kontakt:** `[Name]`, `[Anschrift]`, `[E-Mail]` ersetzen – in `site/impressum.html`, `site/datenschutz.html`, `site/support.html` und in der App (`ios/Restwert/Features/Settings/LegalView.swift`).
 4. **Händlerstatus (DSA):** In App Store Connect angeben. Wer die App verkauft oder als Unternehmer anbietet, gilt als „Trader“; Anschrift, Telefon und E-Mail werden dann im Store angezeigt.

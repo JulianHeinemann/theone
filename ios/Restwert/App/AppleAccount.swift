@@ -3,8 +3,9 @@ import AuthenticationServices
 import Security
 
 /// Optionale Anmeldung mit Apple – nur ein Profil auf diesem Gerät, kein Konto bei uns und kein Server.
-/// Gespeichert werden die anonyme Apple-Nutzerkennung (Schlüsselbund, nur dieses Gerät) und Name/E-Mail,
-/// die Apple nur bei der allerersten Anmeldung mitliefert. Gutscheine bleiben auf dem Gerät und im eigenen iCloud.
+/// Gespeichert werden die anonyme Apple-Nutzerkennung (Schlüsselbund, nur dieses Gerät) und der Vorname
+/// (App-Einstellungen), den Apple nur bei der allerersten Anmeldung mitliefert. Ältere Stände hatten die E-Mail;
+/// sie wird noch angezeigt, falls vorhanden, aber nicht mehr angefragt. Gutscheine bleiben auf dem Gerät und im eigenen iCloud.
 @Observable
 final class AppleAccount {
     static let shared = AppleAccount()
@@ -34,9 +35,10 @@ final class AppleAccount {
         email = UserDefaults.standard.string(forKey: Self.emailKey) ?? ""
     }
 
-    /// Anfrage für den „Mit Apple anmelden“-Knopf: Name und E-Mail (Apple zeigt sie nur beim ersten Mal an).
+    /// Anfrage für den „Mit Apple anmelden“-Knopf: nur der Name (für die Begrüßung). Keine E-Mail –
+    /// Restwert schreibt niemandem und braucht sie nicht (Datensparsamkeit).
     func configure(_ request: ASAuthorizationAppleIDRequest) {
-        request.requestedScopes = [.fullName, .email]
+        request.requestedScopes = [.fullName]
     }
 
     func handle(_ result: Result<ASAuthorization, any Error>) {

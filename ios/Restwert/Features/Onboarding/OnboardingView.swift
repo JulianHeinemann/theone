@@ -524,7 +524,7 @@ private struct AccountPage: View {
 
     private let benefits: [(icon: String, title: String, text: String)] = [
         ("faceid", "Ein Blick, fertig", "Face ID statt Passwort – nichts zu merken."),
-        ("envelope.badge.shield.half.filled", "E-Mail bleibt privat", "Auf Wunsch siehst du nur eine Apple-Weiterleitung."),
+        ("hand.raised", "Nur dein Vorname", "Keine E-Mail, kein Profil – nur für die Begrüßung."),
         ("lock.shield", "Gutscheine bleiben bei dir", "Auf dem Gerät und in deinem iCloud – nicht bei uns."),
     ]
 

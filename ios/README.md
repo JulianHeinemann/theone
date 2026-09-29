@@ -30,20 +30,20 @@ Mit kostenlosem Account läuft die App 7 Tage, danach einfach erneut aus Xcode s
 - **An der Kasse**: großer Barcode, Helligkeit automatisch auf Maximum, Kassentest (geklappt/abgelehnt).
 - **Ablauf-Radar**: Punkte auf Ringen (30 T, 90 T, 6 M, 1 J), Größe = Restwert, darunter Zeitstrahl nach Monaten.
 - **Verlauf (Bon)**: alle Einlösungen über alle Gutscheine mit Summe, antippbar.
-- **Einstellungen**: Konto und Sync, Sortierung (Ablaufdatum, Wert, Shop), Warnfrist in Tagen, Erinnerungen 30/7 Tage vorher, Export.
+- **Einstellungen**: optional „Mit Apple anmelden“ (nur lokal), iCloud-Sync, Sortierung (Ablaufdatum, Wert, Shop), Warnfrist in Tagen, Erinnerungen 30/7 Tage vorher, Export.
 
 Daten liegen auf dem Gerät (`Application Support/restwert.json`, Dateischutz `completeFileProtection`).
-Mit Konto werden sie über die Restwert-API (Railway) synchronisiert, ohne Fotos und PINs.
+Mit iCloud-Sync gehen sie Ende-zu-Ende verschlüsselt in die private CloudKit-Datenbank des Nutzers, ohne Fotos; PINs nur in den iCloud-Schlüsselbund. Kein eigener Server.
 
 ## Projekt
 
 ```
 ios/
 ├── Restwert/                 App (synchronisierter Ordner, neue Dateien erscheinen automatisch)
-│   ├── App/                  Einstieg, Navigation, Store, Konto + Sync
+│   ├── App/                  Einstieg, Navigation, Store, Apple-Anmeldung + iCloud-Sync
 │   ├── Design/               Farben, Bausteine, Ordnerkarte
 │   ├── Services/             Vision-Import, Apple Intelligence, Barcode-Darstellung
-│   └── Features/             Home, Radar, Detail, Kasse, Verlauf, Händler, Einstellungen, Scan, Formular, Login
+│   └── Features/             Home, Radar, Detail, Kasse, Verlauf, Händler, Einstellungen, Scan, Formular, Onboarding
 └── Packages/RestwertKit/     Modelle, Textparser, Barcode-Kodierung, Sync-Logik – mit Swift-Testing-Tests
 ```
 

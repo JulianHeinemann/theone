@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 import UIKit
 import UserNotifications
 import RestwertKit
@@ -8,6 +9,7 @@ import RestwertKit
 /// Fotos als eigene Dateien daneben (`photos/<id>.jpg`).
 @Observable
 final class Store {
+    private nonisolated static let log = Logger(subsystem: "de.restwert.app", category: "store")
     private(set) var cards: [GiftCard] = []
     private(set) var tests: [TestResult] = []
     /// Letzter Fehler beim Speichern, als Hinweis für die Oberfläche (z. B. Toast). Bleibt gesetzt, solange das
@@ -99,7 +101,7 @@ final class Store {
         do {
             data = try Data(contentsOf: fileURL)
         } catch {
-            print("Restwert: Datei noch nicht lesbar, später erneut:", error)
+            Self.log.notice("Datei noch nicht lesbar, später erneut: \(error.localizedDescription, privacy: .public)")
             retryWhenUnlocked()
             return
         }
@@ -114,7 +116,7 @@ final class Store {
             loadPhotos()
         } else {
             // Nicht dekodierbar: ohne Beispiele leer starten, Original bleibt als .broken-Kopie erhalten.
-            print("Restwert: Datei nicht lesbar, wird vor dem nächsten Speichern gesichert")
+            Self.log.error("Datei nicht lesbar, wird vor dem nächsten Speichern gesichert")
             keepCopyBeforeWrite = true
         }
         finishLoad()
@@ -208,7 +210,7 @@ final class Store {
                 keepCopyBeforeWrite = false
             } catch {
                 // Original nicht überschreiben, solange es keine Kopie gibt; beim nächsten Speichern erneut versuchen.
-                print("Restwert: Sicherungskopie fehlgeschlagen:", error)
+                Self.log.error("Sicherungskopie fehlgeschlagen: \(error.localizedDescription, privacy: .public)")
                 saveError = "Deine Änderung ist noch nicht gespeichert. Restwert versucht es gleich noch einmal."
                 scheduleRetry()
                 scheduleSideEffects(pins: true)
@@ -237,7 +239,7 @@ final class Store {
                     self.saveError = nil
                 }
             } catch {
-                print("Restwert: Speichern fehlgeschlagen:", error)
+                Self.log.error("Speichern fehlgeschlagen: \(error.localizedDescription, privacy: .public)")
                 let encoding = error is EncodingError
                 let failure = encoding
                     ? "Ein Eintrag ließ sich nicht speichern. Prüf die zuletzt eingegebenen Beträge."
