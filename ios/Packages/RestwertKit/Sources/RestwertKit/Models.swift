@@ -283,6 +283,10 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     public var addedAt: Date?
     /// Originale Barcode-Art, wenn Restwert sie nicht selbst zeichnen kann und Code 128 zeigt (z. B. „Code 93“).
     public var originalSymbology: String?
+    /// Angebot eines Aktionsgutscheins ohne Betrag oder Prozent, z. B. „2 für 1“ oder „Gratis Kaffee“.
+    public var benefit: String = ""
+    /// Foto der Rückseite (Nummer, PIN, Rubbelfeld). Wie `photo` nur auf dem Gerät, nicht im Sync.
+    public var photoBack: Data?
 
     /// Erfasst seit – für Altbestände ohne `addedAt` das Kaufdatum.
     public var addedOrReceived: Date { addedAt ?? received }
@@ -311,7 +315,8 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
         if kind.isValueBased { return balance.euro }
         if let percent, percent > 0 { return "\(percent.formatted(.number.precision(.fractionLength(0...1)))) %" }
         if value > 0 { return value.euro }
-        return kind.label
+        let offer = benefit.trimmingCharacters(in: .whitespacesAndNewlines)
+        return offer.isEmpty ? kind.label : offer
     }
 
     public var isOpen: Bool { redeemedAt == nil && (!kind.isValueBased || balance > 0) }
@@ -389,7 +394,7 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case id, kind, merchantID, customName, number, format, pin, value, balance, percent, received, expires
         case location, locationNote, redeemedAt, photo, isExample, history, modifiedAt, archivedAt, reminderAt, owner, forGifting, pendingSince, expiresEstimated
-        case minOrder, issuedByMe, issuedTo, greeting, addedAt, originalSymbology
+        case minOrder, issuedByMe, issuedTo, greeting, addedAt, originalSymbology, benefit, photoBack
     }
 
     /// Tolerantes Dekodieren, damit ältere Speicherstände nach Updates lesbar bleiben.
@@ -426,6 +431,8 @@ public struct GiftCard: Codable, Identifiable, Hashable, Sendable {
         greeting = try c.decodeIfPresent(String.self, forKey: .greeting) ?? ""
         addedAt = try c.decodeIfPresent(Date.self, forKey: .addedAt)
         originalSymbology = try c.decodeIfPresent(String.self, forKey: .originalSymbology)
+        benefit = try c.decodeIfPresent(String.self, forKey: .benefit) ?? ""
+        photoBack = try c.decodeIfPresent(Data.self, forKey: .photoBack)
         // Ältere Stände legten Empfänger und Gruß in owner/locationNote ab: einmal umziehen.
         if issuedByMe && !c.contains(.issuedTo) {
             issuedTo = owner; greeting = locationNote

@@ -13,6 +13,10 @@ struct ScanView: View {
     @State private var outcome: ScanOutcome?
     @State private var busy = false
     @State private var showScanner = false
+    /// Kamera für die Rückseite (Nummer, PIN, Rubbelfeld) des gerade gezeigten Ergebnisses.
+    @State private var showBackScanner = false
+    /// Der laufende Lesevorgang gilt der Rückseite: Abbrechen lässt dann die Reihe in Ruhe.
+    @State private var readingBack = false
     @State private var showFiles = false
     @State private var showEmail = false
     @State private var photoItems: [PhotosPickerItem] = []
@@ -175,6 +179,9 @@ struct ScanView: View {
         .fullScreenCover(isPresented: $showScanner) {
             LiveScannerView { live in read { await finishLive(live) } }
         }
+        .fullScreenCover(isPresented: $showBackScanner) {
+            LiveScannerView(side: .back) { live in readBack { await finishLive(live) } }
+        }
         .sheet(isPresented: $showIssue) {
             NavigationStack {
                 IssueVoucherView { card in router.showCard(card.id) }
@@ -277,17 +284,23 @@ struct ScanView: View {
 
     // MARK: Logik
 
-    private func run(_ work: () async -> ScanOutcome) async {
+    private func run(_ work: () async -> ScanOutcome, asBack: Bool = false) async {
         // Offenes Formular schließen, damit das neue Ergebnis sichtbar wird
         formSeed = nil
         readID += 1
         let id = readID
         busy = true
+        readingBack = asBack
         let result = await work()
         guard !Task.isCancelled else { return }
         // Inzwischen abgebrochen oder von einem neueren Lesevorgang abgelöst: Ergebnis verwerfen.
         guard id == readID else { return }
         busy = false
+        readingBack = false
+        if asBack {
+            attachBack(result)
+            return
+        }
         if result.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && result.barcode == nil && result.photo == nil {
             // Mehrere Fotos: ein unlesbares überspringen statt die Reihe anzuhalten, am Ende nennen.
             if batchTotal > 1 { batchUnreadable += 1; nextFromBatch(); return }
@@ -313,11 +326,33 @@ struct ScanView: View {
         readTask = Task { await run(work) }
     }
 
+    /// Wie ``read(_:)``, das Ergebnis wird aber als Rückseite an das gezeigte Ergebnis gehängt.
+    private func readBack(_ work: @escaping @MainActor () async -> ScanOutcome) {
+        readTask?.cancel()
+        readTask = Task { await run(work, asBack: true) }
+    }
+
+    /// Rückseite anhängen und alles neu entscheiden (Dublette, „Speichern mit einem Tipp“).
+    private func attachBack(_ back: ScanOutcome) {
+        guard var current = outcome else { return }
+        if back.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && back.barcode == nil && back.photo == nil {
+            importError = "Die Rückseite konnte nicht gelesen werden. Versuch es noch einmal mit mehr Licht."
+            return
+        }
+        current.attachBack(back)
+        current.duplicateName = nil
+        current.duplicateID = nil
+        show(current)
+        AccessibilityNotification.Announcement("Rückseite hinzugefügt").post()
+    }
+
     private func cancelReading() {
         readID += 1
         readTask?.cancel()
         readTask = nil
         busy = false
+        // Rückseite abgebrochen: Vorderseite bleibt, die Reihe läuft weiter.
+        if readingBack { readingBack = false; return }
         // Abbrechen in einer Mehrfachauswahl: Rest als übersprungen zählen und mit Bilanz beenden.
         if batchTotal > 1 {
             batchSkipped += batch.count + 1
@@ -329,17 +364,22 @@ struct ScanView: View {
     /// „Hinzufügen“ bzw. bei Nicht-Gutscheinen „Erneut scannen“ als Hauptaktion.
     private func resultActions(_ outcome: ScanOutcome) -> some View {
         let canSave = outcome.canSave
+        // Rückseite hervorheben, wenn vorn kein Code steht oder der Text auf PIN/Rubbelfeld/Rückseite verweist.
+        let backFirst = !outcome.hasBack && outcome.duplicateID == nil && outcome.suggestsBack
+        // Pro Bildschirm nur ein schwarzer Knopf: Steht „Rückseite“ vorn, werden die übrigen leise.
+        let main: FilledButtonStyle = backFirst ? .quiet : .primary
         return VStack(spacing: 14) {
+            if backFirst { backActions(outcome, prominent: true) }
             if let dup = outcome.duplicateID {
                 if batchTotal <= 1 {
                     Button("Gespeicherten Gutschein öffnen") {
                         withAnimation(reduceMotion ? nil : .smooth) { self.outcome = nil }
                         router.showCard(dup)
                     }
-                    .buttonStyle(.primary)
+                    .buttonStyle(main)
                 } else {
                     // Mehrere Fotos: die Dublette einfach auslassen.
-                    skipButton.buttonStyle(.primary)
+                    skipButton.buttonStyle(main)
                 }
                 // Untereinander: „Trotzdem hinzufügen“ bräche nebeneinander zweizeilig um.
                 Button("Trotzdem hinzufügen") { formSeed = FormSeed(outcome: outcome) }.buttonStyle(.quiet)
@@ -347,7 +387,7 @@ struct ScanView: View {
                 if batchTotal <= 1 { Button("Erneut scannen") { rescan() }.buttonStyle(.quiet) }
             } else if canSave {
                 // Alles sicher erkannt: ein Tipp genügt. Wer prüfen will, öffnet das Formular.
-                Button("Speichern") { formSeed = FormSeed(outcome: outcome, autoSave: true) }.buttonStyle(.primary)
+                Button("Speichern") { formSeed = FormSeed(outcome: outcome, autoSave: true) }.buttonStyle(main)
                 HStack(spacing: 10) {
                     Button("Prüfen und ändern") { formSeed = FormSeed(outcome: outcome) }
                         .buttonStyle(.quiet)
@@ -358,7 +398,7 @@ struct ScanView: View {
                     // Mit Warnung (abgelaufen, hoher Wert, Prüfziffer) einmal nachfragen.
                     if outcome.hasWarnings { confirmAddWithWarning = true } else { formSeed = FormSeed(outcome: outcome) }
                 }
-                .buttonStyle(.primary)
+                .buttonStyle(main)
                 .confirmationDialog("Trotz Warnung hinzufügen?", isPresented: $confirmAddWithWarning, titleVisibility: .visible) {
                     Button("Hinzufügen und prüfen") { formSeed = FormSeed(outcome: outcome) }
                 } message: {
@@ -367,14 +407,71 @@ struct ScanView: View {
                 rescanOrSkip
             } else if batchTotal > 1 {
                 // Mehrere Fotos: Nicht-Gutschein einfach auslassen (auch beim letzten Foto, dann mit Abschlussmeldung).
-                skipButton.buttonStyle(.primary)
+                skipButton.buttonStyle(main)
                 Button("Trotzdem von Hand eintragen") { formSeed = FormSeed(outcome: nil) }.buttonStyle(.quiet)
             } else {
-                Button("Erneut scannen") { rescan() }.buttonStyle(.primary)
+                Button("Erneut scannen") { rescan() }.buttonStyle(main)
                 Button("Trotzdem von Hand eintragen") { formSeed = FormSeed(outcome: nil) }.buttonStyle(.quiet)
             }
+            if !backFirst && outcome.duplicateID == nil { backActions(outcome, prominent: false) }
         }
         .padding(.horizontal, Layout.page).padding(.top, 10).padding(.bottom, 8)
+    }
+
+    /// Rückseite scannen (Kamera) oder in einer Foto-Reihe das nächste Foto als Rückseite nehmen.
+    /// Ist schon eine Rückseite angehängt, nur ein kleiner Hinweis mit „Neu scannen“.
+    @ViewBuilder
+    private func backActions(_ outcome: ScanOutcome, prominent: Bool) -> some View {
+        if outcome.hasBack {
+            HStack(spacing: 10) {
+                Label("Rückseite hinzugefügt", systemImage: "checkmark.circle.fill")
+                    .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
+                    .symbolRenderingMode(.multicolor)
+                Spacer(minLength: 8)
+                Button("Neu scannen") { showBackScanner = true }
+                    .font(.scaled(15, weight: .semibold))
+                    .accessibilityLabel("Rückseite neu scannen")
+            }
+            .frame(minHeight: Layout.tap)
+        // Auch geteilte Fotos (Dateien aus „Teilen“) zählen: Hauptsache, die Reihe besteht aus Bildern.
+        } else if batchPhotos && batchTotal > 1 && !batch.isEmpty {
+            HStack(spacing: 10) {
+                Button("Nächstes Foto ist die Rückseite") { useNextAsBack() }
+                    .buttonStyle(prominent ? .primary : .quiet)
+                Button("Kamera", systemImage: "camera") { showBackScanner = true }
+                    .buttonStyle(.quiet)
+                    .accessibilityLabel("Rückseite mit der Kamera scannen")
+            }
+        } else {
+            Button("Rückseite scannen", systemImage: "rectangle.on.rectangle.angled") { showBackScanner = true }
+                .buttonStyle(prominent ? .primary : .quiet)
+                .accessibilityHint("Liest Nummer, PIN oder Rubbelfeld von der Rückseite und ergänzt das Ergebnis")
+        }
+    }
+
+    /// Mehrere Fotos: das nächste Foto der Reihe ist die Rückseite des aktuellen Gutscheins.
+    private func useNextAsBack() {
+        guard !batch.isEmpty else { return }
+        let source = batch.removeFirst()
+        // Die Rückseite ist kein eigener Eintrag: Zählung „Foto x von y“ bleibt stimmig.
+        batchTotal = max(1, batchTotal - 1)
+        readBack { await Self.analyze(source) }
+    }
+
+    /// Ein Eintrag der Reihe lesen (Datei oder Foto aus der Mediathek).
+    private static func analyze(_ source: BatchSource) async -> ScanOutcome {
+        switch source {
+        case .file(let url):
+            let result = await Importer.analyze(url: url)
+            // Aus dem Teilen-Menü übernommene Kopie nach dem Lesen löschen (das Foto steckt im Ergebnis).
+            if url.path().contains("/shared-inbox/") { try? FileManager.default.removeItem(at: url) }
+            return result
+        case .photo(let item):
+            guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
+                return ScanOutcome()
+            }
+            return await Importer.analyze(image: image)
+        }
     }
 
     /// Aus dem Teilen-Menü übergebene Dateien wie eine Mehrfachauswahl einlesen (auch eine einzelne Datei).
@@ -443,20 +540,7 @@ struct ScanView: View {
             return
         }
         let source = batch.removeFirst()
-        read {
-            switch source {
-            case .file(let url):
-                let result = await Importer.analyze(url: url)
-                // Aus dem Teilen-Menü übernommene Kopie nach dem Lesen löschen (das Foto steckt im Ergebnis).
-                if url.path().contains("/shared-inbox/") { try? FileManager.default.removeItem(at: url) }
-                return result
-            case .photo(let item):
-                guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
-                    return ScanOutcome()
-                }
-                return await Importer.analyze(image: image)
-            }
-        }
+        read { await Self.analyze(source) }
     }
 
     private func rescan() {

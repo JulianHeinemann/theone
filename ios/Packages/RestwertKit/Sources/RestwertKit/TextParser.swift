@@ -20,14 +20,28 @@ public struct CardDraft: Sendable, Equatable {
     public var validity: Validity?
     /// Mindestbestellwert („ab 50 € Einkauf“, „Mindestbestellwert 50 €“).
     public var minOrder: Double?
+    /// Fester Rabatt in Euro („10 € Rabatt“, „spare 5 €“): kein Guthaben, sondern Nachlass beim Einkauf.
+    public var discountValue: Double?
+    /// Angebot ohne Betrag oder Prozent, z. B. „2 für 1“ oder „Gratis Kaffee“.
+    public var benefit: String?
 
     public init(merchantID: String? = nil, number: String? = nil, pin: String? = nil, value: Double? = nil, expires: Date? = nil, percent: Double? = nil, customName: String? = nil) {
         self.merchantID = merchantID; self.number = number; self.pin = pin; self.value = value; self.expires = expires; self.percent = percent
         self.customName = customName
     }
 
-    /// Heuristik: Rabattcode statt Wertgutschein.
-    public var isDiscount: Bool { percent != nil }
+    /// Heuristik: Rabattcode oder Aktionsgutschein statt Wertgutschein.
+    public var isDiscount: Bool { percent != nil || discountValue != nil || benefit != nil }
+
+    /// Vorschlag für die Art: Rabatt mit Code (ohne Barcode) ist ein Rabattcode, sonst ein Aktionsgutschein.
+    /// `nil` heißt: kein Rabatt erkannt, die Art bleibt beim Wertgutschein bzw. der Wahl des Nutzers.
+    public var suggestedKind: VoucherKind? { suggestedKind(hasBarcode: false) }
+
+    /// Wie ``suggestedKind``; mit Barcode ist ein Rabatt ein Coupon für die Kasse, kein Code zum Abtippen.
+    public func suggestedKind(hasBarcode: Bool) -> VoucherKind? {
+        guard isDiscount else { return nil }
+        return number != nil && !hasBarcode ? .discountCode : .coupon
+    }
 }
 
 /// Laufzeit eines Gutscheins, z. B. „3 Jahre ab Ende des Jahres“.
@@ -60,7 +74,9 @@ public enum TextParser {
         let t = text.replacingOccurrences(of: "\u{00A0}", with: " ")
         d.merchantID = merchant(in: t)
         d.pin = firstMatch(#"(?i)\bPIN(?:[-\s]?(?:Code|Nr\.?|Nummer))?\s*[:#]?\s*([0-9]{3,8})\b"#, in: t)
-        d.value = amount(in: t)
+        d.discountValue = discountValue(in: t)
+        // „10 € Rabatt ab 50 €“ ist ein Nachlass, kein Guthaben: Rabattbeträge nicht als Wert lesen.
+        d.value = amount(in: d.discountValue == nil ? t : withoutDiscounts(t))
         if let e = expiryDetail(in: t, now: now) {
             d.expires = e.date
             d.expiresIsEstimate = e.estimated
@@ -69,6 +85,7 @@ public enum TextParser {
         d.percent = percent(in: t)
         d.recipient = recipient(in: t)
         d.minOrder = minOrder(in: t)
+        d.benefit = benefit(in: t)
         d.number = code(in: t, excluding: d.pin)
         return d
     }
@@ -111,12 +128,72 @@ public enum TextParser {
     public static func percent(in s: String) -> Double? {
         // Steuersätze („19 % MwSt“, „inkl. MwSt. 19 %“) sind kein Rabatt: ganze Steuerzeilen überspringen.
         let untaxed = withoutTax(s)
+        // „-15 %“ ist für sich schon ein Rabatt, auch ohne weiteres Wort.
+        let minus = matches(#"(?<![\d.,])[-–−]\s?(\d{1,2}(?:[.,]\d)?)\s?%"#, in: untaxed)
+            .compactMap { parseMoney($0[1]) }.first { $0 > 0 && $0 <= 90 }
+        if let minus { return minus }
         let hits = matches(#"(?i)(\d{1,2}(?:[.,]\d)?)\s?%"#, in: untaxed)
             .compactMap { parseMoney($0[1]) }.filter { $0 > 0 && $0 <= 90 }
         guard let first = hits.first else { return nil }
         // Nur mit Rabatt-Kontext; „Code“ steht in fast jedem Gutscheintext und zählt nicht
-        let signal = #"(?i)\b(?:rabatt\w*|nachlass|sparen|spare|off|reduziert)\b"#
+        let signal = #"(?i)\b(?:rabatt\w*|nachlass|sparen|spare|off|reduziert|ermäßigung|ermaessigung|günstiger|guenstiger|weniger|discount|coupons?)\b|%\s*auf\s+(?:alles|den\s+(?:gesamten\s+)?Einkauf|das\s+gesamte|die\s+gesamte|den\s+gesamten)"#
         return matches(signal, in: untaxed).isEmpty ? nil : first
+    }
+
+    /// Betrag mit Währung in Rabatt-Mustern (Gruppe 1 oder 2 ist die Zahl).
+    private static let euroAmount = #"(?:(?:€|EUR)\s?"# + number + #"|"# + number + #"\s?(?:€|EUR\b|Euro\b))"#
+
+    /// Fester Rabatt in Euro: „10 € Rabatt“, „Rabatt von 10 €“, „spare 5 €“, „-5 € auf alles“.
+    private static let discountPatterns: [String] = [
+        #"(?i)"# + euroAmount + #"\s+(?:Sofort)?(?:Rabatt|Nachlass|Preisnachlass|Ermäßigung|Ermaessigung|günstiger|guenstiger|weniger|off)\b"#,
+        #"(?i)\b(?:Sofort)?(?:Rabatt|Nachlass|Preisnachlass|Ermäßigung|Ermaessigung)\s+(?:von|in\s+Höhe\s+von|über)\s+"# + euroAmount,
+        #"(?i)\bspar(?:e|en|st|t)?\s+(?:(?:Sie|du|ihr|jetzt|bis\s+zu)\s+)*"# + euroAmount,
+        #"(?i)(?<![\d.,])[-–−]\s?"# + euroAmount + #"\s+(?:auf|Rabatt|bei|beim|ab)\b"#,
+    ]
+
+    public static func discountValue(in raw: String) -> Double? {
+        let s = raw.replacingOccurrences(of: #"(\d)[.,]\s?[-–—]{1,2}(?!\d)"#, with: "$1,00", options: .regularExpression)
+        for p in discountPatterns {
+            for g in matches(p, in: s) {
+                let n = g.dropFirst().first { !$0.isEmpty }
+                if let v = n.flatMap(parseMoney), v > 0, v <= 1000 { return v }
+            }
+        }
+        return nil
+    }
+
+    /// Text ohne Rabattbeträge, damit ``amount(in:)`` sie nicht als Gutscheinwert liest.
+    static func withoutDiscounts(_ raw: String) -> String {
+        var s = raw.replacingOccurrences(of: #"(\d)[.,]\s?[-–—]{1,2}(?!\d)"#, with: "$1,00", options: .regularExpression)
+        for p in discountPatterns { s = s.replacingOccurrences(of: p, with: " ", options: .regularExpression) }
+        return s
+    }
+
+    /// Angebot ohne Betrag: „2 für 1“, „3 zum Preis von 2“, „Buy one get one“ → „2 für 1“;
+    /// „Gratis Kaffee“, „kostenloser Cappuccino“, „1 Kaffee gratis“ → „Gratis Kaffee“. Versand und Lieferung zählen nicht.
+    public static func benefit(in s: String) -> String? {
+        // „2 für 1“, nicht „für 2 Personen“ und keine Preise („2 für 1,50 €“, „3 für 10 €“).
+        let deal = #"(?i)(?<![\d.,])([1-9])\s*(?:für|fuer|for|zum\s+Preis\s+von)\s*([1-9])(?![.,]?\d)(?!\s*(?:,-|€|EUR\b|Euro\b|Person\w*|Pers\b|Pers\.))"#
+        for g in matches(deal, in: s) {
+            if let a = Int(g[1]), let b = Int(g[2]), a > b { return "\(a) für \(b)" }
+        }
+        if !matches(#"(?i)\b(?:BOGO|buy\s+one,?\s+get\s+one)\b"#, in: s).isEmpty { return "2 für 1" }
+        // Produkt: Substantiv groß geschrieben (oder alles in Versalien); „gratis testen“ ist kein Angebot.
+        let product = #"([A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜ]?[a-zäöüß]+)?|[A-ZÄÖÜ]{3,})"#
+        let free = #"(?i:gratis|kostenlos(?:e[rsnm]?)?|umsonst)"#
+        let patterns = [
+            #"\b"# + free + #"\s+"# + product + #"(?![\wäöüß])"#,
+            #"(?:\b(?i:ein(?:e[nm]?)?)|(?<![\d.,])1)\s+"# + product + #"\s+"# + free + #"\b"#,
+        ]
+        let excluded = #"(?i)^(?:versand\w*|liefer\w*|rücksend\w*|ruecksend\w*|rückversand|retoure\w*|zustellung|porto|stornierung|kündigung|rückgabe|umtausch|anmeldung|registrierung|parken|beratung|hotline|testen|dazu|online|app)$"#
+        for p in patterns {
+            for g in matches(p, in: s) {
+                let word = g[1]
+                if word.range(of: excluded, options: .regularExpression) != nil { continue }
+                return "Gratis " + word.capitalized(with: Locale(identifier: "de_DE"))
+            }
+        }
+        return nil
     }
 
     /// Mindestbestellwert: „ab 50 €“, „Mindestbestellwert 50 €“, „MBW: 50 EUR“, „Mindesteinkaufswert von 50 €“,
@@ -315,7 +392,8 @@ public enum TextParser {
     public static func code(in s: String, excluding pin: String?) -> String? {
         let value = #"\s*[:#]?\s*([A-Z0-9][A-Z0-9 \-]{5,40})"#
         // Spezifische Beschriftungen zuerst, dann „Code“/„Nummer“ als ganzes Wort (nicht Kunden-/Bestellnummer)
-        let specific = #"(?i)\b(?:Gutscheincode|Gutschein-Code|Gutscheinnummer|Kartennummer|Karten-Nr\.?|Kartennr\.?|Card number|Seriennummer)"# + value
+        let specific = #"(?i)\b(?:Gutscheincode|Gutschein-Code|Gutscheinnummer|Kartennummer|Karten-Nr\.?|Kartennr\.?|Card number|Seriennummer|"#
+            + couponLabels + ")" + value
         let generic = #"(?i)(?<!Kunden-|Bestell-|Rechnungs-|Auftrags-)\b(?:Code|Nummer)"# + value
         for pattern in [specific, generic] {
             for g in matches(pattern, in: s) {
@@ -323,12 +401,32 @@ public enum TextParser {
                 if cleaned.count >= 6, cleaned != pin, cleaned.contains(where: \.isNumber) { return cleaned }
             }
         }
+        // Rabattcodes sind oft kurz oder reine Wörter („Rabattcode: KAFFEE“, „Promo-Code SAVE10“): nur mit Beschriftung.
+        if let c = labeledCouponCode(in: s), c != pin { return c }
         let foreign = Set(matches(#"(?i)\b(?:Kunden|Bestell|Rechnungs|Auftrags)-?(?:nummer|nr\.?)\s*[:#]?\s*([A-Z0-9\-]{6,40})"#, in: s)
             .map { $0[1].uppercased() })
         let candidates = matches(#"\b[A-Z0-9][A-Z0-9\-]{7,30}\b"#, in: s.uppercased())
             .map { $0[0] }
             .filter { $0.filter(\.isNumber).count >= 4 && $0 != pin && !foreign.contains($0) }
         return candidates.max { $0.count < $1.count }
+    }
+
+    /// Beschriftungen von Rabatt- und Aktionscodes („Rabattcode“, „Promo-Code“, „Coupon-Code“).
+    static let couponLabels = #"Rabatt-?code|Aktions-?code|Promo-?code|Coupon-?code|Gutschein-?code"#
+
+    /// Kurzer Code direkt hinter einer Rabattcode-Beschriftung: 4–20 Zeichen, Versalien und Ziffern.
+    static func labeledCouponCode(in s: String) -> String? {
+        let pattern = #"(?i:\b(?:"# + couponLabels + #"))\s*[:#]?\s*([A-Z0-9][A-Z0-9]{3,19})(?![A-Za-z0-9äöüÄÖÜß])"#
+        let stop: Set<String> = ["GILT", "ONLINE", "CODE", "HIER", "SHOP", "EINGEBEN", "NUTZEN", "KASSE", "NICHT", "GUTSCHEIN"]
+        for g in matches(pattern, in: s) where !stop.contains(g[1]) && g[1].contains(where: \.isLetter) { return g[1] }
+        return nil
+    }
+
+    /// Steht der Code in einer Zeile hinter einer Rabattcode-Beschriftung?
+    static func isLabeledCouponCode(_ code: String, in lines: [String]) -> Bool {
+        let c = code.replacingOccurrences(of: " ", with: "")
+        guard (4...20).contains(c.count), c.allSatisfy({ ($0.isUppercase && $0.isLetter) || $0.isNumber }) else { return false }
+        return lines.contains { labeledCouponCode(in: $0) == c }
     }
 
     /// Ziffernblöcke zusammenziehen, Wörter am Ende abschneiden.

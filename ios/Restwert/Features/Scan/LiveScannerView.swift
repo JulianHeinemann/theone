@@ -7,6 +7,9 @@ import RestwertKit
 
 /// Live-Scanner mit der Kamera: findet Barcodes und Text, auch Handschrift.
 struct LiveScannerView: View {
+    /// Welche Seite gelesen wird: die Rückseite ergänzt ein schon gelesenes Ergebnis.
+    enum Side { case front, back }
+    var side: Side = .front
     var onDone: (ScanOutcome) -> Void
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
@@ -62,6 +65,16 @@ struct LiveScannerView: View {
                 let result = await Importer.analyze(image: image)
                 onDone(result)
                 dismiss()
+            }
+        }
+        .overlay(alignment: .top) {
+            if side == .back {
+                Text("Rückseite")
+                    .font(.scaled(17, weight: .bold)).foregroundStyle(Color.ink)
+                    .padding(.horizontal, 18).frame(minHeight: Layout.tap)
+                    .glassEffect(.regular, in: .capsule)
+                    .padding(.top, 16)
+                    .accessibilityAddTraits(.isHeader)
             }
         }
         .overlay(alignment: .topTrailing) {
@@ -120,7 +133,7 @@ struct LiveScannerView: View {
                 .font(.scaled(15)).foregroundStyle(Color.ink2)
                 .fixedSize(horizontal: false, vertical: true)
             if spacers { Spacer() }
-            let pickTitle = reading ? "Wird gelesen …" : "Foto des Gutscheins wählen"
+            let pickTitle = reading ? "Wird gelesen …" : side == .back ? "Foto der Rückseite wählen" : "Foto des Gutscheins wählen"
             PhotosPicker(selection: $photoItem, matching: .images) {
                 Label(pickTitle, systemImage: "photo")
             }
@@ -193,7 +206,8 @@ struct LiveScannerView: View {
                     .contentTransition(.symbolEffect(.replace))
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(model.barcode == nil ? "Halte die Rückseite ins Bild" : "\(model.format?.label ?? "Barcode") erkannt")
+                    Text(model.barcode == nil ? (side == .back ? "Nummer, PIN oder Barcode ins Bild" : "Halte die Rückseite ins Bild")
+                         : "\(model.format?.label ?? "Barcode") erkannt")
                         .font(.scaled(15, weight: .bold))
                     Text(model.barcode?.grouped ?? "\(model.texts.count) Textzeilen erkannt, auch Handschrift")
                         .font(.scaled(13)).foregroundStyle(Color.ink2).lineLimit(2)

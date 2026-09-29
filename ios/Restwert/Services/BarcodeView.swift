@@ -1,4 +1,5 @@
 import SwiftUI
+import os
 import UIKit
 import CoreImage
 import CoreImage.CIFilterBuiltins
@@ -72,10 +73,19 @@ enum BarcodeRenderer {
         switch format {
         case .code128, .qr, .pdf417, .aztec, .dataMatrix, .text: return false
         default:
+            // Gemerkt: VoiceOver-Beschriftung fragt bei jedem Zeichnen, das Kodieren wäre jedes Mal neu.
+            let key = "\(format.rawValue)|\(raw)"
+            if let known = fallbackCache.withLock({ $0[key] }) { return known }
             let value = BarcodeEncoder.payload(raw)
-            return !value.isEmpty && BarcodeEncoder.modules(for: value, format: format) == nil
+            let result = !value.isEmpty && BarcodeEncoder.modules(for: value, format: format) == nil
+            fallbackCache.withLock { cache in
+                if cache.count > 200 { cache.removeAll() }
+                cache[key] = result
+            }
+            return result
         }
     }
+    private static let fallbackCache = OSAllocatedUnfairLock(initialState: [String: Bool]())
 
     /// Eine Zeile des 1-Pixel-pro-Modul-Bildes von Core Image als Strich/Lücke lesen.
     private static func modules(of ci: CIImage?) -> [Bool]? {

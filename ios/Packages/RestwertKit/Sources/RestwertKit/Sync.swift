@@ -17,6 +17,7 @@ public struct SyncData: Codable, Sendable, Equatable {
         let safe = cards.filter { !$0.isExample }.map { c -> GiftCard in
             var x = c
             x.photo = nil
+            x.photoBack = nil
             x.pin = ""
             return x
         }
@@ -48,6 +49,7 @@ public enum SyncMerge {
                     var merged = unite(r, local, deleted: deleted)
                     if merged.pin.isEmpty { merged.pin = local.pin }
                     if merged.photo == nil { merged.photo = local.photo }
+                    if merged.photoBack == nil { merged.photoBack = local.photoBack }
                     byID[r.id] = merged
                 } else {
                     byID[r.id] = unite(local, r, deleted: deleted)

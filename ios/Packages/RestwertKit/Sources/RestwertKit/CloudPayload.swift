@@ -17,10 +17,11 @@ public enum CloudPayload {
     public static func keyData(_ key: SymmetricKey) -> Data { key.withUnsafeBytes { Data($0) } }
     public static func key(from data: Data) -> SymmetricKey { SymmetricKey(data: data) }
 
-    /// Gutschein ohne Foto und PIN verschlüsseln. PINs synchronisieren getrennt über den Schlüsselbund.
+    /// Gutschein ohne Fotos und PIN verschlüsseln. PINs synchronisieren getrennt über den Schlüsselbund.
     public static func seal(_ card: GiftCard, key: SymmetricKey) throws -> Data {
         var safe = card
         safe.photo = nil
+        safe.photoBack = nil
         safe.pin = ""
         return try seal(APICoding.encoder.encode(safe), key: key)
     }

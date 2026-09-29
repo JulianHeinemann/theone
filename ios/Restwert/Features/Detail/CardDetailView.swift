@@ -32,6 +32,9 @@ struct CardDetailView: View {
     @State private var notifStatus: UNAuthorizationStatus?
     /// Dekodiertes Foto, damit UIImage(data:) nicht bei jedem Neuzeichnen läuft; `source` zeigt, zu welchen Daten es gehört.
     @State private var photo: (source: Data, image: UIImage?)?
+    /// Rückseite (Nummer, PIN, Rubbelfeld), ebenso einmal im Hintergrund dekodiert.
+    @State private var photoBack: (source: Data, image: UIImage?)?
+    @State private var showBackPhoto = false
 
     var body: some View {
         Group {
@@ -51,7 +54,7 @@ struct CardDetailView: View {
             if phase != .active {
                 pinVisible = false
                 codeVisible = false
-                if codeLock { showPhoto = false }
+                if codeLock { showPhoto = false; showBackPhoto = false }
             } else { Task { await refreshNotifStatus() } }
         }
     }
@@ -115,6 +118,16 @@ struct CardDetailView: View {
             if let image = photo?.image { PhotoViewer(image: image) }
         }
         .task(id: card.photo) { await decodePhoto(card.photo) }
+        .fullScreenCover(isPresented: $showBackPhoto) {
+            if let image = photoBack?.image { PhotoViewer(image: image) }
+        }
+        .task(id: card.photoBack) {
+            guard let data = card.photoBack else { photoBack = nil; return }
+            if photoBack?.source == data { return }
+            let image = await Self.decode(data)
+            guard !Task.isCancelled else { return }
+            photoBack = (data, image)
+        }
         .toolbar(.hidden, for: .tabBar)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
@@ -287,9 +300,53 @@ struct CardDetailView: View {
     private func decodePhoto(_ data: Data?) async {
         guard let data else { photo = nil; return }
         if photo?.source == data { return }
-        let image = await Task.detached(priority: .userInitiated) { UIImage(data: data)?.preparingForDisplay() ?? UIImage(data: data) }.value
+        let image = await Self.decode(data)
         guard !Task.isCancelled else { return }
         photo = (data, image)
+    }
+
+    private static func decode(_ data: Data) async -> UIImage? {
+        await Task.detached(priority: .userInitiated) { UIImage(data: data)?.preparingForDisplay() ?? UIImage(data: data) }.value
+    }
+
+    /// Rückseite klein neben dem Code bzw. unter dem Foto; bei Code-Schutz erst nach dem Entsperren (dort steht oft die PIN).
+    @ViewBuilder
+    private func backPhotoButton(_ card: GiftCard) -> some View {
+        if card.photoBack != nil {
+            Button { unlockCode(card) { showBackPhoto = true } } label: {
+                HStack(spacing: 12) {
+                    if let image = photoBack?.image, !(codeLock && !codeVisible) {
+                        Image(uiImage: image).resizable().scaledToFill()
+                            .frame(width: 56, height: 56)
+                            .clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+                            .accessibilityHidden(true)
+                    } else {
+                        Image(systemName: "rectangle.on.rectangle.angled").font(.scaled(17))
+                            .frame(width: 56, height: 56)
+                            .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+                            .accessibilityHidden(true)
+                    }
+                    Text("Rückseite ansehen").font(.scaled(15, weight: .medium))
+                    Spacer(minLength: 0)
+                }
+                .foregroundStyle(Color.ink2)
+                .frame(minHeight: Layout.tap)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .disabled(photoBack?.image == nil)
+            .accessibilityLabel("Foto der Rückseite ansehen")
+        }
+    }
+
+    /// Angebot eines Coupons („2 für 1“), wenn es nicht schon groß als Überschrift steht (z. B. neben einem Rabatt).
+    @ViewBuilder
+    private func benefitLine(_ card: GiftCard) -> some View {
+        let offer = card.benefit.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !card.kind.isValueBased, !offer.isEmpty, card.headline != offer {
+            Label("Angebot: \(offer)", systemImage: "gift")
+                .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+        }
     }
 
     /// Aufgebraucht oder abgelaufen: direkt oben anbieten, den Gutschein aus der Liste zu nehmen.
@@ -308,7 +365,7 @@ struct CardDetailView: View {
             .buttonStyle(.glass)
         }
         .foregroundStyle(Color.ink)
-        .padding(14)
+        .padding(Layout.inset)
         .flatSurface()
     }
 
@@ -349,7 +406,7 @@ struct CardDetailView: View {
             }
         }
         .foregroundStyle(Color.ink)
-        .padding(14)
+        .padding(Layout.inset)
         .flatSurface()
     }
 
@@ -375,23 +432,6 @@ struct CardDetailView: View {
 
     private func clearLaterNotification(_ id: UUID) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["\(id.uuidString)-later"])
-    }
-
-    /// Nur echte Abzüge und gestempelte Codes, keine Aufladungen oder Korrekturen.
-    private func redemptionCount(_ card: GiftCard) -> Int {
-        card.history.filter { r in
-            r.amount > 0 ? r.note != "Stand korrigiert" : r.amount == 0 && r.note == "\(card.kind.label) eingelöst"
-        }.count
-    }
-
-    /// Kurze Beschriftung neben dem PIN-Knopf, passend zum Prüfweg.
-    private func shortLinkLabel(_ check: BalanceCheck) -> String? {
-        switch check {
-        case .form: "Guthaben prüfen"
-        case .account: "Kundenkonto"
-        case .info: "Infos zum Guthaben"
-        case .none: nil
-        }
     }
 
     private func locationRow(_ card: GiftCard) -> some View {
@@ -427,6 +467,7 @@ struct CardDetailView: View {
     private func photoTicket(_ card: GiftCard) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Original").font(.scaled(16, weight: .bold))
+            benefitLine(card)
             if card.photo != nil && photo?.source != card.photo {
                 // Wird gerade dekodiert.
                 ProgressView().frame(maxWidth: .infinity, minHeight: 120)
@@ -446,6 +487,9 @@ struct CardDetailView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Foto des Gutscheins groß anzeigen")
                 Text("An der Kasse das Foto zeigen oder das Original mitnehmen.").font(.scaled(13)).foregroundStyle(Color.ink2)
+                backPhotoButton(card)
+            } else if card.photoBack != nil {
+                backPhotoButton(card)
             } else {
                 Text("Kein Foto und kein Code gespeichert. Tipp oben auf den Stift, um eins hinzuzufügen.")
                     .font(.scaled(15)).foregroundStyle(Color.ink2)
@@ -523,8 +567,10 @@ struct CardDetailView: View {
                     .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
                     .disabled(photo?.image == nil)
             }
+            backPhotoButton(card)
+            benefitLine(card)
         }
-        .padding(16)
+        .padding(Layout.inset)
         .frame(maxWidth: .infinity, alignment: .leading)
         .flatSurface()
     }

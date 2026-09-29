@@ -26,6 +26,8 @@ struct CardFormView: View {
     @State private var percentText = ""
     /// Mindestbestellwert („ab 50 € Einkauf“), optional.
     @State private var minOrderText = ""
+    /// Angebot eines Coupons ohne Betrag („2 für 1“, „Gratis Kaffee“).
+    @State private var benefitText = ""
     @State private var received = Date.now
     @State private var expires = GiftCard.legalExpiry(from: .now)
     @State private var location: StorageLocation = .drawer
@@ -35,6 +37,12 @@ struct CardFormView: View {
     @State private var photo: Data?
     /// Dekodiertes Foto, nur bei Änderung neu erzeugt (nicht bei jedem Tastendruck).
     @State private var photoImage: UIImage?
+    /// Foto der Rückseite (Nummer, PIN, Rubbelfeld), optional.
+    @State private var photoBack: Data?
+    @State private var photoBackImage: UIImage?
+    @State private var backPhotoItem: PhotosPickerItem?
+    @State private var showBackCamera = false
+    @State private var showBackPhoto = false
     @State private var errors: [String] = []
     /// Format kommt aus Scan, Nutzerwahl oder gespeicherter Karte und wird nicht mehr automatisch gesetzt.
     @State private var formatLocked = false
@@ -90,12 +98,14 @@ struct CardFormView: View {
         var value: String, balance: String, percent: String
         var received: Date, expires: Date, location: StorageLocation, locationNote: String
         var owner: String, forGifting: Bool, photo: Data?
+        var benefit: String, photoBack: Data?
     }
 
     private var snapshot: Snapshot {
         Snapshot(kind: kind, shop: shopText.trimmingCharacters(in: .whitespaces), number: Self.normalizedCode(number), pin: pin,
                  value: valueText, balance: balanceText, percent: percentText, received: received, expires: expires,
-                 location: location, locationNote: locationNote, owner: owner, forGifting: forGifting, photo: photo)
+                 location: location, locationNote: locationNote, owner: owner, forGifting: forGifting, photo: photo,
+                 benefit: benefitText, photoBack: photoBack)
     }
 
     private var isDirty: Bool { initial.map { $0 != snapshot } ?? false }
@@ -199,6 +209,22 @@ struct CardFormView: View {
         .fullScreenCover(isPresented: $showPhoto) {
             if let photoImage { PhotoViewer(image: photoImage) }
         }
+        .onChange(of: photoBack, initial: true) { _, data in photoBackImage = data.flatMap(UIImage.init(data:)) }
+        .onChange(of: backPhotoItem) { _, item in
+            guard let item else { return }
+            Task {
+                if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
+                    photoBack = image.thumbnailJPEG()
+                }
+                backPhotoItem = nil
+            }
+        }
+        .sheet(isPresented: $showBackCamera) {
+            CameraPicker { image in photoBack = image.thumbnailJPEG() }.ignoresSafeArea()
+        }
+        .fullScreenCover(isPresented: $showBackPhoto) {
+            if let photoBackImage { PhotoViewer(image: photoBackImage) }
+        }
         .onChange(of: received) { _, new in
             if expiresIsSuggestion {
                 expires = GiftCard.legalExpiry(from: new)
@@ -256,7 +282,75 @@ struct CardFormView: View {
     }
 
     /// Foto zuerst: reicht auch allein, z. B. für Papiergutscheine ohne Barcode.
+    /// Darunter die Rückseite, sobald es ein Foto gibt (Nummer, PIN oder Rubbelfeld stehen oft hinten).
     private var photoSlot: some View {
+        VStack(alignment: .leading, spacing: Layout.group) {
+            frontPhotoRow
+            if photoImage != nil || photoBackImage != nil {
+                Divider()
+                backPhotoRow
+            }
+        }
+        .padding(Layout.inset)
+        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
+        .padding(.top, 8)
+    }
+
+    /// Rückseite: kleines Vorschaubild mit Ersetzen/Entfernen oder die Knöpfe zum Aufnehmen.
+    private var backPhotoRow: some View {
+        HStack(spacing: 14) {
+            if let photoBackImage {
+                Button { showBackPhoto = true } label: {
+                    Image(uiImage: photoBackImage).resizable().scaledToFill()
+                        .frame(width: 84, height: 84).clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Foto der Rückseite ansehen")
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Rückseite").font(.scaled(16, weight: .semibold))
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 8) { backPhotoActionsFilled }
+                        VStack(alignment: .leading, spacing: 8) { backPhotoActionsFilled }
+                    }
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Rückseite (optional)").font(.scaled(16, weight: .semibold))
+                        .accessibilityAddTraits(.isHeader)
+                    Text("Stehen Nummer, PIN oder Rubbelfeld hinten? Dann auch die Rückseite fotografieren.")
+                        .font(.scaled(13)).foregroundStyle(Color.ink2)
+                        .fixedSize(horizontal: false, vertical: true)
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 8) { backPhotoActionsEmpty }
+                        VStack(alignment: .leading, spacing: 8) { backPhotoActionsEmpty }
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    @ViewBuilder private var backPhotoActionsEmpty: some View {
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            Button { showBackCamera = true } label: { Label("Foto machen", systemImage: "camera") }
+                .buttonStyle(SoftButtonStyle())
+                .accessibilityLabel("Rückseite fotografieren")
+        }
+        PhotosPicker(selection: $backPhotoItem, matching: .images) { Label("Aus Fotos", systemImage: "photo") }
+            .buttonStyle(SoftButtonStyle())
+            .accessibilityLabel("Rückseite aus Fotos wählen")
+    }
+
+    @ViewBuilder private var backPhotoActionsFilled: some View {
+        PhotosPicker(selection: $backPhotoItem, matching: .images) { Text("Ersetzen") }
+            .buttonStyle(SoftButtonStyle())
+            .accessibilityLabel("Foto der Rückseite ersetzen")
+        Button("Entfernen", role: .destructive) { photoBack = nil }
+            .buttonStyle(SoftButtonStyle(foreground: .bad))
+            .accessibilityLabel("Foto der Rückseite entfernen")
+    }
+
+    private var frontPhotoRow: some View {
         HStack(spacing: 14) {
             if let photoImage {
                 Button { showPhoto = true } label: {
@@ -287,9 +381,6 @@ struct CardFormView: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(Layout.inset)
-        .background(Color.surface, in: .rect(cornerRadius: Layout.cardRadius, style: .continuous)).modifier(ContrastEdge())
-        .padding(.top, 8)
     }
 
     @ViewBuilder private var photoActionsEmpty: some View {
@@ -381,6 +472,8 @@ struct CardFormView: View {
                     FormField(label: "Rabatt in %", prompt: "z.\u{00A0}B. 15", text: $percentText, keyboard: .decimalPad)
                     FormField(label: "oder Wert in €", prompt: "z.\u{00A0}B. 5,00", text: $valueText, keyboard: .decimalPad)
                 }
+                FormField(label: "Angebot", note: "Ohne Rabatt oder Wert, z.\u{00A0}B. „2 für 1“ oder „Gratis Kaffee“.",
+                          prompt: "z.\u{00A0}B. 2 für 1", text: $benefitText)
             }
             if !kind.isValueBased || !minOrderText.isEmpty {
                 FormField(label: "Mindestbestellwert in € (optional)", note: "Gilt der Code erst ab einem Einkaufswert? Dann hier eintragen.",
@@ -612,12 +705,14 @@ struct CardFormView: View {
             // Laden, den die Texterkennung gelesen hat, der aber nicht in der Händlerliste steht.
             merchantID = "other"; customName = name; shopText = name
         }
-        if let p = d.percent {
-            kind = .discountCode
-            percentText = p.formatted()
-        }
+        // Rabatt, fester Nachlass oder Angebot: Rabattcode (Code ohne Barcode) oder Aktionsgutschein.
+        if let k = d.suggestedKind(hasBarcode: o.barcode != nil) { kind = k }
+        if let p = d.percent { percentText = p.formatted() }
+        // Fester Rabatt („10 € Rabatt“) gehört ins Feld „oder Wert in €“, nicht ins Guthaben.
+        if d.percent == nil, let off = d.discountValue { valueText = Self.money(off) }
+        if let b = d.benefit { benefitText = b }
         let online = Merchant.byID[merchantID]?.category == .codeOnly
-        if d.percent == nil, online || o.source == .text {
+        if !d.isDiscount, online || o.source == .text {
             // Online-Code aus Mail oder von einem reinen Online-Laden: kein Plastik, liegt im Postfach.
             kind = .valueVoucher
         }
@@ -640,7 +735,7 @@ struct CardFormView: View {
             }
         }
         if let p = d.pin { pin = p }
-        if let v = d.value { valueText = Self.money(v) }
+        if let v = d.value, !d.isDiscount || valueText.isEmpty { valueText = Self.money(v) }
         // Aus einer Laufzeit berechnet: als „geschätzt“ zeigen, aber nicht bei „Erhalten am“ neu rechnen.
         if let e = d.expires {
             expires = e; expiresIsSuggestion = false; expiresFromDuration = d.expiresIsEstimate
@@ -649,6 +744,7 @@ struct CardFormView: View {
         if let r = d.recipient { owner = r }
         if let m = d.minOrder { minOrderText = Self.money(m) }
         photo = o.photo
+        photoBack = o.backPhoto
     }
 
     private func load(_ c: GiftCard) {
@@ -671,6 +767,8 @@ struct CardFormView: View {
         owner = c.owner
         forGifting = c.forGifting
         photo = c.photo
+        photoBack = c.photoBack
+        benefitText = c.benefit
         // Ohne Code war .text keine echte Wahl: beim Ergänzen eines Codes gilt wieder das automatische Format
         formatLocked = !c.number.isEmpty
         valueText = c.value > 0 ? Self.money(c.value) : ""
@@ -708,7 +806,9 @@ struct CardFormView: View {
             if let b = balance, b < 0 { e.append("„Guthaben jetzt“ darf nicht negativ sein.") }
             if !balanceFollowsValue, let v = value, let b = balance, b > v { e.append("„Guthaben jetzt“ ist größer als das Guthaben beim Kauf.") }
         } else {
-            if percent == nil && value == nil { e.append("Gib einen Rabatt in % oder einen Wert in € ein.") }
+            if percent == nil && value == nil && benefitText.trimmingCharacters(in: .whitespaces).isEmpty {
+                e.append("Gib einen Rabatt in %, einen Wert in € oder ein Angebot ein.")
+            }
             if let p = percent, p < 1 || p > 100 { e.append("Der Rabatt muss zwischen 1 und 100\u{00A0}% liegen.") }
             if let v = value, v < 0 { e.append("Der Wert darf nicht negativ sein.") }
         }
@@ -780,6 +880,8 @@ struct CardFormView: View {
         card.owner = owner.trimmingCharacters(in: .whitespaces)
         card.forGifting = forGifting
         card.photo = photo
+        card.photoBack = photoBack
+        card.benefit = kind.isValueBased ? "" : benefitText.trimmingCharacters(in: .whitespacesAndNewlines)
         if editing == nil { card.addedAt = .now }
         // Nur solange es beim umgewandelten Code 128 bleibt; wer die Art ändert, hat bewusst gewählt.
         if let from = convertedFrom, card.format == .code128 { card.originalSymbology = from }

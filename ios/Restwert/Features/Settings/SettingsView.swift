@@ -239,12 +239,14 @@ struct SettingsView: View {
         .tabTitle("Einstellungen")
         .fileImporter(isPresented: $showRestore, allowedContentTypes: [.json]) { result in
             guard case .success(let url) = result else { return }
-            do {
-                let n = try store.restore(from: url)
-                restoreMessage = n == 0 ? "Keine neuen Gutscheine – alles ist schon aktuell."
-                    : n == 1 ? "1 Gutschein aus der Sicherung übernommen." : "\(n) Gutscheine aus der Sicherung übernommen."
-            } catch {
-                restoreMessage = "Die Datei ist keine Restwert-Sicherung."
+            Task {
+                do {
+                    let n = try await store.restore(from: url)
+                    restoreMessage = n == 0 ? "Keine neuen Gutscheine – alles ist schon aktuell."
+                        : n == 1 ? "1 Gutschein aus der Sicherung übernommen." : "\(n) Gutscheine aus der Sicherung übernommen."
+                } catch {
+                    restoreMessage = "Die Datei ist keine Restwert-Sicherung."
+                }
             }
         }
         .task {
@@ -355,7 +357,7 @@ struct SettingsView: View {
             }
             await Task.yield()  // Fortschritt zuerst zeigen
             let url: URL? = switch kind {
-            case .backup: store.backupFile()
+            case .backup: await store.backupFile()
             case .csv: writeCSV()
             }
             exporting = nil

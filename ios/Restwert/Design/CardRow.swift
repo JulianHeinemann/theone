@@ -35,8 +35,9 @@ struct CardRow: View {
         }
     }
 
-    private var due: Due {
-        let days = card.daysLeft
+    /// Restlaufzeit einmal pro Zeile: jede Abfrage ist eine Kalenderrechnung, und die Zeile braucht sie für
+    /// Frist, Status, Deckkraft und Ansage.
+    private func due(days: Int) -> Due {
         let status = card.status(warnDays: warnDays)
         let estimated = card.expiresEstimated && card.isOpen && days >= 0 && !card.isArchived
         // Archiviert, aber noch gültig: so anzeigen und ansagen. Eingelöst und abgelaufen behalten ihren Status.
@@ -55,7 +56,9 @@ struct CardRow: View {
     }
 
     var body: some View {
-        let due = due
+        let days = card.daysLeft
+        let active = card.isOpen && days >= 0 && !card.isArchived
+        let due = due(days: days)
         // Bei sehr großer Schrift untereinander statt nebeneinander, damit nichts abgeschnitten wird.
         let layout = typeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
@@ -63,7 +66,7 @@ struct CardRow: View {
         layout {
             HStack(spacing: 14) {
                 MerchantMark(card: card)
-                nameBlock(due)
+                nameBlock(due, active: active)
             }
             if !typeSize.isAccessibilitySize { Spacer(minLength: 8) }
             amountBlock
@@ -72,23 +75,23 @@ struct CardRow: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.leading, Layout.inset).padding(.trailing, 4).padding(.vertical, Layout.group)
-        .opacity(card.isActive ? 1 : 0.5)
+        .opacity(active ? 1 : 0.5)
         .contentShape(.rect)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(spoken(due))
+        .accessibilityLabel(spoken(due, active: active))
     }
 
     /// Ein Satz für VoiceOver, z. B. „Thalia, 12,40 € von 25,00 €, bis 31.12.2028, Datum geschätzt“.
-    private func spoken(_ due: Due) -> String {
+    private func spoken(_ due: Due, active: Bool) -> String {
         let amount = card.kind.isValueBased ? "\(card.headline) von \(card.value.euro)" : card.headline == card.kind.label ? card.kind.label : "\(card.headline) \(card.kind.label)"
         let who = card.forWhom.isEmpty ? "" : ", für \(card.forWhom)"
-        let open = card.pendingSince != nil && card.isActive ? ", Betrag offen" : ""
+        let open = card.pendingSince != nil && active ? ", Betrag offen" : ""
         let urgent = due.level == .urgent ? ", dringend" : ""
         let estimated = due.estimated ? ", Ablaufdatum geschätzt" : ""
         return "\(card.name)\(who)\(open), \(amount), \(due.text)\(urgent)\(estimated)\(card.forGifting ? ", zum Verschenken" : "")\(card.issuedByMe ? (card.issuedTo.isEmpty ? ", selbst ausgestellt" : ", selbst ausgestellt für \(card.issuedTo)") : "")"
     }
 
-    private func nameBlock(_ due: Due) -> some View {
+    private func nameBlock(_ due: Due, active: Bool) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             // Name einzeilig; Zusatz-Etiketten stehen in der zweiten Zeile, damit der Name nicht umbricht.
             HStack(spacing: 6) {
@@ -106,14 +109,14 @@ struct CardRow: View {
             }
             // Zwei Stufen: bis 14 Tage Pille mit Ausrufezeichen, danach nur Text mit Uhr.
             ViewThatFits(in: .horizontal) {
-                HStack(spacing: 6) { dueLabel(due); tags(due) }
-                VStack(alignment: .leading, spacing: 3) { dueLabel(due); HStack(spacing: 6) { tags(due) } }
+                HStack(spacing: 6) { dueLabel(due); tags(due, active: active) }
+                VStack(alignment: .leading, spacing: 3) { dueLabel(due); HStack(spacing: 6) { tags(due, active: active) } }
             }
         }
     }
 
     @ViewBuilder
-    private func tags(_ due: Due) -> some View {
+    private func tags(_ due: Due, active: Bool) -> some View {
         // Ruhige Zusätze als Text mit Trennpunkt statt eigener Pillen.
         // Selbst ausgegeben: in der zweiten Zeile, damit der Ladenname ganz sichtbar bleibt.
         if card.issuedByMe {
@@ -124,7 +127,7 @@ struct CardRow: View {
         if due.estimated && due.level != .calm {
             Text("· Datum geschätzt").font(.scaled(13)).foregroundStyle(Color.muted).fixedSize()
         }
-        if card.pendingSince != nil && card.isActive {
+        if card.pendingSince != nil && active {
             Text("· Betrag offen").font(.scaled(13, weight: .semibold)).foregroundStyle(Color.warn).fixedSize()
         }
     }

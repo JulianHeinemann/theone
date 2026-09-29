@@ -603,31 +603,40 @@ final class Store {
 
     // MARK: Sicherung
 
-    private struct Backup: Codable { var cards: [GiftCard]; var tests: [TestResult] }
+    private nonisolated struct Backup: Codable, Sendable { var cards: [GiftCard]; var tests: [TestResult] }
 
     /// Vollständige Sicherung als Datei (mit PINs und eingebetteten Fotos), zum Aufbewahren in Dateien oder iCloud Drive.
     /// Noch nicht nachgeladene Fotos werden dafür direkt aus ihren Dateien gelesen.
-    func backupFile() -> URL? {
-        var own = cards.filter { !$0.isExample }
+    /// Stand auf dem Hauptthread festhalten, Fotos laden, kodieren und schreiben im Hintergrund:
+    /// Mit vielen Fotos dauert das spürbar, und die Oberfläche soll dabei nicht stehen.
+    func backupFile() async -> URL? {
+        let own = cards.filter { !$0.isExample }
+        let ownTests = tests.filter { !$0.isExample }
         let missing = Set(own.filter { $0.photo == nil }.map(\.id)).intersection(pendingPhotos)
-        if !missing.isEmpty {
-            let files = photoFiles
-            let loaded = Self.io.sync { files.load(missing) }
-            for i in own.indices where own[i].photo == nil { own[i].photo = loaded[own[i].id] }
-        }
-        let enc = APICoding.encoder
-        guard let data = try? enc.encode(Backup(cards: own.map(\.sanitized), tests: tests.filter { !$0.isExample }.map(\.sanitized)))
-        else { return nil }
-        let url = URL.temporaryDirectory.appending(path: "Restwert-Sicherung-\(Date.now.formatted(.iso8601.year().month().day())).restwert.json")
-        return (try? data.write(to: url, options: .completeFileProtection)).map { url }
+        let files = photoFiles
+        let io = Self.io
+        return await Task.detached(priority: .userInitiated) {
+            var own = own
+            if !missing.isEmpty {
+                let loaded = io.sync { files.load(missing) }
+                for i in own.indices where own[i].photo == nil { own[i].photo = loaded[own[i].id] }
+            }
+            guard let data = try? APICoding.encoder.encode(Backup(cards: own.map(\.sanitized), tests: ownTests.map(\.sanitized)))
+            else { return nil }
+            let url = URL.temporaryDirectory.appending(path: "Restwert-Sicherung-\(Date.now.formatted(.iso8601.year().month().day())).restwert.json")
+            return (try? data.write(to: url, options: .completeFileProtection)).map { url }
+        }.value
     }
 
     /// Sicherung einspielen; neuere Stände gewinnen, nichts wird doppelt angelegt. Hier bereits entfernte Gutscheine
     /// kommen mit neuer ID zurück. Gibt die Zahl der tatsächlich übernommenen (neuen oder aktualisierten) Gutscheine zurück.
-    func restore(from url: URL) throws -> Int {
-        let access = url.startAccessingSecurityScopedResource()
-        defer { if access { url.stopAccessingSecurityScopedResource() } }
-        let backup = try APICoding.decoder.decode(Backup.self, from: Data(contentsOf: url))
+    func restore(from url: URL) async throws -> Int {
+        // Lesen und Dekodieren (Fotos als Base64) im Hintergrund; nur das Zusammenführen auf dem Hauptthread.
+        let backup = try await Task.detached(priority: .userInitiated) {
+            let access = url.startAccessingSecurityScopedResource()
+            defer { if access { url.stopAccessingSecurityScopedResource() } }
+            return try APICoding.decoder.decode(Backup.self, from: Data(contentsOf: url))
+        }.value
         guard isLoaded else { throw CocoaError(.fileReadNoPermission) }
         let revived = SyncMerge.revive(cards: backup.cards.map(\.sanitized), tests: backup.tests.map(\.sanitized), deleted: deletedIDs)
         let before = Dictionary(cards.map { ($0.id, $0.modifiedAt) }, uniquingKeysWith: { a, _ in a })
@@ -654,6 +663,7 @@ final class Store {
         let safe = cards.map { c -> GiftCard in
             var x = c.sanitized
             x.photo = nil
+            x.photoBack = nil
             x.pin = c.pin.isEmpty ? "" : "(gesetzt)"
             return x
         }

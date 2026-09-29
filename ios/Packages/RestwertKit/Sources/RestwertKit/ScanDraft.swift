@@ -27,7 +27,8 @@ public enum ScanDraft {
             let shouting = found == found.uppercased() && found.filter(\.isLetter).count > 4
             d.customName = found == found.lowercased() || shouting ? found.capitalized(with: Locale(identifier: "de_DE")) : found
         }
-        if d.value == nil, let v = smart.value, amountAppears(v, in: text) { d.value = v }
+        // „10 € Rabatt“ ist kein Guthaben, auch wenn die KI es als Wert liest.
+        if d.value == nil, d.discountValue == nil, let v = smart.value, amountAppears(v, in: text) { d.value = v }
         if d.percent == nil, let p = smart.percent, percentAppears(p, in: text) { d.percent = p }
         // PIN nur, wenn sie in einer Zeile mit „PIN“ steht (sonst wäre jeder Ziffernblock der Kartennummer eine „PIN“).
         if d.pin == nil, let pin = smart.pin, pin.contains(where: \.isNumber),
@@ -36,7 +37,7 @@ public enum ScanDraft {
         }
         if d.expires == nil, let e = smart.expires, dateAppears(e, in: lines) { d.expires = e }
         if d.merchantID == nil, d.customName == nil { d.customName = headlineName(in: lines) }
-        if let n = smart.number, isPlausibleCode(n), onOneLine(n, in: lines), n != d.pin,
+        if let n = smart.number, isPlausibleCode(n) || TextParser.isLabeledCouponCode(n, in: lines), onOneLine(n, in: lines), n != d.pin,
            d.number == nil || (d.number?.count ?? 0) < n.count {
             d.number = n
         }
@@ -66,6 +67,8 @@ public enum ScanDraft {
         if text.range(of: voucherWords, options: .regularExpression) != nil || hasGarbledVoucherWord(text) { return true }
         // Kassenbon von REWE, Fahrkarte der Bahn, Ausweis „gültig bis“: kein Gutschein, auch mit bekanntem Laden.
         if text.range(of: otherDocuments, options: .regularExpression) != nil { return false }
+        // Aktionsgutschein ohne Gutschein-Wort: „Gratis Kaffee“, „2 für 1 Pizza“, „10 € Rabatt“.
+        if d.benefit != nil || d.discountValue != nil { return true }
         if d.merchantID != nil || text.range(of: weakVoucherWords, options: .regularExpression) != nil { return true }
         // Gestalteter Gutschein ohne lesbares Gutschein-Wort (Schreibschrift, Foto): genau ein Betrag mit Währung
         // in ganzen Euro (Gutscheine: 10, 25, 50 €; Preise: 2,99 €), eine markante Überschrift (Laden)
@@ -74,6 +77,39 @@ public enum ScanDraft {
            text.range(of: priceWords, options: .regularExpression) == nil,
            headlineName(in: text.split(whereSeparator: \.isNewline).map(String.init)) != nil { return true }
         return hasBarcode || d.percent != nil || d.pin != nil || (d.value != nil && d.number != nil)
+    }
+
+    /// Vorder- und Rückseite zusammenführen. Nicht einfach die Texte verbinden: ``TextParser/amount(in:)`` nimmt
+    /// den größten Betrag, und „aufladbar bis 500 €“ von der Rückseite schlüge den Wert von vorn.
+    /// Vorn gewinnen Laden, Wert, Rabatt, Angebot und Empfänger; hinten Nummer und PIN. Beim Ablaufdatum gewinnt
+    /// ein gedrucktes vor einem geschätzten, sonst die Vorderseite. Lücken füllt jeweils die andere Seite.
+    public static func combine(front: CardDraft, back: CardDraft) -> CardDraft {
+        var d = front
+        if front.merchantID == nil, front.customName == nil {
+            d.merchantID = back.merchantID
+            d.customName = back.merchantID == nil ? back.customName : nil
+        }
+        // Wert und Rabatt nur von hinten, wenn vorn gar nichts dazu steht (sonst mischten sich z. B. Wert und Rabatt).
+        let frontHasOffer = front.value != nil || front.isDiscount
+        if !frontHasOffer {
+            d.value = back.value
+            d.percent = back.percent
+            d.discountValue = back.discountValue
+            d.benefit = back.benefit
+        }
+        d.recipient = front.recipient ?? back.recipient
+        d.number = back.number ?? front.number
+        d.pin = back.pin ?? front.pin
+        if d.number != nil, d.number == d.pin { d.number = front.number != d.pin ? front.number : nil }
+        let frontPrinted = front.expires != nil && !front.expiresIsEstimate
+        let backPrinted = back.expires != nil && !back.expiresIsEstimate
+        if !frontPrinted, backPrinted || front.expires == nil, back.expires != nil {
+            d.expires = back.expires
+            d.expiresIsEstimate = back.expiresIsEstimate
+            d.validity = back.validity
+        }
+        d.minOrder = front.minOrder ?? back.minOrder
+        return d
     }
 
     /// Verlesenes Gutschein-Wort aus Schreibschrift oder unscharfem Foto („Gesdienkgutsdiein“, „Gutscbein“).

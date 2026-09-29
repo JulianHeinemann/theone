@@ -141,7 +141,7 @@ private struct LegalPage: View {
             .font(.scaled(15, weight: .semibold, design: .monospaced))
             .foregroundStyle(Color.ink)
             .padding(.horizontal, 6).padding(.vertical, 2)
-            .background(Color.warnSoft, in: .rect(cornerRadius: 6))
+            .background(Color.warnSoft, in: .rect(cornerRadius: 6, style: .continuous))
             .accessibilityLabel("Platzhalter: \(text.trimmingCharacters(in: CharacterSet(charactersIn: "[]")))")
     }
 }

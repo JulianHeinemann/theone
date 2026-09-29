@@ -34,6 +34,20 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
     /// Gelesene Barcode-Art, die Restwert nicht nachzeichnen kann (z. B. Code 93, Codabar) und als Code 128 zeigt.
     var convertedSymbology: String?
 
+    // MARK: Rückseite
+    /// Text, KI-Ergebnis, Foto und Barcode der Rückseite (Nummer, PIN, Rubbelfeld), per ``attachBack(_:)`` gesetzt.
+    private(set) var backText = ""
+    private(set) var backSmart: CardDraft?
+    private(set) var backPhoto: Data?
+    private(set) var backBarcode: String?
+    private(set) var backFormat: CodeFormat?
+    /// Barcode der Vorderseite, bevor die Rückseite dazukam: für „Rückseite neu scannen“ und „entfernen“.
+    private var frontCode: ScanReading.Code?
+    /// Eine Rückseite ist angehängt.
+    var hasBack: Bool { !backText.isEmpty || backBarcode != nil || backPhoto != nil }
+    /// Vorder- und Rückseitentext zusammen, für die Gutschein-Prüfung und Hinweise (nicht für Beträge, siehe ``ScanDraft/combine(front:back:)``).
+    var combinedText: String { backText.isEmpty ? text : text + "\n" + backText }
+
     /// Regel-Parser plus KI-Ergebnis; die KI füllt nur Lücken, und nur mit Angaben, die im Text stehen.
     /// Mit „Wann gekauft?“ werden Laufzeit und gesetzliche Frist ab diesem Tag gerechnet.
     /// Einmal je Änderung von Text, KI-Ergebnis oder Kaufdatum berechnet, nicht bei jedem Zugriff: Das Ergebnis
@@ -54,7 +68,44 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
     }
 
     private mutating func refreshDraft() {
-        draft = ScanDraft.merge(text: text, smart: smart, now: received ?? .now)
+        let now = received ?? .now
+        let front = ScanDraft.merge(text: text, smart: smart, now: now)
+        draft = hasBack ? ScanDraft.combine(front: front, back: ScanDraft.merge(text: backText, smart: backSmart, now: now)) : front
+    }
+
+    /// Rückseite anhängen (oder eine frühere ersetzen): Angaben zusammenführen, der bessere Barcode beider Seiten gewinnt.
+    mutating func attachBack(_ other: ScanOutcome) {
+        if !hasBack, let barcode, let format { frontCode = ScanReading.Code(payload: barcode, format: format, converted: convertedSymbology) }
+        backText = other.text
+        backSmart = other.smart
+        backPhoto = other.photo
+        backBarcode = other.barcode
+        backFormat = other.format
+        let backCode = other.barcode.flatMap { b in other.format.map { ScanReading.Code(payload: b, format: $0, converted: other.convertedSymbology) } }
+        let best = VoucherScanner.bestCode([frontCode, backCode].compactMap { $0 })
+        barcode = best?.payload
+        format = best?.format
+        convertedSymbology = best?.converted
+        usedAppleIntelligence = usedAppleIntelligence || other.usedAppleIntelligence
+        barcodeUnavailable = barcodeUnavailable && other.barcodeUnavailable
+        refreshDraft()
+    }
+
+    /// Angehängte Rückseite wieder entfernen (Barcode der Vorderseite zurück).
+    mutating func removeBack() {
+        guard hasBack else { return }
+        barcode = frontCode?.payload
+        format = frontCode?.format
+        convertedSymbology = frontCode?.converted
+        backText = ""; backSmart = nil; backPhoto = nil; backBarcode = nil; backFormat = nil
+        frontCode = nil
+        refreshDraft()
+    }
+
+    /// Rückseite anbieten: vorn kein Code/Barcode, oder der Text verweist auf PIN, Rubbelfeld oder Rückseite.
+    var suggestsBack: Bool {
+        barcode == nil && draft.number == nil
+            || text.range(of: #"(?i)\b(?:PIN|Rubbel\w*|freirubbeln|Rückseite|Rueckseite)\b"#, options: .regularExpression) != nil
     }
 
     /// Angezeigter und gespeicherter Code: der gelesene Barcode. Bei reinen Online-Codes ohne Barcode-Anzeige
@@ -73,7 +124,7 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
         let d = draft
         guard let id = d.merchantID, let m = Merchant.byID[id] else { return d.customName }
         if id == "stadtgutschein",
-           let city = text.firstMatch(of: /([A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜ][a-zäöüß]+)?)\s+Stadtgutschein|Stadtgutschein\s+([A-ZÄÖÜ][a-zäöüß]+)/)
+           let city = combinedText.firstMatch(of: /([A-ZÄÖÜ][a-zäöüß]+(?:-[A-ZÄÖÜ][a-zäöüß]+)?)\s+Stadtgutschein|Stadtgutschein\s+([A-ZÄÖÜ][a-zäöüß]+)/)
             .flatMap({ $0.1 ?? $0.2 }).map(String.init), city.lowercased() != "der", city.lowercased() != "ihr" {
             return "\(m.name) \(city)"
         }
@@ -94,8 +145,10 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
 
     /// Felder, die nur Apple Intelligence gefunden hat (der Regel-Parser nicht): im Ergebnis markiert.
     var aiFilled: Set<String> {
-        guard smart != nil else { return [] }
-        let rules = TextParser.parse(text, now: received ?? .now)
+        guard smart != nil || backSmart != nil else { return [] }
+        let now = received ?? .now
+        let rules = hasBack ? ScanDraft.combine(front: TextParser.parse(text, now: now), back: TextParser.parse(backText, now: now))
+            : TextParser.parse(text, now: now)
         let d = draft
         var out: Set<String> = []
         if rules.value == nil && d.value != nil || rules.percent == nil && d.percent != nil { out.insert("Wert") }
@@ -107,19 +160,24 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
     }
 
     /// Genug gefunden, um von einem Gutschein auszugehen (Laden, Betrag, Code, Barcode oder Gutschein-Wörter).
-    var looksLikeVoucher: Bool { ScanDraft.looksLikeVoucher(draft, text: text, hasBarcode: barcode != nil) }
+    /// Mit Rückseite zählt auch der gemeinsame Text; die Vorderseite allein bleibt gültig, weil Rückseiten oft
+    /// Wörter wie „aufladbar“ oder „Prepaid“ tragen, die sonst auf einen Bankbeleg deuten.
+    var looksLikeVoucher: Bool {
+        ScanDraft.looksLikeVoucher(draft, text: text, hasBarcode: barcode != nil)
+            || hasBack && ScanDraft.looksLikeVoucher(draft, text: combinedText, hasBarcode: barcode != nil)
+    }
 
     /// Barcode-Format, das der Gutschein bekommt: gescannt, aus einer gültigen EAN im Text oder vom Laden.
     /// Formular und Ergebnis nutzen dieselbe Regel, damit sie sich nicht widersprechen.
     var resolvedFormat: (format: CodeFormat, origin: FormatOrigin)? {
         let d = draft
         // Reine Online-Läden: an der Kasse nur der Code zum Eintippen, auch wenn ein Barcode gelesen wurde.
-        if d.percent == nil, d.merchantID.flatMap({ Merchant.byID[$0] })?.category == .codeOnly { return (.text, .merchant) }
+        if !d.isDiscount, d.merchantID.flatMap({ Merchant.byID[$0] })?.category == .codeOnly { return (.text, .merchant) }
         if barcode != nil, let format { return (format, .scanned) }
         guard let number = d.number else { return nil }
         // 13 Ziffern mit gültiger EAN-Prüfziffer: sehr wahrscheinlich ein EAN-Barcode (auch bei bekannten Läden).
-        if d.percent == nil, let check = ScanDraft.retailCheck(number), check.valid { return (check.format, .number) }
-        return (CodeFormat.automatic(kind: d.percent == nil ? .giftCard : .discountCode, merchantID: d.merchantID), .merchant)
+        if !d.isDiscount, let check = ScanDraft.retailCheck(number), check.valid { return (check.format, .number) }
+        return (CodeFormat.automatic(kind: d.isDiscount ? .discountCode : .giftCard, merchantID: d.merchantID), .merchant)
     }
 
     enum FormatOrigin: Sendable { case scanned, number, merchant }

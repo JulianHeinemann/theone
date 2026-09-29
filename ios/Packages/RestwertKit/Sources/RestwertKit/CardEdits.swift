@@ -68,6 +68,7 @@ extension GiftCard {
         c.value = value.sanitizedMoney
         c.balance = balance.sanitizedMoney
         c.percent = percent.flatMap { $0.isFinite ? $0 : nil }
+        c.minOrder = minOrder.flatMap { $0.isFinite ? $0 : nil }
         c.history = history.map { r in
             var x = r
             x.amount = r.amount.sanitizedSigned
@@ -79,7 +80,7 @@ extension GiftCard {
 
     /// Alle Beträge endlich (sonst wirft JSONEncoder).
     public var isFiniteEverywhere: Bool {
-        value.isFinite && balance.isFinite && (percent?.isFinite ?? true)
+        value.isFinite && balance.isFinite && (percent?.isFinite ?? true) && (minOrder?.isFinite ?? true)
             && history.allSatisfy { $0.amount.isFinite && $0.balanceAfter.isFinite }
     }
 }

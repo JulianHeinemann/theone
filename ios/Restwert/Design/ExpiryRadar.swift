@@ -3,7 +3,7 @@ import UIKit
 import RestwertKit
 
 /// Ein Punkt auf dem Verfallsradar. Eigener Typ, damit auch das Onboarding Beispieldaten zeigen kann.
-struct RadarItem: Identifiable {
+struct RadarItem: Identifiable, Equatable {
     let id: UUID
     let merchantID: String?
     let name: String
@@ -48,7 +48,7 @@ struct RadarItem: Identifiable {
 // MARK: - Radar
 
 /// Verfallsradar: ehrliche Zeitachse in zwei gekennzeichneten Zonen.
-/// Zone A: „Heute“ am linken Rand, die nächsten 90 Tage linear mit Monatsstrichen und Warnband (0–14 / 15–30 Tage).
+/// Zone A: „Heute“ am linken Rand, die nächsten 90 Tage mit Monatsstrichen (die ersten 30 Tage gestreckt).
 /// Danach ein sichtbarer Achsbruch, Zone B: spätere Kalenderjahre als gleich breite Spalten.
 /// Höchstens zwei Spuren ohne Überdeckung; was nicht mehr passt, wird zum „+N“-Bündel.
 /// Beschriftungen werden gemessen und bei Kollision weggelassen. Die Platzierung wird einmal je Aufbau berechnet.
@@ -66,6 +66,17 @@ struct ExpiryRadar: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var landed = false
     @State private var width: CGFloat = 0
+    /// Platzierung nur neu, wenn sich Einträge, Breite, Kachel, Schrift oder der Tag ändern – nicht bei jedem
+    /// Neuzeichnen der Startseite (Messen der Beschriftungen und Datumsformate kosten spürbar Zeit).
+    @State private var cached: (key: PlanKey, plan: RadarPlan)?
+
+    private struct PlanKey: Equatable {
+        let items: [RadarItem]
+        let width: CGFloat
+        let tile: CGFloat
+        let type: DynamicTypeSize
+        let day: Date
+    }
 
     /// Kachelgröße bei Standardschrift; auf der Startseite 36 pt (gut lesbar), sonst 28 pt.
     var baseTile: CGFloat = 28
@@ -75,9 +86,19 @@ struct ExpiryRadar: View {
     /// Beschriftungen wachsen bis Accessibility 1 (≈ 17 pt), danach nicht weiter.
     private static let maxType = DynamicTypeSize.accessibility1
 
+    private var planKey: PlanKey {
+        PlanKey(items: items, width: width, tile: tile, type: min(typeSize, Self.maxType),
+                day: Calendar.current.startOfDay(for: .now))
+    }
+
+    private func makePlan(_ key: PlanKey) -> RadarPlan {
+        RadarPlan(items: key.items, width: key.width, tile: key.tile, fonts: RadarFonts(key.type), now: .now)
+    }
+
     var body: some View {
-        let plan = RadarPlan(items: items, width: width, tile: tile,
-                             fonts: RadarFonts(min(typeSize, Self.maxType)), now: .now)
+        let key = planKey
+        // Nie ein veralteter Stand: passt der Schlüssel nicht, wird einmal direkt gerechnet.
+        let plan = cached.flatMap { $0.key == key ? $0.plan : nil } ?? makePlan(key)
         ZStack(alignment: .topLeading) {
             chart(plan)
             labels(plan)
@@ -95,6 +116,7 @@ struct ExpiryRadar: View {
         .frame(height: plan.height)
         .dynamicTypeSize(...Self.maxType)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+        .onChange(of: key, initial: true) { _, k in cached = (k, makePlan(k)) }
         .onChange(of: plan.axisY, initial: true) { _, y in onAxis?(y) }
         .onAppear { landed = true }
         .accessibilityElement(children: .contain)
@@ -103,7 +125,7 @@ struct ExpiryRadar: View {
 
     private var shown: Bool { landed || reduceMotion || !animateIn }
 
-    // MARK: Achse, Zonen, Band
+    // MARK: Achse und Zonen
 
     private func chart(_ p: RadarPlan) -> some View {
         Canvas { ctx, size in
@@ -257,13 +279,11 @@ struct ExpiryRadar: View {
 
     /// „Zalando, 20 €, läuft am 9. Oktober 2026 ab (in 12 Tagen)“; Bündel zählen alle auf.
     private func spoken(_ items: [RadarItem]) -> String {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: .now)
         let de = Locale(identifier: "de_DE")
         let parts = items.map { item -> String in
-            let days = max(0, cal.dateComponents([.day], from: today, to: cal.startOfDay(for: item.expires)).day ?? 0)
+            let days = max(0, CalendarDay.days(from: .now, to: item.expires))
             let rel = days == 0 ? "heute" : days == 1 ? "morgen" : "in \(days)\u{00A0}Tagen"
-            let date = item.expires.formatted(.dateTime.day().month(.wide).year().locale(de))
+            let date = CalendarDay.local(item.expires).formatted(.dateTime.day().month(.wide).year().locale(de))
             let amount = item.amount.map { ", \($0)" } ?? ""
             let est = item.estimated ? " voraussichtlich" : ""
             return "\(item.name)\(amount), läuft\(est) am \(date) ab (\(rel))\(item.urgent ? ", dringend" : "")"
@@ -313,7 +333,6 @@ private struct RadarPlan {
     }
     struct Tick { var x: CGFloat; var label: String? }
     struct Column { var x0: CGFloat; var x1: CGFloat; var label: String? }
-    struct Band { var x0: CGFloat; var x1: CGFloat; var strong: Bool }
 
     static let horizon = 90
     /// Tage der linearen Zone: 90, oder bis Silvester, wenn das nur knapp dahinter liegt
@@ -334,7 +353,6 @@ private struct RadarPlan {
     var marks: [Mark] = []
     var ticks: [Tick] = []
     var columns: [Column] = []
-    var bands: [Band] = []
     var todayX: CGFloat
     var zoneAEnd: CGFloat
     var breakW: CGFloat = 0
@@ -349,7 +367,8 @@ private struct RadarPlan {
         let cal = Calendar.current
         let today = cal.startOfDay(for: now)
         let de = Locale(identifier: "de_DE")
-        func days(_ d: Date) -> Int { max(0, cal.dateComponents([.day], from: today, to: cal.startOfDay(for: d)).day ?? 0) }
+        // Wie Liste und Erinnerungen: Ablaufdaten als Kalendertag (12:00 UTC gespeichert), nicht als Ortszeit-Mitternacht.
+        func days(_ d: Date) -> Int { max(0, CalendarDay.days(from: now, to: d, calendar: cal)) }
 
         tile = t
         hit = max(Layout.tap, t + 4)
@@ -392,7 +411,7 @@ private struct RadarPlan {
         // Zone A linear: Heute links, Tag 90 so weit rechts, dass keine Trefferfläche in die Jahreszone ragt.
         let xEnd = farCols.isEmpty ? W - todayX : zoneAEnd - hit / 2 + 6
         // Die ersten 30 Tage (dort liegt das Dringende) bekommen 55 % der Breite, der Rest bis zum Horizont 45 %:
-        // rote und orange Zone sind so gut sichtbar, Kacheln der nächsten Wochen stehen nicht aufeinander.
+        // Kacheln der nächsten Wochen stehen so nicht aufeinander.
         let span = max(0, xEnd - todayX)
         let x0 = todayX
         let near30 = span * 0.55
@@ -400,8 +419,6 @@ private struct RadarPlan {
             if d <= 30 { return x0 + CGFloat(d) / 30 * near30 }
             return x0 + near30 + CGFloat(d - 30) / CGFloat(max(1, horizon - 30)) * (span - near30)
         }
-
-        bands = [Band(x0: x0, x1: xA(14), strong: true), Band(x0: xA(14), x1: xA(30), strong: false)]
 
         // Monatsstriche mit Beschriftung, die nicht mit „Heute“ oder der vorigen kollidiert.
         let pillW = fonts.width("Heute", fonts.pill) + 16
@@ -556,9 +573,7 @@ struct ExpiryRadarSection: View {
 
     /// „2 in 30 Tagen · 70 €“ – was bald verfällt und wie viel Geld daran hängt.
     private var soon: (text: String, spoken: String) {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: .now)
-        let in30 = items.filter { (cal.dateComponents([.day], from: today, to: cal.startOfDay(for: $0.expires)).day ?? 0) <= 30 }
+        let in30 = items.filter { CalendarDay.days(from: .now, to: $0.expires) <= 30 }
         guard !in30.isEmpty else { return ("Nichts in 30\u{00A0}Tagen", "Nichts läuft in 30\u{00A0}Tagen ab") }
         let sum = in30.reduce(0.0) { $0 + ($1.value ?? 0) }
         let money = sum > 0 ? " · \(RadarItem.short(sum))" : ""

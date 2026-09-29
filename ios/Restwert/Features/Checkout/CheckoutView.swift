@@ -101,7 +101,8 @@ struct CheckoutView: View {
             if let photoImage { PhotoViewer(image: photoImage) }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: store.card(cardID)?.photo?.count) { await decodePhoto() }
+        // Auf den Fotoinhalt, nicht die Größe: ein neues Foto mit zufällig gleicher Byte-Zahl würde sonst nicht neu geladen.
+        .task(id: store.card(cardID)?.photo) { await decodePhoto() }
         .onAppear {
             busy = false
             #if DEBUG

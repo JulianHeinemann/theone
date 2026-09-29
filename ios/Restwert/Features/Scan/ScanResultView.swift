@@ -46,7 +46,11 @@ struct ScanResultView: View {
         guard outcome.looksLikeVoucher else { return "Kein Gutschein erkannt." }
         let d = outcome.draft
         let name = d.merchantID.flatMap { Merchant.byID[$0]?.name } ?? d.customName ?? "Laden nicht erkannt"
-        let amount = d.percent.map { "\(Int($0)) Prozent" } ?? d.value.map(\.euro) ?? "ohne Betrag"
+        let amount: String
+        if let p = d.percent { amount = "\(Self.percentText(p)) Prozent Rabatt" }
+        else if let off = d.discountValue { amount = "\(off.euro) Rabatt" }
+        else if let offer = d.benefit { amount = "Angebot: \(offer)" }
+        else { amount = d.value.map(\.euro) ?? "ohne Betrag" }
         let until = d.expires.map { ", gültig bis \($0.dayMonthYear)" } ?? ""
         let warnings = Self.checks(outcome: outcome, draft: d, merchant: d.merchantID.flatMap { Merchant.byID[$0] }).filter { $0.level == .warning }
         let warn = warnings.isEmpty ? "" : " Achtung: " + warnings.map(\.text).joined(separator: " ")
@@ -201,15 +205,29 @@ struct ScanResultView: View {
     /// Was man im Betrugsfall tut: beim Aussteller sperren lassen, bevor jemand einlöst.
     static let nextStep = "Ruf sofort die Firma auf dem Gutschein an und lass das Guthaben sperren. Zeig den Betrug bei der Polizei an. Das geht auch online."
 
-    /// Ganzes Foto zeigen (nicht beschneiden), damit Ladenname und Logo sichtbar bleiben.
+    /// Ganzes Foto zeigen (nicht beschneiden), damit Ladenname und Logo sichtbar bleiben. Mit Rückseite beide nebeneinander.
     @ViewBuilder private var photoView: some View {
-        if let img = outcome.photo.flatMap(UIImage.init(data:)) {
-            Image(uiImage: img).resizable().scaledToFit()
-                .frame(maxWidth: .infinity, maxHeight: 160)
-                .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
-                .clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
-                .accessibilityLabel("Foto des Gutscheins")
+        let front = outcome.photo.flatMap(UIImage.init(data:))
+        let back = outcome.backPhoto.flatMap(UIImage.init(data:))
+        if front != nil || back != nil {
+            HStack(spacing: 8) {
+                if let front { photoTile(front, label: back == nil ? "Foto des Gutscheins" : "Foto der Vorderseite") }
+                if let back { photoTile(back, label: "Foto der Rückseite") }
+            }
         }
+    }
+
+    private func photoTile(_ img: UIImage, label: String) -> some View {
+        Image(uiImage: img).resizable().scaledToFit()
+            .frame(maxWidth: .infinity, maxHeight: 160)
+            .background(Color.fill, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+            .clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+            .accessibilityLabel(label)
+    }
+
+    /// „12,5“ statt abgeschnittener „12“; ganze Prozent ohne Nachkommastelle.
+    static func percentText(_ p: Double) -> String {
+        p.formatted(.number.precision(.fractionLength(0...1)).locale(Locale(identifier: "de_DE")))
     }
 
     /// Dasselbe Format, das das Formular gleich vorschlägt, mit Herkunft.
@@ -229,11 +247,15 @@ struct ScanResultView: View {
     /// Die Angaben des Ergebnisses in fester Reihenfolge.
     private func tileList(_ draft: CardDraft, code: String?) -> [Tile] {
         var t: [Tile] = []
+        // Rabatt oder Angebot statt Guthaben: ein Coupon hat kein Guthaben.
         if let p = draft.percent {
-            t.append(Tile(label: "Rabatt", value: "\(Int(p))\u{00A0}%"))
-        } else {
+            t.append(Tile(label: "Rabatt", value: "\(Self.percentText(p))\u{00A0}%"))
+        } else if let off = draft.discountValue {
+            t.append(Tile(label: "Rabatt", value: off.euro))
+        } else if draft.benefit == nil {
             t.append(Tile(label: "Guthaben", value: draft.value.map(\.euro) ?? "nicht gefunden"))
         }
+        if let offer = draft.benefit { t.append(Tile(label: "Angebot", value: offer)) }
         if let expires = draft.expires, expires < Calendar.current.startOfDay(for: .now) {
             // Abgelaufen direkt an der Kachel, nicht nur im Warnkasten.
             t.append(Tile(label: "Abgelaufen", value: "\(expires.dayMonthYear) · frag im Laden, oft noch einlösbar", alert: true))
@@ -358,7 +380,7 @@ struct ScanResultView: View {
     /// Reine Funktion über dem Ergebnis, ohne View-Zustand: auch für ``ScanOutcome/warningTexts`` nutzbar.
     fileprivate static func checks(outcome: ScanOutcome, draft: CardDraft, merchant: Merchant?) -> [Check] {
         var out: [Check] = []
-        if outcome.barcode != nil, outcome.resolvedFormat?.format == .text, draft.percent == nil {
+        if outcome.barcode != nil, outcome.resolvedFormat?.format == .text, !draft.isDiscount {
             out.append(Check(level: .info, text: "Online-Code: Du gibst ihn im Shop ein. Der Barcode auf dem Gutschein wird deshalb nicht angezeigt."))
         }
         if let original = outcome.convertedSymbology {
@@ -371,7 +393,7 @@ struct ScanResultView: View {
             case nil: out.append(Check(level: .ok, text: "\(format.label)-Barcode sauber gelesen (\(code.count) Zeichen)."))
             }
         } else if let number = draft.number {
-            let online = draft.percent != nil || merchant?.category == .codeOnly
+            let online = draft.isDiscount || merchant?.category == .codeOnly
             if online {
                 // Online-Codes haben keinen Barcode: kein Hinweis auf die Barcode-Suche.
             } else if outcome.barcodeUnavailable {
@@ -390,6 +412,9 @@ struct ScanResultView: View {
         } else {
             out.append(Check(level: .info, text: "Kein Code gefunden. Bei Papiergutscheinen reicht das Foto an der Kasse, sonst trag ihn im nächsten Schritt ein."))
         }
+        if outcome.hasBack {
+            out.append(Check(level: .ok, text: "Vorder- und Rückseite gelesen: Laden und Wert von vorn, Nummer und PIN von hinten."))
+        }
         if let merchant {
             out.append(Check(level: .ok, text: "Laden erkannt: \(merchant.name). \(merchant.category.long)."))
             if let howTo = merchant.redeemHowTo { out.append(Check(level: .info, text: howTo)) }
@@ -401,7 +426,7 @@ struct ScanResultView: View {
         if let expires = draft.expires {
             if expires < Calendar.current.startOfDay(for: .now) {
                 out.append(Check(level: .warning, text: "Laut Gutschein abgelaufen am \(expires.dayMonthYear). Oft trotzdem noch einlösbar – frag im Laden nach."))
-                if draft.percent == nil {
+                if !draft.isDiscount {
                     out.append(Check(level: .info, text: "Gekaufte Gutscheine gelten meist 3 Jahre ab dem Ende des Kaufjahres, auch wenn ein kürzeres Datum draufsteht. Frag im Laden: einlösen oder Geld zurück?"))
                 }
             } else if draft.expiresIsEstimate {

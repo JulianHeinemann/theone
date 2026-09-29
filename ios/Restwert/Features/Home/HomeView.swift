@@ -76,7 +76,8 @@ struct HomeView: View {
         .defaultScrollAnchor(UserDefaults.standard.bool(forKey: "demoScrollBottom") ? .bottom : .top)
         #endif
         // Solange der Rückgängig-Hinweis über der Tab-Leiste steht, lässt sich das Listenende darüber schieben.
-        .safeAreaPadding(.bottom, router.toast == nil ? 0 : 88)
+        // Eigener Baustein: So zeichnet ein Hinweis nur den Rand neu, nicht die ganze Startseite samt Listen.
+        .modifier(ToastInset())
         .pageBackground()
         .readableWidth()
         .navigationTitle("Restwert")
@@ -120,7 +121,8 @@ struct HomeView: View {
                     if sortable { sortMenu }
                 }
                 // Jeder Gutschein als eigene Karte (nicht als zusammenhängende Liste).
-                VStack(spacing: 8) {
+                // Lazy: bei langen Listen entstehen nur die sichtbaren Zeilen, Scrollen bleibt flüssig.
+                LazyVStack(spacing: 8) {
                     ForEach(cards) { c in
                         HStack(spacing: 0) {
                             NavigationLink(value: Route.card(c.id)) {
@@ -133,7 +135,7 @@ struct HomeView: View {
                             .buttonStyle(.plain)
                             // Sichtbarer Weg zu Kasse, Bearbeiten, Archivieren, Entfernen (nicht nur langes Drücken).
                             Menu { rowMenu(c) } label: {
-                                Image(systemName: "ellipsis").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                                Image(systemName: "ellipsis").font(.scaled(17, weight: .semibold)).foregroundStyle(Color.ink2)
                                     .frame(width: Layout.tap, height: Layout.tap).contentShape(.rect)
                             }
                             .accessibilityLabel("Aktionen für \(c.name)")
@@ -196,27 +198,8 @@ struct HomeView: View {
         }
     }
 
-    @ViewBuilder
     private func rowMenu(_ c: GiftCard) -> some View {
-        if c.isActive {
-            Button("An der Kasse zeigen", systemImage: "barcode") { router.homePath.append(.checkout(c.id)) }
-        }
-        Button("Bearbeiten", systemImage: "pencil") {
-            // Im Formular steht der Code offen: bei Code-Schutz erst entsperren.
-            if DeviceSecurity.codeLockActive {
-                Task { if await DeviceSecurity.revealCode(of: c.name) { router.editing = c } }
-            } else {
-                router.editing = c
-            }
-        }
-        Button(c.isArchived ? "Wiederherstellen" : "Archivieren", systemImage: c.isArchived ? "tray.and.arrow.up" : "archivebox") {
-            let archive = !c.isArchived
-            withAnimation(.snappy) { store.setArchived(c.id, archive) }
-            if archive {
-                router.showUndo("„\(c.name)“ archiviert") { withAnimation(.snappy) { store.setArchived(c.id, false) } }
-            }
-        }
-        Button("Entfernen", systemImage: "trash", role: .destructive) { deleting = c }
+        CardActionsMenu(card: c, deleting: $deleting)
     }
 
     /// Aufgebrauchte, abgelaufene und archivierte Gutscheine, eingeklappt, damit die Liste ruhig bleibt.
@@ -388,9 +371,13 @@ private struct HomeLists {
         /// Ohne Leerzeichen, damit „1234 5678“ und „12345678“ gleich gefunden werden.
         let compact: String
 
+        /// Einmal pro Suche statt pro Gutschein: der Code-Schutz ist eine Systemabfrage.
+        let searchNumbers: Bool
+
         init(_ query: String) {
             text = query
             compact = query.filter { !$0.isWhitespace }
+            searchNumbers = compact.count >= 3 && !DeviceSecurity.codeLockActive
         }
 
         func matches(_ c: GiftCard) -> Bool {
@@ -401,7 +388,7 @@ private struct HomeLists {
             if c.headline.filter({ !$0.isWhitespace }).localizedCaseInsensitiveContains(compact) { return true }
             // Nummern erst ab drei Zeichen, sonst trifft jede Ziffer fast jede Karte.
             // Mit Code-Schutz nicht über den verdeckten Code finden (sonst ließe er sich erraten).
-            if compact.count >= 3, !DeviceSecurity.codeLockActive, c.number.filter({ !$0.isWhitespace && $0 != "-" }).localizedCaseInsensitiveContains(compact.filter { $0 != "-" }) {
+            if searchNumbers, c.number.filter({ !$0.isWhitespace && $0 != "-" }).localizedCaseInsensitiveContains(compact.filter { $0 != "-" }) {
                 return true
             }
             return false
@@ -410,6 +397,45 @@ private struct HomeLists {
 }
 
 // MARK: - Bausteine
+
+/// Aktionen einer Gutscheinzeile (Menü „…“ und langes Drücken) – gleich auf Start und in den Ablaufterminen.
+struct CardActionsMenu: View {
+    let card: GiftCard
+    @Binding var deleting: GiftCard?
+    @Environment(Store.self) private var store
+    @Environment(Router.self) private var router
+
+    var body: some View {
+        let c = card
+        if c.isActive {
+            Button("An der Kasse zeigen", systemImage: "barcode") { router.homePath.append(.checkout(c.id)) }
+        }
+        Button("Bearbeiten", systemImage: "pencil") {
+            // Im Formular steht der Code offen: bei Code-Schutz erst entsperren.
+            if DeviceSecurity.codeLockActive {
+                Task { if await DeviceSecurity.revealCode(of: c.name) { router.editing = c } }
+            } else {
+                router.editing = c
+            }
+        }
+        Button(c.isArchived ? "Wiederherstellen" : "Archivieren", systemImage: c.isArchived ? "tray.and.arrow.up" : "archivebox") {
+            let archive = !c.isArchived
+            withAnimation(.snappy) { store.setArchived(c.id, archive) }
+            if archive {
+                router.showUndo("„\(c.name)“ archiviert") { withAnimation(.snappy) { store.setArchived(c.id, false) } }
+            }
+        }
+        Button("Entfernen", systemImage: "trash", role: .destructive) { deleting = c }
+    }
+}
+
+/// Platz unter der Liste, solange der Rückgängig-Hinweis steht.
+private struct ToastInset: ViewModifier {
+    @Environment(Router.self) private var router
+    func body(content: Content) -> some View {
+        content.safeAreaPadding(.bottom, router.toast == nil ? 0 : 88)
+    }
+}
 
 /// Offenes Guthaben als ruhige Zahl, ohne Deko.
 private struct TotalHeader: View {
@@ -542,7 +568,7 @@ private struct DueSoonCard<MenuItems: View>: View {
                                 .foregroundStyle(due.urgent ? Color.warn : Color.soon)
                                 .lineLimit(1)
                                 .padding(.horizontal, 8).padding(.vertical, 3)
-                                .background((due.urgent ? Color.warn : Color.soon).opacity(0.13), in: .capsule)
+                                .background(due.urgent ? Color.warnSoft : Color.soon.opacity(0.12), in: .capsule)
                                 .fixedSize()
                         }
                         .layoutPriority(1)
@@ -563,7 +589,7 @@ private struct DueSoonCard<MenuItems: View>: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(card.name), \(card.headline)\(card.kind.isValueBased ? " von \(card.value.euro)" : " Rabatt"), \(due.text)")
                 Menu { menu() } label: {
-                    Image(systemName: "ellipsis").font(.scaled(17, weight: .bold)).foregroundStyle(Color.ink2)
+                    Image(systemName: "ellipsis").font(.scaled(17, weight: .semibold)).foregroundStyle(Color.ink2)
                         .frame(width: Layout.tap, height: Layout.tap).contentShape(.rect).padding(.trailing, -8)
                 }
                 .accessibilityLabel("Aktionen für \(card.name)")
@@ -572,8 +598,8 @@ private struct DueSoonCard<MenuItems: View>: View {
                 Label(action.title, systemImage: action.icon)
                     .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.onInk)
                     .frame(maxWidth: .infinity, minHeight: Layout.tap + 4)
-                    .background(Color.ink, in: .rect(cornerRadius: 14, style: .continuous))
-                    .contentShape(.rect(cornerRadius: 14))
+                    .background(Color.ink, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+                    .contentShape(.rect(cornerRadius: Layout.buttonRadius))
             }
             .padding(.trailing, Layout.group)
             .buttonStyle(.plain)

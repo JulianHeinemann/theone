@@ -1,4 +1,5 @@
 import SwiftUI
+import os
 import AppIntents
 import LocalAuthentication
 import UserNotifications
@@ -562,15 +563,26 @@ enum DeviceSecurity {
     enum Status: Equatable { case ready, noPasscode, unavailable }
 
     /// Nur „kein Code eingerichtet“ heißt: iOS kann nichts sperren. Andere Fehler sind vorübergehend.
+    /// Kurz zwischengespeichert: Jede Abfrage ist ein synchroner Systemaufruf (LAContext), und Suche, Kasse und
+    /// Sperrbildschirm lesen den Status pro Zeichnen mehrfach – bei der Suche sogar pro Gutschein und Tastendruck.
+    /// Zwei Sekunden reichen, damit ein in den iOS-Einstellungen geänderter Code nach der Rückkehr sofort gilt.
     static var status: Status {
         #if DEBUG
         // Nur für Tests: `-simulateNoPasscode YES` spielt ein iPhone ohne Code durch.
         if UserDefaults.standard.bool(forKey: "simulateNoPasscode") { return .noPasscode }
         #endif
-        var error: NSError?
-        if LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) { return .ready }
-        return (error as? LAError)?.code == .passcodeNotSet ? .noPasscode : .unavailable
+        return cache.withLock { entry in
+            if let entry = entry.value, entry.at.timeIntervalSinceNow > -2 { return entry.status }
+            var error: NSError?
+            let fresh: Status = LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) ? .ready
+                : (error as? LAError)?.code == .passcodeNotSet ? .noPasscode : .unavailable
+            entry.value = (fresh, Date())
+            return fresh
+        }
     }
+
+    private struct CacheBox: @unchecked Sendable { var value: (status: Status, at: Date)? }
+    private static let cache = OSAllocatedUnfairLock(initialState: CacheBox())
 
     static var canAuthenticate: Bool { status == .ready }
 
@@ -627,8 +639,9 @@ enum DeviceSecurity {
         AccessibilityNotification.Announcement(text).post()
     }
 
-    /// „Face ID“, „Touch ID“ oder „Code“ – je nach Gerät, für Beschriftungen.
-    static var methodName: String {
+    /// „Face ID“, „Touch ID“ oder „Code“ – je nach Gerät, für Beschriftungen. Einmal ermittelt: Die Art der
+    /// Biometrie ändert sich zur Laufzeit nicht, die Abfrage ist aber ein Systemaufruf pro Beschriftung.
+    static let methodName: String = {
         let context = LAContext()
         var error: NSError?
         _ = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
@@ -638,7 +651,7 @@ enum DeviceSecurity {
         case .opticID: return "Optic ID"
         default: return "Code"
         }
-    }
+    }()
 }
 
 extension View {
