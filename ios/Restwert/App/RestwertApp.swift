@@ -351,7 +351,7 @@ extension Router {
             let cal = Calendar.current
             func day(_ d: Int) -> Date { cal.date(byAdding: .day, value: d, to: .now) ?? .now }
             let specs: [(String, String, Double, Double?, Int)] = [
-                ("other", "Stadler", 25, nil, 11), ("other", "KM Kaffee", 25, nil, 400),
+                ("other", "Schreibwaren Stahl", 25, nil, 11), ("other", "KM Kaffee", 25, nil, 400),
                 ("other", "Kaufhaus Lindner", 70, nil, 900), ("other", "Buchladen", 25.15, nil, 1000), ("other", "Modehaus Kranz", 0, 20, 820)]
                 // `-demoManyDue YES`: dazu drei weitere bald ablaufende (mehr als drei Karten in „Läuft bald ab“).
                 + (UserDefaults.standard.bool(forKey: "demoManyDue")

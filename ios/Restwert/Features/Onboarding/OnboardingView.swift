@@ -525,7 +525,7 @@ private struct AccountPage: View {
     private let benefits: [(icon: String, title: String, text: String)] = [
         ("person.badge.key", "Kein neues Passwort", "Ein Tipp, bestätigt mit Face ID. Sperren tut die Anmeldung nichts – dafür gibt es „Schutz“."),
         ("hand.raised", "Nur dein Vorname", "Keine E-Mail, kein Profil – nur für die Begrüßung."),
-        ("lock.shield", "Gutscheine bleiben bei dir", "Auf dem Gerät und in deinem iCloud – nicht bei uns."),
+        ("lock.shield", "Gutscheine bleiben bei dir", "Auf dem Gerät und in deiner iCloud – nicht bei uns."),
     ]
 
     var body: some View {

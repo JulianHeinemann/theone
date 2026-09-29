@@ -41,7 +41,8 @@ NOCH DRAUF – AUF EINEN BLICK
 Das gelbe Ticket zeigt dein ganzes Guthaben. Darunter steht, was bald abläuft, und der Verfallsradar zeigt die nächsten Monate auf einer Zeitachse.
 
 IN SEKUNDEN ANGELEGT
-• Karte scannen: Barcode und Text werden automatisch gelesen
+• Karte scannen: Barcode und Text werden automatisch gelesen – auf Wunsch Vorder- und Rückseite (Kartennummer und PIN stehen oft hinten)
+• Coupons direkt erkennen: „Gratis Kaffee“, „2 für 1“, „-15 % auf alles“, „10 € Rabatt ab 50 €“
 • Foto, Screenshot oder PDF wählen
 • Text einer Gutschein-Mail einfügen
 • Oder alles von Hand eintragen

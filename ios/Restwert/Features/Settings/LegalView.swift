@@ -38,7 +38,7 @@ struct PrivacyPolicyView: View {
             "Erinnerungen plant die App lokal auf dem \(Device.name). Es gibt keinen Push-Server. Ob Mitteilungen auf dem Sperrbildschirm Inhalte zeigen, stellst du in den iOS-Einstellungen ein.",
         ]),
         LegalSection(title: "Mit Apple anmelden (freiwillig)", paragraphs: [
-            "Freiwillig. Meldest du dich in den Einstellungen mit Apple an, bekommt die App von Apple eine anonyme Kennung und – nur beim ersten Mal und nur wenn du zustimmst – deinen Namen. Eine E-Mail-Adresse fragt Restwert nicht ab. Diese Angaben bleiben auf dem \(Device.name); die Kennung liegt im Schlüsselbund und geht nicht in iCloud. Wir haben keinen Server, an den sie gehen.",
+            "Freiwillig. Meldest du dich in den Einstellungen mit Apple an, bekommt die App von Apple eine anonyme Kennung und – nur beim ersten Mal und nur wenn du zustimmst – deinen Namen; gespeichert wird nur der Vorname. Eine E-Mail-Adresse fragt Restwert nicht ab. Diese Angaben bleiben auf dem \(Device.name); die Kennung liegt im Schlüsselbund und geht nicht in iCloud. Wir haben keinen Server, an den sie gehen.",
             "Beim Start fragt die App Apple nur, ob die Anmeldung noch gültig ist. „Abmelden“ beendet die Anmeldung (den Vornamen merkt sich die App für eine erneute Anmeldung), „Alles löschen“ entfernt alles. Die Freigabe für Restwert widerrufst du in den iOS-Einstellungen unter deinem Namen → „Mit Apple anmelden“.",
         ]),
         LegalSection(title: "iCloud-Sync (freiwillig)", paragraphs: [

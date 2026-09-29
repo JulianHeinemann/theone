@@ -414,7 +414,11 @@ struct ScanView: View {
                 Button("Trotzdem von Hand eintragen") { formSeed = FormSeed(outcome: nil) }.buttonStyle(.quiet)
             }
             // Mail-Text hat keine Rückseite.
-            if !backFirst && outcome.duplicateID == nil && outcome.source != .text { backActions(outcome, prominent: false) }
+            // Mail-Text und reine Online-Codes haben keine Rückseite.
+            if !backFirst && outcome.duplicateID == nil && outcome.source != .text
+                && outcome.draft.merchantID.flatMap({ Merchant.byID[$0] })?.category != .codeOnly {
+                backActions(outcome, prominent: false)
+            }
         }
         .padding(.horizontal, Layout.page).padding(.top, 10).padding(.bottom, 8)
     }
@@ -436,12 +440,22 @@ struct ScanView: View {
             .frame(minHeight: Layout.tap)
         // Auch geteilte Fotos (Dateien aus „Teilen“) zählen: Hauptsache, die Reihe besteht aus Bildern.
         } else if batchPhotos && batchTotal > 1 && !batch.isEmpty {
-            HStack(spacing: 10) {
-                Button("Nächstes Foto ist die Rückseite") { useNextAsBack() }
-                    .buttonStyle(prominent ? .primary : .quiet)
-                Button("Kamera", systemImage: "camera") { showBackScanner = true }
-                    .buttonStyle(.quiet)
-                    .accessibilityLabel("Rückseite mit der Kamera scannen")
+            if prominent {
+                HStack(spacing: 10) {
+                    Button("Nächstes Foto ist die Rückseite") { useNextAsBack() }
+                        .buttonStyle(.primary)
+                    Button("Kamera", systemImage: "camera") { showBackScanner = true }
+                        .buttonStyle(.quiet)
+                        .accessibilityLabel("Rückseite mit der Kamera scannen")
+                }
+            } else {
+                // Leise, damit die Leiste nicht aus fünf großen Knöpfen besteht.
+                Button { useNextAsBack() } label: {
+                    Label("Nächstes Foto ist die Rückseite", systemImage: "rectangle.on.rectangle.angled")
+                        .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                        .frame(maxWidth: .infinity, minHeight: Layout.tap).contentShape(.rect)
+                }
+                .buttonStyle(.plain)
             }
         } else {
             // Nicht hervorgehoben nur ein leiser Textlink: sonst stünden drei große Knöpfe in der Leiste

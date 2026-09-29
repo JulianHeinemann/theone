@@ -37,6 +37,25 @@ final class AppleAccount {
         userID = Self.readUserID()
         name = UserDefaults.standard.string(forKey: Self.nameKey) ?? ""
         email = UserDefaults.standard.string(forKey: Self.emailKey) ?? ""
+        Self.migrateStoredNames()
+        // Ältere Stände speicherten Vor- und Nachnamen: auf den Vornamen kürzen, wie im Einstieg versprochen.
+        if let first = name.split(separator: " ").first.map(String.init), first != name {
+            name = first
+            UserDefaults.standard.set(first, forKey: Self.nameKey)
+        }
+    }
+
+    /// Einmalig: Merkliste früherer Stände (Apple-Kennung im Klartext, voller Name) auf Prüfsumme und Vornamen umstellen.
+    private static func migrateStoredNames() {
+        let old = knownNames
+        guard !old.isEmpty else { return }
+        var fixed: [String: String] = [:]
+        for (key, value) in old {
+            let isHash = key.count == 64 && key.allSatisfy(\.isHexDigit)
+            let first = value.split(separator: " ").first.map(String.init) ?? value
+            fixed[isHash ? key : hashed(key)] = first
+        }
+        if fixed != old { UserDefaults.standard.set(fixed, forKey: knownNamesKey) }
     }
 
     /// Anfrage für den „Mit Apple anmelden“-Knopf: nur der Name (für die Begrüßung). Keine E-Mail –

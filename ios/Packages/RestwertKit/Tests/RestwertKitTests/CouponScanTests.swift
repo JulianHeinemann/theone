@@ -229,4 +229,19 @@ struct CouponRound16Tests {
         #expect(TextParser.benefit(in: "Gratis Kaffee zu jedem Kuchen") == "Gratis Kaffee")
         #expect(TextParser.benefit(in: "3 für 2 auf alle Bücher") == "3 für 2")
     }
+
+    @Test("Angebote mit Tickets, Karten, Nächten bleiben erkannt; Reservierung nicht")
+    func dealsKeepUnits() {
+        #expect(TextParser.benefit(in: "2 für 1 Tickets") == "2 für 1")
+        #expect(TextParser.benefit(in: "3 für 2 Karten im Kino") == "3 für 2")
+        #expect(TextParser.benefit(in: "4 für 3 Nächte im Hotel") == "4 für 3")
+        #expect(TextParser.benefit(in: "Tisch reserviert: 4 für 2") == nil)
+    }
+
+    @Test("Wertgutschein mit Prozent-Zusatz bleibt Wertgutschein")
+    func valueVoucherWithPercent() {
+        let d = TextParser.parse("GESCHENKGUTSCHEIN\nCafé Krone\nGutschein 50 € + 10 % Rabatt auf Torten")
+        #expect(d.value == 50)
+        #expect(!d.isDiscount)
+    }
 }

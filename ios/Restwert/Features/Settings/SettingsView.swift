@@ -27,7 +27,8 @@ struct SettingsView: View {
     @AppStorage("lockDelay") private var lockDelay = 0
     @AppStorage("codeLock") private var codeLock = false
     @State private var hasPasscode = DeviceSecurity.status != .noPasscode
-    private let method = DeviceSecurity.methodName
+    /// Mit geschütztem Leerzeichen: „Face ID“ bricht bei großer Schrift nicht um.
+    private let method = DeviceSecurity.methodName.replacingOccurrences(of: " ", with: "\u{00A0}")
     @AppStorage("onboarded") private var onboarded = true
     @AppStorage("sortOrder") private var sortRaw = CardSortOrder.expiry.rawValue
     @AppStorage("warnDays") private var warnDays = 30
@@ -71,6 +72,8 @@ struct SettingsView: View {
                             .lineLimit(1).fixedSize()
                             .padding(.horizontal, 12).padding(.vertical, 6)
                             .background(Color.fill, in: .capsule)
+                            // Mit Rand, damit es als Knopf erkennbar ist (nicht als blasses Etikett).
+                            .overlay(Capsule().strokeBorder(Color.ink.opacity(0.35), lineWidth: 1))
                         // Sehr große Schrift: Knopf unter den Text, damit „Einschalten“ nicht getrennt wird.
                         if typeSize.isAccessibilitySize {
                             VStack(alignment: .leading, spacing: 8) { label; pill }
@@ -106,7 +109,7 @@ struct SettingsView: View {
             } header: {
                 Text("Schutz")
             } footer: {
-                Text("Die App-Sperre schützt die ganze App. Die anderen Schalter schützen nur die PIN, den Code oder die Ziffern an der Kasse. \(Device.name)-Code ist der Code, mit dem du dein \(Device.name) entsperrst.")
+                Text("Die App-Sperre schützt die ganze App. Die anderen Schalter schützen nur die PIN, den Code oder die Ziffern an der Kasse. Mit App-Sperre oder Code-Schutz zeigen Erinnerungen weder Laden noch Betrag. \(Device.name)-Code ist der Code, mit dem du dein \(Device.name) entsperrst.")
                     .foregroundStyle(Color.ink2)
             }
             .tint(Color.toggleOn)
@@ -118,8 +121,8 @@ struct SettingsView: View {
                 Text("Konto")
             } footer: {
                 Text(account.isSignedIn
-                     ? "Restwert kennt dich nur auf diesem \(Device.name): Name und eine anonyme Apple-Kennung. Deine Gutscheine bleiben auf dem Gerät und in deinem iCloud."
-                     : "Optional und ohne Passwort. Ohne Anmeldung funktioniert alles genauso. Restwert speichert nur Name und eine anonyme Apple-Kennung auf diesem \(Device.name) – kein Konto bei uns, kein Server.")
+                     ? "Restwert kennt dich nur auf diesem \(Device.name): Vorname und eine anonyme Apple-Kennung. Deine Gutscheine bleiben auf dem Gerät und in deiner iCloud."
+                     : "Optional und ohne Passwort. Ohne Anmeldung funktioniert alles genauso. Restwert speichert nur deinen Vornamen und eine anonyme Apple-Kennung auf diesem \(Device.name) – kein Konto bei uns, kein Server.")
             }
 
             Section { accountSection } footer: {
@@ -451,7 +454,10 @@ struct SettingsView: View {
             .onAppear { nameDraft = account.name }
             .onChange(of: nameFocused) { _, focused in if !focused { account.rename(nameDraft) } }
             .onChange(of: account.name) { _, new in if !nameFocused { nameDraft = new } }
-            Button("Abmelden", role: .destructive) { confirmSignOut = true }
+            // Bei eingeschaltetem Schutz erst Face ID – wie bei allen anderen Änderungen am Schutz.
+            Button("Abmelden", role: .destructive) {
+                Task { if await allowedToDelete("Von Apple abmelden") { confirmSignOut = true } }
+            }
                 .confirmationDialog("Von Apple abmelden?", isPresented: $confirmSignOut, titleVisibility: .visible) {
                     Button("Abmelden", role: .destructive) { withAnimation(.snappy) { account.signOut() } }
                 } message: {

@@ -33,7 +33,8 @@ public struct CardDraft: Sendable, Equatable {
     /// Heuristik: Rabattcode oder Aktionsgutschein statt Wertgutschein.
     /// Ein fester Nachlass zählt nur ohne Gutscheinwert: „Gutschein 50 € … sparen Sie 5 €“ bleibt ein 50-€-Gutschein
     /// (sonst fiele das Guthaben aus der Summe), „10 € Rabatt ab 50 €“ ist ein Coupon (50 € ist dort Mindestbestellwert).
-    public var isDiscount: Bool { percent != nil || benefit != nil || (discountValue != nil && value == nil) }
+    /// Ebenso ein Prozent-Zusatz („Gutschein 50 € + 10 % Rabatt“): Mit Gutscheinwert bleibt es ein Wertgutschein.
+    public var isDiscount: Bool { value == nil && (percent != nil || benefit != nil || discountValue != nil) }
 
     /// Vorschlag für die Art: Rabatt mit Code (ohne Barcode) ist ein Rabattcode, sonst ein Aktionsgutschein.
     /// `nil` heißt: kein Rabatt erkannt, die Art bleibt beim Wertgutschein bzw. der Wahl des Nutzers.
@@ -175,8 +176,11 @@ public enum TextParser {
     /// „Gratis Kaffee“, „kostenloser Cappuccino“, „1 Kaffee gratis“ → „Gratis Kaffee“. Versand und Lieferung zählen nicht.
     public static func benefit(in s: String) -> String? {
         // „2 für 1“, nicht „für 2 Personen“ und keine Preise („2 für 1,50 €“, „3 für 10 €“).
-        let deal = #"(?i)(?<![\d.,])([1-9])\s*(?:für|fuer|for|zum\s+Preis\s+von)\s*([1-9])(?![.,]?\d)(?!\s*(?:,-|€|EUR\b|Euro\b|Person\w*|Pers\b|Pers\.|Std\b|Stunde\w*|Min\b|Minute\w*|Nacht|Nächte\w*|Tag\w*|Gäste\w*|Plätze\w*|Karten\b|Tickets?\b))"#
-        for g in matches(deal, in: s) {
+        let deal = #"(?i)(?<![\d.,])([1-9])\s*(?:für|fuer|for|zum\s+Preis\s+von)\s*([1-9])(?![.,]?\d)(?!\s*(?:,-|€|EUR\b|Euro\b|Person\w*|Pers\b|Pers\.|Std\b|Stunde\w*|Min\b|Minute\w*|Gäste\w*|Plätze\w*))"#
+        // Zeilen mit Reservierung („Tisch reserviert: 4 für 2“) sind keine Angebote.
+        let offerLines = s.split(separator: "\n").filter { $0.range(of: #"(?i)reserv|tisch"#, options: .regularExpression) == nil }
+            .joined(separator: "\n")
+        for g in matches(deal, in: offerLines) {
             if let a = Int(g[1]), let b = Int(g[2]), a > b { return "\(a) für \(b)" }
         }
         if !matches(#"(?i)\b(?:BOGO|buy\s+one,?\s+get\s+one)\b"#, in: s).isEmpty { return "2 für 1" }
