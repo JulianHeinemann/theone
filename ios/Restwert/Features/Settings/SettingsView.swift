@@ -45,17 +45,6 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            // Optional: Anmelden mit Apple – nur ein Profil auf diesem Gerät, kein Konto bei uns.
-            Section {
-                appleAccountRow
-            } header: {
-                Text("Konto")
-            } footer: {
-                Text(account.isSignedIn
-                     ? "Restwert kennt dich nur auf diesem \(Device.name): Name und eine anonyme Apple-Kennung. Deine Gutscheine bleiben auf dem Gerät und in deinem iCloud."
-                     : "Optional und ohne Passwort. Ohne Anmeldung funktioniert alles genauso. Restwert speichert nur Name und eine anonyme Apple-Kennung auf diesem \(Device.name) – kein Konto bei uns, kein Server.")
-            }
-
             Section {
                 if !hasPasscode {
                     // In der Liste statt als Fußzeile: die lag unter der schwebenden Tab-Leiste.
@@ -121,6 +110,17 @@ struct SettingsView: View {
                     .foregroundStyle(Color.ink2)
             }
             .tint(Color.toggleOn)
+
+            // Unter „Schutz“ (der bleibt ganz oben, auch bei großer Schrift). Optional: Anmelden mit Apple – nur ein Profil auf diesem Gerät, kein Konto bei uns.
+            Section {
+                appleAccountRow
+            } header: {
+                Text("Konto")
+            } footer: {
+                Text(account.isSignedIn
+                     ? "Restwert kennt dich nur auf diesem \(Device.name): Name und eine anonyme Apple-Kennung. Deine Gutscheine bleiben auf dem Gerät und in deinem iCloud."
+                     : "Optional und ohne Passwort. Ohne Anmeldung funktioniert alles genauso. Restwert speichert nur Name und eine anonyme Apple-Kennung auf diesem \(Device.name) – kein Konto bei uns, kein Server.")
+            }
 
             Section { accountSection } footer: {
                 Text("Ohne eigenes Konto und ohne unseren Server: Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deiner iCloud. Den Schlüssel hat nur dein iCloud-Schlüsselbund – diese Sync-Daten können weder wir noch Apple lesen. Das iCloud-Backup deines \(Device.name)s kann Apple dagegen öffnen, solange „Erweiterter Datenschutz“ aus ist.")
@@ -440,7 +440,7 @@ struct SettingsView: View {
             .accessibilityElement(children: .combine)
             // Apple gibt den Namen nur bei der ersten Anmeldung heraus – hier lässt er sich jederzeit setzen.
             HStack(spacing: 12) {
-                Text("Name").font(.scaled(16))
+                Text("Vorname").font(.scaled(16))
                 TextField("Wie dürfen wir dich nennen?", text: $nameDraft)
                     .multilineTextAlignment(.trailing)
                     .textContentType(.givenName)
@@ -455,7 +455,7 @@ struct SettingsView: View {
                 .confirmationDialog("Von Apple abmelden?", isPresented: $confirmSignOut, titleVisibility: .visible) {
                     Button("Abmelden", role: .destructive) { withAnimation(.snappy) { account.signOut() } }
                 } message: {
-                    Text("Deine Gutscheine bleiben erhalten. Nur Name und Apple-Kennung werden von diesem \(Device.name) entfernt.")
+                    Text("Deine Gutscheine bleiben erhalten. Deinen Namen merkt sich Restwert für eine erneute Anmeldung; „Alles löschen“ entfernt auch ihn.")
                 }
         } else {
             VStack(alignment: .leading, spacing: 12) {

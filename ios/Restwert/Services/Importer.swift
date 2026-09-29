@@ -102,10 +102,13 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
         refreshDraft()
     }
 
-    /// Rückseite anbieten: vorn kein Code/Barcode, oder der Text verweist auf PIN, Rubbelfeld oder Rückseite.
+    /// Rückseite hervorheben – nur bei Fotos einer Karte (nicht bei Mail-Text oder PDF): vorn kein Code/Barcode,
+    /// oder der Text verweist auf PIN, Rubbelfeld oder Rückseite und eine PIN fehlt noch.
     var suggestsBack: Bool {
-        barcode == nil && draft.number == nil
-            || text.range(of: #"(?i)\b(?:PIN|Rubbel\w*|freirubbeln|Rückseite|Rueckseite)\b"#, options: .regularExpression) != nil
+        guard source == .camera || source == .photo, photo != nil, !hasBack else { return false }
+        if barcode == nil && draft.number == nil { return true }
+        return draft.pin == nil
+            && text.range(of: #"(?i)\b(?:PIN|Rubbel\w*|freirubbeln|Rückseite|Rueckseite)\b"#, options: .regularExpression) != nil
     }
 
     /// Angezeigter und gespeicherter Code: der gelesene Barcode. Bei reinen Online-Codes ohne Barcode-Anzeige

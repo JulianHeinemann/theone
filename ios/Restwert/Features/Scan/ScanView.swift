@@ -428,7 +428,7 @@ struct ScanView: View {
                     .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
                     .symbolRenderingMode(.multicolor)
                 Spacer(minLength: 8)
-                Button("Neu scannen") { showBackScanner = true }
+                Button("Rückseite neu") { showBackScanner = true }
                     .font(.scaled(15, weight: .semibold))
                     .accessibilityLabel("Rückseite neu scannen")
             }
@@ -443,9 +443,21 @@ struct ScanView: View {
                     .accessibilityLabel("Rückseite mit der Kamera scannen")
             }
         } else {
-            Button("Rückseite scannen", systemImage: "rectangle.on.rectangle.angled") { showBackScanner = true }
-                .buttonStyle(prominent ? .primary : .quiet)
+            // Nicht hervorgehoben nur ein leiser Textlink: sonst stünden drei große Knöpfe in der Leiste
+            // und schöben bei großer Schrift Warnungen aus dem Bild.
+            if prominent {
+                Button("Rückseite scannen", systemImage: "rectangle.on.rectangle.angled") { showBackScanner = true }
+                    .buttonStyle(.primary)
+                    .accessibilityHint("Liest Nummer, PIN oder Rubbelfeld von der Rückseite und ergänzt das Ergebnis")
+            } else {
+                Button { showBackScanner = true } label: {
+                    Label("Rückseite hinzufügen", systemImage: "rectangle.on.rectangle.angled")
+                        .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
+                        .frame(maxWidth: .infinity, minHeight: Layout.tap).contentShape(.rect)
+                }
+                .buttonStyle(.plain)
                 .accessibilityHint("Liest Nummer, PIN oder Rubbelfeld von der Rückseite und ergänzt das Ergebnis")
+            }
         }
     }
 

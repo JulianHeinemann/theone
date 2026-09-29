@@ -51,7 +51,8 @@ final class AppleAccount {
             userID = credential.user
             Self.writeUserID(credential.user)
             // Apple liefert Name und E-Mail nur bei der ersten Anmeldung; später gilt der gemerkte Name.
-            let given = [credential.fullName?.givenName, credential.fullName?.familyName].compactMap { $0 }.joined(separator: " ")
+            // Nur der Vorname (so steht es im Einstieg); den Nachnamen braucht die Begrüßung nicht.
+            let given = credential.fullName?.givenName ?? credential.fullName?.familyName ?? ""
             if !given.isEmpty { rename(given) }
             else if name.isEmpty, let known = Self.knownNames[credential.user] { rename(known) }
             if let mail = credential.email, !mail.isEmpty { email = mail; UserDefaults.standard.set(mail, forKey: Self.emailKey) }

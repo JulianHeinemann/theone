@@ -101,7 +101,8 @@ struct CardRow: View {
                     Image(systemName: "gift").font(.scaled(13)).foregroundStyle(Color.ink2)
                         .accessibilityLabel("zum Verschenken")
                 }
-                if !card.forWhom.isEmpty {
+                // Selbst ausgestellt: Empfänger steht in der zweiten Zeile („· für …“), hier nicht doppelt.
+                if !card.forWhom.isEmpty && !card.issuedByMe {
                     // „für Mia“ bekommt zuerst Platz, lieber kürzt sich der Ladenname.
                     Text("für \(card.forWhom)").font(.scaled(13)).foregroundStyle(Color.ink2).lineLimit(1)
                         .layoutPriority(2)
