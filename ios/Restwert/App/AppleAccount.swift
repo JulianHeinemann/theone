@@ -28,6 +28,9 @@ final class AppleAccount {
     private static let keychainAccount = "apple-user-id"
     private static let nameKey = "appleAccountName"
     private static let emailKey = "appleAccountEmail"
+    /// Namen früherer Anmeldungen je Apple-Kennung: Apple liefert den Namen nur beim allerersten Mal.
+    /// Ohne diese Merkliste stünde nach Abmelden und erneutem Anmelden nur noch „Apple-Konto“ da.
+    private static let knownNamesKey = "appleAccountKnownNames"
 
     private init() {
         userID = Self.readUserID()
@@ -47,9 +50,10 @@ final class AppleAccount {
             guard let credential = auth.credential as? ASAuthorizationAppleIDCredential else { return }
             userID = credential.user
             Self.writeUserID(credential.user)
-            // Apple liefert Name und E-Mail nur bei der ersten Anmeldung; später bleibt das Gespeicherte.
+            // Apple liefert Name und E-Mail nur bei der ersten Anmeldung; später gilt der gemerkte Name.
             let given = [credential.fullName?.givenName, credential.fullName?.familyName].compactMap { $0 }.joined(separator: " ")
-            if !given.isEmpty { name = given; UserDefaults.standard.set(given, forKey: Self.nameKey) }
+            if !given.isEmpty { rename(given) }
+            else if name.isEmpty, let known = Self.knownNames[credential.user] { rename(known) }
             if let mail = credential.email, !mail.isEmpty { email = mail; UserDefaults.standard.set(mail, forKey: Self.emailKey) }
             error = nil
         case .failure(let err):
@@ -58,7 +62,21 @@ final class AppleAccount {
         }
     }
 
-    func signOut() {
+    /// Name selbst setzen oder ändern (Einstellungen). Leer = wieder „Apple-Konto“.
+    func rename(_ new: String) {
+        let trimmed = new.trimmingCharacters(in: .whitespacesAndNewlines)
+        name = trimmed
+        UserDefaults.standard.set(trimmed, forKey: Self.nameKey)
+        if let id = userID {
+            var known = Self.knownNames
+            known[id] = trimmed.isEmpty ? nil : trimmed
+            UserDefaults.standard.set(known, forKey: Self.knownNamesKey)
+        }
+    }
+
+    /// `forget`: auch den gemerkten Namen löschen („Alles löschen“, Anmeldung in iOS widerrufen).
+    func signOut(forget: Bool = false) {
+        if forget { UserDefaults.standard.removeObject(forKey: Self.knownNamesKey) }
         userID = nil
         name = ""
         email = ""
@@ -73,7 +91,11 @@ final class AppleAccount {
         let state = await withCheckedContinuation { (cont: CheckedContinuation<ASAuthorizationAppleIDProvider.CredentialState, Never>) in
             ASAuthorizationAppleIDProvider().getCredentialState(forUserID: id) { state, _ in cont.resume(returning: state) }
         }
-        if state == .revoked || state == .notFound { signOut() }
+        if state == .revoked || state == .notFound { signOut(forget: true) }
+    }
+
+    private static var knownNames: [String: String] {
+        UserDefaults.standard.dictionary(forKey: knownNamesKey) as? [String: String] ?? [:]
     }
 
     // MARK: Schlüsselbund (nur dieses Gerät, nicht im iCloud-Schlüsselbund)

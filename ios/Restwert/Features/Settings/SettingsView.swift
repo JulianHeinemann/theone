@@ -13,6 +13,8 @@ struct SettingsView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var account = AppleAccount.shared
     @State private var confirmSignOut = false
+    @State private var nameDraft = ""
+    @FocusState private var nameFocused: Bool
     /// Nur lesend, damit Schalter und Kopfzeile immer denselben Stand zeigen (CloudSync liest direkt aus UserDefaults).
     @AppStorage("iCloudSync") private var syncOn = false
     @State private var notifDenied = false
@@ -294,7 +296,7 @@ struct SettingsView: View {
         }
         .confirmationDialog("Alle Gutscheine, Einlösungen und Kassen-Tests löschen?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("Alles löschen", role: .destructive) {
-                Task { if await allowedToDelete("Alle Gutscheine löschen") { withAnimation(reduceMotion ? nil : .default) { store.resetAll(); account.signOut() } } }
+                Task { if await allowedToDelete("Alle Gutscheine löschen") { withAnimation(reduceMotion ? nil : .default) { store.resetAll(); account.signOut(forget: true) } } }
             }
         }
     }
@@ -414,10 +416,16 @@ struct SettingsView: View {
     @ViewBuilder private var appleAccountRow: some View {
         if account.isSignedIn {
             HStack(spacing: 14) {
-                Text(String(account.displayName.prefix(1)).uppercased())
-                    .font(.scaled(20, weight: .bold)).foregroundStyle(Color(uiColor: .systemBackground))
-                    .frame(width: 48, height: 48).background(Color.primary, in: .circle)
-                    .accessibilityHidden(true)
+                Group {
+                    if account.name.isEmpty {
+                        Image(systemName: "person.fill").font(.scaled(20, weight: .semibold))
+                    } else {
+                        Text(String(account.name.prefix(1)).uppercased()).font(.scaled(20, weight: .bold))
+                    }
+                }
+                .foregroundStyle(Color(uiColor: .systemBackground))
+                .frame(width: 48, height: 48).background(Color.primary, in: .circle)
+                .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(account.displayName).font(.scaled(16, weight: .semibold))
                     Label("Angemeldet mit Apple", systemImage: "apple.logo")
@@ -430,6 +438,19 @@ struct SettingsView: View {
             }
             .padding(.vertical, 4)
             .accessibilityElement(children: .combine)
+            // Apple gibt den Namen nur bei der ersten Anmeldung heraus – hier lässt er sich jederzeit setzen.
+            HStack(spacing: 12) {
+                Text("Name").font(.scaled(16))
+                TextField("Wie dürfen wir dich nennen?", text: $nameDraft)
+                    .multilineTextAlignment(.trailing)
+                    .textContentType(.givenName)
+                    .submitLabel(.done)
+                    .onSubmit { account.rename(nameDraft) }
+                    .focused($nameFocused)
+            }
+            .onAppear { nameDraft = account.name }
+            .onChange(of: nameFocused) { _, focused in if !focused { account.rename(nameDraft) } }
+            .onChange(of: account.name) { _, new in if !nameFocused { nameDraft = new } }
             Button("Abmelden", role: .destructive) { confirmSignOut = true }
                 .confirmationDialog("Von Apple abmelden?", isPresented: $confirmSignOut, titleVisibility: .visible) {
                     Button("Abmelden", role: .destructive) { withAnimation(.snappy) { account.signOut() } }
