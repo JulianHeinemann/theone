@@ -44,11 +44,18 @@ final class AppleAccount {
             return
         }
         #endif
-        Self.migrateStoredNames()
-        // Ältere Stände speicherten Vor- und Nachnamen: auf den Vornamen kürzen, wie im Einstieg versprochen.
-        if let first = name.split(separator: " ").first.map(String.init), first != name {
-            name = first
-            UserDefaults.standard.set(first, forKey: Self.nameKey)
+        // Einmalig (ältere Stände): Merkliste auf Prüfsumme, gespeicherten vollen Namen auf den Vornamen, keine E-Mail.
+        // Nur einmal – danach bleibt ein selbst eingetragener zweiteiliger Vorname („Abdul Karim“) unangetastet.
+        let migratedKey = "appleAccountMigratedV2"
+        if !UserDefaults.standard.bool(forKey: migratedKey) {
+            Self.migrateStoredNames()
+            if let first = name.split(separator: " ").first.map(String.init), first != name {
+                name = first
+                UserDefaults.standard.set(first, forKey: Self.nameKey)
+            }
+            email = ""
+            UserDefaults.standard.removeObject(forKey: Self.emailKey)
+            UserDefaults.standard.set(true, forKey: migratedKey)
         }
     }
 
@@ -82,7 +89,6 @@ final class AppleAccount {
             let given = credential.fullName?.givenName ?? credential.fullName?.familyName ?? ""
             if !given.isEmpty { rename(given) }
             else if name.isEmpty, let known = Self.knownNames[Self.hashed(credential.user)] { rename(known) }
-            if let mail = credential.email, !mail.isEmpty { email = mail; UserDefaults.standard.set(mail, forKey: Self.emailKey) }
             error = nil
         case .failure(let err):
             if (err as? ASAuthorizationError)?.code == .canceled { return }

@@ -337,9 +337,9 @@ struct ScanResultView: View {
         }
     }
 
-    /// Bindestriche in Codes nicht umbrechen (IK‑9934‑2281‑4410), Leerzeichen zwischen Gruppen schon.
+    /// Codes nur zwischen Gruppen umbrechen: Bindestrich nicht trennbar, danach eine unsichtbare Umbruchstelle
+    /// (IK-9934-/2281-4410); Leerzeichen zwischen Gruppen bleiben normale Umbruchstellen.
     static func unbreakableGroups(_ s: String) -> String {
-        // Nach jedem Bindestrich eine unsichtbare Umbruchstelle: Umbruch nur zwischen Gruppen (IK-9934-/2281-4410).
         s.replacingOccurrences(of: "-", with: "\u{2011}\u{200B}")
     }
 

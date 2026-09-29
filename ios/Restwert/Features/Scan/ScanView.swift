@@ -413,7 +413,6 @@ struct ScanView: View {
                 Button("Erneut scannen") { rescan() }.buttonStyle(main)
                 Button("Trotzdem von Hand eintragen") { formSeed = FormSeed(outcome: nil) }.buttonStyle(.quiet)
             }
-            // Mail-Text hat keine Rückseite.
             // Mail-Text und reine Online-Codes haben keine Rückseite.
             if !backFirst && outcome.duplicateID == nil && outcome.source != .text
                 && outcome.draft.merchantID.flatMap({ Merchant.byID[$0] })?.category != .codeOnly {
@@ -444,9 +443,14 @@ struct ScanView: View {
                 HStack(spacing: 10) {
                     Button("Nächstes Foto ist die Rückseite") { useNextAsBack() }
                         .buttonStyle(.primary)
-                    Button("Kamera", systemImage: "camera") { showBackScanner = true }
-                        .buttonStyle(.quiet)
-                        .accessibilityLabel("Rückseite mit der Kamera scannen")
+                    // Kamera nur als kleines Symbol: sonst stünden vier große Knöpfe in der Leiste.
+                    Button { showBackScanner = true } label: {
+                        Image(systemName: "camera").font(.scaled(17, weight: .semibold)).foregroundStyle(Color.ink)
+                            .frame(width: 56, height: 56)
+                            .background(Color.surface, in: .rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Rückseite mit der Kamera scannen")
                 }
             } else {
                 // Leise, damit die Leiste nicht aus fünf großen Knöpfen besteht.
@@ -587,7 +591,8 @@ struct ScanView: View {
             dropPendingBatch(); batchTotal = 0; batchUnreadable = 0; batchSaved = 0; batchSkipped = 0
             router.tab = .home
             router.homePath = [.checkout(own.id)]
-            router.toast = Toast(message: "Eigener Gutschein erkannt: noch \(own.balance.euro) Guthaben", undo: nil)
+            // Kein Hinweis-Banner: die Kasse zeigt Laden und Guthaben selbst; eine Meldung verdeckte dort den Kopf.
+            AccessibilityNotification.Announcement("Eigener Gutschein erkannt: noch \(own.balance.euro) Guthaben").post()
             return
         }
         var result = result
@@ -734,7 +739,7 @@ struct ViewfinderTeaser: View {
                 .accessibilityHidden(true)
             Spacer(minLength: 28)
             Text("Gutschein scannen").font(.scaled(22, weight: .bold))
-            Text("Barcode und Text auf der Rückseite werden automatisch gelesen.")
+            Text("Barcode und Text werden automatisch gelesen – auf Wunsch auch die Rückseite.")
                 .font(.scaled(15)).foregroundStyle(text.opacity(0.85))
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 4)

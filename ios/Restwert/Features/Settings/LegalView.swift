@@ -46,7 +46,7 @@ struct PrivacyPolicyView: View {
             "Jeder Gutschein wird vorher auf dem \(Device.name) mit AES-GCM (256 Bit) verschlüsselt. Der Schlüssel liegt in deinem iCloud-Schlüsselbund, den Apple Ende-zu-Ende verschlüsselt. Den Inhalt können weder wir noch Apple lesen.",
             "PINs gehen nie in die iCloud-Datenbank, sondern einzeln in deinen iCloud-Schlüsselbund. Fotos werden nicht synchronisiert und bleiben auf dem Gerät.",
             "Für Apple sichtbar bleiben technische Angaben wie Anzahl, zufällige Kennungen, Größe und Änderungszeit der Einträge. Für iCloud gelten Apples Datenschutzbestimmungen.",
-            "In den Einstellungen löscht „Daten aus iCloud löschen“ alles aus deinem iCloud und aus dem iCloud-Schlüsselbund.",
+            "In den Einstellungen löscht „Daten aus iCloud löschen“ alles aus deiner iCloud und aus dem iCloud-Schlüsselbund.",
         ]),
         LegalSection(title: "iCloud-Backup des \(Device.name)s", paragraphs: [
             "Unabhängig vom Sync sichert iOS die Daten von Apps im iCloud-Backup, wenn es eingeschaltet ist – auch Gutscheine, Fotos und PINs aus Restwert.",

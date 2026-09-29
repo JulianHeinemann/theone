@@ -461,7 +461,7 @@ struct SettingsView: View {
                 .confirmationDialog("Von Apple abmelden?", isPresented: $confirmSignOut, titleVisibility: .visible) {
                     Button("Abmelden", role: .destructive) { withAnimation(.snappy) { account.signOut() } }
                 } message: {
-                    Text("Deine Gutscheine bleiben erhalten. Deinen Namen merkt sich Restwert für eine erneute Anmeldung; „Alles löschen“ entfernt auch ihn.")
+                    Text("Deine Gutscheine bleiben erhalten. Deinen Vornamen merkt sich Restwert für eine erneute Anmeldung; „Alles löschen“ entfernt auch ihn.")
                 }
         } else {
             VStack(alignment: .leading, spacing: 12) {
@@ -643,9 +643,21 @@ extension View {
     /// Einstellungen im Stil der App: Abschnitte als abgerundete weiße Karten mit Abstand zum Rand,
     /// wie die Karten auf der Startseite (statt Zeilen von Rand zu Rand).
     func settingsCards() -> some View {
-        listStyle(.insetGrouped)
+        modifier(ContrastPage())
+            .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .listSectionSpacing(Layout.section)
             .environment(\.defaultMinListRowHeight, Layout.tap + 8)
+    }
+}
+
+/// „Kontrast erhöhen“: dunklerer Seitengrund, damit sich die weißen Karten der Einstellungen klar abheben
+/// (einen Rand um gruppierte Listen-Abschnitte zeichnet das System nicht).
+private struct ContrastPage: ViewModifier {
+    @Environment(\.colorSchemeContrast) private var contrast
+    func body(content: Content) -> some View {
+        content.background {
+            if contrast == .increased { Color.line.opacity(0.55).ignoresSafeArea() }
+        }
     }
 }

@@ -108,7 +108,7 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
         guard source == .camera || source == .photo, photo != nil, !hasBack else { return false }
         // Ohne Code nur bei Karten (Geschenkkarte, Kartennummer): ein handgeschriebener Gutschein hat keine Rückseite.
         if barcode == nil && draft.number == nil,
-           text.range(of: #"(?i)karte|card"#, options: .regularExpression) != nil { return true }
+           text.range(of: #"(?i)\b(?:\w*(?:geschenk|guthaben|gutschein|kunden|wert|prepaid|bonus)karte|karte|kartennummer|gift\s?card|card)\b"#, options: .regularExpression) != nil { return true }
         return draft.pin == nil
             && text.range(of: #"(?i)\b(?:PIN|Rubbel\w*|freirubbeln|Rückseite|Rueckseite)\b"#, options: .regularExpression) != nil
     }

@@ -457,17 +457,22 @@ private struct TotalHeader: View {
     @State private var tearY: CGFloat = 110
 
     /// Die Summe enthält nur Euro-Guthaben. Rabattcodes stehen extra, damit die Rechnung aufgeht.
+    /// Eine Zählweise für alles: Gutscheine und Rabattcodes getrennt genannt, „bald ab“ zählt beide
+    /// (wie die Karten „Läuft bald ab“). Bei sehr großer Schrift in zwei Zeilen statt mitten im Satz umbrochen.
     private var caption: String {
         let value = cards.filter(\.kind.isValueBased).count
-        var parts = [value == 1 ? "1 Gutschein" : "\(value) Gutscheine"]
-        if soon > 0 { parts.append(soon == 1 ? "1 läuft bald ab" : "\(soon) laufen bald ab") }
-        return parts.joined(separator: " · ")
+        let codes = cards.count - value
+        var first = value == 1 ? "1 Gutschein" : "\(value) Gutscheine"
+        if codes > 0 { first += codes == 1 ? " + 1 Code" : " + \(codes) Codes" }
+        guard soon > 0 else { return first }
+        let due = soon == 1 ? "1 läuft bald ab" : "\(soon) laufen bald ab"
+        return typeSize.isAccessibilitySize ? "\(first)\n\(due)" : "\(first) · \(due)"
     }
 
     private var codesNote: String? {
         let codes = cards.filter { !$0.kind.isValueBased }.count
         guard codes > 0 else { return nil }
-        return codes == 1 ? "+ 1 Rabattcode (nicht in der Summe)" : "+ \(codes) Rabattcodes (nicht in der Summe)"
+        return codes == 1 ? "Der Rabattcode zählt nicht zur Summe" : "Rabattcodes zählen nicht zur Summe"
     }
 
     var body: some View {

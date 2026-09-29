@@ -96,7 +96,7 @@ In `Restwert-Info.plist` steht `ITSAppUsesNonExemptEncryption = NO`. Die App nut
 
 ## Hinweise für die Prüfung (App Review Information)
 
-- Anmeldung: nicht nötig. „Mit Apple anmelden“ ist optional (Einstieg Seite 4 mit „Später“ überspringbar, Einstellungen → Konto), legt kein Server-Konto an und fragt nur den Namen ab; Kennung und Name bleiben auf dem Gerät. „Abmelden“ bzw. „Alles löschen“ entfernen sie – daher keine Kontolöschung nach 5.1.1(v) nötig. Alle Funktionen gehen ohne Anmeldung.
+- Anmeldung: nicht nötig. „Mit Apple anmelden“ ist optional (Einstieg Seite 4 mit „Später“ überspringbar, Einstellungen → Konto), legt kein Server-Konto an und fragt nur den Namen ab (gespeichert wird nur der Vorname, keine E-Mail); Kennung (Schlüsselbund) und Vorname bleiben auf dem Gerät. „Abmelden“ beendet die Anmeldung (der Vorname bleibt für eine erneute Anmeldung gemerkt), „Alles löschen“ entfernt alles – es gibt kein Konto auf einem Server, daher keine Kontolöschung nach 5.1.1(v) nötig. Alle Funktionen gehen ohne Anmeldung.
 - Beim ersten Start zeigt die App Beispiel-Gutscheine. Damit lassen sich alle Funktionen ohne eigene Daten ausprobieren (Detail, „An der Kasse zeigen“, Einkauf abziehen, Verfallsradar).
 - Scannen braucht eine Kamera. Alternativ „Hinzufügen → Aus dem Text einer E-Mail“ mit z. B. „Buchhandlung Seitenweise Gutschein 25,00 € Code 6300981274561234 gültig bis 31.12.2027“.
 - iCloud-Sync ist optional und in den Einstellungen abschaltbar.
