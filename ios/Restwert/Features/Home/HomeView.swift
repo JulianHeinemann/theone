@@ -25,6 +25,7 @@ struct HomeView: View {
                 NavigationLink(value: Route.radar) {
                     TotalHeader(total: store.total, cards: lists.active.filter { !$0.forGifting && !$0.issuedByMe }, soon: lists.dueSoonCount,
                                 saved: lists.saved, examples: lists.examplesOnly && !Self.storeShots)
+                        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Öffnet Ablauftermine und Verfallsradar")
@@ -167,6 +168,8 @@ struct HomeView: View {
                             act: { router.homePath.append(c.number.isEmpty && c.photo == nil ? .card(c.id) : .checkout(c.id)) }) {
                     rowMenu(c)
                 }
+                // Höchstens Bedienungshilfen-Stufe 1: sehr groß, aber der Kasse-Knopf bleibt über der Tab-Leiste.
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
             }
             if more > 0 {
                 Text(more == 1 ? "1 weiterer steht unten in der Liste." : "\(more) weitere stehen unten in der Liste.")
