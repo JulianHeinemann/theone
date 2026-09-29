@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 import AuthenticationServices
 import Security
 
@@ -101,5 +101,27 @@ final class AppleAccount {
 
     private static func deleteUserID() {
         SecItemDelete(query() as CFDictionary)
+    }
+}
+
+/// Offizieller „Mit Apple anmelden“-Knopf im Stil der App: 56 pt hoch wie der Hauptknopf, gleiche Rundung,
+/// Schwarz im Hellen und Weiß im Dunkeln (wie alle Hauptaktionen).
+struct AppleSignInButton: View {
+    var onSuccess: () -> Void = {}
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        SignInWithAppleButton(.signIn) { request in
+            AppleAccount.shared.configure(request)
+        } onCompletion: { result in
+            withAnimation(.snappy) { AppleAccount.shared.handle(result) }
+            if AppleAccount.shared.isSignedIn { onSuccess() }
+        }
+        .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+        // Der Systemknopf zeichnet Text und Logo selbst und verträgt keine riesige Höhe: fest wie der Hauptknopf.
+        .frame(maxWidth: .infinity, minHeight: 56, maxHeight: 56)
+        .clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
+        // Nach Abmelden → Anmelden neu aufbauen, sonst behält der Systemknopf alten Zustand.
+        .id(colorScheme)
     }
 }

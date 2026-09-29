@@ -4,9 +4,10 @@ import RestwertKit
 /// Wohin es nach dem Einstieg geht.
 enum OnboardingExit { case browse, add, scan, manual }
 
-/// Einstieg in vier Seiten: Willkommen (Ticket), Sammeln (Liste), Erinnern (Mitteilung), Erster Gutschein.
+/// Einstieg in fünf Seiten: Willkommen (Ticket), Sammeln (Liste), Erinnern (Mitteilung), Mit Apple anmelden, Erster Gutschein.
 /// Jede Seite spielt ihre kleine Animation, sobald sie sichtbar wird. Bei „Bewegung reduzieren“ steht alles sofort da.
-/// Kein Login: Die App hat bewusst kein Konto. Wer schon Gutscheine hat, holt sie aus der eigenen iCloud.
+/// Anmelden mit Apple ist der empfohlene Weg, lässt sich aber mit „Später“ überspringen. Es gibt kein Konto bei uns:
+/// Die Gutscheine bleiben auf dem Gerät; wer schon welche hat, holt sie aus der eigenen iCloud.
 /// Nach der Mitteilungs-Erlaubnis fragt erst das Formular beim ersten Speichern – nicht der Einstieg.
 struct OnboardingView: View {
     var onFinish: (OnboardingExit) -> Void
@@ -14,10 +15,14 @@ struct OnboardingView: View {
     @Environment(CloudSync.self) private var cloud
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var page = 0
+    @State private var account = AppleAccount.shared
 
-    private let pages = 4
+    private let pages = 5
+    private let accountPage = 3
     /// Alle Knopftexte liegen übereinander im Knopf, damit er auf jeder Seite gleich hoch ist.
-    private let primaryTitles = ["Los geht’s", "Weiter", "Weiter", "Gutschein hinzufügen"]
+    private let primaryTitles = ["Los geht’s", "Weiter", "Weiter", "Weiter", "Gutschein hinzufügen"]
+    /// Auf der Anmeldeseite ersetzt der Apple-Knopf den Hauptknopf (solange niemand angemeldet ist).
+    private var showsAppleButton: Bool { page == accountPage && !account.isSignedIn }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,7 +31,8 @@ struct OnboardingView: View {
                 WelcomePage(active: page == 0).tag(0)
                 CollectPage(active: page == 1).tag(1)
                 RemindPage(active: page == 2).tag(2)
-                FirstCardPage(active: page == 3, onPick: onFinish, onRestore: restore).tag(3)
+                AccountPage(active: page == accountPage).tag(accountPage)
+                FirstCardPage(active: page == 4, onPick: onFinish, onRestore: restore).tag(4)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .sensoryFeedback(.selection, trigger: page)
@@ -43,6 +49,10 @@ struct OnboardingView: View {
         }
         .foregroundStyle(Color.ink)
         .background(Color.page.ignoresSafeArea())
+        #if DEBUG
+        // Bildschirmfotos: `-onboardingPage 3` öffnet direkt die Anmeldeseite.
+        .onAppear { page = min(max(UserDefaults.standard.integer(forKey: "onboardingPage"), 0), pages - 1) }
+        #endif
     }
 
     /// Wortmarke wie auf dem Start: gleiche Größe, 16 pt Rand, 44 pt hohe Leiste direkt unter der Statusleiste.
@@ -53,7 +63,8 @@ struct OnboardingView: View {
             Wordmark(size: 28).fixedSize()
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             Spacer()
-            Button("Überspringen") { go(to: pages - 1) }
+            // Überspringt die Erklärseiten, aber nicht die Anmeldung: dort lässt sie sich mit „Später“ auslassen.
+            Button("Überspringen") { go(to: account.isSignedIn || page >= accountPage ? pages - 1 : accountPage) }
                 .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
                 .frame(minWidth: Layout.tap, minHeight: Layout.tap)
                 .contentShape(.rect)
@@ -85,24 +96,39 @@ struct OnboardingView: View {
 
     private var actions: some View {
         VStack(spacing: 4) {
-            Button(action: primary) {
-                ZStack {
-                    ForEach(primaryTitles.indices, id: \.self) { i in
-                        Text(primaryTitles[i]).opacity(i == page ? 1 : 0)
+            ZStack {
+                Button(action: primary) {
+                    ZStack {
+                        ForEach(primaryTitles.indices, id: \.self) { i in
+                            Text(primaryTitles[i]).opacity(i == page ? 1 : 0)
+                        }
                     }
                 }
-            }
-            .buttonStyle(.primary)
-            .accessibilityLabel(primaryTitles[page])
+                .buttonStyle(.primary)
+                .accessibilityLabel(primaryTitles[page])
+                .opacity(showsAppleButton ? 0 : 1)
+                .disabled(showsAppleButton)
+                .accessibilityHidden(showsAppleButton)
 
-            // Zweiter Knopf nur auf der letzten Seite; der Platz ist überall reserviert.
-            Button("Erstmal umschauen") { onFinish(.browse) }
-                .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
-                .frame(maxWidth: .infinity, minHeight: Layout.tap)
-                .contentShape(.rect)
-                .opacity(page == pages - 1 ? 1 : 0)
-                .disabled(page != pages - 1)
-                .accessibilityHidden(page != pages - 1)
+                if showsAppleButton {
+                    // Nach erfolgreicher Anmeldung kurz das Häkchen auf der Seite zeigen, dann weiter.
+                    AppleSignInButton {
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 900))
+                            if page == accountPage { go(to: accountPage + 1) }
+                        }
+                    }
+                    .transition(.opacity)
+                }
+            }
+
+            // Zweiter Knopf: auf der Anmeldeseite „Später“, auf der letzten „Erstmal umschauen“; der Platz ist überall reserviert.
+            ZStack {
+                Button("Später") { go(to: accountPage + 1) }
+                    .secondaryOnboardingLink(visible: showsAppleButton)
+                Button("Erstmal umschauen") { onFinish(.browse) }
+                    .secondaryOnboardingLink(visible: page == pages - 1)
+            }
         }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: page)
     }
@@ -119,6 +145,19 @@ struct OnboardingView: View {
     private func go(to target: Int) {
         let target = min(target, pages - 1)
         if reduceMotion { page = target } else { withAnimation(.smooth) { page = target } }
+    }
+}
+
+private extension View {
+    /// Leiser Textknopf unter dem Hauptknopf; unsichtbar bleibt er im Layout, damit nichts springt.
+    func secondaryOnboardingLink(visible: Bool) -> some View {
+        self
+            .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
+            .frame(maxWidth: .infinity, minHeight: Layout.tap)
+            .contentShape(.rect)
+            .opacity(visible ? 1 : 0)
+            .disabled(!visible)
+            .accessibilityHidden(!visible)
     }
 }
 
@@ -476,7 +515,64 @@ private struct AppIconMark: View {
     }
 }
 
-// MARK: - 04 Erster Gutschein
+// MARK: - 04 Mit Apple anmelden
+
+private struct AccountPage: View {
+    let active: Bool
+    @State private var step = 0
+    @State private var account = AppleAccount.shared
+
+    private let benefits: [(icon: String, title: String, text: String)] = [
+        ("faceid", "Ein Blick, fertig", "Face ID statt Passwort – nichts zu merken."),
+        ("envelope.badge.shield.half.filled", "E-Mail bleibt privat", "Auf Wunsch siehst du nur eine Apple-Weiterleitung."),
+        ("lock.shield", "Gutscheine bleiben bei dir", "Auf dem Gerät und in deinem iCloud – nicht bei uns."),
+    ]
+
+    var body: some View {
+        PageFrame(title: account.isSignedIn ? "Hallo\(greeting)!" : "Melde dich\nmit Apple an.",
+                  text: account.isSignedIn
+                    ? "Du bist mit Apple angemeldet. Abmelden kannst du jederzeit in den Einstellungen."
+                    : "So ist Restwert von Anfang an deins. Kein neues Passwort, kein Konto bei uns – und du kannst es jederzeit in den Einstellungen ändern.",
+                  active: active) {
+            VStack(spacing: 0) {
+                ForEach(Array(benefits.enumerated()), id: \.offset) { i, b in
+                    if i > 0 { Divider().padding(.leading, 70).opacity(step > i ? 1 : 0) }
+                    HStack(spacing: 14) {
+                        Image(systemName: account.isSignedIn && i == 0 ? "checkmark" : b.icon)
+                            .font(.scaled(20, weight: .semibold))
+                            .foregroundStyle(i == 0 && account.isSignedIn ? Color.onInk : Color.ink)
+                            .contentTransition(.symbolEffect(.replace))
+                            .frame(width: 44, height: 44)
+                            .background(i == 0 && account.isSignedIn ? Color.ink : Color.fill, in: .circle)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(b.title).font(.scaled(16, weight: .semibold))
+                            Text(b.text).font(.scaled(13)).foregroundStyle(Color.muted)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, Layout.inset).padding(.vertical, Layout.group)
+                    .offset(x: step > i ? 0 : 60)
+                    .opacity(step > i ? 1 : 0)
+                    .motion(.spring(duration: 0.5, bounce: 0.25), value: step)
+                }
+            }
+            .cardSurface()
+            .scaleEffect(step >= 1 ? 1 : 0.96)
+            .motion(.spring(duration: 0.5), value: step)
+            .accessibilityElement(children: .combine)
+        }
+        .modifier(Stepper(active: active, steps: [150, 160, 160], step: $step))
+        .sensoryFeedback(.success, trigger: account.isSignedIn) { _, now in now }
+    }
+
+    private var greeting: String {
+        let first = account.name.split(separator: " ").first.map(String.init) ?? ""
+        return first.isEmpty ? "" : ", \(first)"
+    }
+}
+
+// MARK: - 05 Erster Gutschein
 
 private struct FirstCardPage: View {
     let active: Bool

@@ -3,7 +3,6 @@ import RestwertKit
 import UniformTypeIdentifiers
 import UserNotifications
 import LocalAuthentication
-import AuthenticationServices
 
 struct SettingsView: View {
     @Environment(Store.self) private var store
@@ -12,7 +11,6 @@ struct SettingsView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
-    @Environment(\.colorScheme) private var colorScheme
     @State private var account = AppleAccount.shared
     @State private var confirmSignOut = false
     /// Nur lesend, damit Schalter und Kopfzeile immer denselben Stand zeigen (CloudSync liest direkt aus UserDefaults).
@@ -435,15 +433,8 @@ struct SettingsView: View {
                 }
         } else {
             VStack(alignment: .leading, spacing: 12) {
-                SignInWithAppleButton(.signIn) { request in
-                    account.configure(request)
-                } onCompletion: { result in
-                    withAnimation(.snappy) { account.handle(result) }
-                }
-                .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
-                .frame(height: 50)
-                .clipShape(.rect(cornerRadius: 14, style: .continuous))
-                .accessibilityHint("Optional. Deine Gutscheine bleiben auf dem Gerät.")
+                AppleSignInButton()
+                    .accessibilityHint("Optional. Deine Gutscheine bleiben auf dem Gerät.")
                 if let error = account.error {
                     Label(error, systemImage: "exclamationmark.triangle").font(.scaled(13)).foregroundStyle(Color.warn)
                 }
