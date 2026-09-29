@@ -503,7 +503,7 @@ private struct TotalHeader: View {
                     if !notes.isEmpty { Text(notes.joined(separator: " · ")).font(.scaled(13)).opacity(0.75) }
                 }
                 // Auch bei großer Schrift: sonst hielte man die Beispiele für eigene Gutscheine.
-                if examples { Text("Nur Beispiele – dein erster Gutschein ersetzt sie").font(.scaled(13)).opacity(0.75) }
+                if examples { Text(big ? "Nur Beispiele – dein erster Gutschein ersetzt sie" : "Nur Beispiele").font(.scaled(13)).opacity(0.75) }
             }
             .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.group).padding(.bottom, Layout.inset)
         }
