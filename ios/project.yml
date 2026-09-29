@@ -36,9 +36,8 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
-        # Geräte-Build ohne iCloud: RESTWERT_APP_ENTITLEMENTS=Restwert-Device.entitlements (nur App Group).
-        RESTWERT_APP_ENTITLEMENTS: Restwert.entitlements
-        CODE_SIGN_ENTITLEMENTS: $(RESTWERT_APP_ENTITLEMENTS)
+        # Immer mit iCloud: ein Build ohne iCloud-Berechtigung stürzt beim ersten CloudKit-Zugriff ab.
+        CODE_SIGN_ENTITLEMENTS: Restwert.entitlements
   RestwertWidget:
     type: app-extension
     platform: iOS
