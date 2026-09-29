@@ -119,14 +119,7 @@ struct ExpiryRadar: View {
                 y -= step
             }
             ctx.fill(dots, with: .color(Color.line.opacity(0.9)))
-            // Warnzonen als farbige Abschnitte der Achse (bis 14 Tage rot, bis 30 Tage orange), mit Luft zur Heute-Marke
-            // und zueinander, damit nichts zusammengequetscht wirkt.
-            for band in p.bands {
-                let x0 = max(band.x0, p.todayX + 7) + (band.strong ? 0 : 2)
-                let w = max(0, band.x1 - x0 - 2)
-                ctx.fill(Path(roundedRect: CGRect(x: x0, y: axis - 2, width: w, height: 4), cornerRadius: 2),
-                         with: .color(band.strong ? Color.warn : Color.soon))
-            }
+            // Keine farbigen Warnzonen auf der Achse (Wunsch): Dringendes zeigen roter Ring und roter Betrag an der Kachel.
             // Spaltengrenzen der Jahreszone: zart gestrichelt, damit sie nicht wie ein Stiel wirken.
             for c in p.columns.dropFirst() {
                 var line = Path()
