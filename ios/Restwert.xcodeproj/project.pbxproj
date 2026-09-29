@@ -28,6 +28,13 @@
 			remoteGlobalIDString = C10000000000000000000006;
 			remoteInfo = RestwertShare;
 		};
+		D10000000000000000000031 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000000000000000000009 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000000000000000000006;
+			remoteInfo = Restwert;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -52,6 +59,7 @@
 		B10000000000000000000014 /* RestwertWidget-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RestwertWidget-Info.plist"; sourceTree = "<group>"; };
 		C10000000000000000000001 /* RestwertShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RestwertShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		C10000000000000000000014 /* RestwertShare-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "RestwertShare-Info.plist"; sourceTree = "<group>"; };
+		D10000000000000000000001 /* RestwertUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RestwertUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -68,6 +76,11 @@
 		C10000000000000000000002 /* RestwertShare */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = RestwertShare;
+			sourceTree = "<group>";
+		};
+		D10000000000000000000002 /* RestwertUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = RestwertUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -96,6 +109,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D10000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -105,6 +125,7 @@
 				A10000000000000000000002 /* Restwert */,
 				B10000000000000000000002 /* RestwertWidget */,
 				C10000000000000000000002 /* RestwertShare */,
+				D10000000000000000000002 /* RestwertUITests */,
 				A10000000000000000000014 /* Restwert-Info.plist */,
 				B10000000000000000000014 /* RestwertWidget-Info.plist */,
 				C10000000000000000000014 /* RestwertShare-Info.plist */,
@@ -118,6 +139,7 @@
 				A10000000000000000000001 /* Restwert.app */,
 				B10000000000000000000001 /* RestwertWidget.appex */,
 				C10000000000000000000001 /* RestwertShare.appex */,
+				D10000000000000000000001 /* RestwertUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -194,6 +216,27 @@
 			productReference = C10000000000000000000001 /* RestwertShare.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		D10000000000000000000006 /* RestwertUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D10000000000000000000010 /* Build configuration list for PBXNativeTarget "RestwertUITests" */;
+			buildPhases = (
+				D10000000000000000000007 /* Sources */,
+				D10000000000000000000003 /* Frameworks */,
+				D10000000000000000000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D10000000000000000000030 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D10000000000000000000002 /* RestwertUITests */,
+			);
+			name = RestwertUITests;
+			productName = RestwertUITests;
+			productReference = D10000000000000000000001 /* RestwertUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -212,6 +255,10 @@
 					};
 					C10000000000000000000006 = {
 						CreatedOnToolsVersion = 26.0;
+					};
+					D10000000000000000000006 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = A10000000000000000000006;
 					};
 				};
 			};
@@ -235,6 +282,7 @@
 				A10000000000000000000006 /* Restwert */,
 				B10000000000000000000006 /* RestwertWidget */,
 				C10000000000000000000006 /* RestwertShare */,
+				D10000000000000000000006 /* RestwertUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -255,6 +303,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		C10000000000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D10000000000000000000008 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -285,6 +340,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D10000000000000000000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -297,6 +359,11 @@
 			isa = PBXTargetDependency;
 			target = C10000000000000000000006 /* RestwertShare */;
 			targetProxy = C10000000000000000000031 /* PBXContainerItemProxy */;
+		};
+		D10000000000000000000030 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A10000000000000000000006 /* Restwert */;
+			targetProxy = D10000000000000000000031 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -376,8 +443,8 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Restwert nutzt die Kamera, um Barcodes und Text von Gutscheinen zu scannen und Fotos deiner Karten aufzunehmen.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Restwert speichert Bilder deiner Gutscheine auf Wunsch in deinen Fotos.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Restwert sperrt mit Face ID die App und die PINs deiner Gutscheinkarten.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Restwert speichert Bilder deiner Gutscheine auf Wunsch in deinen Fotos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -416,8 +483,8 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Restwert nutzt die Kamera, um Barcodes und Text von Gutscheinen zu scannen und Fotos deiner Karten aufzunehmen.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Restwert speichert Bilder deiner Gutscheine auf Wunsch in deinen Fotos.";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Restwert sperrt mit Face ID die App und die PINs deiner Gutscheinkarten.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Restwert speichert Bilder deiner Gutscheine auf Wunsch in deinen Fotos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -560,6 +627,42 @@
 			};
 			name = Release;
 		};
+		D10000000000000000000015 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3MX55UN8BD;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.restwert.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Restwert;
+			};
+			name = Debug;
+		};
+		D10000000000000000000016 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3MX55UN8BD;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.restwert.app.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Restwert;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -595,6 +698,15 @@
 			buildConfigurations = (
 				C10000000000000000000015 /* Debug */,
 				C10000000000000000000016 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D10000000000000000000010 /* Build configuration list for PBXNativeTarget "RestwertUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D10000000000000000000015 /* Debug */,
+				D10000000000000000000016 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

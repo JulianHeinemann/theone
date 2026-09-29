@@ -274,4 +274,15 @@ struct CouponRound16Tests {
         #expect(TextParser.benefit(in: "Reservierung: 4 für 2") == nil)
         #expect(TextParser.benefit(in: "2 für 1 – Reservierung empfohlen") == "2 für 1")
     }
+
+    @Test("Rückseite hervorheben: Geschenkkarte ja, Speisekarte/handschriftlich/Eintrittskarte mit Code nein")
+    func suggestsBack() {
+        #expect(ScanDraft.suggestsBack(text: "Buchhandlung Seitenweise\nGeschenkkarte\n25,00 €", hasCode: false, hasPin: false))
+        #expect(ScanDraft.suggestsBack(text: "Gift Card 50 €", hasCode: false, hasPin: false))
+        #expect(!ScanDraft.suggestsBack(text: "Café Krone\nSpeisekarte\nGutschein 20 €", hasCode: false, hasPin: false))
+        #expect(!ScanDraft.suggestsBack(text: "Gutschein für Oma\n30 Euro\nvon Mia", hasCode: false, hasPin: false))
+        #expect(!ScanDraft.suggestsBack(text: "Eintrittskarte\nCode 1234-5678", hasCode: true, hasPin: false))
+        #expect(ScanDraft.suggestsBack(text: "Code 1234-5678\nPIN auf der Rückseite freirubbeln", hasCode: true, hasPin: false))
+        #expect(!ScanDraft.suggestsBack(text: "Code 1234-5678\nPIN 4821", hasCode: true, hasPin: true))
+    }
 }

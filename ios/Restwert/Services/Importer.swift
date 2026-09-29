@@ -106,11 +106,7 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
     /// oder der Text verweist auf PIN, Rubbelfeld oder Rückseite und eine PIN fehlt noch.
     var suggestsBack: Bool {
         guard source == .camera || source == .photo, photo != nil, !hasBack else { return false }
-        // Ohne Code nur bei Karten (Geschenkkarte, Kartennummer): ein handgeschriebener Gutschein hat keine Rückseite.
-        if barcode == nil && draft.number == nil,
-           text.range(of: #"(?i)\b(?:\w*(?:geschenk|guthaben|gutschein|kunden|wert|prepaid|bonus)karte|karte|kartennummer|gift\s?card|card)\b"#, options: .regularExpression) != nil { return true }
-        return draft.pin == nil
-            && text.range(of: #"(?i)\b(?:PIN|Rubbel\w*|freirubbeln|Rückseite|Rueckseite)\b"#, options: .regularExpression) != nil
+        return ScanDraft.suggestsBack(text: text, hasCode: barcode != nil || draft.number != nil, hasPin: draft.pin != nil)
     }
 
     /// Angezeigter und gespeicherter Code: der gelesene Barcode. Bei reinen Online-Codes ohne Barcode-Anzeige

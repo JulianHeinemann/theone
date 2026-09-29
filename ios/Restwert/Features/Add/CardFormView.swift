@@ -476,7 +476,7 @@ struct CardFormView: View {
                           prompt: "z.\u{00A0}B. 2 für 1", text: $benefitText)
             }
             if !kind.isValueBased || !minOrderText.isEmpty {
-                FormField(label: "Mindestbestellwert in € (optional)", note: "Gilt der Code erst ab einem Einkaufswert? Dann hier eintragen.",
+                FormField(label: "Mindesteinkauf in € (optional)", note: "Gilt der Code erst ab einem Einkaufswert? Dann hier eintragen.",
                           prompt: "z.\u{00A0}B. 50", text: $minOrderText, keyboard: .decimalPad)
             }
             dateBox(expiresIsSuggestion ? "Gültig bis · geschätzt" : expiresFromDuration ? "Gültig bis · berechnet" : "Gültig bis",
@@ -790,7 +790,7 @@ struct CardFormView: View {
     private func validate() -> [String] {
         var e: [String] = []
         if shopText.trimmingCharacters(in: .whitespaces).isEmpty { e.append("Gib den Laden ein.") }
-        if !minOrderText.isEmpty && parseMoney(minOrderText) == nil { e.append("„Mindestbestellwert“ ist keine gültige Zahl.") }
+        if !minOrderText.isEmpty && parseMoney(minOrderText) == nil { e.append("„Mindesteinkauf“ ist keine gültige Zahl.") }
         if formatNeedsChoice && !number.isEmpty {
             e.append("Wähl die Barcode-Art, die auf dem Gutschein zu sehen ist (oder „Nur Code“, wenn es keinen Barcode gibt).")
         }

@@ -68,7 +68,7 @@ struct SettingsView: View {
                             AccessibilityNotification.Announcement("Schutz für geteiltes Gerät ist an").post()
                         }
                     } label: {
-                        let label = settingLabel("Mehrere nutzen dieses Gerät", "Schaltet PIN-Schutz, App-Sperre und Code-Schutz auf einmal ein", "person.2")
+                        let label = settingLabel("Mehrere nutzen dieses Gerät", "Schaltet die drei Schalter darunter auf einmal ein: PIN schützen, App sperren, Codes erst nach \(method)", "person.2")
                         let pill = Text("Einschalten").font(.scaled(15, weight: .semibold))
                             .lineLimit(1).fixedSize()
                             .padding(.horizontal, 12).padding(.vertical, 6)
@@ -110,7 +110,7 @@ struct SettingsView: View {
                     settingLabel("Code an der Kasse verdecken", "Nur die Ziffern, Tippen zeigt sie", "eye.slash")
                 }
             } header: {
-                Text("Schutz")
+                Text("Schutz").foregroundStyle(Color.ink2)
             } footer: {
                 Text("Die App-Sperre schützt die ganze App. Die anderen Schalter schützen nur die PIN, den Code oder die Ziffern an der Kasse. Mit App-Sperre oder Code-Schutz zeigen Erinnerungen weder Laden noch Betrag. \(Device.name)-Code ist der Code, mit dem du dein \(Device.name) entsperrst.")
                     .foregroundStyle(Color.ink2)
@@ -121,7 +121,7 @@ struct SettingsView: View {
             Section {
                 appleAccountRow
             } header: {
-                Text("Konto")
+                Text("Konto").foregroundStyle(Color.ink2)
             } footer: {
                 Text(account.isSignedIn
                      ? "Restwert kennt dich nur auf diesem \(Device.name): Vorname und eine anonyme Apple-Kennung. Deine Gutscheine bleiben auf dem Gerät und in deiner iCloud."
@@ -156,7 +156,7 @@ struct SettingsView: View {
                     }
                 }
             } header: {
-                Text("Erinnerungen")
+                Text("Erinnerungen").foregroundStyle(Color.ink2)
             }
             .tint(Color.toggleOn)
 
@@ -174,7 +174,7 @@ struct SettingsView: View {
                 }
                 .modifier(AdaptivePickerStyle())
             } header: {
-                Text("Anzeige")
+                Text("Anzeige").foregroundStyle(Color.ink2)
             } footer: {
                 Text("Ab dann steht ein Gutschein auf Start oben unter „Läuft bald ab“.")
             }
@@ -187,7 +187,7 @@ struct SettingsView: View {
                 }
                 Label("An der Kasse wird die Helligkeit automatisch erhöht.", systemImage: "sun.max")
             } header: {
-                Text("So funktioniert Restwert")
+                Text("So funktioniert Restwert").foregroundStyle(Color.ink2)
             }
             .font(.scaled(15))
             .foregroundStyle(Color.ink2)
@@ -201,7 +201,7 @@ struct SettingsView: View {
                     Text(restoreMessage).font(.scaled(15)).foregroundStyle(Color.ink2)
                 }
             } header: {
-                Text("Sicherung")
+                Text("Sicherung").foregroundStyle(Color.ink2)
             } footer: {
                 Text("Deine Gutscheine sind im iCloud-Backup deines \(Device.name)s enthalten. Zusätzlich kannst du eine Sicherungsdatei speichern, z.\u{00A0}B. in iCloud Drive. Sie enthält PINs und Fotos – bewahre sie sicher auf. Die Tabelle enthält keine PINs.")
             }
@@ -234,7 +234,7 @@ struct SettingsView: View {
                 }
                 Button("Alles löschen", systemImage: "trash", role: .destructive) { confirmReset = true }
             } header: {
-                Text("Hilfe & Rechtliches")
+                Text("Hilfe & Rechtliches").foregroundStyle(Color.ink2)
             }
             .foregroundStyle(Color.ink)
         }
@@ -561,7 +561,7 @@ struct ReminderSettingsView: View {
                         }))
                 }
             } header: {
-                Text("Vorlaufzeit")
+                Text("Vorlaufzeit").foregroundStyle(Color.ink2)
             } footer: {
                 Text("Du kannst mehrere wählen. Unabhängig davon steht ein Gutschein ab \(warnDays)\u{00A0}Tagen vor Ablauf unter „Läuft bald ab“.")
             }

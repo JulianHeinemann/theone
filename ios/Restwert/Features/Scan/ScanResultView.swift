@@ -271,11 +271,13 @@ struct ScanResultView: View {
                           // Kein Datum auf dem Gutschein: gesetzliche Frist nennen statt nur „nicht gefunden“.
                           value: draft.expires.map(\.dayMonthYear) ?? "nicht angegeben – gesetzlich bis \(GiftCard.legalExpiry(from: outcome.received ?? .now).dayMonthYear)"))
         }
-        if let m = draft.minOrder { t.append(Tile(label: "Mindestbestellwert", value: "ab \(m.euro)")) }
+        if let m = draft.minOrder { t.append(Tile(label: "Mindesteinkauf", value: "ab \(m.euro)")) }
         if let code {
             // Lange Codes über die volle Breite, damit sie in einer Zeile stehen (wie an der Kasse).
             t.append(Tile(label: "Code", value: code, wide: code.filter { !$0.isWhitespace }.count > 12))
-            t.append(Tile(label: "Barcode an der Kasse", value: formatText))
+            // Bei breitem Code auch die Barcode-Kachel breit darunter: Code steht zuerst, wie auf der Karte.
+            let wideCode = code.filter { !$0.isWhitespace }.count > 12
+            t.append(Tile(label: "Barcode an der Kasse", value: formatText, wide: wideCode))
             if let pin = draft.pin { t.append(Tile(label: "PIN", value: String(repeating: "•", count: pin.count))) }
         } else {
             // Papiergutschein ohne Code: keine leeren „–“-Kacheln, sondern sagen, was an der Kasse passiert.

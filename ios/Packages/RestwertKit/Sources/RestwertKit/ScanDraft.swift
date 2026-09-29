@@ -165,6 +165,15 @@ public enum ScanDraft {
     }
 
     /// Code muss nach Code aussehen: mindestens 4 Zeichen und eine Ziffer.
+    /// Rückseite hervorheben (nur für Kartenfotos): Ohne Code nur bei Karten (Geschenkkarte, Kartennummer) –
+    /// ein handgeschriebener Gutschein oder eine Speisekarte hat keine Rückseite mit Nummer. Sonst, wenn der Text
+    /// auf PIN, Rubbelfeld oder Rückseite verweist und die PIN noch fehlt.
+    public static func suggestsBack(text: String, hasCode: Bool, hasPin: Bool) -> Bool {
+        if !hasCode, text.range(of: #"(?i)\b(?:(?:geschenk|guthaben|gutschein|kunden|wert|prepaid|bonus)karte|karte|kartennummer|gift\s?card|card)\b"#,
+                                options: .regularExpression) != nil { return true }
+        return !hasPin && text.range(of: #"(?i)\b(?:PIN|Rubbel\w*|freirubbeln|Rückseite|Rueckseite)\b"#, options: .regularExpression) != nil
+    }
+
     public static func isPlausibleCode(_ n: String) -> Bool {
         let c = n.replacingOccurrences(of: " ", with: "")
         // Betragszeilen („über30,-Euro“, „25 €“) sind kein Code, auch wenn die KI sie dafür hält.

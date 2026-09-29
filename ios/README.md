@@ -49,4 +49,6 @@ ios/
 
 - Swift 6 mit `MainActor` als Standard-Isolation; Analyse läuft mit `@concurrent` im Hintergrund.
 - Tests für die Logik: `cd Packages/RestwertKit && swift test`.
+- UI-Tests (XCUITest, Simulator): `xcodebuild test -project Restwert.xcodeproj -scheme RestwertUITests -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` – Einstieg mit Anmeldeseite, Vorder- und Rückseite scannen, Barrierefreiheits-Audit (Apple) für Start, Einstellungen und Kasse; bewusst hingenommene Audit-Befunde stehen mit Begründung in `RestwertUITests/RestwertUITests.swift`.
+- Barcodes an der Kasse Ende-zu-Ende: `scripts/barcode-kasse-test.sh <Simulator-UDID>`, Screenshots danach mit Vision zurücklesen.
 - Alternativ mit [XcodeGen](https://github.com/yonaskolb/XcodeGen): `xcodegen generate` im Ordner `ios/` erzeugt das Projekt aus `project.yml`.
