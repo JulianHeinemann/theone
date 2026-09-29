@@ -1,0 +1,1179 @@
+[
+ {
+  "persona": "Sabine K., 38, Grundschullehrerin, bekommt Gutscheine von Eltern (Papier, Stadtgutschein, handgeschrieben) und sammelt sie im Portemonnaie (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Papiergutscheine per Foto scannen, Übersicht was noch drauf ist und bald abläuft",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 8,
+   "barrierefreiheit": 9
+  },
+  "scores_runde12": {
+   "gesamt": 10,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Das Radar rechnet jetzt ehrlich: '95 € + 20 %' und darunter '3 Gutscheine', da passt Summe und Anzahl. Aber beim handgeschriebenen Café-Gutschein von Oma Gisela steht plötzlich als Code 'über30,-Euro' – das ist der Betrag und kein Code. Außerdem sehen die Einstellungen wieder aus wie früher, ohne die schönen runden Karten.",
+  "behoben": [
+   "start-bestand-unten / ExpiryRadar.swift:461-467: Bündel '95 € + 20 %' / '3 Gutscheine' – der Rabattcode steht jetzt ausdrücklich im Betrag, Anzahl und Summe passen zusammen (mein Befund aus Runde 12).",
+   "start / start-bestand: 'Läuft bald ab' mit Frist-Pille und großem Kasse-Knopf weiter gut; in dunkel-start und kontrast-start genauso klar."
+  ],
+  "offen": [
+   "gespeichert-im-tab: Toast '„Douglas“ gespeichert – Ansehen' liegt weiter über einer Zeile der Hinzufügen-Liste (jetzt über 'Aus der Zwischenablage').",
+   "Reihen-Ende (Bilanz mit 'Letzten ansehen') weiter ohne Screenshot.",
+   "start-bestand: '25,00 € / von 25,00 €' bei nie eingelösten Gutscheinen doppelt (Wunsch des Inhabers, klein und grau)."
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v04 / ScanDraft.swift:38-40, 132-135",
+    "befund": "Handgeschriebener Café-Gutschein: Kachel 'Code ✦ über30,-Euro' – Apple Intelligence liefert die Betragszeile als Code, und isPlausibleCode lässt alles mit ≥4 Zeichen und einer Ziffer durch. Deswegen steht auch 'Barcode an der Kasse: nicht gelesen – im nächsten Schritt wählen' statt 'Foto zeigen'. Nicht stabil: gross/scan-v04 aus demselben Lauf zeigt korrekt 'An der Kasse' ohne Code. Mit ✦ und 'bitte prüfen' markiert, aber genau mein Alltagsfall.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "einstellungen-schutz / SettingsView.swift:552-556",
+    "befund": "Regression: Auf dem iPhone laufen die Einstellungs-Abschnitte wieder randlos über die volle Breite, ohne abgerundete Ecken (seit in c655afe die contentMargins für das iPad entfernt wurden). Auf dem iPad passt es.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gespeichert-im-tab",
+    "befund": "Speichern-Hinweis verdeckt eine Listenzeile; stört wenig.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Kein KI-Code aus der Betragszeile (Code mit '€'/'Euro' oder gleich dem Wert verwerfen, bei Handschrift ohne Code 'Foto zeigen'), Einstellungen auf dem iPhone wieder als runde Karten mit Randabstand. Dann wieder 10.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Helga und Werner B., 70 und 72, Rentnerpaar, teilen sich ein iPhone, mittlere Schriftgröße (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Geteiltes Gerät mit 'Codes erst nach Face ID zeigen', einfache Kasse, verständliche Sprache",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 10,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Die Kasse ist so gut wie beim letzten Mal, und im Radar steht jetzt '120 € + 20 %' und '4 Gutscheine' – das stimmt auch, wenn man nachzählt. Die Einstellungen sehen aber wieder aus wie vor zwei Runden: weiße Streifen bis an den Rand statt der runden Karten, die uns so gefallen haben. Bei großer Schrift muss man für den Kasse-Knopf immer noch scrollen.",
+  "behoben": [
+   "gross-start-bestand-unten: Radar-Bündel '120 € + 20 %' / '4 Gutscheine' – Summe und Anzahl passen jetzt zusammen.",
+   "Mitteilungen: Mit App-Sperre oder Code-Schutz sagt die Erinnerung nur 'Ein Gutschein läuft bald ab – Öffne Restwert, um ihn zu sehen' (Store.swift, Commit c655afe); beim Umschalten neu geplant (SettingsView.swift:256-258). Gut für unser geteiltes Gerät (nur im Code geprüft, kein Screenshot).",
+   "geteiltes-geraet-an: grüne Zeile 'Schutz für geteiltes Gerät ist an', alle drei Schalter an, 'Sperren – Sofort' darunter."
+  ],
+  "offen": [
+   "gross-start / gross-start-bestand: Guthabenkarte bei XL weiter über die halbe Seite; von der ersten 'Läuft bald ab'-Karte sieht man nur Logo und Namen, Kasse-Knopf erst nach Scrollen (als bekannte Grenze vermerkt).",
+   "einstellungen-schutz / geteiltes-geraet-an: 'Sofort ⌃' als eingerückte grüne Auswahl – man sieht nicht gleich, dass man tippen kann.",
+   "Unter der schwebenden Tab-Leiste scheint Text durch (iOS-26-Grenze)."
+  ],
+  "befunde": [
+   {
+    "screen": "einstellungen-schutz / geteiltes-geraet-an / kontrast-einstellungen / SettingsView.swift:552-556",
+    "befund": "Regression: Die in Runde 12 gelobten abgerundeten Karten mit Randabstand sind auf dem iPhone weg – Abschnitte laufen wieder randlos von Kante zu Kante (auch bei Kontrast). Ursache: für die iPad-Lesebreite wurde .contentMargins(.horizontal, …) ersatzlos gestrichen. iPad (ipad-einstellungen) ist dagegen richtig.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross-einstellungen",
+    "befund": "Bei XL fehlen die Symbole vor den Schaltern und die Abschnitte gehen bis an den Rand; lesbar, aber die Zeilen wirken wie eine lange Textwand.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-start",
+    "befund": "Bei großer Schrift ist von der ersten 'Läuft bald ab'-Karte nur 'Zalando' angeschnitten zu sehen, Frist und Knopf liegen unter der Tab-Leiste.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross-kasse",
+    "befund": "Ladenhinweis läuft bei XL unter der Leiste aus; Barcode und 'PIN anzeigen' gut sichtbar.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Die runden Einstellungs-Karten auf dem iPhone zurück (ohne die iPad-Lesebreite wieder zu brechen). Schön wäre zusätzlich eine kleinere Guthabenkarte bei großer Schrift, damit der Kasse-Knopf ohne Scrollen sichtbar ist.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Leon M., 19, Azubi im Einzelhandel, steht täglich an der Kasse mit Handscanner (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Barcode-Qualität an der Kasse, richtige Symbologie, Prüfziffern",
+  "scores": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Kasse top: Rücklesung 12/12, Code-93-Hinweis jetzt auch im Vollbild, neue Modulzahl-Tests nach Norm. Aber meine zwei Dauerpunkte – der falsche Kommentar im Importer und die umbrechenden langen Codes im Ergebnis – stehen jetzt die fünfte Runde offen. Und beim Café-Gutschein landet 'über30,-Euro' als Code.",
+  "behoben": [
+   "barcodes/rueckgelesen.txt: 12/12 exakt (EAN-13, EAN-8, UPC-A als EAN-13 mit führender 0, ITF, Code 39 mit Leerzeichen, 2× Code 128, QR, PDF417, Aztec, 2× Data Matrix).",
+   "kasse-vollbild-code93: Vollbild quer mit 'Als Code 128 gezeichnet (auf der Karte: Code 93)' – neuer Screenshot belegt es.",
+   "ExpiryRadar.swift:462-467: Bündel nennt Rabattcodes im Betrag ('95 € + 20 %'), Anzahl und Summe beziehen sich jetzt auf dieselbe Menge.",
+   "ModuleCountTests.swift (neu): Modulzahlen EAN-13/UPC-A 95, EAN-8 67, ITF 135 bei 14 Ziffern, Code 39 +16 je Zeichen.",
+   "ScanResultView.swift: 'Barcode (EAN-13)' statt 'Strichcode (…)' – einheitliche Begriffe."
+  ],
+  "offen": [
+   "ios/Restwert/Services/Importer.swift:64-65: Doc-Kommentar sagt weiter 'gelesener oder am Code erkannter Barcode', Z. 72-73 erlaubt nur origin == .scanned oder Online-Code – fünfte Runde.",
+   "scan-v09 / scan-v13 / musterwarnung: Code-Kachel weiter zweizeilig ('AQ7K-2ZPM4H-' / 'R8TX', 'OT-7731-5520-' / '9912', 'IK-9934-2281-' / '4410'), obwohl kasse-online denselben Code einzeilig zeigt.",
+   "ScanResultView.swift:312 vs. 314: Doc-Kommentar 'Bindestriche nicht umbrechen', Code setzt nach jedem Bindestrich eine Umbruchstelle.",
+   "ExpiryRadar.swift:443 und 459: Kommentare zu '„+N“ für den Rest' und '„2× 95 €“' weiter veraltet; Z. 368 nennt noch '„2× 120 €“'."
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v04 / ScanDraft.swift:132-135",
+    "befund": "isPlausibleCode akzeptiert jeden String mit ≥ 4 Zeichen und einer Ziffer; so wird 'über30,-Euro' aus der Wertzeile als KI-Code übernommen (ScanDraft.swift:38-40), obwohl d.value = 30 aus derselben Zeile stammt. Ein Code, der Leerzeichen-bereinigt die Betragszeile ist oder '€/Euro' enthält, sollte verworfen werden. Nicht deterministisch (gross/scan-v04 ohne Code).",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "einstellungen-schutz / SettingsView.swift:552-556",
+    "befund": "Regression durch c655afe: .contentMargins(.horizontal, Layout.page) entfernt – iPad passt jetzt, aber iPhone-Einstellungen laufen randlos ohne runde Ecken. Die Randabstände hätten nur fürs iPad (bzw. innerhalb readableWidth) wegfallen dürfen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ios/Restwert/Services/Importer.swift:64-65",
+    "befund": "Veralteter Kommentar widerspricht Z. 72-73 – Einzeiler, fünfte Runde offen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v09, scan-v13, musterwarnung",
+    "befund": "Lange Codes in halber Kachel zweizeilig; beim Abgleich mit dem Papier unruhig.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Importer.swift:64-65 korrigieren, lange Codes im Scan-Ergebnis über die volle Kachelbreite, KI-Codes aus Betragszeilen verwerfen. Das sind konkrete, kleine Änderungen – dann 10.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Thomas R., 45, Pendler, bekommt fast nur Online-Codes per Mail (Zalando, Amazon, OTTO) (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Import aus Mail-Text und PDF-Anhang, Fristen, Code online einlösen",
+  "scores": {
+   "gesamt": 10,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 10,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Im Radar steht jetzt '95 € + 20 %' – mein Zalando-Rabattcode ist endlich sichtbar mitgezählt statt heimlich. Online-Kasse mit großem Code und 'Code kopieren' bleibt klasse, OTTO und Zalando werden sicher erkannt. Die Einstellungen sehen etwas schlichter aus als letztes Mal, das stört mich aber kaum.",
+  "behoben": [
+   "start-bestand-unten: Radar-Bündel '95 € + 20 %' / '3 Gutscheine' – Anzahl und Summe passen zusammen (mein Befund aus Runde 12).",
+   "start / dunkel-start: 'Code anzeigen' mit Globus für Online-Codes, '15 % Rabatt' statt Betrag.",
+   "kasse-online / kasse-online-mindestbestellwert: Code einzeilig groß, 'Code kopieren' 10 Minuten nur auf diesem iPhone, 'Eingelöst – Einkauf abziehen'.",
+   "Mitteilungen ohne Laden und Betrag bei Sperre (Store.swift, c655afe) – nur im Code geprüft."
+  ],
+  "offen": [
+   "scan-v14: Online-Code '7GHK 2M9P XQ41' mit Leerzeichen gruppiert, weiter ohne Hinweis, ob die Leerzeichen beim Abtippen dazugehören ('Code kopieren' löst es).",
+   "scan-v09 / scan-v13: lange Codes brechen in der halben Kachel um.",
+   "Teilen aus der Mail-App mit Vorschau 'Amazon · 25,00 €' weiter ohne Screenshot (bekannte Simulator-Grenze)."
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v09 / scan-v13",
+    "befund": "'AQ7K-2ZPM4H-' / 'R8TX' und 'OT-7731-5520-' / '9912' zweizeilig, obwohl die Online-Kasse denselben Code in einer Zeile zeigt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v14",
+    "befund": "Gruppierter Online-Code ohne Hinweis 'ohne Leerzeichen eingeben'.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz / SettingsView.swift:552-556",
+    "befund": "Einstellungen auf dem iPhone wieder randlos statt runder Karten (Regression aus c655afe); funktional egal, optisch ein Schritt zurück.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches – die 10 bleibt. Kosmetik: lange Codes im Ergebnis über volle Breite, Leerzeichen-Hinweis bei gruppierten Online-Codes, runde Einstellungskarten auf dem iPhone zurück.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Sandra K., 34, alleinerziehend, ein iPad wird von zwei Kindern (7 und 11) mitgenutzt (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Geteiltes Gerät: Codes vor Kindern verstecken, Schutz nicht aus Versehen abschaltbar",
+  "scores": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Meine beiden Wünsche sind erfüllt: Die Einstellungen auf dem iPad stehen wieder schön in der Mitte, und wenn der Code-Schutz an ist, steht in der Erinnerung nur noch „Ein Gutschein läuft bald ab“, ohne Laden und ohne Betrag. Das ist sogar besser als ein eigener Schalter, weil ich nichts extra einstellen muss. Der Schutz selbst ist unverändert gut.",
+  "behoben": [
+   "iPad-Einstellungen wieder auf Lesebreite (ca. 700 pt, Karten mit runden Ecken, ipad-einstellungen); Ursache war contentMargins in settingsCards(), jetzt entfernt (SettingsView.swift:551-556)",
+   "Mitteilungen ohne Laden/Betrag, sobald App-Sperre oder Code-Schutz an ist: „Ein Gutschein läuft bald ab – Öffne Restwert, um ihn zu sehen.“ (Store.swift:812-814); beim Umschalten werden die Erinnerungen neu geplant (SettingsView.swift:257-258)",
+   "Schutz unverändert vollständig: grün „Schutz für geteiltes Gerät ist an“ mit Schonfrist „Sofort“ (geteiltes-geraet-an), Kasse nur „Geschützt – tippen und entsperren“ (kasse-code-geschuetzt)"
+  ],
+  "offen": [
+   "Suchfeld auf dem iPad weiter über die volle Breite, Inhalt darunter in der Lesespalte (ipad-start)",
+   "iPad-Kasse im Hochformat mit großer Leerfläche zwischen Karte und Leiste (ipad-kasse, unverändert)",
+   "Stille Mitteilung selbst nur im Code belegt, nicht per Screenshot (kein Abzug)"
+  ],
+  "befunde": [
+   {
+    "screen": "ipad-start",
+    "befund": "Suchfeld läuft von Rand zu Rand (ca. 1440 px breit), Guthabenkarte und Liste darunter nur ca. 980 px – wirkt uneinheitlich, stört aber nicht beim Benutzen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Store.swift:812",
+    "befund": "Die stille Variante hängt nur an „appLock“/„codeLock“; mit reinem PIN-Schutz (Standard) nennt die Mitteilung weiter Laden und Betrag. Für mich passt das, weil ich Code-Schutz an habe; im Fußtext der Einstellungen steht diese Wirkung auf Mitteilungen aber nirgends.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz / SettingsView.swift:221 + Theme.swift:607",
+    "befund": "Auf dem iPhone laufen die Einstellungs-Abschnitte jetzt als weiße Bänder von Rand zu Rand ohne runde Ecken (readableWidth setzt contentMargins .horizontal = 0 und überschreibt damit den Rand von .insetGrouped). Auf meinem iPad nicht sichtbar, deshalb für mich egal.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Für mich ist es eine 10. Schön wären noch ein Satz in den Schutz-Einstellungen, dass Erinnerungen dann nichts verraten, und das Suchfeld auf dem iPad in der Lesespalte.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Helga M., 61, Sehschwäche, nutzt große Schrift (Dynamic Type) und „Kontrast erhöhen“ (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Lesbarkeit, Kontrast, Größe der Warnungen und Knöpfe",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Im Radar steht jetzt „120 € + 20 %“ und darunter „4 Gutscheine“ – jetzt verstehe ich, dass ein Rabatt dabei ist. Aber die rote Betrugsbox ist bei meiner Schrift immer noch mitten im Satz „lass das Guthaben sperren“ abgeschnitten, und die Einstellungen sehen auf dem iPhone plötzlich wieder aus wie früher, ohne die runden Karten.",
+  "behoben": [
+   "Radar-Bündel nennt den Rabattcode ausdrücklich: XL „120 € + 20 %“ / „4 Gutscheine“, normal „95 € + 20 %“ / „3 Gutscheine“ (gross-start-bestand-unten, start-bestand-unten, ExpiryRadar.swift:461-468)",
+   "„Läuft bald ab“ höchstens drei Karten, Zähler zählt alle, Hinweis „N weitere stehen unten in der Liste.“ (HomeView.swift:170-173) – im Screenshot-Bestand nicht ausgelöst (nur 1–2 Karten)",
+   "Kontrast-Modus Start und Einstellungen weiter klar abgesetzt: Karten mit Rand, ausgeschaltete Schalter dunkelgrau (kontrast-start, kontrast-einstellungen)"
+  ],
+  "offen": [
+   "Rote Betrugsbox bei XL: sichtbar endet sie bei „Ruf sofort die Firma auf dem Gutschein an und lass das“, Sperren und Polizei erst nach Scrollen (gross/scan-v09, unverändert seit Runde 11)",
+   "Kein Screenshot des Radars mit „Kontrast erhöhen“ (kontrast-start endet bei „Läuft bald ab“)",
+   "Radar-Beschriftungen wachsen nur bis Bedienungshilfen 1 (ExpiryRadar.swift:76, :96)",
+   "Knopf „Einschalten“ bei „Mehrere nutzen dieses Gerät“ weiter hellbeige, wirkt blass (gross-einstellungen)"
+  ],
+  "befunde": [
+   {
+    "screen": "einstellungen-schutz, gross-einstellungen, kontrast-einstellungen / SettingsView.swift:221, Theme.swift:607",
+    "befund": "Regression auf dem iPhone: Die in Runde 12 eingeführten abgerundeten Karten mit Randabstand sind weg; Abschnitte laufen als weiße Bänder von Rand zu Rand. Ursache: readableWidth() setzt contentMargins(.horizontal, max(0, (width-700)/2)) = 0 und überschreibt den Rand von .insetGrouped, seit settingsCards() keinen eigenen Rand mehr setzt (Fix für das iPad). Lesbar bleibt es, aber der Wechsel zwischen Start (Karten) und Einstellungen (Bänder) ist wieder da.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross/scan-v09",
+    "befund": "Handlungsabsatz der roten Box läuft bei XL im Verlauf über „Hinzufügen“ aus; „Gib den Code nicht weiter.“ steht oben, Polizei-Hinweis erst nach Scrollen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-start-bestand-unten",
+    "befund": "„4 Gutscheine“ im Radar zählt den Rabattcode mit, die Guthabenkarte oben trennt „Gutscheine“ und „Rabattcode“. Durch „+ 20 %“ ist es aber jetzt nachvollziehbar.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-einstellungen",
+    "befund": "„Einschalten“ hellbeige auf Weiß neben kräftig grünen Schaltern – wirkt fast deaktiviert.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Die ganze rote Box inkl. „Polizei“ bei XL ohne Scrollen (z. B. Knöpfe mitscrollen lassen oder Box kürzer), die runden Einstellungs-Karten auf dem iPhone zurück, ein kräftigerer „Einschalten“-Knopf und ein Kontrast-Screenshot mit Radar.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Werner B., 67, pensionierter Kriminalhauptkommissar, früher Betrugsprävention für Senioren (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Gutscheinbetrug (Enkeltrick, falsche Behörden), Warnungen, Schutz der Codes",
+  "scores": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Warnungen sind stabil: rote Box ab 200 € mit Frage und Handlungsabsatz, Musterwarnung ab 100 €. Neu und richtig: Mit Sperre verraten die Erinnerungen auf dem Sperrbildschirm weder Laden noch Betrag – Täter mit kurzem Zugriff aufs Handy sehen damit nicht mehr, wo Guthaben liegt. Das Radar rechnet jetzt ehrlich „95 € + 20 %“.",
+  "behoben": [
+   "Sperrbildschirm-Mitteilungen ohne Laden/Betrag bei App-Sperre oder Code-Schutz (Store.swift:812-814), Neuplanung beim Umschalten (SettingsView.swift:257-258)",
+   "Radar-Unstimmigkeit „3 Gutscheine“ vs. „95 €“ aufgelöst durch „95 € + 20 %“ (start-bestand-unten, ExpiryRadar.swift:461-468)",
+   "Keine Regression bei Warnungen: gross/scan-v09 zeigt Frage, „Dann ist es Betrug. Gib den Code nicht weiter.“ und Handlungsabsatz; Rückfrage über „Hinzufügen“ statt Ein-Tipp-Speichern; Sperrbildschirm ohne Code mit Hauptweg „Einstellungen öffnen“, Abschalten nur als Textlink (login-ohne-code)"
+  ],
+  "offen": [
+   "Bei XL steht die Polizei-Empfehlung weiter erst nach Scrollen (gross/scan-v09)",
+   "Erste Karte 100–199 € ohne Vorgeschichte nur mit grauem Hinweis, ohne Rückfrage – vertretbar"
+  ],
+  "befunde": [
+   {
+    "screen": "gross/scan-v09",
+    "befund": "Sichtbar: Frage, Betrugssatz, „Ruf sofort die Firma … an und lass das“ – Sperren und Anzeige erst nach Scrollen. Das Wichtigste steht oben.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Store.swift:812",
+    "befund": "Mit nur PIN-Schutz (Standard) nennt die Erinnerung weiter „<Laden> <Betrag> gültig bis …“. Aus Präventionssicht vertretbar, weil Codes nie in der Mitteilung stehen; ein Hinweis im Schutz-Fußtext wäre gut.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz / SettingsView.swift:221",
+    "befund": "Schutz-Abschnitt auf dem iPhone optisch wieder von Rand zu Rand (Regression der Karten-Optik); inhaltlich und sicherheitlich unverändert.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches im Simulator-Build; optional bei XL die ganze rote Box ohne Scrollen.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Tarek A., 29, Deutsch als Zweitsprache (B1), Lagerlogistiker (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Verständlichkeit der Warnungen und Schutztexte",
+  "scores": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Jetzt steht im Radar „95 € + 20 %“ und darunter „3 Gutscheine“. Ich rechne: Amazon 70 und Buchladen 25 sind 95, plus Zalando mit 20 % – das passt jetzt. Die Einstellungen sehen etwas anders aus als letztes Mal, aber die Texte sind gleich klar.",
+  "behoben": [
+   "Rabattcode steht im Bündel ausdrücklich dabei: „95 € + 20 %“ / „3 Gutscheine“ – Anzahl und Betrag passen zusammen (start-bestand-unten, ExpiryRadar.swift:461-468); bei mehreren Codes „+ 2 Codes“",
+   "Mitteilung bei Sperre kurz und einfach: „Ein Gutschein läuft bald ab – Öffne Restwert, um ihn zu sehen.“ (Store.swift:813-814)",
+   "Schutztexte weiter klar, Fußtext erklärt „iPhone-Code“ (einstellungen-schutz)"
+  ],
+  "offen": [
+   "Bei „Läuft bald ab“ und in der Liste „25,00 €“ und darunter „von 25,00 €“ – doppelt, aber klein und grau (start-bestand)",
+   "Systemblatt beim Teilen auf Englisch (Simulator, nicht die App)"
+  ],
+  "befunde": [
+   {
+    "screen": "start-bestand-unten",
+    "befund": "Oben (Guthabenkarte) heißt es „4 Gutscheine + 1 Rabattcode“, im Radar zählt der Rabattcode zu „3 Gutscheine“. Mit „+ 20 %“ verstehe ich es trotzdem sofort.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz / SettingsView.swift:221",
+    "befund": "Einstellungen auf dem iPhone nicht mehr als runde Karten, sondern von Rand zu Rand (wie in älteren Runden). Für mich kein Verständnisproblem.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand",
+    "befund": "„25,00 €“ und „von 25,00 €“ untereinander bei ungenutzten Gutscheinen – ich lese das doppelt.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Für mich ist es jetzt eine 10; „von X €“ nur nach Teileinlösung wäre noch ruhiger.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Timo Brandt, 31, iOS-Entwickler und erfahrener TestFlight-Beta-Tester (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Codequalität, Tests, Scan-Pipeline (Vision/Fallbacks), Sperrlogik",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Richtung stimmt: 'platz'/'reihe' nur noch mit Nummer, 143/143 grün, Modulzahl-Tests da. Aber \\s+ frisst den Zeilenumbruch, und 'CAFÉ AM PLATZ' direkt über '25 €' fliegt weiter raus. Der Test ist so gebaut, dass er es nicht merkt. Die neue Inbox-Aufräumung löscht ausgerechnet alte PDFs mitten in der Reihe, und die Einstellungen haben auf dem iPhone ihre Karten verloren.",
+  "behoben": [
+   "Mein R12-Beispiel 'CAFÉ AM PLATZ / Für dich / 25 €' und der neue Test 'Café am Platz' (mit Zwischenzeile) werden erkannt (ScanDraft.swift:56, GoldenOCRTests.swift:58; probe13 bestätigt)",
+   "Radar-Bündel: Summe und Anzahl passen jetzt zusammen, '95 € + 20 %' / '3 Gutscheine' (ExpiryRadar.swift:461-468; start-bestand-unten.png)",
+   "Liegengebliebene Teilen-Kopien werden aufgeräumt (RestwertApp.swift:124-129), das Prinzip ist umgesetzt (Fehler siehe Befunde)",
+   "Eigener Lauf: 'Test run with 143 tests in 23 suites passed'"
+  ],
+  "offen": [
+   "'Café am Platz' nur teilweise behoben: \\s+ passt auf Zeilenumbrüche (siehe Befund)",
+   "'nur für dich' trifft weiter 'nur' (probe13: 'BLUMEN MEYER / Nur für dich / 20 €' → kein Gutschein), kein Test dafür",
+   "ToastView weiter mit doppeltem fixedSize (RestwertApp.swift:435-436)",
+   ".part wird weiter nicht genutzt, providers.prefix(20) verwirft still ab dem 21. Anhang (ShareViewController.swift:58)",
+   "Texterkennungsfehler weiter still leer (try? … ?? [] in VoucherScanner.swift)",
+   "canSaveDirectly/aiFilled unverändert, kein XCUITest-Target"
+  ],
+  "befunde": [
+   {
+    "screen": "RestwertKit/ScanDraft.swift:56 (priceWords: platz\\s+\\d+)",
+    "befund": "\\s+ passt auch auf Zeilenumbrüche. Bei 'CAFÉ AM PLATZ\\n25 €' trifft 'PLATZ\\n25' das Preiswort. Die Probe probe13 im Scratchpad gegen RestwertKit ergibt: 'CAFÉ AM PLATZ / 25 €' → voucher false, 'HOTEL AM PLATZ / 50 €' → false. Der neue Test (GoldenOCRTests.swift:58) ist nur grün, weil 'Für eine Auszeit' zwischen Name und Betrag steht. Richtig wäre [ \\t]+ statt \\s+, dazu ein Test ohne Zwischenzeile.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "App/RestwertApp.swift:124-129 (takeSharedInbox) + RestwertShare/ShareViewController.swift:138 (copyItem) + RestwertKit/SharedInbox.swift:34 (moveItem)",
+    "befund": "Die neue Aufräumung nach einem Tag richtet sich nach contentModificationDate. copyItem und moveItem behalten aber das Änderungsdatum der Quelldatei. Das hat die Probe mtime13.swift im Scratchpad bestätigt: Nach Kopieren und Verschieben hat eine 5 Tage alte Datei immer noch ihr altes Datum. takeSharedInbox läuft beim Start in .task UND bei jedem scenePhase .active. Ein aus Dateien geteiltes PDF, das älter als einen Tag ist, liegt in pendingBatch. Beim nächsten Aktivieren wird es gelöscht, zum Beispiel beim zweiten Aufruf direkt nach dem Kaltstart oder nach einem kurzen App-Wechsel mitten in einer Reihe. Das passiert, bevor es gelesen ist, und ohne Meldung. Fotos betrifft das nicht, weil sie als JPEG neu geschrieben werden und damit ein frisches Datum haben. Im Simulator nicht per Screenshot belegt, aus Code und Probe abgeleitet.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "einstellungen-schutz.png, gross-einstellungen.png, kontrast-einstellungen.png / Design/Theme.swift:607 + Features/Settings/SettingsView.swift:551-556",
+    "befund": "Regression auf dem iPhone: Die Einstellungen sind nicht mehr als abgerundete Karten mit Randabstand zu sehen. Die weißen Abschnitte laufen von Rand zu Rand, ohne Ecken, und der Schalter sitzt fast an der Bildschirmkante. Ursache: Mit dem entfernten .contentMargins(.horizontal, Layout.page) bleibt nur ReadableWidth übrig, und das setzt auf dem iPhone .contentMargins(.horizontal, max(0, (width-700)/2)) = 0. Damit sind die Standardränder von insetGrouped weg. Auf dem iPad stimmt es (ipad-einstellungen.png). Die Aussage im Protokoll, die Karten behielten ihre abgerundeten Ecken, stimmt also nur für das iPad.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "RestwertApp.swift:435-436",
+    "befund": "Zwei fixedSize-Modifier hintereinander in ToastView, der zweite wirkt nicht. Seit R12 unverändert.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "platz/reihe mit [ \\t]+ statt \\s+ und ein Test 'CAFÉ AM PLATZ\\n25 €' ohne Zwischenzeile. 'nur für dich' als Positivtest. Die Inbox-Aufräumung nach dem Übernahmezeitpunkt richten (Datum beim Verschieben setzen oder nur Dateien löschen, die nicht in pendingBatch stehen). Settings-Ränder auf dem iPhone reparieren. Toast aufräumen, .part/20er-Grenze melden, OCR-Fehler als eigener Zustand und ein XCUITest Scan → Speichern → Kasse.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Rainer Köhler, 48, Kassen- und Scanner-Techniker (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Barcode-Darstellung an der Kasse: Symbologien, Ruhezonen, Kontrast, Rücklesbarkeit",
+  "scores": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Das Vollbild mit 'Als Code 128 gezeichnet (auf der Karte: Code 93)' ist jetzt im Screenshot, sauber quer, mit Ruhezone und Klartext. Modulzahl-Tests gibt es auch, für EAN-13, UPC-A, EAN-8, ITF und Code 39. Ausgerechnet Code 128, um den ich gebeten hatte, fehlt aber darin.",
+  "behoben": [
+   "Vollbild-Screenshot mit Ersatzformat-Hinweis: kasse-vollbild-code93.png zeigt den gedrehten Barcode, 'C93-4471-2208' und 'Als Code 128 gezeichnet (auf der Karte: Code 93)'",
+   "Modulzahl-Tests nach Norm: EAN-13/UPC-A 95, EAN-8 67, ITF 135 bei 14 Ziffern, Code 39 +16 je Zeichen, ungerades ITF → nil (ModuleCountTests.swift; eigener Lauf grün)",
+   "Radar-Bündel rechnerisch ehrlich: '95 € + 20 %' / '3 Gutscheine' (start-bestand-unten.png)"
+  ],
+  "offen": [
+   "Kein Modulzahl-Test für Code 128 (11·n+35 bzw. 11·n+2 Stopp), obwohl das mein konkreter Wunsch war. Kein Treffer für '.code128' in ModuleCountTests.swift",
+   "Bei XL-Schrift liegen Betrag und 'An der Kasse zeigen' der 'Läuft bald ab'-Karte unter der Tab-Leiste (gross-start-bestand.png, als bekannte Grenze genannt)",
+   "GS1-128/FNC1 beim Neuzeichnen (Hinweis, im Simulator nicht prüfbar)"
+  ],
+  "befunde": [
+   {
+    "screen": "RestwertKit/Tests/RestwertKitTests/ModuleCountTests.swift",
+    "befund": "Die Suite deckt EAN/UPC/ITF/Code 39 ab, aber nicht den Code-128-Pfad, der das Ersatzformat für Code 93, Codabar und ungerades ITF liefert. Gerade dort wäre eine Prüfung von Start, Prüfzeichen und Stopp (11·Zeichen + 35 Module) am wichtigsten.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-start-bestand.png",
+    "befund": "Bei XL-Schrift ist auf dem ersten Bildschirm nur der Kopf der Stadler-Karte zu sehen. Knopf und Betrag muss man erst hochscrollen, und das an der Kasse. Unverändert seit R10.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz.png",
+    "befund": "Die Einstellungen auf dem iPhone laufen wieder von Rand zu Rand, ohne Kartenecken. Stört mich an der Kasse nicht, ist aber sichtbar schlechter als in R12.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Ein Modulzahl-Test für Code 128 (z. B. 'C93-4471-2208' → 11·Anzahl Symbole + 35 Module, Start/Stopp an den Enden). Dann ist die Kasse für mich technisch fertig. Schön wäre noch, dass der Kasse-Knopf der 'Läuft bald ab'-Karte bei XL ohne Scrollen erreichbar ist.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Svenja Albrecht, 36, QA-Testerin, testet systematisch im Simulator (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Nachweise gegen Protokoll abgleichen, Testfälle v01–v14, Konsistenz von Texten und Zuständen",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Das Bündel stimmt jetzt: '95 € + 20 %' über '3 Gutscheine', das passt zu Zalando, Amazon und Buchladen in der Liste. Beim Abgleich mit dem Protokoll bin ich aber gestolpert: 'Karten behalten ihre abgerundeten Ecken' stimmt nur auf dem iPad. Auf dem iPhone sind die Einstellungen in allen drei Screenshots wieder randlose Zeilen. Meine XL-Punkte sind weiter offen.",
+  "behoben": [
+   "Bündel-Summe und -Anzahl beziehen sich auf dieselbe Menge: '95 € + 20 %' / '3 Gutscheine' = Amazon 70,00 + Buchladen 25,15 + Zalando 20 % (start-bestand-unten.png)",
+   "'Läuft bald ab' auf höchstens drei Karten begrenzt, Zahl zählt alle, Hinweis '… weitere stehen unten in der Liste.' (HomeView.swift:155-173, :374-376). Nur im Code belegt, kein Screenshot mit mehr als drei",
+   "iPad-Einstellungen auf Lesebreite mit runden Karten (ipad-einstellungen.png)",
+   "Vollbild-Screenshot mit Ersatzformat vorhanden (kasse-vollbild-code93.png)",
+   "Datenstand konsistent: 145,15 € / 4 Gutscheine / '+ 1 Rabattcode' (start-bestand.png) passt zur Liste in start-bestand-unten.png"
+  ],
+  "offen": [
+   "XL-Start: erster Bildschirm nur Guthaben und Kopf der Stadler-Karte, Betrag/Knopf/Liste darunter (gross-start-bestand.png)",
+   "'von X €' auch ohne Teileinlösung: '25,00 € von 25,00 €', '70,00 € von 70,00 €' (start-bestand.png, start-bestand-unten.png)",
+   "DueSoonCard ohne '· Datum geschätzt', '· Betrag offen' und Empfänger (HomeView.swift:546 nur due.text)",
+   "'Prüfen und ändern' und 'Überspringen – nächstes Foto' weiter nebeneinander (ScanView.swift:352, :414)",
+   "Kein Screenshot der Abschlussbilanz, kein XCUITest"
+  ],
+  "befunde": [
+   {
+    "screen": "einstellungen-schutz.png, gross-einstellungen.png, kontrast-einstellungen.png / Design/Theme.swift:607 + Features/Settings/SettingsView.swift:551-556",
+    "befund": "Regression auf dem iPhone: Die Einstellungen sind nicht mehr als abgerundete Karten mit Randabstand zu sehen. Die weißen Abschnitte laufen von Rand zu Rand, ohne Ecken, und der Schalter sitzt fast an der Bildschirmkante. Ursache: Mit dem entfernten .contentMargins(.horizontal, Layout.page) bleibt nur ReadableWidth übrig, und das setzt auf dem iPhone .contentMargins(.horizontal, max(0, (width-700)/2)) = 0. Damit sind die Standardränder von insetGrouped weg. Auf dem iPad stimmt es (ipad-einstellungen.png). Die Aussage im Protokoll, die Karten behielten ihre abgerundeten Ecken, stimmt also nur für das iPad.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "GoldenOCRTests.swift:58 / ScanDraft.swift:56",
+    "befund": "Der neue Test 'Café am Platz' deckt den eigentlichen Fall nicht ab: Er hat eine Zwischenzeile 'Für eine Auszeit'. Ohne sie ('CAFÉ AM PLATZ / 25 €') ist das Ergebnis weiter 'kein Gutschein', weil \\s+ den Zeilenumbruch überspringt (Probe im Scratchpad). Protokollpunkt 4 ist damit nur teilweise erfüllt.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross-start-bestand.png / HomeView.swift:510-575",
+    "befund": "Die Begrenzung auf drei Karten hilft bei XL nicht: Schon eine Karte füllt den Bildschirm, die Liste liegt weit unten. Im Protokoll als bekannte Grenze genannt, für mich aber der größte Nutzungspunkt.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start-bestand.png / CardRow.swift",
+    "befund": "'25,00 € von 25,00 €' in jeder Zeile und in der Läuft-bald-ab-Karte. Bewusste Inhaber-Entscheidung, die Doppelung bleibt aber und verdeckt den Unterschied nach einer Teileinlösung.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Die Einstellungskarten auf dem iPhone wiederherstellen (Randabstand zusätzlich zur Lesebreite) und künftig mit Screenshots gegen das Protokoll prüfen. 'Café am Platz' ohne Zwischenzeile als Test. 'Läuft bald ab' bei XL kompakter, sodass der Knopf ohne Scrollen sichtbar ist. 'von X €' nur, wenn es vom Betrag abweicht. Nebenknöpfe der Reihe untereinander, ein Screenshot der Abschlussbilanz, ein Screenshot mit mehr als drei bald ablaufenden und ein XCUITest-Nachweis.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Markus Weidner, 42, IT-Administrator, datenschutzbewusst (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Datenfluss, Speicherung, Zwischenablage, Logs, App-Sperre und Code-Schutz",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Gut, dass die Erinnerungen bei App-Sperre oder Code-Schutz jetzt neutral sind und beim Umschalten neu geplant werden. Aber 'Morgen erinnern' baut die Mitteilung wieder mit Ladenname und Guthaben auf, am Schutz vorbei. Die Inbox-Aufräumung ist nett gemeint, räumt aber nach dem falschen Datum auf.",
+  "behoben": [
+   "Ablauf-Erinnerungen bei App-Sperre oder Code-Schutz ohne Laden und Betrag: 'Ein Gutschein läuft bald ab' / 'Öffne Restwert, um ihn zu sehen.' (Store.swift:811-814; die Schlüssel appLock/codeLock stimmen mit @AppStorage überein, Standard false)",
+   "Beim Umschalten von appLock/codeLock werden Widget UND Erinnerungen neu geplant (SettingsView.swift:256-258)",
+   "Reste in tmp/shared-inbox werden beim Abholen gelöscht, wenn sie älter als ein Tag sind (RestwertApp.swift:124-129). Das Prinzip ist umgesetzt, das Kriterium ist falsch (siehe Befund)"
+  ],
+  "offen": [
+   "Übergabedateien weiter nur .completeUntilFirstUserAuthentication, nachträglich per try? setAttributes (ShareViewController.swift:87)",
+   "Kein Hinweis im Ausstellen-Screen, dass Empfänger und Gruß gespeichert werden (nur LegalView.swift:32)",
+   "'Face ID' im Einstellungstext weiter mit normalem Leerzeichen (SettingsView.swift:81, RestwertApp.swift:629). In gross-einstellungen.png bricht es diesmal zufällig nicht um",
+   "Einstellungskarten bei 'Kontrast erhöhen' ohne Rand. Jetzt ganz ohne Karten (kontrast-einstellungen.png)"
+  ],
+  "befunde": [
+   {
+    "screen": "App/RestwertApp.swift:805-817 (snoozeText)",
+    "befund": "'Morgen erinnern' ersetzt Titel und Text der Mitteilung durch '\\(name): noch X Tage' und '\\(headline) gültig bis … Jetzt einlösen.'. Dabei wird die neue Stille-Regel aus Store.swift:812 nicht geprüft. Eine mit App-Sperre neutral gezeigte Erinnerung kommt nach 'Morgen erinnern' mit Ladenname und Guthaben auf den Sperrbildschirm. Der Name liegt zudem in userInfo. Aus dem Code abgeleitet, im Simulator nicht per Screenshot belegt.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "App/RestwertApp.swift:124-129 (takeSharedInbox) + RestwertShare/ShareViewController.swift:138 (copyItem) + RestwertKit/SharedInbox.swift:34 (moveItem)",
+    "befund": "Die neue Aufräumung nach einem Tag richtet sich nach contentModificationDate. copyItem und moveItem behalten aber das Änderungsdatum der Quelldatei. Das hat die Probe mtime13.swift im Scratchpad bestätigt: Nach Kopieren und Verschieben hat eine 5 Tage alte Datei immer noch ihr altes Datum. takeSharedInbox läuft beim Start in .task UND bei jedem scenePhase .active. Ein aus Dateien geteiltes PDF, das älter als einen Tag ist, liegt in pendingBatch. Beim nächsten Aktivieren wird es gelöscht, zum Beispiel beim zweiten Aufruf direkt nach dem Kaltstart oder nach einem kurzen App-Wechsel mitten in einer Reihe. Das passiert, bevor es gelesen ist, und ohne Meldung. Fotos betrifft das nicht, weil sie als JPEG neu geschrieben werden und damit ein frisches Datum haben. Im Simulator nicht per Screenshot belegt, aus Code und Probe abgeleitet.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "Features/Checkout/CheckoutView.swift:523",
+    "befund": "Die Nachfrage-Mitteilung von 'Später eintragen' ('Hast du bei \\(card.name) bezahlt?') nennt den Laden ebenfalls ohne Rücksicht auf App-Sperre oder Code-Schutz. Ohne Betrag, aber uneinheitlich mit der neuen Regel.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz.png, gross-einstellungen.png, kontrast-einstellungen.png / Design/Theme.swift:607 + Features/Settings/SettingsView.swift:551-556",
+    "befund": "Regression auf dem iPhone: Die Einstellungen sind nicht mehr als abgerundete Karten mit Randabstand zu sehen. Die weißen Abschnitte laufen von Rand zu Rand, ohne Ecken, und der Schalter sitzt fast an der Bildschirmkante. Ursache: Mit dem entfernten .contentMargins(.horizontal, Layout.page) bleibt nur ReadableWidth übrig, und das setzt auf dem iPhone .contentMargins(.horizontal, max(0, (width-700)/2)) = 0. Damit sind die Standardränder von insetGrouped weg. Auf dem iPad stimmt es (ipad-einstellungen.png). Die Aussage im Protokoll, die Karten behielten ihre abgerundeten Ecken, stimmt also nur für das iPad.",
+    "schwere": "mittel"
+   }
+  ],
+  "was_fehlt_zur_10": "Stille-Regel zentral für alle Mitteilungen: Snooze und 'Später eintragen' eingeschlossen, ohne Namen in userInfo, wenn gesperrt. Die Inbox-Aufräumung nach Übernahmezeit statt Dateidatum, sodass nichts in einer laufenden Reihe gelöscht wird. Übergabedateien direkt mit .completeFileProtection schreiben. Ein Satz im Ausstellen-Screen zu Empfänger und Gruß. Die Einstellungskarten auf dem iPhone reparieren (mit Rand bei Kontrast erhöhen).",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Mara Lindqvist, 33, UX-Designerin in einer Hamburger Produktagentur, achtet auf Hierarchie und Konsistenz (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Visuelle Hierarchie und Konsistenz; Läuft-bald-ab-Karten, Einstellungen als Karten, Radar-Bündel, Selbst ausgestellt, iPad",
+  "scores": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Das Radar-Bündel „95 € + 20 % / 3 Gutscheine“ ist jetzt stimmig, und die iPad-Einstellungen sitzen sauber auf Lesebreite. Aber auf dem iPhone sind die abgerundeten Einstellungskarten weg – die Zeilen laufen wieder von Rand zu Rand, genau das, was ich in Runde 12 gelobt hatte. Und von meinen Hierarchie-Wünschen (schwarze Balken, „von X €“) ist nichts angefasst.",
+  "behoben": [
+   "Radar-Bündel: Summe und Anzahl passen, „95 € + 20 %“ über „3 Gutscheine“ (start-bestand-unten; Design/ExpiryRadar.swift:461-468)",
+   "iPad-Einstellungen auf 700-pt-Lesebreite mit runden Karten (ipad-einstellungen)",
+   "Läuft bald ab höchstens drei Karten, Rest in der Liste mit Hinweis (Features/Home/HomeView.swift:170-173, 374-376) – im Screenshot nicht belegt (nur 1–2 fällige)"
+  ],
+  "offen": [
+   "Je fälligem Gutschein ein schwarzer Vollbreite-Knopf; bei zwei Einträgen dominieren zwei schwarze Balken den ersten Bildschirm (start, ipad-start)",
+   "„von X €“ auch ohne Teileinlösung in jeder Zeile („70,00 € / von 70,00 €“, start-bestand-unten; Design/CardRow.swift:155)",
+   "Kontrast-Rand fehlt in den Einstellungen (kontrast-einstellungen)",
+   "iPad-Start: Wortmarke und Suchfeld auf voller Breite, Inhalt auf Lesebreite – zwei linke Kanten (ipad-start)",
+   "gross-eigener-gutschein-einloesen: schwarze Meldung klebt ohne Lücke am schwarzen Knopf",
+   "gross-dublette: Kasten „schon gespeichert“ plus Kopfzeile „Schon gespeichert“ doppelt, drei volle Knöpfe",
+   "„Gespeichert“-Meldung liegt über der Quellenliste (gespeichert-im-tab)",
+   "„· für Familie Weber“ mit führendem Mittelpunkt als eigene Zeile (liste-ausgestellt)",
+   "„bis ca. 28.09.2036“ kleiner gesetzt als die Nachbarzeile (Design/CardRow.swift:141 minimumScaleFactor 0.75)"
+  ],
+  "befunde": [
+   {
+    "screen": "einstellungen-schutz / gross-einstellungen / kontrast-einstellungen / Features/Settings/SettingsView.swift:551-557",
+    "befund": "Regression: Mit dem Entfernen von .contentMargins(.horizontal, Layout.page) (Commit c655afe) haben die iPhone-Einstellungen keine abgerundeten Karten mit Randabstand mehr – die Abschnitte sind weiße Bänder von Rand zu Rand. Der Doc-Kommentar an settingsCards() verspricht weiter „abgerundete weiße Karten mit Abstand zum Rand“. Startseite und Einstellungen wirken wieder wie zwei Apps.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start / start-bestand / Features/Home/HomeView.swift (DueSoonCard)",
+    "befund": "Unverändert: 56-pt-schwarzer Knopf je fälliger Karte; mit Tab-Leiste bleibt vom ersten Bildschirm kaum Liste übrig.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start-bestand-unten / Design/CardRow.swift:155",
+    "befund": "„von 70,00 €“ unter „70,00 €“ – doppelter Betrag ohne Information.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kontrast-einstellungen",
+    "befund": "Weiße Bänder auf dunklerem Papier ohne Rand; kontrast-start hat Ränder um alle Karten – uneinheitlich.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Einstellungskarten auf dem iPhone wiederherstellen (Randabstand nur ohne Lesebreiten-Konflikt); Läuft-bald-ab-Knopf leichter oder nur beim dringendsten schwarz; „von X €“ nur nach Teileinlösung; Kontrast-Rand in den Einstellungen; Abstand Meldung/Knopf bei XL; iPad-Kopf auf Lesebreite.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Jule Okafor, 30, Community-Managerin für Beta-Programme bei einem Fintech, liest Feedback von Hunderten Testern (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Was Beta-Tester melden würden: Verwirrung, Vertrauen, Support-Last; Radar-Bündel, Läuft-bald-ab, Einstellungen, Mitteilungen",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "scores_runde12": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Das Nachzähl-Ticket ist erledigt: „95 € + 20 %“ über „3 Gutscheine“ – jetzt stimmt die Rechnung für jeden. Dass Erinnerungen bei Sperre weder Laden noch Betrag zeigen, nimmt eine typische Datenschutz-Beschwerde vorweg. Die „Gespeichert“-Meldung über der Quellenliste und die randlosen Einstellungen auf dem iPhone würden aber wieder als Screenshots im Feedback-Kanal landen.",
+  "behoben": [
+   "Bündel-Anzahl und Summe passen: „95 € + 20 %“ / „3 Gutscheine“ (start-bestand-unten; Design/ExpiryRadar.swift:461-468)",
+   "Mitteilungen bei App-Sperre/Code-Schutz ohne Laden und Betrag, Neuplanung beim Umschalten (Features/Settings/SettingsView.swift:256-258; App/Store.swift:811) – nur im Code, kein Screenshot",
+   "„Café am Platz“ wieder als Gutschein erkannt (neuer Test laut Protokoll; im Build nicht per Screenshot belegt)"
+  ],
+  "offen": [
+   "Meldung „„Douglas“ gespeichert – Ansehen“ liegt über „Einscannen/…“-Zeile der Quellenliste (gespeichert-im-tab)",
+   "Screenshot der Mehrfach-Bilanz („3 Fotos: …“) fehlt weiter in beta-shots",
+   "gross-eigener-gutschein-einloesen: Meldung klebt ohne Abstand am Einlöse-Knopf",
+   "„von 70,00 €“ bei unberührten Gutscheinen (start-bestand-unten)",
+   "Doppelte Zählung „4 Gutscheine · 1 läuft bald ab“ direkt über „Läuft bald ab 1“ (start-bestand)"
+  ],
+  "befunde": [
+   {
+    "screen": "einstellungen-schutz / Features/Settings/SettingsView.swift:551-557",
+    "befund": "Regression: iPhone-Einstellungen wieder randlos statt als Karten. Tester, die Runde 12 gesehen haben, melden so etwas als „Design kaputt“ – vermutlich Nebenwirkung der iPad-Korrektur.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gespeichert-im-tab",
+    "befund": "Die schwarze Meldung deckt eine Zeile der Quellenliste ab; wer direkt die nächste Quelle wählen will, trifft die Meldung.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-eigener-gutschein-einloesen",
+    "befund": "Meldung und Knopf gleiche Tinte, ohne Lücke – Café-Personal tippt ggf. auf die Meldung.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "iPhone-Einstellungskarten zurück; Meldung im Hinzufügen-Tab ohne Überdeckung; Bilanz-Screenshot der Mehrfachauswahl; Abstand Meldung/Knopf bei XL; „von X €“ nur nach Teileinlösung.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Tobias Brandt, 40, Accessibility-Beta-Tester, stark sehbehindert, nutzt VoiceOver und große Schrift, prüft mit dem Accessibility Inspector im Simulator (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "VoiceOver-Labels, Dynamic Type, Tippziele; Startseite und Einstellungen bei XL und Kontrast",
+  "scores": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 7
+  },
+  "scores_runde12": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 7
+  },
+  "erster_eindruck": "Das „…“-Menü der Läuft-bald-ab-Karte ist etwas breiter geworden, aber immer noch keine 44 pt. Bei XL sehe ich von der Stadler-Karte weiterhin nur Logo, Name und „Noch 11 Tage“ – Betrag und Kasse-Knopf liegen unter der Tab-Leiste. Die übrigen XL- und Kontrast-Punkte aus Runde 12 sind unverändert.",
+  "behoben": [
+   "Radar-Bündel liest sich für VoiceOver und Lupe eindeutig, Rabattcode wird genannt (Design/ExpiryRadar.swift:461-468)",
+   "„Face ID“ bricht in gross-einstellungen nicht mehr mitten im Begriff (zufällig durch Zeilenfall; Code ohne geschütztes Leerzeichen, Features/Settings/SettingsView.swift:80)"
+  ],
+  "offen": [
+   "gross-start-bestand: Läuft-bald-ab-Karte bei XL stapelt Logo/Name/Pille, Betrag und „An der Kasse zeigen“ erst nach Scrollen (Protokoll nennt es selbst als Grenze)",
+   "„…“-Tippziel 36 pt statt 44 (Features/Home/HomeView.swift:573: frame(width: 36, …).padding(.trailing, -4))",
+   "Kontrast-Rand fehlt in den Einstellungen (kontrast-einstellungen)",
+   "gross-eigener-gutschein-einloesen: Meldung ohne Abstand zum Knopf, gleiche Tinte",
+   "gross-dublette: drei volle Knöpfe",
+   "gross-ausgeben: „Gutschein teilen oder drucken“ unten angeschnitten, keine feste Leiste",
+   "Fälligkeitszeile mit minimumScaleFactor 0.75 (Design/CardRow.swift:141)",
+   "Kein dokumentierter Accessibility-Inspector-Audit"
+  ],
+  "befunde": [
+   {
+    "screen": "gross-start-bestand / Features/Home/HomeView.swift (DueSoonCard)",
+    "befund": "Bei XL ist der erste Bildschirm: Guthaben, Überschrift, Logo, „Stadler“, „Noch 11 Tage“ – Betrag und der zentrale Kasse-Knopf liegen unter der schwebenden Tab-Leiste. Unverändert seit Runde 12.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start / Features/Home/HomeView.swift:573",
+    "befund": "„…“-Menü 36 pt breit, mit -4 pt Randausgleich; unter 44 pt, direkt neben dem Betrag.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-einstellungen / Features/Settings/SettingsView.swift:551-557",
+    "befund": "Einstellungen auf dem iPhone wieder randlos (Regression aus c655afe). Für mich mit Lupe eher neutral, aber der Kartenrand half bei der Orientierung zwischen Abschnitten.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kontrast-einstellungen",
+    "befund": "Bei „Kontrast erhöhen“ keine Ränder um die Einstellungsabschnitte, anders als auf kontrast-start.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-ausgeben",
+    "befund": "Hauptknopf am unteren Rand angeschnitten, kein Verlauf als Scroll-Hinweis.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Läuft-bald-ab-Karte bei XL kompakt (Betrag und Kasse-Knopf ohne Scrollen); „…“ mindestens 44 pt; Kontrast-Rand in den Einstellungen; Abstand Meldung/Knopf; feste Leiste beim Ausstellen bei XL; dokumentierter Accessibility-Inspector-Audit.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Sabine Roth, 44, freie Texterin und Lektorin für Produkt- und Banking-Apps (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Mikrotexte, Glossar, Tonalität, Konsistenz; Radar-Beschriftung, Datumszeilen, Einstellungen, Läuft-bald-ab-Karten",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "„Guthaben drauf“ im Einstieg und „Barcode (EAN-13)“ statt „Strichcode“ in der Kachel – zwei meiner Glossar-Punkte sind erledigt. „95 € + 20 %“ ist ehrlich und knapp. Der OTTO-Hinweis sagt aber weiter „Strichcode“, und die übrigen Punkte stehen unverändert im Code.",
+  "behoben": [
+   "„Restbetrag drauf“ → „Guthaben drauf“ (Features/Onboarding/OnboardingView.swift:336)",
+   "Barcode-Kachel „Barcode (…)“ statt „Strichcode (…)“ (Features/Scan/ScanResultView.swift:308)",
+   "Radar-Bündel sprachlich stimmig: „95 € + 20 %“ / „3 Gutscheine“",
+   "Hinweis „2 weitere stehen unten in der Liste.“ sauber formuliert (Features/Home/HomeView.swift:171)"
+  ],
+  "offen": [
+   "„Strichcode“ weiter im OTTO-Hinweis (Features/Scan/ScanResultView.swift:133), direkt unter der Kachel „Barcode an der Kasse“",
+   "„Tippe auf „Fertig“.“ (RestwertShare/ShareViewController.swift:212) vs. „Tipp unten auf „+““ (Features/Issue/IssueVoucherView.swift:127)",
+   "Drei Kassenknöpfe, zwei Satzformen (Features/Checkout/CheckoutView.swift:217-219)",
+   "Kachel „An der Kasse: Foto zeigen“ neben „Barcode an der Kasse“ (Features/Scan/ScanResultView.swift:251)",
+   "Sammelzeile „PIN-Schutz, App-Sperre und Code-Schutz“ vs. Schalternamen (Features/Settings/SettingsView.swift:65, 78-96)",
+   "„Code anzeigen“ vs. „An der Kasse zeigen“ (Features/Home/HomeView.swift:522)",
+   "„von X €“ ohne Teileinlösung (Design/CardRow.swift:155)",
+   "„· für Familie Weber“ mit führendem Mittelpunkt (liste-ausgestellt)"
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v13 / Features/Scan/ScanResultView.swift:133",
+    "befund": "Die Glossar-Korrektur ist halb: Kachel „Barcode (…)“, direkt darunter „Der Strichcode auf dem Gutschein ist nicht für die Kasse“ – zwei Wörter für dasselbe auf einem Bildschirm.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz / Features/Settings/SettingsView.swift:65",
+    "befund": "„Code-Schutz“ heißt als Schalter „Gutscheincodes erst nach Face ID zeigen“; Sammelzeile und Schalter nutzen weiter verschiedene Begriffe.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Features/Checkout/CheckoutView.swift:217-219",
+    "befund": "„Bezahlt – Einkauf abziehen“, „Eingelöst – Einkauf abziehen“, „Einlösen – vom Guthaben abziehen“: Partizip vs. Infinitiv im selben Bauplan.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start / Features/Home/HomeView.swift:522",
+    "befund": "„Code anzeigen“ neben „An der Kasse zeigen“ und „Foto an der Kasse zeigen“ – zeigen/anzeigen im selben Block.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "„Strichcode“ auch im OTTO-Hinweis → „Barcode“; durchgehend „Tipp“; eine Satzform für die Kassenknöpfe; Sammelzeile mit den Schalternamen abgleichen; „zeigen“ einheitlich; „von X €“ nur nach Teileinlösung.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Rüdiger, 52, Schnäppchenjäger mit über 40 Gutscheinen aus Aktionen, Cashback und Geschenken (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Überblick bei vielen Karten, Verfallsradar, schnelles Erfassen, Kasse",
+  "scores": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Endlich steht im Radar „95 € + 20 %“, da sehe ich, dass der Zalando-Code mit drin ist. Und laut Protokoll kommen oben höchstens drei große Karten. Gesehen habe ich das aber nur mit ein oder zwei Karten, das Radar steht weiter ganz unten, und die Einstellungen sehen plötzlich wieder aus wie eine nackte Systemliste.",
+  "behoben": [
+   "„Läuft bald ab“ höchstens drei Karten, der Rest steht in der Liste mit dem Hinweis „N weitere stehen unten in der Liste.“, die Zahl neben der Überschrift zählt alle (Restwert/Features/Home/HomeView.swift:170-173, 374-376). Nur im Code belegt: kein Screenshot mit mehr als zwei Karten",
+   "Radar-Bündel nennt den Rabattcode: „95 € + 20 %“ / „3 Gutscheine“, bei XL „120 € + 20 %“ / „4 Gutscheine“ (start-bestand-unten, gross-start-bestand-unten; Restwert/Design/ExpiryRadar.swift:461-468)"
+  ],
+  "offen": [
+   "Radar steht weiter unter der ganzen Liste; die Guthabenkarte mit „1 läuft bald ab“ ist weiter keine Abkürzung dorthin (HomeView.swift:24-25, TotalHeader ohne Aktion)",
+   "Zählweise: Guthabenkarte „4 Gutscheine + 1 Rabattcode“, Radar-Bündel „3 Gutscheine“ inklusive Rabattcode. Die Summe stimmt jetzt, die Zählweise nicht ganz",
+   "Gespeichert-Meldung liegt weiter über dem Hinzufügen-Menü, jetzt über der Zeile unter „Aus einer Datei“ statt über deren Untertitel (gespeichert-im-tab)",
+   "„von 25,00 €“ unter 25,00 € bei unangetasteten Gutscheinen (start-bestand, Stadler-Karte)"
+  ],
+  "befunde": [
+   {
+    "screen": "einstellungen-schutz, kontrast-einstellungen, gross-einstellungen / Restwert/Features/Settings/SettingsView.swift:549-556",
+    "befund": "Regression: Auf dem iPhone laufen die Einstellungs-Abschnitte wieder als weiße Flächen von Rand zu Rand, ohne runde Ecken und ohne Randabstand (Pixel am linken Rand weiß). In Runde 12 waren es abgerundete Karten wie auf dem Start. Der Kommentar in settingsCards() verspricht weiter „abgerundete weiße Karten mit Abstand zum Rand“. Ursache ist wohl das entfernte contentMargins für die iPad-Korrektur. Der Hinzufügen-Tab hat weiter Karten, die Einstellungen nicht mehr.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "HomeView.swift:374-376 (kein Screenshot)",
+    "befund": "Die Drei-Karten-Grenze ist genau mein Wunsch, aber kein Screenshot zeigt den Fall mit 4 oder mehr bald ablaufenden Karten und den Hinweis „2 weitere stehen unten in der Liste.“. Prüfen kann ich nur den Code.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand / start-bestand-unten",
+    "befund": "Oben „4 Gutscheine + 1 Rabattcode“, im Radar „3 Gutscheine“, obwohl einer davon der Zalando-Rabattcode ist. Mit „+ 20 %“ ist klar, was drin ist, aber das Wort „Gutscheine“ meint einmal mit, einmal ohne Rabattcodes.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gespeichert-im-tab",
+    "befund": "Die schwarze Meldung „„Douglas“ gespeichert – Ansehen“ verdeckt weiter eine Zeile im Hinzufügen-Menü (jetzt die unter „Aus einer Datei“).",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Einstellungen wieder als abgerundete Karten auf dem iPhone. Ein Screenshot mit fünf oder mehr bald ablaufenden Gutscheinen, der die Drei-Karten-Grenze und den Hinweis zeigt. Eine Guthabenkarte, die per Tipp zum Radar springt, eine Zählweise für Rabattcodes überall und eine Gespeichert-Meldung, die nichts verdeckt.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Meltem, 41, Besitzerin eines kleinen Cafés, gibt eigene handgeschriebene Papiergutscheine aus und nimmt sie an (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Papiergutscheine ohne Code, Foto an der Kasse, Nutzen für Ladeninhaber",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Schön, dass „Café am Platz · 25 €“ wieder als Gutschein durchgeht, so heißen hier viele Cafés. Von meinen eigenen Punkten ist aber keiner erledigt: Der Teilen-Knopf bei großer Schrift ist immer noch abgeschnitten. Und die Einstellungen, die ich letzte Runde gelobt habe, sind auf dem iPhone wieder eckig und gehen bis zum Rand.",
+  "behoben": [
+   "„Platz“/„Reihe“ zählen nur mit Nummer als Eintrittskarten-Wort, „Café am Platz · 25 €“ wird wieder erkannt (laut Protokoll mit neuem Test; im Screenshot nicht zu sehen)",
+   "Ist App-Sperre oder Code-Schutz an, verraten Ablauf-Erinnerungen weder Laden noch Betrag, Neuplanung beim Umschalten (SettingsView.swift:257-258). Gut für das geteilte Kassen-iPad. Die Mitteilung selbst ist nicht als Screenshot belegt"
+  ],
+  "offen": [
+   "XL-Schrift: „Gutschein teilen oder drucken“ liegt weiter unten am Bildschirmrand und ist angeschnitten (gross-ausgeben), fünfte Runde",
+   "Eigener Gutschein mitten in einer Fotoreihe beendet die Reihe weiter ohne Bilanz. Die Meldung „Eigener Gutschein erkannt: noch … Guthaben“ sagt nicht, dass die übrigen Fotos verworfen wurden (Restwert/Features/Scan/ScanView.swift:478-482)",
+   "Kein Screenshot der Detailansicht eines selbst ausgestellten Gutscheins mit Verlauf nach Teil-Einlösung",
+   "Zwei ausgestellte Gutscheine für „Familie Weber“ sind in der Liste weiter nicht zu unterscheiden, kein Code-Ende (liste-ausgestellt, liste-ausgestellt-unten)"
+  ],
+  "befunde": [
+   {
+    "screen": "einstellungen-schutz / kontrast-einstellungen / SettingsView.swift:549-556",
+    "befund": "Regression: Auf dem iPhone sind die Einstellungen keine abgerundeten Karten mit Rand mehr, die weißen Flächen gehen bis an den Bildschirmrand. Auf dem iPad sind sie rund und schmal. Das hatte ich in Runde 12 ausdrücklich gelobt.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross-ausgeben",
+    "befund": "Bei XL-Schrift endet der schwarze Knopf „Gutschein teilen oder drucken“ am unteren Bildschirmrand, die untere Kante ist nicht zu sehen. Unverändert seit mehreren Runden.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Restwert/Features/Scan/ScanView.swift:478-482",
+    "befund": "dropPendingBatch() ohne Hinweis: Scanne ich an der Theke fünf Fotos und das zweite ist mein eigener Gutschein, sind die anderen drei still weg.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "liste-ausgestellt",
+    "befund": "Zwei gleiche Zeilen „Café am Markt · bis 31.12.2029 · für Familie Weber · 25,00 €“ ohne Code-Ende zur Unterscheidung.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Der XL-Teilen-Knopf ganz sichtbar, die Einstellungen auf dem iPhone wieder als runde Karten, eine Reihe mit eigenem Gutschein, die die übrigen Fotos nicht still verwirft (oder die Bilanz nennt), ein kurzes Code-Ende bei gleichen Empfängern und ein Screenshot der Detailansicht eines ausgestellten Gutscheins mit Verlauf.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Lea, 21, Studentin, will alles in Sekunden erledigt haben (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Tempo, wenige Taps, Screenshot/Mail-Import, schnell an die Kasse",
+  "scores": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Start ist schnell wie immer: rote Pille, schwarzer Knopf, Barcode. Nur meine eine Bitte ist wieder nicht erfüllt, die Gespeichert-Meldung liegt immer noch mitten im Menü, jetzt halt eine Zeile tiefer. Und die Einstellungen sehen auf einmal altbacken aus.",
+  "behoben": [
+   "Höchstens drei große „Läuft bald ab“-Karten, damit wächst der Start nicht endlos, bevor die Liste kommt (HomeView.swift:374-376; kein Screenshot mit mehr als zwei Karten)",
+   "„…“-Menü auf den Karten etwas breiter und leichter zu treffen (HomeView.swift:573)"
+  ],
+  "offen": [
+   "Gespeichert-Meldung verdeckt weiter eine Zeile im Hinzufügen-Tab, jetzt die unter „Aus einer Datei“ (gespeichert-im-tab), sechste Runde",
+   "Nach dem Teilen weiter „Fertig“ tippen und Restwert selbst öffnen (Systemgrenze, teilen-erweiterung)",
+   "Krustenzauber ohne Datum: Kachel „nicht angegeben – gesetzlich bis 31.12.2029“ weiter dreizeilig (teilen-ergebnis)",
+   "Mit zwei bald ablaufenden Karten liegen die Filter-Chips auf dem Start weiter hinter der Tab-Leiste (start)"
+  ],
+  "befunde": [
+   {
+    "screen": "gespeichert-im-tab",
+    "befund": "Die Meldung „„Douglas“ gespeichert – Ansehen“ liegt über dem Menü und verdeckt die Zeile unter „Aus einer Datei“. Wer gleich den nächsten Gutschein holen will, tippt daneben oder wartet.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz / SettingsView.swift:549-556",
+    "befund": "Regression: Die Einstellungen auf dem iPhone sind wieder Flächen von Rand zu Rand statt runder Karten. Das passt nicht mehr zum Hinzufügen-Tab mit seinen Karten und sieht nach Systemliste aus.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start",
+    "befund": "Zwei große Karten füllen den Bildschirm, die Filter-Chips schimmern unter der Tab-Leiste durch. Für die Kasse top, zum Suchen ein Wisch mehr.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Eine Gespeichert-Meldung, die nichts verdeckt (oben oder als Zeile im Tab), und die runden Einstellungs-Karten wieder zurück. Sonst fehlt mir im Simulator-Build nichts.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Tobias, 39, Tech-Journalist, schreibt ein App-Review für ein Online-Magazin (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Gesamtqualität, Ehrlichkeit der Erkennung, Datenschutz, Sicherheitsmodell, Details",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde12": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Gute Runde in der Sache: Das Radar-Bündel ist ehrlich, die iPad-Einstellungen stehen in der Lesespalte, und Erinnerungen verraten bei Sperre nichts mehr. Aber der iPad-Fix hat das iPhone erwischt: Dort sind die Einstellungen wieder Flächen von Rand zu Rand, obwohl der Code-Kommentar runde Karten verspricht. Genau so etwas fällt in einem Review auf.",
+  "behoben": [
+   "Radar-Bündel mit Rabattcode im Betrag: „95 € + 20 %“, bei mehreren „+ 2 Codes“ (start-bestand-unten, gross-start-bestand-unten; ExpiryRadar.swift:461-468). Spaltenbreite an den längeren Text angepasst (ExpiryRadar.swift:369)",
+   "iPad-Einstellungen in der 700-pt-Spalte mit runden Karten (ipad-einstellungen)",
+   "„Läuft bald ab“ auf drei Karten begrenzt, Zähler und VoiceOver nennen alle (HomeView.swift:156-159, 374-376)",
+   "Ablauf-Erinnerungen ohne Laden und Betrag bei App-Sperre/Code-Schutz, Neuplanung beim Umschalten (SettingsView.swift:257-258)"
+  ],
+  "offen": [
+   "Radar zählt Rabattcodes weiter als „Gutscheine“ („3 Gutscheine“), die Guthabenkarte trennt sie („4 Gutscheine + 1 Rabattcode“). Die Summe ist jetzt ehrlich, die Zählweise nicht einheitlich (ExpiryRadar.swift:468)",
+   "iPad-Start: Suchfeld über die volle Breite, Inhalt in der 700-pt-Spalte (ipad-start; HomeView.swift:81 vs. :91 .searchable)",
+   "Eigener Gutschein in einer Reihe endet ohne Bilanz (ScanView.swift:478-482)",
+   "Kein Screenshot mit mehr als drei bald ablaufenden Karten; die neue Grenze ist nur im Code belegt",
+   "Kein Wallet-Pass (bekannte Grenze)"
+  ],
+  "befunde": [
+   {
+    "screen": "einstellungen-schutz, kontrast-einstellungen, gross-einstellungen / Restwert/Features/Settings/SettingsView.swift:549-556",
+    "befund": "Regression durch die iPad-Korrektur: contentMargins(.horizontal) wurde entfernt, seitdem zeigen die iPhone-Screenshots die Schutz-Sektion von Rand zu Rand weiß (Pixel bei x=2 weiß) ohne runde Ecken. Der Doc-Kommentar von settingsCards() beschreibt weiter „abgerundete weiße Karten mit Abstand zum Rand“. Auf dem iPad stimmt es jetzt, auf dem iPhone nicht mehr. Ein Screenshot pro Gerät hätte das vor der Abgabe gezeigt.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start-bestand / start-bestand-unten",
+    "befund": "Zwei Zählweisen auf einer Seite: Guthabenkarte „4 Gutscheine + 1 Rabattcode (nicht in der Summe)“, Radar „95 € + 20 % / 3 Gutscheine“ (Amazon, Buchladen, Zalando-Code). Kein Fehler mehr, aber nicht konsistent.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ipad-start",
+    "befund": "Das Suchfeld läuft über die volle iPad-Breite, Guthabenkarte und Liste stehen in der 700-pt-Spalte. Nach der Einstellungs-Korrektur ist das die letzte abweichende Breite.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Restwert/Features/Home/HomeView.swift:374-376",
+    "befund": "Die Drei-Karten-Grenze plus Hinweis „N weitere stehen unten in der Liste.“ ist sauber gelöst. Für das Review fehlt ein Beleg-Screenshot mit fünf oder mehr Fristen im 30-Tage-Fenster.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "iPhone-Einstellungen wieder als runde Karten mit Rand, ohne das iPad zu brechen (mit Screenshots beider Geräte als Beleg). Das iPad-Suchfeld in der Lesespalte, eine Zählweise für Rabattcodes in Karte und Radar, ein Screenshot mit mehr als drei bald ablaufenden Karten und ein eigener Gutschein in der Reihe mit Bilanz. Für den Konkurrenzvergleich weiter ein Wallet-Pass.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ }
+]

@@ -10,6 +10,8 @@ xcrun simctl uninstall "$U" $B 2>/dev/null || true; xcrun simctl install "$U" "$
 shot() { local n="$1"; shift; xcrun simctl terminate "$U" $B 2>/dev/null || true; xcrun simctl launch "$U" $B "$@" >/dev/null; sleep "${WAIT:-5}"; xcrun simctl io "$U" screenshot "$O/$n.png" >/dev/null 2>&1; echo "📸 $n"; }
 M=(-onboarded YES -appLock NO -codeLock NO)
 shot einstieg -onboarded NO
+# Einstieg mitten in der Animation (Karten fächern auf, Guthaben zählt hoch)
+xcrun simctl terminate "$U" $B 2>/dev/null || true; xcrun simctl launch "$U" $B -onboarded NO >/dev/null; sleep 1.1; xcrun simctl io "$U" screenshot "$O/einstieg-anfang.png" >/dev/null 2>&1
 shot start "${M[@]}"
 shot hinzufuegen "${M[@]}" -demoScreen scan
 shot detail "${M[@]}" -demoScreen detail

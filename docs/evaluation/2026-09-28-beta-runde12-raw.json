@@ -1,0 +1,1183 @@
+[
+ {
+  "persona": "Sabine K., 38, Grundschullehrerin, bekommt Gutscheine von Eltern (Papier, Stadtgutschein, handgeschrieben) und sammelt sie im Portemonnaie (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Papiergutscheine per Foto scannen, Übersicht was noch drauf ist und bald abläuft",
+  "scores": {
+   "gesamt": 10,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "scores_runde11": {
+   "gesamt": 10,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Das Radar liest sich jetzt richtig: '95 €' und darunter '3 Gutscheine' – kein Rätselraten mehr, ob das dreimal 95 sind. Die Stadler-Karte oben mit der roten Pille 'Noch 11 Tage' und dem schwarzen Kasse-Knopf ist genau das, was ich morgens vor dem Einkaufen sehen will. Bleibt bei 10, ich empfehle sie weiter im Kollegium.",
+  "behoben": [
+   "start-bestand-unten / ExpiryRadar.swift:461: Bündel zweizeilig '95 €' / '3 Gutscheine' statt '3× 95 €' – liest sich nicht mehr wie eine Multiplikation.",
+   "start-bestand-unten: 'Heute' als gelbe Marke mit Pille, kein Punkt mehr, der mit Stiel und Betrag kollidiert; mehr Luft zwischen Kachel, Betrag und Achse.",
+   "start-bestand / start: 'Läuft bald ab' als eigene Karte mit farbiger Frist-Pille und großem 'An der Kasse zeigen' – der nächste Schritt steht direkt da."
+  ],
+  "offen": [
+   "gespeichert-im-tab: Toast '„Douglas“ gespeichert – Ansehen' liegt weiter über dem Untertitel von 'Aus einer Datei' (ScanView.swift:81 schafft nur Scroll-Platz, 88 pt).",
+   "Reihen-Ende (Bilanz mit 'Letzten ansehen', ScanView.swift:440) weiterhin ohne Screenshot."
+  ],
+  "befunde": [
+   {
+    "screen": "start-bestand-unten / ExpiryRadar.swift:455-461",
+    "befund": "'3 Gutscheine' zählt den Zalando-Rabattcode mit, die 95 € stammen aber nur von Amazon und Buchladen (70 + 25,15). Mir fällt das nur auf, weil ich nachrechne; der Kommentar in Z. 453 sagt selbst 'Rabattcodes zählen nicht mit'.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gespeichert-im-tab",
+    "befund": "Speichern-Hinweis verdeckt weiterhin eine Listenzeile ('Aus einer Datei'); stört kaum, weil man scrollen kann.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand",
+    "befund": "'25,00 € / von 25,00 €' bei nie eingelösten Gutscheinen ist doppelt; klein und grau, daher nur ein Schönheitsfehler.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts – die 10 bleibt. Feinschliff: im Bündel nur Gutscheine mit Euro-Betrag zählen (oder '+ 1 Rabattcode'), Toast nicht über Listenzeilen legen.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Helga und Werner B., 70 und 72, Rentnerpaar, teilen sich ein iPhone, mittlere Schriftgröße (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Geteiltes Gerät mit 'Codes erst nach Face ID zeigen', einfache Kasse, verständliche Sprache",
+  "scores": {
+   "gesamt": 10,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 10,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Der große schwarze Knopf 'An der Kasse zeigen' ist wieder da – und jetzt sogar noch größer, direkt unter 'Noch 11 Tage'. Im Radar steht '120 €' und darunter '4 Gutscheine', das verstehen wir beide sofort. Genau so hatten wir uns das gewünscht; das erzählen wir auch unserer Nachbarin.",
+  "behoben": [
+   "start / start-bestand / dunkel-start / kontrast-start: Jeder bald ablaufende Gutschein hat einen großen Knopf 'An der Kasse zeigen' (Online: 'Code anzeigen'), in Dunkel hell hinterlegt, bei Kontrast mit Rand – unser Hauptwunsch aus Runde 11.",
+   "gross-start-bestand-unten: Radar-Bündel '120 €' / '4 Gutscheine' statt '4× 120 €' – nicht mehr als Multiplikation lesbar.",
+   "start-bestand: Überschrift 'Weitere Gutscheine' statt 'Weitere'.",
+   "einstellungen-schutz / gross-einstellungen / kontrast-einstellungen: Abschnitte als abgerundete weiße Karten mit Randabstand; bei XL steht 'Einschalten' unter dem Text, gut lesbar.",
+   "geteiltes-geraet-an: grüne Zeile 'Schutz für geteiltes Gerät ist an' mit Schild, alle drei Schalter an, Fußtext erklärt 'iPhone-Code'."
+  ],
+  "offen": [
+   "gross-start / gross-start-bestand: Guthabenkarte füllt bei XL weiter über die halbe Seite; der neue Kasse-Knopf ist bei XL erst nach Scrollen sichtbar.",
+   "geteiltes-geraet-an / einstellungen-schutz: Unter der schwebenden Tab-Leiste scheint weiter Text durch (bekannte iOS-26-Grenze)."
+  ],
+  "befunde": [
+   {
+    "screen": "gross-start",
+    "befund": "Bei großer Schrift sieht man von der ersten 'Läuft bald ab'-Karte nur Logo und angeschnittenes 'Zalando'; Frist-Pille und Knopf liegen unter der Tab-Leiste. In Runde 11 war die erste Zeile bei XL noch ganz sichtbar – die größeren Karten kosten Platz.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross-start-bestand",
+    "befund": "Bei XL steht unter 'Stadler' die rote Pille 'Noch 11 Tage' knapp über der Tab-Leiste; Betrag und Kasse-Knopf erst nach Scrollen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-kasse",
+    "befund": "Der Ladenhinweis 'Für online brauchst du Code und PIN' läuft bei XL unter der Leiste aus; für uns unwichtig, der Barcode und 'PIN anzeigen' sind gut sichtbar.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz",
+    "befund": "Nach dem Einschalten der App-Sperre steht 'Sperren – Sofort' als eingerückte grüne Auswahl unter dem Text; wir hätten nicht gleich gesehen, dass man darauf tippen kann.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches – unsere beiden Wünsche (Kasse-Knopf zurück, verständliche Radar-Beschriftung) sind erfüllt. Schön wäre: bei großer Schrift eine kleinere Guthabenkarte, damit der Kasse-Knopf ohne Scrollen zu sehen ist.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Leon M., 19, Azubi im Einzelhandel, steht täglich an der Kasse mit Handscanner (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Barcode-Qualität an der Kasse, richtige Symbologie, Prüfziffern",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Der Kasse-Knopf ist zurück, und zwar groß und schwarz – das spart in der Schlange echt Zeit. Rücklesung weiter 12/12, Thalia als Code 128 sauber, Code-93-Hinweis passt. Aber der Importer-Kommentar und die umbrechenden langen Codes stehen jetzt die vierte Runde offen.",
+  "behoben": [
+   "start / start-bestand: 'An der Kasse zeigen' direkt unter jeder bald ablaufenden Karte (Online: 'Code anzeigen'), nicht mehr nur über '…' – mein Hauptpunkt aus Runde 11.",
+   "ExpiryRadar.swift:421-422: Auch in der 90-Tage-Zone wird das Bündel jetzt nach Guthaben sortiert, vorne liegt die Kachel, zu der der Betrag passt (vorher nur Jahresspalten).",
+   "barcodes/rueckgelesen.txt: weiterhin 12/12 exakt (EAN-13, EAN-8, UPC-A als EAN-13 mit führender 0, ITF, Code 39 mit Leerzeichen, 2× Code 128, QR, PDF417, Aztec, 2× Data Matrix).",
+   "kasse-code93: 'Als Code 128 gezeichnet (auf der Karte: Code 93). Klappt es nicht, zeig das Original.' direkt unter dem Barcode.",
+   "kasse / gross-kasse: 'PIN anzeigen' weiß mit Tintenrand, wirkt nicht mehr ausgeschaltet."
+  ],
+  "offen": [
+   "ios/Restwert/Services/Importer.swift:64-65: Doc-Kommentar sagt weiter 'gelesener oder am Code erkannter Barcode', Z. 72-73 erlaubt nur origin == .scanned oder Online-Code – seit Runde 8.",
+   "scan-v09 / scan-v13 / musterwarnung: Code-Kachel bricht weiter zweizeilig um ('AQ7K-2ZPM4H-' / 'R8TX', 'OT-7731-5520-' / '9912', 'IK-9934-2281-' / '4410'), obwohl daneben bzw. darunter Platz wäre.",
+   "ScanResultView.swift:266: Format für die Code-Gruppierung nur bei origin == .scanned – unverändert, undokumentiert."
+  ],
+  "befunde": [
+   {
+    "screen": "ios/Restwert/Services/Importer.swift:64-65",
+    "befund": "Veralteter Kommentar widerspricht der Regel in Z. 72-73 – vierte Runde offen, Einzeiler.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v09, scan-v13, musterwarnung",
+    "befund": "Lange Online-/QR-Codes in halber Kachel zweizeilig; beim Abgleich mit dem Papier unruhig. Die Kasse-Online-Ansicht zeigt denselben Code einzeilig groß – das Ergebnis könnte es genauso.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ScanResultView.swift:312",
+    "befund": "Doc-Kommentar 'Bindestriche in Codes nicht umbrechen' – die Funktion setzt aber absichtlich nach jedem Bindestrich eine Umbruchstelle (Z. 314-315); widersprüchlich.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ExpiryRadar.swift:443, 459",
+    "befund": "Kommentare erwähnen noch '„+N“ für den Rest' und '„2× 95 €“', obwohl beides entfernt ist.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand-unten / ExpiryRadar.swift:455-461",
+    "befund": "'3 Gutscheine' zählt den Rabattcode mit, die '95 €' nicht – Anzahl und Summe beziehen sich auf verschiedene Mengen.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Kommentar in Importer.swift:64-65 korrigieren und lange Codes im Scan-Ergebnis über die volle Kachelbreite (wie in der Online-Kasse) – das sind die zwei Punkte, die ich seit Runden nenne. Dann 10.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Thomas R., 45, Pendler, bekommt fast nur Online-Codes per Mail (Zalando, Amazon, OTTO) (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Import aus Mail-Text und PDF-Anhang, Fristen, Code online einlösen",
+  "scores": {
+   "gesamt": 10,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 10,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 8,
+   "verstaendlichkeit": 10,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Auf der Startseite steht jetzt bei meinem Zalando-Code 'Noch 12 Tage' und darunter 'Code anzeigen' mit Globus – genau der richtige Knopf für Online-Codes, nicht 'An der Kasse'. Die Online-Kasse mit großem Code und 'Code kopieren' bleibt mein Lieblingsbildschirm. Ich empfehle sie weiter im Zug.",
+  "behoben": [
+   "start / dunkel-start: 'Läuft bald ab'-Karte für Online-Codes mit 'Code anzeigen' (Globus) statt Kasse-Knopf; Rabatt '15 % Rabatt' statt Betrag.",
+   "start-bestand-unten: Radar-Bündel '95 €' / '3 Gutscheine' statt '3× 95 €'.",
+   "kasse-online: Code 'AQ7K-2ZPM4H-R8TX' einzeilig groß, 'Code kopieren' 10 Minuten nur auf diesem iPhone, 'Eingelöst – Einkauf abziehen' / 'Nicht angenommen'.",
+   "mehrere-fotos: Zalando mit 'Mindestbestellwert ab 50,00 €' und 'Nur Code (online)' sicher erkannt, 'Überspringen – nächstes Foto' in der Reihe."
+  ],
+  "offen": [
+   "scan-v14: Online-Code '7GHK 2M9P XQ41' mit Leerzeichen gruppiert, weiter ohne Hinweis, ob sie beim Abtippen dazugehören ('Code kopieren' löst es an der Kasse).",
+   "scan-v09 / scan-v13: lange Codes brechen in der halben Kachel um.",
+   "Kein Screenshot der Teilen-Erweiterung mit Mail-Text-Vorschau ('Amazon · 25,00 €'); Mail-App im Simulator bekannte Grenze."
+  ],
+  "befunde": [
+   {
+    "screen": "scan-v14",
+    "befund": "Gruppierter Online-Code ohne Hinweis 'ohne Leerzeichen eingeben'.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand-unten / ExpiryRadar.swift:455-461",
+    "befund": "'3 Gutscheine' zählt meinen Zalando-Rabattcode mit, obwohl er zur Summe '95 €' nichts beiträgt – Anzahl und Summe passen weiter nicht zusammen (nur die Form ist besser).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "scan-v09 / scan-v13",
+    "befund": "'AQ7K-2ZPM4H-' / 'R8TX' und 'OT-7731-5520-' / '9912' zweizeilig, obwohl die Online-Kasse denselben Code in einer Zeile zeigt.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches – die 10 bleibt. Kosmetik: lange Codes im Ergebnis über volle Breite, Hinweis zu Leerzeichen bei gruppierten Online-Codes, im Radar-Bündel nur Euro-Gutscheine zählen.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Sandra K., 34, alleinerziehend, ein iPad wird von zwei Kindern (7 und 11) mitgenutzt (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Geteiltes Gerät: Codes vor Kindern verstecken, Schutz nicht aus Versehen abschaltbar",
+  "scores": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Der Schutz ist genau so geblieben, wie ich ihn brauche: grün „Schutz für geteiltes Gerät ist an“, an der Kasse nur „Geschützt – tippen und entsperren“, auch das Café-Foto ist verdeckt. Der große schwarze Kasse-Knopf auf der Startseite ist wieder da – bei aktivem Code-Schutz landen die Kinder aber trotzdem nur vor dem Schloss. Auf meinem iPad laufen die Einstellungen jetzt allerdings über die ganze Breite.",
+  "behoben": [
+   "Bündel-Beschriftung nicht mehr „2× 44 €“, sondern zweizeilig Betrag + „N Gutscheine“; vorne liegt die Kachel mit dem meisten Guthaben (start-bestand-unten, ExpiryRadar.swift:446, :461)",
+   "Schutz unverändert vollständig: alle drei Schalter an mit grüner Bestätigung und Schonfrist „Sofort“ (geteiltes-geraet-an); Barcode und Papierfoto verdeckt (kasse-code-geschuetzt, papier-foto-geschuetzt); Detail zeigt „•••• ••••“ mit „Entsperren“ (detail-code-geschuetzt)",
+   "Touch ID/iPad-Code korrekt benannt in den iPad-Einstellungen (ipad-einstellungen)"
+  ],
+  "offen": [
+   "Ablauf-Erinnerung nennt Laden und Betrag im Klartext, auch bei „Codes erst nach Face ID“; kein Schalter zum Ausblenden (Store.swift:812, RestwertApp.swift:805)",
+   "Suchfeld auf dem iPad weiter über die volle Breite, Inhalt darunter in der Lesespalte (ipad-start)",
+   "iPad-Kasse im Hochformat mit großer Leerfläche zwischen Karte und Leiste (ipad-kasse, unverändert)",
+   "iPad-Querformat nicht per Screenshot belegt (Skriptgrenze, kein Abzug)"
+  ],
+  "befunde": [
+   {
+    "screen": "ipad-einstellungen / SettingsView.swift:217+221, :554",
+    "befund": "Regression: Die neuen Einstellungs-Karten laufen auf dem iPad fast über die ganze Bildschirmbreite (ca. 940 pt), während Start, Detail und Kasse auf 700 pt begrenzt sind. Ursache: settingsCards() setzt contentMargins(.horizontal, Layout.page) direkt an der Liste, das von außen angehängte readableWidth() (ebenfalls contentMargins .horizontal) greift dadurch offenbar nicht mehr. Lange Zeilen („Die App-Sperre schützt die ganze App …“) werden auf dem iPad schwer zu lesen.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "Store.swift:812",
+    "befund": "Mitteilung „<Laden> <Betrag> gültig bis … Jetzt einlösen.“ bleibt auf dem Familien-iPad für Kinder sichtbar; Codes stehen nicht drin. Schalter „Beträge in Mitteilungen ausblenden“ fehlt weiterhin.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand / ipad-start",
+    "befund": "„An der Kasse zeigen“ ist wieder ein großer Knopf direkt auf der Startseite. Mit „Codes erst nach Face ID zeigen“ für mich unkritisch; ohne diesen Schalter kommen Kinder damit mit einem Tipp zum Barcode.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Für mich ist es eine 10. Wünschenswert: iPad-Einstellungen wieder auf Lesebreite und ein Schalter, der Beträge in Mitteilungen ausblendet.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Helga M., 61, Sehschwäche, nutzt große Schrift (Dynamic Type) und „Kontrast erhöhen“ (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Lesbarkeit, Kontrast, Größe der Warnungen und Knöpfe",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "„Läuft bald ab“ ist jetzt richtig groß, mit roter Pille „Noch 11 Tage“ und einem dicken schwarzen Knopf – das finde ich sofort. Im Radar steht nicht mehr „4× 120 €“, sondern „120 €“ und darunter „4 Gutscheine“. Aber einer davon ist ein Rabattcode, und die rote Betrugsbox ist bei meiner Schrift unten immer noch abgeschnitten.",
+  "behoben": [
+   "Bündel-Beschriftung ohne „×“: zweizeilig „95 €“ / „3 Gutscheine“ bzw. bei XL „120 €“ / „4 Gutscheine“ (start-bestand-unten, gross-start-bestand-unten, ExpiryRadar.swift:461)",
+   "Betrag passt zur vorderen Kachel: vorne liegt der Gutschein mit dem meisten Guthaben (Amazon), nicht mehr Zalando mit Rabatt (ExpiryRadar.swift:446)",
+   "„PIN anzeigen“ weiß mit kräftigem Tintenrand statt grau gefüllt – wirkt nicht mehr ausgeschaltet (gross-kasse, kasse-code-geschuetzt); nicht farbig gefüllt, aber für mich ausreichend",
+   "„Läuft bald ab“ bei XL gut lesbar: große Überschrift mit Anzahl, Name und Frist-Pille untereinander, nichts abgeschnitten (gross-start-bestand, gross-start)",
+   "Kontrast-Modus: Karten „Läuft bald ab“ mit sichtbarem Rand, Einstellungs-Karten klar vom dunkleren Papier abgesetzt, ausgeschaltete Schalter dunkelgrau statt blass (kontrast-start, kontrast-einstellungen)"
+  ],
+  "offen": [
+   "Rabattcodes werden im Bündel mitgezählt, aber nicht mitsummiert: „95 € · 3 Gutscheine“ enthält den Zalando-Rabattcode (ExpiryRadar.swift:461, its.count)",
+   "Rote Betrugsbox bei XL: sichtbar endet sie bei „Ruf sofort die Firma auf dem Gutschein an und lass das“, Sperren und Polizei erst nach Scrollen (gross/scan-v09, unverändert)",
+   "Radar-Beschriftungen wachsen weiter nur bis Bedienungshilfen 1 (ExpiryRadar.swift:76, :96): bei XL ist „4 Gutscheine“ deutlich kleiner als „Alle Ablauftermine“ darunter",
+   "Kein Screenshot des Radars mit „Kontrast erhöhen“ (kontrast-start endet bei „Läuft bald ab“)"
+  ],
+  "befunde": [
+   {
+    "screen": "gross-start-bestand-unten / ExpiryRadar.swift:461",
+    "befund": "„120 € / 4 Gutscheine“: gezählt werden KM Kaffee, Amazon, Buchladen UND der Zalando-Rabattcode; summiert nur drei. Die Guthabenkarte oben trennt sauber („4 Gutscheine … + 1 Rabattcode“), das Radar nicht – zwei verschiedene Zählweisen auf einer Seite.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "gross/scan-v09",
+    "befund": "Handlungsabsatz der roten Box läuft bei XL im Verlauf über „Hinzufügen“ aus; „Gib den Code nicht weiter.“ ist oben sichtbar, der Rest erst nach Scrollen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-einstellungen",
+    "befund": "Bei XL entfallen die Symbole links – richtig so; der Knopf „Einschalten“ ist aber nur hellbeige auf Weiß und wirkt blass neben den grünen Schaltern.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ExpiryRadar.swift:76",
+    "befund": "maxType = .accessibility1 unverändert; für mich tragbar, weil darunter „Alle Ablauftermine“ in voller Größe liegt.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Rabattcodes im Radar-Bündel getrennt nennen (z. B. „95 € · 2 Gutscheine + 1 Rabatt“), bei XL die ganze rote Box inkl. „Polizei“ ohne Scrollen und ein Kontrast-Screenshot mit Radar.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Werner B., 67, pensionierter Kriminalhauptkommissar, früher Betrugsprävention für Senioren (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Gutscheinbetrug (Enkeltrick, falsche Behörden), Warnungen, Schutz der Codes",
+  "scores": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 10,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 10,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Bei den Warnungen hat sich nichts verschlechtert: 1.250 € und 200 € bekommen die rote Box mit der Frage und darunter den eigenen Absatz „Ruf sofort die Firma … Zeig den Betrug bei der Polizei an“, die Musterwarnung greift ab 100 €. Das Radar sagt jetzt „95 €“ und „3 Gutscheine“ statt „3× 95 €“ – die Rechenfalle ist weg. Neu ist der große Kasse-Knopf auf der Startseite; der führt aber nur zum Barcode, nicht zum Weitergeben von Codes.",
+  "behoben": [
+   "„3× 95 €“ entfällt, zweizeilig Betrag und Anzahl – keine Multiplikations-Lesart mehr (start-bestand-unten, ExpiryRadar.swift:461)",
+   "Keine Regression bei Warnungen: rote Box ab 200 € mit Rückfrage „Hinzufügen“ statt Ein-Tipp-Speichern (scan-v06, scan-v09), Musterwarnung „ab 100 €“ mit Handlungsabsatz (musterwarnung), falsche Prüfziffer als eigene Warnung über der Betrugsbox (scan-v06), Abgelaufen-Box mit „frag im Laden nach“ (scan-v07, gross/scan-v07)",
+   "Sperrbildschirm ohne iPhone-Code unverändert sicher: Hauptweg „Einstellungen öffnen“, Abschalten nur als Textlink (login-ohne-code)"
+  ],
+  "offen": [
+   "Bei XL steht die Polizei-Empfehlung weiter erst nach Scrollen (gross/scan-v09)",
+   "Erste Karte 100–199 € ohne Vorgeschichte nur mit grauem Hinweis, ohne Rückfrage – vertretbar"
+  ],
+  "befunde": [
+   {
+    "screen": "gross/scan-v09",
+    "befund": "Bei XL sichtbar: Frage, „Dann ist es Betrug. Gib den Code nicht weiter.“ und „Ruf sofort die Firma auf dem Gutschein an und lass das“ – Sperren und Anzeige erst nach Scrollen. Das Wichtigste steht oben, daher niedrig.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand / HomeView.swift:521-575",
+    "befund": "Großer Knopf „An der Kasse zeigen“/„Code anzeigen“ direkt auf der Startseite. Aus Betrugssicht unkritisch: öffnet die Kasse bzw. den Online-Code mit den bekannten Schutzschaltern; die Kopier-Warnung der Online-Kasse bleibt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ExpiryRadar.swift:461",
+    "befund": "„3 Gutscheine“ zählt den Rabattcode mit, „95 €“ nicht – kein Sicherheitsproblem, aber eine kleine Unstimmigkeit für ältere Nutzer.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Nichts Wesentliches im Simulator-Build; optional bei XL die ganze rote Box ohne Scrollen und eine Rückfrage schon bei der ersten Karte ab 100 €.",
+  "wuerde_nutzen": true,
+  "nps": 10
+ },
+ {
+  "persona": "Tarek A., 29, Deutsch als Zweitsprache (B1), Lagerlogistiker (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Verständlichkeit der Warnungen und Schutztexte",
+  "scores": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 10,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Jetzt steht über der Liste „Weitere Gutscheine“ – gut. Im Radar steht „95 €“ und darunter „3 Gutscheine“, ohne „mal“. Aber ich zähle: Amazon 70 und Buchladen 25 sind 95 – der dritte ist Zalando mit 20 % Rabatt, das ist doch kein Geld?",
+  "behoben": [
+   "„3× 95 €“ ersetzt durch zweizeilig „95 €“ / „3 Gutscheine“ (start-bestand-unten, ExpiryRadar.swift:461)",
+   "Überschrift „Weitere Gutscheine“ statt „Weitere“ (start-bestand, ipad-start)",
+   "Heute-Spalte: vorne die Kachel mit dem meisten Guthaben, Betrag passt zur sichtbaren Kachel (ExpiryRadar.swift:446)",
+   "„Läuft bald ab“ mit klarer Aufforderung: „Noch 11 Tage“ und darunter „An der Kasse zeigen“ bzw. bei Online „Code anzeigen“ – ich weiß sofort, was zu tun ist (start, start-bestand)"
+  ],
+  "offen": [
+   "Rabattcode zählt im Bündel mit, aber nicht in der Summe – Anzahl und Betrag passen nicht zusammen (ExpiryRadar.swift:461)",
+   "Systemblatt beim Teilen auf Englisch (Simulator, nicht die App)"
+  ],
+  "befunde": [
+   {
+    "screen": "start-bestand-unten / ExpiryRadar.swift:461",
+    "befund": "„95 € / 3 Gutscheine“: gemeint sind 2 Guthaben-Gutscheine (95 €) plus 1 Rabattcode. Die Guthabenkarte oben sagt es richtig („4 Gutscheine … + 1 Rabattcode (nicht in der Summe)“), das Radar zählt anders. Besser: „95 € · 2 Gutscheine + 1 Rabatt“.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start-bestand",
+    "befund": "Bei „Läuft bald ab“ steht „25,00 €“ und darunter „von 25,00 €“ – für mich doppelt. Klein und grau, stört nur wenig.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "einstellungen-schutz",
+    "befund": "Der Fußtext erklärt „iPhone-Code ist der Code, mit dem du dein iPhone entsperrst.“ – sehr gut für mich; die Schalter-Texte sind kurz und klar.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Im Radar Rabattcodes nicht als „Gutscheine“ mitzählen oder getrennt nennen, damit Anzahl und Betrag zusammenpassen – dann ist es für mich eine 10.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Timo Brandt, 31, iOS-Entwickler und erfahrener TestFlight-Beta-Tester (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Codequalität, Tests, Scan-Pipeline (Vision/Fallbacks), Sperrlogik",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Mein priceWords-Befund ist sauber umgesetzt: 'eintritt\\w*' und 'konzert\\w*' fangen jetzt die Komposita, 'jahr\\w*' ist raus, und es gibt je einen Negativ- und einen Positivtest. 139/139 grün bei mir. Die Wortliste bleibt aber ein Sieb, das an anderer Stelle neue Löcher reißt, und meine Architekturpunkte sind unverändert offen.",
+  "behoben": [
+   "Komposita: 'Eintrittskarte' und 'KONZERTKARTE' treffen jetzt priceWords (ScanDraft.swift:57, eintritt\\w*, konzert\\w*); eigene Probe probe12.py im Scratchpad bestätigt",
+   "'jahr\\w*' und 'monat\\w*' ersetzt durch 'monatlich|jährlich': 'KRUSTENZAUBER / Frohes neues Jahr! / 25 €' trifft kein Preiswort mehr",
+   "Neue Tests 'Konzertkarte' (voucher: false) und 'Neujahrs-Gutschein ohne Gutschein-Wort' (GoldenOCRTests.swift:56-57); eigener Lauf: 'Test run with 139 tests in 22 suites passed'",
+   "Radar-Bündel liest sich nicht mehr als Multiplikation ('95 €' / '3 Gutscheine', ExpiryRadar.swift:461), vorne die Kachel mit dem höchsten Wert (ExpiryRadar.swift:423)"
+  ],
+  "offen": [
+   ".part wird weiter nicht geschrieben (ShareViewController.swift, kein Treffer für '.part')",
+   "providers.prefix(20) verwirft ab dem 21. Anhang still (ShareViewController.swift:58)",
+   "canSaveDirectly/aiFilled unverändert (nicht Teil des Diffs)",
+   "Texterkennungsfehler weiter still leer: (try? await request.perform(on: image)) ?? [] (VoucherScanner.swift:238)",
+   "Kein XCUITest-Target (project.pbxproj: 0 Treffer für ui-testing)",
+   "batchPhotos-Benennung beim Anhängen an PDF/Text (kosmetisch, unverändert)"
+  ],
+  "befunde": [
+   {
+    "screen": "RestwertKit ScanDraft.swift:57 (priceWords)",
+    "befund": "Neue Falsch-Negative durch die Erweiterung: 'platz' und 'reihe' stehen jetzt in der Liste. Ein gestalteter Gutschein 'CAFÉ AM PLATZ / Für dich / 25 €' trifft 'PLATZ' und wird nicht mehr als Gutschein erkannt (Probe im Scratchpad). 'Platz' steht in vielen Laden- und Café-Namen ('Am Marktplatz' trifft wegen \\b nicht, 'Am Platz' schon). Auch 'nur für dich' (Grußformel) trifft weiter 'nur'. Ein Test genau für diese Fälle fehlt.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "RestwertApp.swift:429-430",
+    "befund": "ToastView hat jetzt zwei fixedSize-Modifier hintereinander (.fixedSize(horizontal: false, vertical: true) und .fixedSize(horizontal: false, vertical: toast.isError)). Der zweite ist wirkungslos geworden. Harmlos, aber toter Code.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ExpiryRadar.swift:461 / start-bestand-unten.png",
+    "befund": "Das Bündel '95 € / 3 Gutscheine' zählt weiter alle Karten (its.count, inklusive Zalando-Rabattcode), die Summe aber nur Euro. Jetzt ohne '×' weniger irreführend, aber 95 € sind nicht der Wert der 3 Gutscheine.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "priceWords nicht weiter per Wortliste aufblähen: 'platz'/'reihe' nur zusammen mit Ziffern ('Reihe 4 Platz 12') werten, dazu Tests für 'Café am Platz' und 'nur für dich'. .part nutzen oder entfernen, mehr als 20 Anhänge melden, Texterkennungsfehler als eigener Zustand, canSaveDirectly/aiFilled einmal berechnen und ein XCUITest für Scan → Speichern → Kasse.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Rainer Köhler, 48, Kassen- und Scanner-Techniker (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Barcode-Darstellung an der Kasse: Symbologien, Ruhezonen, Kontrast, Rücklesbarkeit",
+  "scores": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Der Knopf 'An der Kasse zeigen' ist wieder da, groß und schwarz, das ist mein Weg zum Barcode. 'PIN anzeigen' sieht in kasse.png endlich nicht mehr ausgeschaltet aus. Aber die zwei Dinge, die ich für die 10 genannt habe, der Modultest und das Vollbild mit Hinweis, fehlen immer noch.",
+  "behoben": [
+   "'An der Kasse zeigen' direkt unter 'Läuft bald ab' zurück (HomeView.swift:320 act → .checkout; start.png, start-bestand.png: großer schwarzer Knopf, Online-Code 'Code anzeigen')",
+   "Bündel-Beschriftung ohne 'x': '95 €' und darunter '3 Gutscheine' (start-bestand-unten.png), keine Multiplikation mehr",
+   "'PIN anzeigen' weiß mit 1,5-pt-Tintenrand statt grauer bordered-Füllung (CheckoutView.swift:146-158; kasse.png)"
+  ],
+  "offen": [
+   "Kein Unit-Test für die Modulzahl aus modules(of:) (BarcodeView.swift), weiter 0 Treffer in den Tests",
+   "Kein Screenshot des Vollbilds mit Ersatzformat-Hinweis (in ios/build/beta-shots keiner)",
+   "GS1-128/FNC1 beim Neuzeichnen (Hinweis, im Simulator nicht prüfbar)"
+  ],
+  "befunde": [
+   {
+    "screen": "gross-start-bestand.png / HomeView.swift:500-560 (DueSoonCard)",
+    "befund": "Bei XL-Schrift füllt schon eine 'Läuft bald ab'-Karte den Bildschirm: Logo, Name und Frist-Pille stehen untereinander, Betrag und der Knopf 'An der Kasse zeigen' liegen unter der Tab-Leiste. Am Tresen muss man erst scrollen. Das ist derselbe Punkt wie in Runde 10.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand-unten.png (Verfallsradar)",
+    "befund": "'95 € / 3 Gutscheine': einer der drei ist ein Rabattcode ohne Euro. Für mich ist das jetzt eindeutig genug, aber genau gerechnet stimmt es nicht.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Unverändert: ein Unit-Test, der die Modulzahl im Code-128-Pfad (11·n+35) prüft, und ein Screenshot des Vollbilds mit 'Als Code 128 gezeichnet (auf der Karte: …)'. Danach ist die Kasse für mich fertig.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Svenja Albrecht, 36, QA-Testerin, testet systematisch im Simulator (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Nachweise gegen Protokoll abgleichen, Testfälle v01–v14, Konsistenz von Texten und Zuständen",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Drei meiner vier Befunde sind im Screenshot nachprüfbar erledigt: Das Datum bei Amazon steht wieder da ('bis ca. 28.09.2036'), 'für Familie Weber' ist ganz lesbar, und VoiceOver nennt die echte Achsenlänge. Dafür steht jetzt überall '25,00 € von 25,00 €', und bei XL-Schrift sieht man von der Liste auf dem Start gar nichts mehr. Die alten Prozesspunkte sind weiter offen.",
+  "behoben": [
+   "Geschätztes Datum nicht mehr abgeschnitten: 'bis ca. 28.09.2036' bei Amazon 1.250,00 € (liste-ausgestellt.png; CardRow.swift:52)",
+   "Empfänger ganz lesbar: '· für Familie Weber' in beiden Café-Zeilen (liste-ausgestellt.png; CardRow.swift:120-121, lineLimit(2)), VoiceOver 'selbst ausgestellt für …' (CardRow.swift:88)",
+   "VoiceOver-Zusammenfassung nennt 'nächste \\(horizon) Tage' statt fest 90 (ExpiryRadar.swift:509, :511)",
+   "Bündel zweizeilig '95 €' / '3 Gutscheine' (start-bestand-unten.png), liest sich nicht mehr als 3 mal 95 €",
+   "Protokoll Punkt 1 belegt: 'Läuft bald ab 2' mit Karten, Pille 'Noch 12 Tage' rot und 'Noch 24 Tage' bernstein, 'Code anzeigen' für Zalando-Rabattcode, 'An der Kasse zeigen' für IKEA (start.png); Punkt 3 belegt: Einstellungen als abgerundete Karten mit Randabstand (einstellungen-schutz.png)",
+   "Datenstand weiter konsistent: start-bestand 145,15 € / 4 Gutscheine / '+ 1 Rabattcode' passt zu start-bestand-unten"
+  ],
+  "offen": [
+   "'Prüfen und ändern' und 'Überspringen – nächstes Foto' weiter nebeneinander (ScanView.swift:352, :414)",
+   "Kein Screenshot der Abschlussbilanz ('5 Fotos: 3 gespeichert, …')",
+   "Speichern-Nachweis weiter per Startparameter, kein XCUITest"
+  ],
+  "befunde": [
+   {
+    "screen": "gross-start-bestand.png / HomeView.swift:500-560",
+    "befund": "Bei XL-Schrift zeigt der erste Bildschirm nur Guthaben und den Kopf der einen Stadler-Karte. Betrag ('von 25,00 €' lugt unter der Tab-Leiste hervor), Knopf und die ganze Liste liegen darunter. Die Runde-10-Absicht 'Liste früher' kehrt sich bei großer Schrift um. Bei zwei bald ablaufenden Gutscheinen (start.png) ist auch in Standardgröße keine Listenzeile mehr sichtbar.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start-bestand.png, start-bestand-unten.png, liste-ausgestellt.png / CardRow.swift:155",
+    "befund": "'von X €' steht jetzt in jeder Zeile, auch ohne Teileinlösung: '25,00 € von 25,00 €', '1.250,00 € von 1.250,00 €'. Das war in Runde 11 bewusst entfernt ('25 € von 25 € sagt nichts') und ist jetzt auf Wunsch des Inhabers zurück. Das ist eine Designentscheidung, aber die Doppelung frisst Platz, und der Hinweis auf eine Teileinlösung geht darin unter.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "liste-ausgestellt.png / CardRow.swift:141",
+    "befund": "Das Datum ist sichtbar, aber bei Amazon wegen minimumScaleFactor(0.75) sichtbar kleiner als bei Douglas ('bis ca. 28.09.2036' vs. 'bis 31.12.2029'). Das ist teilweise behoben. Bei XL oder breiteren Beträgen könnte es wieder knapp werden (nicht belegt).",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "HomeView.swift:536 (DueSoonCard)",
+    "befund": "Die Karte in 'Läuft bald ab' zeigt nur 'Noch 11 Tage'. Die Zusätze der Listenzeile fehlen hier: '· Datum geschätzt', '· Betrag offen' und die Person ('für …'). Genau bei dringenden Gutscheinen wären sie relevant. Im Screenshot nicht belegt, nur im Code.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ExpiryRadar.swift:461",
+    "befund": "'3 Gutscheine' zählt den Zalando-Rabattcode mit, '95 €' summiert nur Amazon und Buchladen. Die Beschriftung ist klarer als '3× 95 €', aber Summe und Anzahl beziehen sich weiter auf verschiedene Mengen.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "'Läuft bald ab' bei XL kompakter (Knopf ohne Scrollen sichtbar) oder auf eine Karte plus 'weitere' begrenzen, damit die Liste erreichbar bleibt. 'von X €' nur, wenn es sich vom Betrag unterscheidet (oder bewusst begründet). Bündel-Anzahl und -Summe auf dieselbe Menge beziehen. Nebenknöpfe der Reihe untereinander, ein Screenshot der Abschlussbilanz und ein Knopf-Nachweis per XCUITest.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Markus Weidner, 42, IT-Administrator, datenschutzbewusst (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Datenfluss, Speicherung, Zwischenablage, Logs, App-Sperre und Code-Schutz",
+  "scores": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 8,
+   "scan": 8,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 8,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Der Datenschutzsatz ist jetzt ehrlich: Empfänger und Gruß gehen wie alle Daten in Export und iCloud-Sync, App und Webseite sagen dasselbe. Die Schutz-Einstellungen sind als Karten übersichtlicher. Meine zwei technischen Punkte zur Teilen-Übergabe hat aber niemand angefasst.",
+  "behoben": [
+   "Datenschutztext richtiggestellt: 'wie alle Gutscheindaten auf deinem Gerät, in deinem Export und (falls eingeschaltet) verschlüsselt in deinem iCloud-Sync' (LegalView.swift:32, server/public/datenschutz.html:34, gleichlautend)",
+   "Schutz-Einstellungen oben als eigene abgerundete Karte, Fußtext erklärt den Unterschied App-Sperre / andere Schalter (einstellungen-schutz.png, SettingsView.swift:547-556)"
+  ],
+  "offen": [
+   "Übergabedateien weiter nur .completeUntilFirstUserAuthentication, nachträglich per setAttributes mit try? (ShareViewController.swift:85-90)",
+   "Keine Aufräumung von tmp/shared-inbox beim App-Start (RestwertApp.swift:121-131 kopiert nur hinein)",
+   "Kein Hinweis im Ausstellen-Screen, dass Empfänger und Gruß gespeichert werden (IssueVoucherView.swift:63)",
+   "Ohne iPhone-Code bleibt die Sperre bewusst abschaltbar (bekannte Grenze)"
+  ],
+  "befunde": [
+   {
+    "screen": "RestwertShare/ShareViewController.swift:85-90",
+    "befund": "Unverändert: Schutzklasse der Übergabedateien schwächer als die der App-Daten (.completeFileProtection), und sie wird erst nach dem Schreiben gesetzt, Fehler still per try?.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "HomeView.swift:320 / start.png",
+    "befund": "'An der Kasse zeigen' bzw. 'Code anzeigen' auf der Startseite führt direkt zur Kasse. Laut Code geht es über router.homePath (.checkout). Ob der Code-Schutz ('Gutscheincodes erst nach Face ID zeigen') dort greift, ist in keinem Screenshot belegt (kasse-code-geschuetzt ist über Detail aufgenommen). Nach dem Code greift die Kasse selbst den Schutz, dies ist aber nur im Code und nicht im Bild nachgewiesen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kontrast-einstellungen.png",
+    "befund": "Mit 'Kontrast erhöhen' haben die Karten auf der Startseite einen sichtbaren Rand (kontrast-start.png), die neuen Einstellungskarten nicht. Weiß auf dem dunkleren Papier ist trotzdem gut unterscheidbar, aber es ist uneinheitlich.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-einstellungen.png / SettingsView.swift:81",
+    "befund": "Bei XL-Schrift bricht 'PIN erst nach Face / ID oder iPhone-Code anzeigen' mitten in 'Face ID' um (normales Leerzeichen statt geschütztem).",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Übergabedateien direkt mit .completeFileProtection schreiben (oder Schutz am Ordner vor dem Kopieren), Reste in tmp/shared-inbox beim App-Start löschen und im Ausstellen-Screen ein Satz 'Empfänger und Gruß werden beim Gutschein gespeichert (auch in Export/iCloud)'.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Mara Lindqvist, 33, UX-Designerin in einer Hamburger Produktagentur, achtet auf Hierarchie und Konsistenz (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Visuelle Hierarchie und Konsistenz; neue „Läuft bald ab“-Karten, Einstellungen als Karten, Radar-Bündel, Bereich „Selbst ausgestellt“, iPad",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Das Radar liest sich jetzt sauber: „95 €“ über „3 Gutscheine“, vorne die Amazon-Kachel mit dem meisten Guthaben, die gelbe Heute-Marke kollidiert mit nichts mehr. Die Einstellungen sehen endlich nach derselben App aus wie die Startseite. Die neuen „Läuft bald ab“-Karten sind aber sehr laut – zwei schwarze Balken ganz oben, und „von 25,00 €“ wiederholt in fast jeder Zeile nur den Betrag.",
+  "behoben": [
+   "Bündel ohne Malzeichen: „95 €“ / „3 Gutscheine“ zweizeilig (start-bestand-unten; Design/ExpiryRadar.swift:461)",
+   "Vorderkachel passt zum Betrag: im Bündel 2028+ liegt Amazon (70 €) vorn (start-bestand-unten)",
+   "Geschätztes Datum nicht mehr abgeschnitten: „bis ca. 28.09.2036“ vollständig (liste-ausgestellt; Design/CardRow.swift:52)",
+   "Empfänger lesbar: „· für Familie Weber“ ganz, darf umbrechen (liste-ausgestellt; Design/CardRow.swift:120-121)",
+   "Einstellungen als abgerundete Karten mit Randabstand, gleiche Formsprache wie Startseite (einstellungen-schutz; Features/Settings/SettingsView.swift:548-555)"
+  ],
+  "offen": [
+   "Code-Kachel halbe Breite bricht weiter mitten im Code: „AQ7K–2ZPM4H– / R8TX“ (scan-v09)",
+   "gross-eigener-gutschein-einloesen: Meldung sitzt jetzt ganz ohne Lücke auf dem Einlöse-Knopf, beide schwarz – wirkt wie ein Block",
+   "gross-dublette: drei volle Knöpfe, dazu Kasten „schon gespeichert“ und Kopfzeile „Schon gespeichert“ doppelt",
+   "iPad-Start: Wortmarke und Suchfeld auf voller Breite, Inhalt auf Lesebreite – zwei linke Kanten (ipad-start)",
+   "„Gespeichert“-Meldung liegt über der Quellenliste (gespeichert-im-tab)",
+   "Radar steht weiter direkt unter „Selbst ausgestellt“ (liste-ausgestellt-unten)",
+   "„· für …“ weiter mit führendem Mittelpunkt als eigene Zeile (liste-ausgestellt)"
+  ],
+  "befunde": [
+   {
+    "screen": "start / start-bestand / Features/Home/HomeView.swift:569-576",
+    "befund": "„Läuft bald ab“: je Gutschein ein 56 pt hoher schwarzer Vollbreite-Knopf. Bei zwei Einträgen (start) dominieren zwei schwarze Balken den ersten Bildschirm stärker als die Guthabenkarte; die eigentliche Liste beginnt erst nach dem Scrollen. Hierarchie kippt zugunsten der Aktion.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start-bestand-unten / liste-ausgestellt / Design/CardRow.swift:155",
+    "befund": "„von X €“ wieder in jeder Zeile: bei unberührten Gutscheinen steht zweimal derselbe Betrag („70,00 € / von 70,00 €“, „1.250,00 € / von 1.250,00 €“). Rauschen ohne Information; in Runde 11 war es gerade weg.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kontrast-einstellungen / Features/Settings/SettingsView.swift:551",
+    "befund": "Regression: Die neuen Einstellungskarten haben bei „Kontrast erhöhen“ keinen Rand (kontrast-start hat ihn über ContrastEdge) – weiße Karte auf hellem Papier, uneinheitlich.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "liste-ausgestellt / Design/CardRow.swift:141",
+    "befund": "„bis ca. 28.09.2036“ ist sichtbar kleiner gesetzt als „bis 31.12.2029“ in der Zeile darüber (minimumScaleFactor 0.75) – zwei Schriftgrößen für dieselbe Rolle.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand-unten / Design/ExpiryRadar.swift:461",
+    "befund": "„3 Gutscheine“ zählt den Zalando-Rabattcode mit, „95 €“ nicht – harmlos, aber wer nachrechnet, findet nur zwei Guthaben.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Läuft-bald-ab-Knopf leichter (z. B. heller Tonknopf oder nur beim dringendsten schwarz); „von X €“ nur nach Teileinlösung; Code-Kachel über volle Breite; Abstand zwischen Meldung und Knopf bei XL; Kontrast-Rand auch in den Einstellungen; iPad-Kopf auf Lesebreite.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Jule Okafor, 30, Community-Managerin für Beta-Programme bei einem Fintech, liest Feedback von Hunderten Testern (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Was Beta-Tester melden würden: Verwirrung, Vertrauen, Support-Last; Radar-Bündel, Ablaufdatum in der Liste, Läuft-bald-ab-Karten, Einstellungen",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 8,
+   "vertrauen": 10,
+   "barrierefreiheit": 9
+  },
+  "erster_eindruck": "Die beiden Ticket-Kandidaten aus Runde 11 sind weg: Amazon zeigt „bis ca. 28.09.2036“ ganz, und „95 € · 3 Gutscheine“ fragt niemand mehr nach 285 €. Der große Knopf „An der Kasse zeigen“ direkt unter dem dringenden Gutschein ist genau das, was Leute in der Schlange suchen. Offen bleibt die Meldung, die über der Quellenliste liegt.",
+  "behoben": [
+   "Ablaufdatum nie abgeschnitten: „bis ca. 28.09.2036“ bei Amazon 1.250,00 € (liste-ausgestellt)",
+   "Bündel eindeutig: „95 €“ + „3 Gutscheine“ statt „3× 95 €“ (start-bestand-unten)",
+   "Kachel passt zum Betrag: Amazon vorn im Bündel (start-bestand-unten, gross-start-bestand-unten)",
+   "Empfänger bei selbst ausgestellten lesbar: „· für Familie Weber“ (liste-ausgestellt)",
+   "XL-Meldung nicht mehr gekürzt: „Eigener Gutschein erkannt: noch 25,00 € Guthaben“ vollständig in drei Zeilen (gross-eigener-gutschein-einloesen; App/RestwertApp.swift:428)",
+   "Nächster Schritt direkt sichtbar: „An der Kasse zeigen“ / „Code anzeigen“ unter jedem bald ablaufenden Gutschein (start, start-bestand)"
+  ],
+  "offen": [
+   "Meldung „„Douglas“ gespeichert – Ansehen“ liegt weiter über „Aus einer Datei“ (gespeichert-im-tab)",
+   "Screenshot der Mehrfach-Bilanz („3 Fotos: …“) fehlt weiterhin in beta-shots",
+   "Teilen: manueller App-Wechsel ohne Mitteilung bleibt Drop-off-Punkt (Plattformgrenze)"
+  ],
+  "befunde": [
+   {
+    "screen": "start-bestand-unten / Design/ExpiryRadar.swift:461",
+    "befund": "„3 Gutscheine“ enthält den Rabattcode, „95 €“ nicht. Einzelne Tester werden nachzählen („Ich habe nur zwei Guthaben-Gutscheine nach 2028“) – deutlich seltener als bei „3×“, aber möglich.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand / start",
+    "befund": "Doppelte Zählung oben: „4 Gutscheine · 1 läuft bald ab“ in der Guthabenkarte und direkt darunter „Läuft bald ab 1“. Kein Fehler, aber Leser fragen sich, ob der Stadler-Gutschein in den 4 steckt.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-eigener-gutschein-einloesen",
+    "befund": "Bei XL klebt die schwarze Meldung ohne Abstand am schwarzen Knopf „Einlösen – vom Guthaben abziehen“; Café-Personal könnte die Meldung für den Knopf halten und hineintippen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand-unten / Design/CardRow.swift:155",
+    "befund": "„von 70,00 €“ unter „70,00 €“ – wiederholter Betrag; Erfahrungsgemäß fragt jemand „Was heißt von?“, wenn beide Zahlen gleich sind.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Meldung im Hinzufügen-Tab ohne Überdeckung der Quellenliste; Bilanz-Screenshot der Mehrfachauswahl; Bündel-Anzahl nur mit Guthaben-Gutscheinen (oder „+ 1 Rabattcode“); Abstand Meldung/Knopf bei XL.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Tobias Brandt, 40, Accessibility-Beta-Tester, stark sehbehindert, nutzt VoiceOver und große Schrift, prüft mit dem Accessibility Inspector im Simulator (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "VoiceOver-Labels, Dynamic Type, Tippziele; Startseite und Einstellungen bei XL und Kontrast",
+  "scores": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 7
+  },
+  "scores_runde11": {
+   "gesamt": 8,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Einlöse-Meldung zeigt bei XL jetzt den ganzen Betrag, und in den Einstellungen rutscht „Einschalten“ sauber unter den Text. Dafür ist die Startseite bei XL ein Rückschritt: Von der neuen Stadler-Karte sehe ich nur Logo, Name und die Frist-Pille – Betrag und der große Kasse-Knopf liegen unter der Tab-Leiste. Und die Einstellungskarten verlieren bei „Kontrast erhöhen“ ihren Rand.",
+  "behoben": [
+   "XL-Meldung ohne Abschneiden: „noch 25,00 € Guthaben“ vollständig (gross-eigener-gutschein-einloesen; App/RestwertApp.swift:428 lineLimit 3)",
+   "Fälligkeitszeile verliert das Datum nicht mehr: „bis ca. 28.09.2036“ (liste-ausgestellt)",
+   "Radar-Bündel ohne „×“: VoiceOver und Lupe lesen „120 €, 4 Gutscheine“ gleich (gross-start-bestand-unten)",
+   "Einstellungen XL: Symbole ausgeblendet, „Einschalten“ unter dem Text ohne Trennung (gross-einstellungen)"
+  ],
+  "offen": [
+   "Kein dokumentierter Accessibility-Inspector-Audit inkl. VoiceOver-Reihenfolge",
+   "gross-ausgeben: „Gutschein teilen oder drucken“ weiter unten angeschnitten, keine feste Leiste",
+   "gross-eigener-gutschein-einloesen: Meldung und Knopf jetzt ganz ohne Abstand, gleiche Tinte",
+   "gross-dublette: drei volle Knöpfe",
+   "Cent bei XL klein hochgestellt („145,¹⁵ €“, gross-start-bestand)",
+   "Fälligkeitszeile weiter mit minimumScaleFactor 0.75 (Design/CardRow.swift:141): „bis ca. 28.09.2036“ sichtbar kleiner"
+  ],
+  "befunde": [
+   {
+    "screen": "gross-start-bestand / Features/Home/HomeView.swift:528-565",
+    "befund": "Regression gegenüber Runde 11: Bei XL stapelt die neue Läuft-bald-ab-Karte Logo, Name, Pille und Betrag untereinander; auf dem ersten Bildschirm stehen nur Logo, „Stadler“ und „Noch 11 Tage“ – Betrag, „von 25,00 €“ und „An der Kasse zeigen“ liegen unter der schwebenden Tab-Leiste. In Runde 11 waren Name, Frist und Betrag ohne Scrollen sichtbar.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start / Features/Home/HomeView.swift:564-565",
+    "befund": "„…“-Menü in der Läuft-bald-ab-Karte hat nur 32 pt Breite (frame(width: 32, height: Layout.tap)) – unter 44 pt, direkt neben dem Betrag.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "kontrast-einstellungen / Features/Settings/SettingsView.swift:548-555",
+    "befund": "settingsCards() setzt keinen ContrastEdge: bei „Kontrast erhöhen“ fehlt der Rand, den alle anderen Karten (kontrast-start) haben; die weißen Karten grenzen sich nur schwach vom Papier ab.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-einstellungen / Features/Settings/SettingsView.swift:79",
+    "befund": "„PIN erst nach Face / ID oder iPhone-Code“: „Face ID“ bricht bei XL mitten im Begriff um (kein geschütztes Leerzeichen), für Screenreader egal, mit Lupe störend.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gross-ausgeben",
+    "befund": "Hauptknopf unten angeschnitten, Home-Balken liegt darauf; kein Verlauf als Scroll-Hinweis.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Läuft-bald-ab-Karte bei XL so kompakt, dass Betrag und Kasse-Knopf ohne Scrollen sichtbar sind; „…“ mind. 44 pt; Kontrast-Rand in den Einstellungen; Meldung mit Abstand zum Knopf; Ausstellen bei XL mit fester Leiste; dokumentierter Accessibility-Inspector-Audit.",
+  "wuerde_nutzen": true,
+  "nps": 8
+ },
+ {
+  "persona": "Sabine Roth, 44, freie Texterin und Lektorin für Produkt- und Banking-Apps (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Mikrotexte, Glossar, Tonalität, Konsistenz; Radar-Beschriftung, Datumszeilen, Einstellungen, Läuft-bald-ab-Karten",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 10,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Das Malzeichen ist weg, „95 €“ über „3 Gutscheine“ ist typografisch sauber, und „bis ca. 31.12.2029“ ist kurz und ehrlich zugleich. „Noch 11 Tage“ in der Pille und „Weitere Gutscheine“ lesen sich gut. Meine vier kleinen Glossar-Punkte aus Runde 11 stehen aber alle noch unverändert im Code.",
+  "behoben": [
+   "Radar ohne „×“: „95 €“ / „3 Gutscheine“ (Design/ExpiryRadar.swift:461)",
+   "„bis ca. 28.09.2036“ statt „Ablauf geschätzt: …“ – kurz, Datum nie abgeschnitten (Design/CardRow.swift:52)",
+   "„· für Familie Weber“ statt „· ausgestellt für F…“ (Design/CardRow.swift:120)",
+   "„Weitere Gutscheine“ als Überschrift unter „Läuft bald ab“ (start-bestand)"
+  ],
+  "offen": [
+   "„Restbetrag drauf“ im Einstieg (Features/Onboarding/OnboardingView.swift:336)",
+   "„Strichcode“ im OTTO-Hinweis (Features/Scan/ScanResultView.swift:133) neben Kachel „Barcode an der Kasse“",
+   "Imperativ uneinheitlich: „Tippe auf „Fertig“.“ (RestwertShare/ShareViewController.swift:212) vs. „Tipp unten auf „+““ (Features/Issue/IssueVoucherView.swift:127)",
+   "Drei Kassenknöpfe, zwei Satzformen: „Bezahlt/Eingelöst – Einkauf abziehen“ vs. „Einlösen – vom Guthaben abziehen“ (Features/Checkout/CheckoutView.swift:213-215)",
+   "Kachel „An der Kasse: Foto zeigen“ neben „Barcode an der Kasse: …“ (Features/Scan/ScanResultView.swift:251)"
+  ],
+  "befunde": [
+   {
+    "screen": "einstellungen-schutz / Features/Settings/SettingsView.swift:64, :78-96",
+    "befund": "Die Sammelzeile nennt „PIN-Schutz, App-Sperre und Code-Schutz“, die Schalter darunter heißen aber „PIN mit Face ID schützen“, „App mit Face ID sperren“, „Gutscheincodes erst nach Face ID zeigen“ – „Code-Schutz“ taucht als Schaltername nirgends auf. Zudem „Gutscheincodes“ im Schalter, „Code“ im Fußtext.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand-unten / Design/CardRow.swift:155",
+    "befund": "„70,00 € / von 70,00 €“: „von“ ohne Teileinlösung ist eine Tautologie; sprachlich trägt „von“ nur, wenn schon etwas abgezogen wurde.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "liste-ausgestellt / Design/CardRow.swift:120",
+    "befund": "„· für Familie Weber“ als eigene Zeile mit führendem Mittelpunkt – der Punkt trennt hier nichts, er steht am Zeilenanfang.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand / Features/Home/HomeView.swift:512-515",
+    "befund": "Knopfbeschriftungen in „Läuft bald ab“: „An der Kasse zeigen“, „Foto an der Kasse zeigen“, aber „Code anzeigen“ (nicht „Code zeigen“) – zeigen vs. anzeigen im selben Block.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "„Restbetrag“ → „Guthaben“; „Strichcode“ → „Barcode“; durchgehend „Tipp“; eine Satzform für alle drei Kassenknöpfe; Schalternamen und Sammelzeile mit denselben Begriffen; „zeigen“ einheitlich; „von X €“ nur nach Teileinlösung.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Rüdiger, 52, Schnäppchenjäger mit über 40 Gutscheinen aus Aktionen, Cashback und Geschenken (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Überblick bei vielen Karten, Verfallsradar, schnelles Erfassen, Kasse",
+  "scores": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Der schwarze Knopf „An der Kasse zeigen“ ist wieder da, und die rote Pille „Noch 11 Tage“ sieht man sofort. Das Radar ist luftiger und die gelbe Heute-Marke eindeutig. Aber bei 40 Karten stehen das Radar weiter ganz unten, und unter „95 €“ steht „3 Gutscheine“, obwohl einer davon der Zalando-Rabattcode ist.",
+  "behoben": [
+   "Knopf „An der Kasse zeigen“ direkt unter jedem bald ablaufenden Gutschein zurück, für Online-Codes „Code anzeigen“ (start-bestand, start, dunkel-start, kontrast-start)",
+   "Radar: Bündel zweizeilig („95 €“ / „3 Gutscheine“) statt „3× 95 €“, vorne liegt die Kachel mit dem meisten Guthaben (Amazon), die Heute-Marke kollidiert nicht mehr mit dem Stiel (start-bestand-unten; Restwert/Design/ExpiryRadar.swift:445-461)",
+   "Radar bei XL weiter lesbar: „120 €“ / „4 Gutscheine“, „2027+“ (gross-start-bestand-unten)"
+  ],
+  "offen": [
+   "Radar steht weiter unter der ganzen Liste und „Selbst ausgestellt“ (Restwert/Features/Home/HomeView.swift:48-60); die Guthabenkarte mit „1 läuft bald ab“ ist weiter nicht antippbar (HomeView.swift:24-25, TotalHeader ohne Aktion)",
+   "Bündel zählt Rabattcodes als „Gutscheine“ mit, die Summe enthält sie aber nicht: „95 € / 3 Gutscheine“ = Amazon 70 + Buchladen 25,15 + Zalando-Rabatt (start-bestand-unten; ExpiryRadar.swift:459-461). Die Guthabenkarte trennt das sauber („4 Gutscheine + 1 Rabattcode“), das Radar nicht",
+   "„„Douglas“ gespeichert – Ansehen“ liegt weiter über dem Untertitel von „Aus einer Datei“ (gespeichert-im-tab)"
+  ],
+  "befunde": [
+   {
+    "screen": "start-bestand / Restwert/Features/Home/HomeView.swift:363-366",
+    "befund": "„Läuft bald ab“ zeigt jeden Gutschein der Warnfrist (Standard 30 Tage, ipad-einstellungen) als große Karte mit eigenem Knopf, ohne Obergrenze. Eine Karte ist etwa ein Drittel Bildschirm hoch (start: zwei Karten füllen den Bildschirm). Bei meinen 40 Karten laufen oft 5 bis 8 im Monat ab, dann schiebt das die Liste und erst recht das Radar mehrere Bildschirme nach unten. Belegt ist nur der Fall mit 1 bis 2 Karten.",
+    "schwere": "mittel"
+   },
+   {
+    "screen": "start-bestand-unten; Restwert/Design/ExpiryRadar.swift:461",
+    "befund": "„95 €“ und darunter „3 Gutscheine“: der Rabattcode zählt als Gutschein, steckt aber nicht in den 95 €. Oben in der Guthabenkarte heißen Rabattcodes extra. Das Radar widerspricht dieser Zählweise.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand / start",
+    "befund": "Unter „Läuft bald ab“ steht bei unangetasteten Gutscheinen „25,00 €“ und darunter „von 25,00 €“. Das ist dieselbe Zahl zweimal und kostet Platz, gerade auf der großen Karte.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "gespeichert-im-tab",
+    "befund": "Die Gespeichert-Meldung deckt weiter den Untertitel von „Aus einer Datei“ ab.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Bei vielen Karten ein kompakter Überblick oben: „Läuft bald ab“ ab etwa drei Karten eingeklappt oder als schmale Zeilen mit „Alle 7 zeigen“, die Guthabenkarte oder die Zahl „1 läuft bald ab“ antippbar zum Radar. Dazu ein Bündel-Text, der Rabattcodes getrennt nennt („95 € · 2 Gutscheine + 1 Rabattcode“), und eine Gespeichert-Meldung, die nichts verdeckt.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Meltem, 41, Besitzerin eines kleinen Cafés, gibt eigene handgeschriebene Papiergutscheine aus und nimmt sie an (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Papiergutscheine ohne Code, Foto an der Kasse, Nutzen für Ladeninhaber",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 8,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Jetzt steht da „· für Familie Weber“, ganz ausgeschrieben, nichts mehr abgeschnitten. Genau das wollte ich. Den Teilen-Knopf bei großer Schrift sehe ich aber immer noch nur halb, und eine Detailansicht mit Verlauf hat mir noch niemand gezeigt.",
+  "behoben": [
+   "Empfänger vollständig in der Zeile: „· für Familie Weber“, bis zwei Zeilen statt „F…“ (liste-ausgestellt, liste-ausgestellt-unten; Restwert/Design/CardRow.swift:120-121)",
+   "VoiceOver nennt den Empfänger: „selbst ausgestellt für …“ (CardRow.swift:88)",
+   "„Ablauf geschätzt“ kurz als „bis ca. 28.09.2036“, das Datum passt neben 1.250,00 € (liste-ausgestellt)",
+   "Einstellungen als abgerundete Karten, ruhiger und übersichtlicher (einstellungen-schutz, kontrast-einstellungen)"
+  ],
+  "offen": [
+   "XL-Schrift: „Gutschein teilen oder drucken“ weiter unten am Rand angeschnitten (gross-ausgeben), vierte Runde",
+   "Eigener Gutschein mitten in einer Fotoreihe beendet die Reihe weiter ohne Bilanz, die Meldung sagt nicht, dass Fotos verworfen wurden (Restwert/Features/Scan/ScanView.swift:478-482)",
+   "Detailansicht eines ausgestellten Gutscheins mit Verlauf (ausgestellt am, eingelöst, Rest) weiter ohne Screenshot"
+  ],
+  "befunde": [
+   {
+    "screen": "gross-ausgeben",
+    "befund": "Bei XL-Schrift liegt „oder drucken“ unten am Bildschirmrand, der Knopf ist nur zu gut drei Vierteln sichtbar. Beim Tippen trifft man ihn, aber es wirkt unfertig.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Restwert/Features/Scan/ScanView.swift:478-482",
+    "befund": "Scanne ich an der Theke mehrere Fotos und eins ist mein eigener Gutschein, springt die App zur Einlösung und verwirft die übrigen Fotos still (dropPendingBatch). „Eigener Gutschein erkannt: noch 25,00 € Guthaben“ sagt davon nichts.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "liste-ausgestellt",
+    "befund": "Beide Zeilen lauten gleich („Café am Markt · bis 31.12.2029 · für Familie Weber · 25,00 €“). Das stimmt bei den Testdaten so, aber der Code (z. B. „…-BSA4“) als Unterscheidung fehlt, wenn dieselbe Familie zwei bekommt.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Der XL-Teilen-Knopf ganz sichtbar, ein Screenshot der Detailansicht eines selbst ausgestellten Gutscheins nach Teil-Einlösung mit Verlauf, und bei gleichen Empfängern ein kurzes Code-Ende in der Zeile. Ein eigener Gutschein in einer Reihe sollte die übrigen Fotos nicht still verwerfen.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Lea, 21, Studentin, will alles in Sekunden erledigt haben (simulierte Persona)",
+  "gruppe": "Alltag",
+  "fokus": "Tempo, wenige Taps, Screenshot/Mail-Import, schnell an die Kasse",
+  "scores": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 10,
+   "barcode_kasse": 10,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Yes, der große schwarze Knopf „An der Kasse zeigen“ ist zurück, App auf, ein Tipp, Barcode. Bei Zalando heißt er „Code anzeigen“, passt. Nur die Gespeichert-Meldung klebt immer noch über „Aus einer Datei“.",
+  "behoben": [
+   "Ein-Tipp-Weg vom Start zur Kasse für dringende Gutscheine: „An der Kasse zeigen“ / „Code anzeigen“ als großer Knopf je Karte (start-bestand, start, dunkel-start, ipad-start)",
+   "Frist als farbige Pille („Noch 12 Tage“ rot, „Noch 24 Tage“ bernstein), sofort erfassbar (start)",
+   "Mehrere Fotos und Teilen weiter flott: „Foto 1 von 3“, „Speichern“ / „Überspringen – nächstes Foto“ (mehrere-fotos); Teilen-Blatt mit Vorschau und drei Schritten (teilen-erweiterung)"
+  ],
+  "offen": [
+   "„„Douglas“ gespeichert – Ansehen“ verdeckt weiter den Untertitel von „Aus einer Datei“ (gespeichert-im-tab), fünfte Runde",
+   "Nach dem Teilen weiter: „Fertig“ tippen und Restwert selbst öffnen (Systemgrenze; Mitteilung im Simulator nicht belegt)"
+  ],
+  "befunde": [
+   {
+    "screen": "gespeichert-im-tab",
+    "befund": "Die schwarze Meldung liegt genau auf dem Untertitel von „Aus einer Datei“. Wer schnell den nächsten Gutschein aus einer Datei holen will, muss erst die Meldung abwarten oder daneben tippen.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start / Restwert/Features/Home/HomeView.swift:363-366",
+    "befund": "Die neuen Karten sind groß. Mit zwei bald ablaufenden Gutscheinen sehe ich auf dem Start keine einzige normale Zeile mehr, die Filter-Chips liegen schon hinter der Tab-Leiste. Für die Kasse super, zum Suchen eines anderen Gutscheins ein Wisch mehr.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "teilen-ergebnis",
+    "befund": "Krustenzauber ohne Datum: „nicht angegeben – gesetzlich bis 31.12.2029“ braucht in der Kachel drei Zeilen. Verständlich, aber lang.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Eine Gespeichert-Meldung, die nichts verdeckt (z. B. oben oder als Zeile im Tab statt über der Liste). Mehr fehlt mir im Simulator-Build kaum noch.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ },
+ {
+  "persona": "Tobias, 39, Tech-Journalist, schreibt ein App-Review für ein Online-Magazin (simulierte Persona)",
+  "gruppe": "Fachleute",
+  "fokus": "Gesamtqualität, Ehrlichkeit der Erkennung, Datenschutz, Sicherheitsmodell, Details",
+  "scores": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "scores_runde11": {
+   "gesamt": 9,
+   "scan": 9,
+   "barcode_kasse": 9,
+   "login_sperre": 9,
+   "verstaendlichkeit": 9,
+   "vertrauen": 9,
+   "barrierefreiheit": 8
+  },
+  "erster_eindruck": "Die Kürzungen aus Runde 11 sind weg: „bis ca. 28.09.2036“ passt neben 1.250,00 €, „für Familie Weber“ ist ganz lesbar und wird auch vorgelesen. Die Startseite ist mit den Frist-Karten jetzt review-tauglich. Kleine Unsauberkeiten bleiben: das Radar zählt Rabattcodes als Gutscheine, und iPad-Einstellungen und iPad-Start folgen unterschiedlichen Breiten.",
+  "behoben": [
+   "Datum bei geschätzter Frist nie mehr abgeschnitten: „bis ca. 28.09.2036“ (liste-ausgestellt, liste-ausgestellt-unten)",
+   "Empfänger vollständig in der Zeile und bei VoiceOver (CardRow.swift:88, 120-121)",
+   "Radar-Bündel: vorne die Kachel mit dem meisten Guthaben, damit Betrag und Kachel zusammenpassen (ExpiryRadar.swift:445); zweizeilig statt „3× 95 €“",
+   "Einstellungen als eingerückte, abgerundete Karten, auch mit Kontrast (Rand sichtbar) und XL (Knopf „Einschalten“ unter dem Text) sauber (einstellungen-schutz, kontrast-einstellungen, gross-einstellungen)"
+  ],
+  "offen": [
+   "Radar-Bündel zählt Rabattcodes als „Gutscheine“, summiert aber nur Euro (ExpiryRadar.swift:459-461; start-bestand-unten „95 € / 3 Gutscheine“, gross-start-bestand-unten „120 € / 4 Gutscheine“)",
+   "iPad-Start: Suchfeld über die volle Breite, Inhalt in der 700-pt-Spalte (ipad-start)",
+   "Eigener Gutschein in einer Reihe endet ohne Bilanz (ScanView.swift:478-482)",
+   "Kein Wallet-Pass (bekannte Grenze)"
+  ],
+  "befunde": [
+   {
+    "screen": "start-bestand-unten / Restwert/Design/ExpiryRadar.swift:461",
+    "befund": "„\\(sum)\\n\\(its.count) Gutscheine“ zählt alle Einträge, auch Rabattcodes, während die Guthabenkarte „4 Gutscheine + 1 Rabattcode (nicht in der Summe)“ trennt. Zwei Zählweisen auf einer Seite; nachrechnen geht nicht auf.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "ipad-einstellungen / ipad-start",
+    "befund": "Die Einstellungen nutzen auf dem iPad die volle Breite (Schalter ganz rechts, Fußtexte über 1.400 px Zeilenlänge), der Start ist auf die 700-pt-Spalte begrenzt, das Suchfeld wiederum volle Breite. Drei verschiedene Breiten in einer App.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "start-bestand / start",
+    "befund": "„von 25,00 €“ steht jetzt auch bei unangetasteten Gutscheinen wieder unter dem gleichen Betrag (Wunsch des Inhabers). Informationsgehalt null, dafür doppelt so viele Zahlen in der Liste. Für ein Review eher ein Geschmacksthema.",
+    "schwere": "niedrig"
+   },
+   {
+    "screen": "Restwert/Features/Home/HomeView.swift:363-366",
+    "befund": "„Läuft bald ab“ hat keine Obergrenze. Bei vielen Fristen im 30-Tage-Fenster wachsen die großen Karten ungebremst über den Bildschirm; kein Screenshot mit mehr als zwei Karten.",
+    "schwere": "niedrig"
+   }
+  ],
+  "was_fehlt_zur_10": "Eine Zählweise für Rabattcodes überall (auch im Radar-Bündel), iPad-Suchfeld und iPad-Einstellungen in derselben Lesespalte wie der Start, eine Obergrenze oder Einklappen für „Läuft bald ab“ mit Beleg bei vielen Fristen und ein eigener Gutschein in der Reihe mit Bilanz. Für den Konkurrenzvergleich weiter ein Wallet-Pass.",
+  "wuerde_nutzen": true,
+  "nps": 9
+ }
+]
