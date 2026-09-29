@@ -613,6 +613,10 @@ struct KeypadView: View {
         .readableWidth()
         .toolbar(.hidden, for: .tabBar)
         .navigationTitle(store.card(cardID)?.name ?? "Einkauf")
+        #if DEBUG
+        // Nur für Store-Bilder: `-demoKeypad 7,80` zeigt einen eingetippten Betrag.
+        .onAppear { if input.isEmpty, let v = UserDefaults.standard.string(forKey: "demoKeypad") { input = v } }
+        #endif
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $usedUp, onDismiss: finishUsedUp) { UsedUpSheet(info: $0) }
     }
@@ -655,7 +659,7 @@ struct KeypadView: View {
             }
             Group {
                 if showStore {
-                    LabeledField(label: "Filiale (für deinen Verlauf)", placeholder: "z.\u{00A0}B. Thalia Köln", text: $storeName)
+                    LabeledField(label: "Filiale (für deinen Verlauf)", placeholder: "z.\u{00A0}B. Köln Hohe Straße", text: $storeName)
                 } else {
                     Button("+ Filiale notieren") { withAnimation(.snappy) { showStore = true } }
                         .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)

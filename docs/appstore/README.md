@@ -76,12 +76,11 @@ Erste Version im App Store.
 
 ## Screenshots
 
-`screenshots/` enthält 7 Bilder in 1320 × 2868 (6,9", Pflichtgröße; Apple skaliert sie für kleinere iPhones).
-In dieser Reihenfolge hochladen: 01_start, 02_checkout, 03_detail, 04_radar, 05_keypad, 06_scan, 07_start_dunkel.
-`screenshots/raw/` sind die unbearbeiteten Simulator-Aufnahmen.
+`screenshots/` enthält 7 Bilder in 1320 × 2868 (6,9", Pflichtgröße; Apple skaliert sie für kleinere iPhones). Nur iPhone – keine iPad-Bilder nötig.
+In dieser Reihenfolge hochladen: 01_start, 02_checkout, 03_scan, 04_detail, 05_radar, 06_keypad, 07_start_dunkel.
+`screenshots/raw/` sind die unbearbeiteten Simulator-Aufnahmen. Neu erzeugen: `cd ios && scripts/store-screens.sh`.
 
-Hinweis: Die Bilder zeigen Namen echter Läden (Thalia, IKEA, Zalando …) mit Buchstaben-Kacheln, keine Logos.
-Das ist üblich, kann in der Prüfung (Richtlinie 5.2.1) aber nachgefragt werden. Wer auf Nummer sicher gehen will, ersetzt die Beispieldaten für die Bilder durch erfundene Läden.
+Alle Läden in Bildern, Beispielen und Einstieg sind erfunden (Modehaus Kranz, Wohnwerk, Buchhandlung Seitenweise, Parfümerie Blüte, Kaufhaus Lindner, Café Krone) – keine echten Marken (Richtlinie 5.2.1).
 
 ## App-Datenschutz („Nutrition Label“)
 
@@ -98,7 +97,7 @@ In `Restwert-Info.plist` steht `ITSAppUsesNonExemptEncryption = NO`. Die App nut
 
 - Anmeldung: nicht nötig. „Mit Apple anmelden“ ist optional (Einstieg Seite 4 mit „Später“ überspringbar, Einstellungen → Konto), legt kein Server-Konto an und fragt nur den Namen ab; Kennung und Name bleiben auf dem Gerät. „Abmelden“ bzw. „Alles löschen“ entfernen sie – daher keine Kontolöschung nach 5.1.1(v) nötig. Alle Funktionen gehen ohne Anmeldung.
 - Beim ersten Start zeigt die App Beispiel-Gutscheine. Damit lassen sich alle Funktionen ohne eigene Daten ausprobieren (Detail, „An der Kasse zeigen“, Einkauf abziehen, Verfallsradar).
-- Scannen braucht eine Kamera. Alternativ „Hinzufügen → Aus dem Text einer E-Mail“ mit z. B. „Thalia Gutschein 25,00 € Code 6300981274561234 gültig bis 31.12.2027“.
+- Scannen braucht eine Kamera. Alternativ „Hinzufügen → Aus dem Text einer E-Mail“ mit z. B. „Buchhandlung Seitenweise Gutschein 25,00 € Code 6300981274561234 gültig bis 31.12.2027“.
 - iCloud-Sync ist optional und in den Einstellungen abschaltbar.
 - Kontakt: Julian Heinrich, info@maitr.de, +49 176 3211307
 

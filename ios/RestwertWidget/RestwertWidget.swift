@@ -52,8 +52,8 @@ struct WidgetSnapshot: Codable {
     static var sample: WidgetSnapshot {
         let day = { (d: Double) in Date.now.addingTimeInterval(d * 86_400) }
         return WidgetSnapshot(items: [
-            Item(id: "", name: "Zalando", headline: "15\u{00A0}%", expires: day(12), color: "FF6900"),
-            Item(id: "", name: "IKEA", headline: "50,00\u{00A0}€", expires: day(24), amount: 50, color: "0058A3"),
+            Item(id: "", name: "Modehaus Kranz", headline: "15\u{00A0}%", expires: day(12), color: "B45309"),
+            Item(id: "", name: "Wohnwerk", headline: "50,00\u{00A0}€", expires: day(24), amount: 50, color: "15803D"),
             Item(id: "", name: "Stadtgutschein", headline: "20,00\u{00A0}€", expires: day(140), amount: 20, color: "52525B"),
         ], updated: .now)
     }

@@ -396,14 +396,14 @@ private struct CollectPage: View {
     @State private var step = 0
 
     private let rows: [(id: String, name: String, due: String, amount: String, sub: String)] = [
-        ("zalando", "Zalando", "bis 09.10.2026", "15\u{00A0}%", "Rabatt"),
-        ("ikea", "IKEA", "bis 21.10.2026", "50,00\u{00A0}€", "von 50,00\u{00A0}€"),
+        ("other", "Modehaus Kranz", "bis 09.10.2026", "15\u{00A0}%", "Rabatt"),
+        ("other", "Wohnwerk", "bis 21.10.2026", "50,00\u{00A0}€", "von 50,00\u{00A0}€"),
         ("stadtgutschein", "Stadtgutschein", "bis 14.02.2027", "20,00\u{00A0}€", "von 20,00\u{00A0}€"),
     ]
 
     var body: some View {
         PageFrame(title: "Alles an einem Ort.",
-                  text: "Egal ob Zalando, IKEA oder der Blumenladen um die Ecke: Gutschein rein, Guthaben drauf, fertig. An der Kasse zeigst du den Code groß und ziehst ab, was du bezahlt hast.",
+                  text: "Egal ob Modehaus, Möbelhaus oder der Blumenladen um die Ecke: Gutschein rein, Guthaben drauf, fertig. An der Kasse zeigst du den Code groß und ziehst ab, was du bezahlt hast.",
                   active: active) {
             VStack(spacing: 0) {
                 ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
@@ -457,7 +457,7 @@ private struct RemindPage: View {
                             Spacer()
                             Text("jetzt").font(.scaled(13)).foregroundStyle(Color.muted)
                         }
-                        Text("Zalando läuft in 12\u{00A0}Tagen ab").font(.scaled(15, weight: .semibold))
+                        Text("Modehaus Kranz läuft in 12\u{00A0}Tagen ab").font(.scaled(15, weight: .semibold))
                         Text("15\u{00A0}% Rabatt, noch nicht eingelöst. Jetzt nutzen?").font(.scaled(15)).foregroundStyle(Color.ink2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -470,9 +470,9 @@ private struct RemindPage: View {
                 .zIndex(1)
 
                 HStack(spacing: 14) {
-                    MerchantMark(merchantID: "zalando", name: "Zalando")
+                    MerchantMark(merchantID: "other", name: "Modehaus Kranz")
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Zalando").font(.scaled(16, weight: .semibold))
+                        Text("Modehaus Kranz").font(.scaled(16, weight: .semibold))
                         Label { Text("noch 12 Tage") } icon: { Image(systemName: "clock") }
                             .labelStyle(DueLabelStyle())
                             .font(.scaled(13, weight: .semibold)).foregroundStyle(Color.warn)

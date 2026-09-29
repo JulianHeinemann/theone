@@ -681,33 +681,34 @@ final class Store {
         func d(_ y: Int, _ m: Int, _ day: Int) -> Date { cal.date(from: DateComponents(year: y, month: m, day: day, hour: 12)) ?? .now }
         func inDays(_ n: Int) -> Date { CalendarDay.noon(cal.date(byAdding: .day, value: n, to: .now) ?? .now) }
 
-        var thalia = GiftCard(merchantID: "thalia", number: "6300981274561234", format: .code128, pin: "4821", value: 25, balance: 25,
+        // Bewusst erfundene Läden: keine echten Marken in Beispielen und Store-Screenshots (Markenrecht).
+        var thalia = GiftCard(merchantID: "other", customName: "Buchhandlung Seitenweise", number: "6300981274561234", format: .code128, pin: "4821", value: 25, balance: 25,
                               received: d(y - 1, 12, 20), expires: d(y + 2, 12, 31), isExample: true)
-        thalia.redeem(12.60, store: "Thalia Beispielstadt", at: inDays(-12))
-        var douglas = GiftCard(merchantID: "douglas", number: "4099875102233441", format: .code128, pin: "1337", value: 40, balance: 40,
+        thalia.redeem(12.60, store: "Beispielstadt", at: inDays(-12))
+        var douglas = GiftCard(merchantID: "other", customName: "Parfümerie Blüte", number: "4099875102233441", format: .code128, pin: "1337", value: 40, balance: 40,
                                received: d(y - 1, 6, 2), expires: d(y + 1, 3, 31), isExample: true)
-        douglas.redeem(16.15, store: "Douglas Beispielstadt", at: inDays(-40))
+        douglas.redeem(16.15, store: "Beispielstadt", at: inDays(-40))
         // Empfangsdaten relativ zu heute, damit sie nie in der Zukunft liegen.
         let newsletter = inDays(-25)
-        let discount = GiftCard(kind: .discountCode, merchantID: "zalando", number: "HERBST15-K7Q2", format: .text, value: 0, balance: 0,
+        let discount = GiftCard(kind: .discountCode, merchantID: "other", customName: "Modehaus Kranz", number: "HERBST15-K7Q2", format: .text, value: 0, balance: 0,
                                 percent: 15, received: newsletter, expires: inDays(12), location: .inbox,
                                 locationNote: "Newsletter vom \(newsletter.formatted(.dateTime.day().month(.defaultDigits).locale(Locale(identifier: "de_DE"))))",
                                 isExample: true)
         cards = [
             discount,
-            GiftCard(merchantID: "ikea", number: "6275980123456789012", format: .code128, value: 50, balance: 50,
+            GiftCard(merchantID: "other", customName: "Wohnwerk", number: "6275980123456789012", format: .code128, value: 50, balance: 50,
                      received: d(y - 3, 5, 11), expires: inDays(24), isExample: true),
             thalia,
             douglas,
-            GiftCard(merchantID: "amazon", number: "AQ7K-9XWP-3HTR", format: .text, value: 30, balance: 30,
+            GiftCard(merchantID: "other", customName: "Kaufhaus Lindner", number: "AQ7K-9XWP-3HTR", format: .text, value: 30, balance: 30,
                      received: inDays(-200), expires: d(y + 3, 12, 31), location: .phone, isExample: true),
             GiftCard(merchantID: "stadtgutschein", number: "SG-2291-7730", format: .qr, value: 20, balance: 20,
                      received: inDays(-260), expires: inDays(140), location: .wallet, isExample: true),
         ]
         tests = [
-            TestResult(merchantID: "thalia", merchantName: "Thalia", date: .now, success: true, store: "Beispielstadt",
+            TestResult(merchantID: "other", merchantName: "Buchhandlung Seitenweise", date: .now, success: true, store: "Beispielstadt",
                        format: .code128, amount: 12.60, isExample: true),
-            TestResult(merchantID: "douglas", merchantName: "Douglas", date: .now, success: false, store: "Beispielstadt",
+            TestResult(merchantID: "other", merchantName: "Parfümerie Blüte", date: .now, success: false, store: "Beispielstadt",
                        note: "Kasse wollte Plastikkarte", format: .code128, isExample: true),
         ]
     }

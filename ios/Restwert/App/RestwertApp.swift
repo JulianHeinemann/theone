@@ -352,10 +352,10 @@ extension Router {
             func day(_ d: Int) -> Date { cal.date(byAdding: .day, value: d, to: .now) ?? .now }
             let specs: [(String, String, Double, Double?, Int)] = [
                 ("other", "Stadler", 25, nil, 11), ("other", "KM Kaffee", 25, nil, 400),
-                ("amazon", "", 70, nil, 900), ("other", "Buchladen", 25.15, nil, 1000), ("zalando", "", 0, 20, 820)]
+                ("other", "Kaufhaus Lindner", 70, nil, 900), ("other", "Buchladen", 25.15, nil, 1000), ("other", "Modehaus Kranz", 0, 20, 820)]
                 // `-demoManyDue YES`: dazu drei weitere bald ablaufende (mehr als drei Karten in „Läuft bald ab“).
                 + (UserDefaults.standard.bool(forKey: "demoManyDue")
-                   ? [("ikea", "", 50, nil, 19), ("douglas", "", 30, nil, 6), ("other", "Kino am Markt", 15, nil, 27)] : [])
+                   ? [("other", "Wohnwerk", 50, nil, 19), ("other", "Parfümerie Blüte", 30, nil, 6), ("other", "Kino am Markt", 15, nil, 27)] : [])
             for (id, name, value, percent, d) in specs {
                 var c = GiftCard(kind: percent == nil ? .giftCard : .discountCode, merchantID: id, customName: name, number: "RADAR\(d)",
                                  format: .code128, value: value, balance: value, percent: percent, received: .now, expires: day(d))
