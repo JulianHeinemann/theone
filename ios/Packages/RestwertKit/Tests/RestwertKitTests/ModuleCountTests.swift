@@ -34,4 +34,22 @@ struct ModuleCountTests {
         #expect(two - one == 16)
         #expect(BarcodeEncoder.modules(for: "a", format: .code39) == BarcodeEncoder.modules(for: "A", format: .code39))
     }
+
+    @Test("Code 128: Start + Zeichen + Prüfzeichen je 11 Module, Stopp 13; beginnt mit Strich, endet mit Doppelstrich")
+    func code128() throws {
+        for value in ["A", "RESTWERT-2026", "6300981274561234", "SG-2291-7730", "ab c+/%"] {
+            let m = try #require(Code128.modules(value), "\(value)")
+            #expect((m.count - 13) % 11 == 0, "\(value): \(m.count) Module")
+            #expect(m.count >= 11 * 3 + 13)
+            #expect(m.first == true && m.last == true)
+            // Stopp-Muster 2331112 = 11000111010 11
+            #expect(Array(m.suffix(13)) == [true, true, false, false, false, true, true, true, false, true, false, true, true])
+        }
+        // Außerhalb von ASCII (é, €) kann Code 128 nichts darstellen: kein Barcode, die App zeigt den Code als Text.
+        #expect(Code128.modules("Café 25€") == nil)
+        // Reine Ziffern nutzt Code-Satz C (Paare): kürzer als dieselbe Länge in Buchstaben.
+        let digits = try #require(Code128.modules("12345678901234"))
+        let letters = try #require(Code128.modules("ABCDEFGHIJKLMN"))
+        #expect(digits.count < letters.count)
+    }
 }

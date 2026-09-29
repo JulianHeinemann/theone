@@ -58,10 +58,9 @@ enum BarcodeRenderer {
         default:
             // Code 128 und Fallback, wenn EAN/ITF/Code 39 den Inhalt nicht kodieren können.
             // Als Module auslesen und selbst zeichnen: dann gilt dasselbe Pixelraster wie für EAN (gleich breite Striche).
+            if let bars = Code128.modules(value) { return .bars(bars) }
             let f = CIFilter.code128BarcodeGenerator()
             f.message = Data(value.utf8)
-            f.quietSpace = 0
-            if let bars = modules(of: f.outputImage) { return .bars(bars) }
             f.quietSpace = 10
             return image(f.outputImage)
         }
@@ -86,19 +85,6 @@ enum BarcodeRenderer {
         }
     }
     private static let fallbackCache = OSAllocatedUnfairLock(initialState: [String: Bool]())
-
-    /// Eine Zeile des 1-Pixel-pro-Modul-Bildes von Core Image als Strich/Lücke lesen.
-    private static func modules(of ci: CIImage?) -> [Bool]? {
-        guard let ci, let cg = context.createCGImage(ci, from: ci.extent), cg.width > 0 else { return nil }
-        let w = cg.width
-        var pixels = [UInt8](repeating: 255, count: w * 4)
-        guard let ctx = CGContext(data: &pixels, width: w, height: 1, bitsPerComponent: 8, bytesPerRow: w * 4,
-                                  space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
-        // Mittlere Zeile des Codes in den 1-Zeilen-Puffer zeichnen.
-        ctx.draw(cg, in: CGRect(x: 0, y: -CGFloat(cg.height) / 2, width: CGFloat(w), height: CGFloat(cg.height)))
-        let bars = (0..<w).map { pixels[$0 * 4] < 128 }
-        return bars.contains(true) ? bars : nil
-    }
 
     /// Data-Matrix-Module als scharfes Bild (8 px je Modul, ohne Glätten).
     private static func matrixImage(_ m: [[Bool]]) -> UIImage {
