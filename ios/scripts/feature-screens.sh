@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Screenshots der neuen Funktionen (Speichern mit einem Tipp, Mindestbestellwert, Musterwarnung, Dublette,
 # eigene Gutscheine ausgeben und einlösen) auf dem iPhone-Simulator und die Hauptscreens auf dem iPad-Simulator.
-# Aufruf aus ios/:  scripts/feature-screens.sh <iPhone-UDID> <iPad-UDID> [Ausgabeordner]
+# Aufruf aus ios/:  scripts/feature-screens.sh <iPhone-UDID> [<iPad-UDID> | -] [Ausgabeordner]   („-“: ohne iPad; die App ist nur fürs iPhone)
 set -euo pipefail
-U="$1"; P="$2"; O="${3:-build/beta-shots}"; B=de.restwert.app
+U="$1"; P="${2:--}"; O="${3:-build/beta-shots}"; B=de.restwert.app
 APP="$(find build/sim/Build/Products -maxdepth 2 -name 'Restwert.app' -type d | head -1)"
 SRC="$(cd "$(dirname "$0")/../../docs/evaluation/testgutscheine" && pwd)"
 mkdir -p "$O"
@@ -45,7 +45,8 @@ xcrun simctl ui "$U" content_size large
 run liste-ausgestellt 5
 run liste-ausgestellt-unten 5 -demoScrollBottom YES
 xcrun simctl terminate "$U" $B 2>/dev/null || true
-# iPad
+# iPad (nur noch zum Vergleich; die App ist iPhone-only)
+if [ "$P" != "-" ]; then
 xcrun simctl install "$P" "$APP"
 for spec in "start:" "kasse:checkout" "einstellungen:settings" "hinzufuegen:scan" "detail:detail"; do
   n="${spec%%:*}"; s="${spec#*:}"; ARGS=("${BASE[@]}"); [ -n "$s" ] && ARGS+=(-demoScreen "$s")
@@ -53,3 +54,4 @@ for spec in "start:" "kasse:checkout" "einstellungen:settings" "hinzufuegen:scan
   xcrun simctl io "$P" screenshot "$O/ipad-$n.png" >/dev/null 2>&1; echo "📸 ipad-$n"
 done
 xcrun simctl terminate "$P" $B 2>/dev/null || true
+fi

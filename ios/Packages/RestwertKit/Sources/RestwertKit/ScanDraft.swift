@@ -169,6 +169,8 @@ public enum ScanDraft {
         let c = n.replacingOccurrences(of: " ", with: "")
         // Betragszeilen („über30,-Euro“, „25 €“) sind kein Code, auch wenn die KI sie dafür hält.
         if c.range(of: #"(?i)(€|euro|eur\b|,-)"#, options: .regularExpression) != nil { return false }
+        // Reiner Preis ohne Währung („25.00“, „1.250,00“) ist ebenfalls ein Betrag, kein Code.
+        if c.range(of: #"^\d{1,3}(?:[.,]\d{3})*[.,]\d{2}$"#, options: .regularExpression) != nil { return false }
         return c.count >= 4 && c.contains(where: \.isNumber)
     }
 

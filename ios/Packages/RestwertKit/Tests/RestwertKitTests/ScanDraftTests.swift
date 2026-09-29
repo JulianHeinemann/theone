@@ -268,6 +268,9 @@ struct ScanDraftTests {
         let d = ScanDraft.merge(text: text, smart: CardDraft(number: "über30,-Euro"), now: now)
         #expect(d.number == nil)
         #expect(!ScanDraft.isPlausibleCode("30 €") && ScanDraft.isPlausibleCode("AB12-CD34"))
+        // Geschenkkarte „25,00 €“: Apple Intelligence hielt „25.00“ für den Code.
+        #expect(!ScanDraft.isPlausibleCode("25.00") && !ScanDraft.isPlausibleCode("1.250,00"))
+        #expect(ScanDraft.isPlausibleCode("6280 1234 5678 9012") && ScanDraft.isPlausibleCode("SOMMER10"))
     }
 
     @Test("KI-Angaben, die nicht im Text stehen, werden nicht übernommen")
