@@ -431,6 +431,14 @@ struct PhotoFileTests {
         #expect(disk2.backPhotos == [a.id])
         again.removeAll(except: keep2, removable: [a.id])
         #expect(FileManager.default.fileExists(atPath: again.backURL(for: a.id).path))
+        // Geladen und dann entfernt (z. B. PIN-Foto): kommt nach Neustart nicht zurück.
+        let loaded = PhotoFiles(directory: dir)
+        _ = loaded.loadBacks([a.id])
+        var removed = reread.cards[0]; removed.photoBack = nil
+        let (disk4, _) = loaded.prepare(StoredState(cards: [removed], tests: [], deletedAt: [:], pinChanged: [:]), pending: [])
+        #expect(disk4.backPhotos == nil)
+        #expect(!FileManager.default.fileExists(atPath: loaded.backURL(for: a.id).path))
+        try Data(repeating: 7, count: 10).write(to: loaded.backURL(for: a.id))
         // Gutschein gelöscht: Rückseite verschwindet beim Aufräumen.
         let (_, keep3) = again.prepare(StoredState(cards: [], tests: [], deletedAt: [a.id: .now], pinChanged: [:]), pending: [])
         again.removeAll(except: keep3, removable: [a.id])

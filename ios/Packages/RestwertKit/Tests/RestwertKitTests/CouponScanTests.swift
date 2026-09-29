@@ -244,4 +244,14 @@ struct CouponRound16Tests {
         #expect(d.value == 50)
         #expect(!d.isDiscount)
     }
+
+    @Test("Reservierungs-Filter nur mit Wortgrenze; Angebot mit Artikelwert bleibt Coupon")
+    func round18() {
+        #expect(TextParser.benefit(in: "Praktisch: 3 für 2 auf alle Hefte") == "3 für 2")
+        #expect(TextParser.benefit(in: "2 für 1 – Reservierung empfohlen") == "2 für 1")
+        #expect(TextParser.benefit(in: "Tisch reserviert: 4 für 2") == nil)
+        let d = TextParser.parse("COUPON\nCafé Krone\nGratis Kaffee im Wert von 3,50 €")
+        #expect(d.benefit == "Gratis Kaffee")
+        #expect(d.isDiscount)
+    }
 }

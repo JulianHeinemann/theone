@@ -526,7 +526,9 @@ struct CheckoutView: View {
             fire = cal.date(bySettingHour: 9, minute: 0, second: 0, of: base) ?? fire
         }
         let content = UNMutableNotificationContent()
-        content.title = "Hast du bei \(card.name) bezahlt?"
+        // Wie alle Erinnerungen: mit App-Sperre oder Code-Schutz ohne Laden (Sperrbildschirm liest jeder).
+        let quiet = UserDefaults.standard.bool(forKey: "appLock") || UserDefaults.standard.bool(forKey: "codeLock")
+        content.title = quiet ? "Hast du mit einem Gutschein bezahlt?" : "Hast du bei \(card.name) bezahlt?"
         content.body = "Zieh den Einkauf ab, damit dein Guthaben stimmt."
         content.sound = .default
         content.userInfo = ["card": card.id.uuidString]

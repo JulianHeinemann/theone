@@ -501,8 +501,9 @@ private struct TotalHeader: View {
                     // Rabattcode-Hinweis und Eingelöstes in einer ruhigen Zeile.
                     let notes = [codesNote, saved > 0 ? "\(saved.euro) eingelöst" : nil].compactMap { $0 }
                     if !notes.isEmpty { Text(notes.joined(separator: " · ")).font(.scaled(13)).opacity(0.75) }
-                    if examples { Text("Nur Beispiele – dein erster Gutschein ersetzt sie").font(.scaled(13)).opacity(0.75) }
                 }
+                // Auch bei großer Schrift: sonst hielte man die Beispiele für eigene Gutscheine.
+                if examples { Text("Nur Beispiele – dein erster Gutschein ersetzt sie").font(.scaled(13)).opacity(0.75) }
             }
             .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.group).padding(.bottom, Layout.inset)
         }

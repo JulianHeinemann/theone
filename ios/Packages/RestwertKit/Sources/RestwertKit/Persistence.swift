@@ -198,6 +198,10 @@ public final class PhotoFiles: @unchecked Sendable {
                     x.photoBack = nil
                     backs.insert(c.id)
                 }
+            } else if knownBack[c.id] != nil {
+                // War geladen und ist jetzt weg: bewusst entfernt (z. B. PIN-Foto) – Datei löschen, kein Verweis.
+                try? fm.removeItem(at: backURL(for: c.id))
+                knownBack[c.id] = nil
             } else if fm.fileExists(atPath: backURL(for: c.id).path) {
                 // Datei da, aber (noch) nicht geladen – z. B. Gerät war beim Start gesperrt: Verweis behalten.
                 backs.insert(c.id)
