@@ -559,7 +559,7 @@ private struct DueSoonCard<MenuItems: View>: View {
     private var paper: Bool { card.number.isEmpty && card.photo != nil }
 
     private var action: (title: String, icon: String) {
-        if online { return ("Code anzeigen", "globe") }
+        if online { return ("Code zeigen", "globe") }
         if paper { return ("Foto an der Kasse zeigen", "photo") }
         if card.number.isEmpty { return ("Gutschein öffnen", "chevron.right") }
         return ("An der Kasse zeigen", "barcode")

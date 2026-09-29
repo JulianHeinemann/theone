@@ -76,7 +76,7 @@ struct CheckoutView: View {
                 .padding(.horizontal, Layout.page).padding(.bottom, Layout.section)
             }
         }
-        // Bei großer Schrift ist die Leiste unten hoch: extra Luft, damit „PIN anzeigen“ ganz darüber passt.
+        // Bei großer Schrift ist die Leiste unten hoch: extra Luft, damit „PIN zeigen“ ganz darüber passt.
         .contentMargins(.bottom, Layout.section, for: .scrollContent)
         // Zeigt beim Öffnen kurz, dass unter der Leiste noch mehr kommt.
         .scrollIndicatorsFlash(onAppear: true)
@@ -151,7 +151,7 @@ struct CheckoutView: View {
     @ViewBuilder
     private func pinButton(_ card: GiftCard) -> some View {
         Button { Task { await togglePin(card) } } label: {
-            Label(showPin ? "PIN \(card.pin)" : "PIN anzeigen", systemImage: showPin ? "lock.open" : pinLock ? (DeviceSecurity.methodName == "Touch ID" ? "touchid" : "faceid") : "eye")
+            Label(showPin ? "PIN \(card.pin)" : "PIN zeigen", systemImage: showPin ? "lock.open" : pinLock ? (DeviceSecurity.methodName == "Touch ID" ? "touchid" : "faceid") : "eye")
                 .font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 18).padding(.vertical, 10)
@@ -301,12 +301,12 @@ struct CheckoutView: View {
                     // Mit Code-Schutz auch den Barcode erst nach Face ID groß zeigen.
                     Button { if hidden && (textOnly || codeLock) { revealCode(card) } else { showFull = true } } label: {
                         // Eigener Gutschein (Laden-Sicht): der Laden scannt nicht, er bucht ab – kleiner Code reicht.
-                        // Sehr große Schrift: Barcode etwas flacher, damit „PIN anzeigen“ ohne Scrollen über der Leiste steht.
+                        // Sehr große Schrift: Barcode etwas flacher, damit „PIN zeigen“ ohne Scrollen über der Leiste steht.
                         BarcodeView(number: card.number, format: card.format, height: card.issuedByMe ? 60 : checkoutTypeSize.isAccessibilitySize ? 100 : 150,
                                     masked: hidden, concealed: hidden && codeLock)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(hidden && (textOnly || codeLock) ? "Geschützt. Tippen und entsperren" : "Barcode groß anzeigen")
+                    .accessibilityLabel(hidden && (textOnly || codeLock) ? "Geschützt. Tippen und entsperren" : "Barcode groß zeigen")
                     if !textOnly && !(codeLock && hidden),
                        let original = card.originalSymbology ?? (BarcodeRenderer.drawnAsCode128(card.number, format: card.format) ? card.format.label : nil) {
                         // Ersatzformat sichtbar machen: Kassierer und Kunde wissen dann, warum er anders aussieht.
@@ -394,8 +394,8 @@ struct CheckoutView: View {
         }
         .buttonStyle(.plain)
         .disabled(photoImage == nil)
-        .accessibilityLabel(concealed ? "Geschützt. Tippen und entsperren" : "Foto des Gutscheins groß anzeigen")
-        if !concealed { Text("Tippen zum Vergrößern").font(.scaled(12)).foregroundStyle(Color.muted) }
+        .accessibilityLabel(concealed ? "Geschützt. Tippen und entsperren" : "Foto des Gutscheins groß zeigen")
+        if !concealed { Text("Tippen zum Vergrößern").font(.scaled(13)).foregroundStyle(Color.ink2) }
         Label("Manche Läden wollen das Original sehen – nimm es sicherheitshalber mit.", systemImage: "doc.text")
             .font(.scaled(13)).foregroundStyle(Color.ink2)
             .multilineTextAlignment(.center)
@@ -512,7 +512,7 @@ struct CheckoutView: View {
             confirmUnprotectedPin = true
             return
         }
-        if await DeviceSecurity.guardSensitive("PIN von \(card.name) anzeigen") { withAnimation(.snappy) { showPin = true } }
+        if await DeviceSecurity.guardSensitive("PIN von \(card.name) zeigen") { withAnimation(.snappy) { showPin = true } }
     }
 
     /// „Später eintragen“: Gutschein als „Betrag offen“ markieren und nach 2 Stunden nachfragen, nie nachts.

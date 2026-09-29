@@ -85,7 +85,7 @@ struct SettingsView: View {
                 }
                 // Ohne Code als „aus“ zeigen: ein grüner Schalter würde Schutz versprechen, den es nicht gibt.
                 Toggle(isOn: guarded($pinLock, reason: "PIN-Schutz ausschalten")) {
-                    settingLabel("PIN mit \(method) schützen", "PIN erst nach \(method == "Code" ? "dem \(Device.name)-Code" : "\(method) oder \(Device.name)-Code") anzeigen",
+                    settingLabel("PIN mit \(method) schützen", "PIN erst nach \(method == "Code" ? "dem \(Device.name)-Code" : "\(method) oder \(Device.name)-Code") zeigen",
                                  method == "Touch ID" ? "touchid" : "faceid")
                 }
                 Toggle(isOn: guarded($appLock, reason: "App-Sperre ausschalten")) {

@@ -205,7 +205,7 @@ struct CardDetailView: View {
         }
         if hasPin {
             tiles.append(AnyView(Button { Task { await togglePin(card) } } label: {
-                ActionTile(icon: pinVisible ? "lock.open" : DeviceSecurity.methodName == "Touch ID" ? "touchid" : "faceid", title: pinVisible ? card.pin : "PIN anzeigen", tint: tint)
+                ActionTile(icon: pinVisible ? "lock.open" : DeviceSecurity.methodName == "Touch ID" ? "touchid" : "faceid", title: pinVisible ? card.pin : "PIN zeigen", tint: tint)
                     .privacySensitive()
             }
             .buttonStyle(.plain)))
@@ -485,7 +485,7 @@ struct CardDetailView: View {
                         .clipShape(.rect(cornerRadius: Layout.buttonRadius, style: .continuous))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Foto des Gutscheins groß anzeigen")
+                .accessibilityLabel("Foto des Gutscheins groß zeigen")
                 Text("An der Kasse das Foto zeigen oder das Original mitnehmen.").font(.scaled(13)).foregroundStyle(Color.ink2)
                 backPhotoButton(card)
             } else if card.photoBack != nil {
@@ -608,7 +608,7 @@ struct CardDetailView: View {
             confirmUnprotectedPin = true
             return
         }
-        if await DeviceSecurity.guardSensitive("PIN von \(card.name) anzeigen") {
+        if await DeviceSecurity.guardSensitive("PIN von \(card.name) zeigen") {
             withAnimation(.snappy) { pinVisible = true }
             AccessibilityNotification.Announcement("PIN: \(card.pin)").post()
         }

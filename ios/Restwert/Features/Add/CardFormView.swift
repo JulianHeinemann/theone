@@ -629,7 +629,7 @@ struct CardFormView: View {
         let context = LAContext()
         guard DeviceSecurity.canAuthenticate else { confirmUnprotectedPin = true; return }
         _ = context
-        pinRevealed = await DeviceSecurity.guardSensitive("PIN anzeigen")
+        pinRevealed = await DeviceSecurity.guardSensitive("PIN zeigen")
     }
 
     private var formatPicker: some View {

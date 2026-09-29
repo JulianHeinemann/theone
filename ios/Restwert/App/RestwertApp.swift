@@ -617,7 +617,7 @@ enum DeviceSecurity {
     /// Bei Fehlschlag Rückmeldung per Haptik und Ansage statt still nichts zu tun.
     @MainActor
     static func revealCode(of name: String, spoken code: String? = nil) async -> Bool {
-        let ok = await authenticate(reason: "Code von \(name) anzeigen", biometricsFirst: true)
+        let ok = await authenticate(reason: "Code von \(name) zeigen", biometricsFirst: true)
         if ok {
             // Nicht den ganzen Code laut vorlesen (Umstehende hören mit): nur die letzten Ziffern.
             AccessibilityNotification.Announcement(code.map { "Code sichtbar, endet auf \(String($0.filter { !$0.isWhitespace }.suffix(4)))" } ?? "Code sichtbar").post()
