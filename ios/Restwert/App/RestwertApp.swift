@@ -41,6 +41,8 @@ struct RestwertApp: App {
                     cloud.attach(store)
                     // Kaltstart nach „Teilen“ → Restwert (oder Tipp auf „bereit zum Prüfen“).
                     router.takeSharedInbox()
+                    // Anmeldung mit Apple in den iOS-Einstellungen widerrufen? Dann hier abmelden.
+                    await AppleAccount.shared.refreshCredentialState()
                     await cloud.syncNow()
                 }
         }

@@ -3,6 +3,7 @@ import RestwertKit
 import UniformTypeIdentifiers
 import UserNotifications
 import LocalAuthentication
+import AuthenticationServices
 
 struct SettingsView: View {
     @Environment(Store.self) private var store
@@ -11,6 +12,9 @@ struct SettingsView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var account = AppleAccount.shared
+    @State private var confirmSignOut = false
     /// Nur lesend, damit Schalter und Kopfzeile immer denselben Stand zeigen (CloudSync liest direkt aus UserDefaults).
     @AppStorage("iCloudSync") private var syncOn = false
     @State private var notifDenied = false
@@ -41,6 +45,17 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            // Optional: Anmelden mit Apple – nur ein Profil auf diesem Gerät, kein Konto bei uns.
+            Section {
+                appleAccountRow
+            } header: {
+                Text("Konto")
+            } footer: {
+                Text(account.isSignedIn
+                     ? "Restwert kennt dich nur auf diesem \(Device.name): Name und eine anonyme Apple-Kennung. Deine Gutscheine bleiben auf dem Gerät und in deinem iCloud."
+                     : "Optional und ohne Passwort. Ohne Anmeldung funktioniert alles genauso. Restwert speichert nur Name und eine anonyme Apple-Kennung auf diesem \(Device.name) – kein Konto bei uns, kein Server.")
+            }
+
             Section {
                 if !hasPasscode {
                     // In der Liste statt als Fußzeile: die lag unter der schwebenden Tab-Leiste.
@@ -276,7 +291,7 @@ struct SettingsView: View {
         }
         .confirmationDialog("Alle Gutscheine, Einlösungen und Kassen-Tests löschen?", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("Alles löschen", role: .destructive) {
-                Task { if await allowedToDelete("Alle Gutscheine löschen") { withAnimation(reduceMotion ? nil : .default) { store.resetAll() } } }
+                Task { if await allowedToDelete("Alle Gutscheine löschen") { withAnimation(reduceMotion ? nil : .default) { store.resetAll(); account.signOut() } } }
             }
         }
     }
@@ -389,6 +404,51 @@ struct SettingsView: View {
             text
         } else {
             Label { text } icon: { Image(systemName: icon).foregroundStyle(Color.ink) }
+        }
+    }
+
+    /// Abgemeldet: offizieller „Mit Apple anmelden“-Knopf. Angemeldet: Name, E-Mail und „Abmelden“.
+    @ViewBuilder private var appleAccountRow: some View {
+        if account.isSignedIn {
+            HStack(spacing: 14) {
+                Text(String(account.displayName.prefix(1)).uppercased())
+                    .font(.scaled(20, weight: .bold)).foregroundStyle(Color(uiColor: .systemBackground))
+                    .frame(width: 48, height: 48).background(Color.primary, in: .circle)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(account.displayName).font(.scaled(16, weight: .semibold))
+                    Label("Angemeldet mit Apple", systemImage: "apple.logo")
+                        .font(.scaled(13)).foregroundStyle(.secondary)
+                    if !account.email.isEmpty, account.email != account.displayName {
+                        Text(account.email).font(.scaled(13)).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 4)
+            .accessibilityElement(children: .combine)
+            Button("Abmelden", role: .destructive) { confirmSignOut = true }
+                .confirmationDialog("Von Apple abmelden?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+                    Button("Abmelden", role: .destructive) { withAnimation(.snappy) { account.signOut() } }
+                } message: {
+                    Text("Deine Gutscheine bleiben erhalten. Nur Name und Apple-Kennung werden von diesem \(Device.name) entfernt.")
+                }
+        } else {
+            VStack(alignment: .leading, spacing: 12) {
+                SignInWithAppleButton(.signIn) { request in
+                    account.configure(request)
+                } onCompletion: { result in
+                    withAnimation(.snappy) { account.handle(result) }
+                }
+                .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+                .frame(height: 50)
+                .clipShape(.rect(cornerRadius: 14, style: .continuous))
+                .accessibilityHint("Optional. Deine Gutscheine bleiben auf dem Gerät.")
+                if let error = account.error {
+                    Label(error, systemImage: "exclamationmark.triangle").font(.scaled(13)).foregroundStyle(Color.warn)
+                }
+            }
+            .padding(.vertical, 6)
         }
     }
 

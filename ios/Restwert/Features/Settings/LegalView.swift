@@ -23,7 +23,7 @@ struct PrivacyPolicyView: View {
             Provider.name, Provider.address, Provider.email,
         ]),
         LegalSection(title: "Kurz gesagt", paragraphs: [
-            "Restwert hat kein Konto und keinen eigenen Server. Die App enthält keine Tracker, keine Analyse- und keine Werbe-Software. Wir erfahren nicht, welche Gutscheine du hast.",
+            "Restwert hat kein Konto bei uns und keinen eigenen Server. Die App enthält keine Tracker, keine Analyse- und keine Werbe-Software. Wir erfahren nicht, welche Gutscheine du hast.",
         ]),
         LegalSection(title: "Auf deinem \(Device.name)", paragraphs: [
             "Gutscheine, Fotos, PINs, Einlösungen und Kassen-Tests liegen in einer Datei im Bereich der App. iOS verschlüsselt sie, solange das \(Device.name) gesperrt ist.",
@@ -36,6 +36,10 @@ struct PrivacyPolicyView: View {
         ]),
         LegalSection(title: "Mitteilungen", paragraphs: [
             "Erinnerungen plant die App lokal auf dem \(Device.name). Es gibt keinen Push-Server. Ob Mitteilungen auf dem Sperrbildschirm Inhalte zeigen, stellst du in den iOS-Einstellungen ein.",
+        ]),
+        LegalSection(title: "Mit Apple anmelden (freiwillig)", paragraphs: [
+            "Freiwillig. Meldest du dich in den Einstellungen mit Apple an, bekommt die App von Apple eine anonyme Kennung und – nur beim ersten Mal und nur wenn du zustimmst – deinen Namen und eine E-Mail-Adresse, auf Wunsch eine verborgene Weiterleitungsadresse. Diese Angaben bleiben auf dem \(Device.name); die Kennung liegt im Schlüsselbund und geht nicht in iCloud. Wir haben keinen Server, an den sie gehen.",
+            "Beim Start fragt die App Apple nur, ob die Anmeldung noch gültig ist. „Abmelden“ oder „Alles löschen“ entfernt die Angaben. Die Freigabe für Restwert widerrufst du in den iOS-Einstellungen unter deinem Namen → „Mit Apple anmelden“.",
         ]),
         LegalSection(title: "iCloud-Sync (freiwillig)", paragraphs: [
             "Der Sync ist anfangs aus. Schaltest du ihn ein, speichert die App deine Gutscheine in der privaten iCloud-Datenbank deines eigenen Apple Accounts (CloudKit).",
