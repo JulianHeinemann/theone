@@ -96,15 +96,29 @@ public enum TextParser {
         d.recipient = recipient(in: t)
         d.minOrder = minOrder(in: t)
         d.benefit = benefit(in: t)
-        // Angebot mit Artikelwert („Gratis Kaffee im Wert von 3,50 €“, „Wert bis 12 €“): dieser Betrag ist kein Guthaben.
-        // Steht daneben ein eigener Gutscheinwert („Gutschein 50 € + …“), gilt der; sonst ist es ein Coupon.
+        // Beträge, die kein Guthaben sind: Wert eines Gratis-Artikels bzw. Versands („Gratis Kaffee (Wert 3,50 €)“,
+        // „Gratis Versand im Wert von 4,90 €“, „Wert bis 12 €“) und Obergrenzen eines Rabatts („30 % … max. 20 €“).
+        // Nur in Zeilen mit Gratis/Versand bzw. bei Prozent – ein „Wert: 25 €“ auf einem Geschenkgutschein bleibt Guthaben.
+        let money = #"\s*(?:€|EUR)?\s?\d{1,3}(?:[.,]\d{2})?\s?(?:€|EUR|Euro)?\)?"#
+        let itemPhrase = #"(?i)\(?\s*\b(?:im\s+Wert\s+von|Wert\s+bis|Wert\s*:?|bis\s+zu|max\.?|maximal|höchstens)"# + money
+        let capPhrase = #"(?i)\(?\s*\b(?:Wert\s+)?(?:max\.?|maximal|höchstens|bis\s+zu)"# + money
+        var stripped = t.split(separator: "\n", omittingEmptySubsequences: false).map { line -> String in
+            let s = String(line)
+            guard s.range(of: #"(?i)\b(?:gratis|kostenlos\w*|umsonst|geschenkt|versand\w*|liefer\w*)\b|\b[1-9]\s*für\s*[1-9]\b"#,
+                          options: .regularExpression) != nil else { return s }
+            return s.replacingOccurrences(of: itemPhrase, with: " ", options: .regularExpression)
+        }.joined(separator: "\n")
+        if d.percent != nil || d.discountValue != nil {
+            stripped = stripped.replacingOccurrences(of: capPhrase, with: " ", options: .regularExpression)
+        }
+        // Mit Angebot auch eigene Zeilen wie „Wert bis 12 €“ (nicht das Etikett „Wert: 25 €“ eines Geschenkgutscheins).
         if d.benefit != nil {
-            let itemPhrase = #"(?i)\b(?:im\s+Wert\s+von|Wert\s+bis|bis\s+zu|max\.?)\s*(?:€|EUR)?\s?\d{1,3}(?:[.,]\d{2})?\s?(?:€|EUR|Euro)?"#
-            if t.range(of: itemPhrase, options: .regularExpression) != nil {
-                let rest = t.replacingOccurrences(of: itemPhrase, with: " ", options: .regularExpression)
-                let own = amount(in: d.discountValue == nil ? rest : withoutDiscounts(rest))
-                if let own { d.value = own } else { d.valueIsItemValue = true }
-            }
+            let offerValue = #"(?i)\(?\s*\b(?:im\s+Wert\s+von|Wert\s+bis|bis\s+zu|max\.?|maximal|höchstens)"# + money
+            stripped = stripped.replacingOccurrences(of: offerValue, with: " ", options: .regularExpression)
+        }
+        if stripped != t {
+            let own = amount(in: d.discountValue == nil ? stripped : withoutDiscounts(stripped))
+            if let own { d.value = own } else if d.benefit != nil { d.valueIsItemValue = true } else { d.value = nil }
         }
         d.number = code(in: t, excluding: d.pin)
         return d

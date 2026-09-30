@@ -105,7 +105,9 @@ struct ScanResultView: View {
                     MerchantMark(merchantID: draft.merchantID, name: merchant?.name ?? draft.customName ?? "?")
                     VStack(alignment: .leading, spacing: 2) {
                         Text(outcome.duplicateID != nil ? "Schon gespeichert" : canSave ? "Sicher erkannt" : "Gelesen – bitte prüfen").font(.scaled(15, weight: .semibold)).foregroundStyle(Color.ink2)
-                        Text((outcome.displayMerchantName ?? "Laden nicht erkannt") + (outcome.aiFilled.contains("Laden") ? " ✦" : ""))
+                        // Ladenname nur zwischen Wörtern umbrechen, nie mitten im Wort („Seiten-/weise“): Wortverbinder
+                        // zwischen den Buchstaben verbieten die Silbentrennung; VoiceOver liest den Namen unverändert.
+                        Text(Self.noHyphenation(outcome.displayMerchantName ?? "Laden nicht erkannt") + (outcome.aiFilled.contains("Laden") ? "\u{00A0}✦" : ""))
                             .font(.scaled(20, weight: .bold))
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -340,6 +342,12 @@ struct ScanResultView: View {
         case .text: "Nur Code"
         default: "Barcode (\(f.label.replacingOccurrences(of: " ", with: "\u{00A0}")))"
         }
+    }
+
+    static func noHyphenation(_ s: String) -> String {
+        s.split(separator: " ", omittingEmptySubsequences: false)
+            .map { $0.map(String.init).joined(separator: "\u{2060}") }
+            .joined(separator: " ")
     }
 
     /// Codes nur zwischen Gruppen umbrechen: Bindestrich nicht trennbar, danach eine unsichtbare Umbruchstelle

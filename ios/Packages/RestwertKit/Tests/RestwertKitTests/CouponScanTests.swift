@@ -298,4 +298,16 @@ struct CouponRound16Tests {
         #expect(ScanDraft.suggestsBack(text: "Kinogutscheinkarte 20 €", hasCode: false, hasPin: false))
         #expect(!ScanDraft.suggestsBack(text: "Speisekarte", hasCode: false, hasPin: false))
     }
+
+    @Test("Kein Guthaben: Artikelwert in Klammern, Versandwert, Rabatt-Obergrenze; „Wert: 25 €“ auf Geschenkgutschein schon")
+    func round21() {
+        let a = TextParser.parse("Gutschein über 50 €\nCafé Krone\nGratis Kaffee (Wert 3,50 €)")
+        #expect(a.value == 50 && !a.isDiscount)
+        let b = TextParser.parse("Modehaus Kranz\n20 € Rabatt\n+ Gratis Versand im Wert von 4,90 €")
+        #expect(b.discountValue == 20 && b.value == nil && b.isDiscount)
+        let c = TextParser.parse("Modehaus Kranz\n30 % Rabatt auf alles\n(Wert max. 20 €)")
+        #expect(c.percent == 30 && c.value == nil && c.isDiscount)
+        let d = TextParser.parse("GESCHENKGUTSCHEIN\nBuchhandlung Seitenweise\nWert: 25,00 €")
+        #expect(d.value == 25 && !d.isDiscount)
+    }
 }

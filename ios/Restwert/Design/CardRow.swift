@@ -125,7 +125,7 @@ struct CardRow: View {
         // Selbst ausgegeben: in der zweiten Zeile, damit der Ladenname ganz sichtbar bleibt.
         if card.issuedByMe {
             // Mit Code-Ende: zwei gleiche Gutscheine für dieselbe Familie bleiben unterscheidbar.
-            Text((card.issuedTo.isEmpty ? "\(lead)selbst ausgestellt" : "\(lead)für \(card.issuedTo)") + (card.number.count >= 4 ? " · …\(card.number.suffix(4))" : "")).font(.scaled(13, weight: .semibold)).foregroundStyle(Color.ink2)
+            Text((card.issuedTo.isEmpty ? "\(lead)selbst ausgestellt" : "\(lead)für \(card.issuedTo)") + (card.number.count >= 4 ? "\u{00A0}·\u{00A0}…\(card.number.suffix(4))" : "")).font(.scaled(13, weight: .semibold)).foregroundStyle(Color.ink2)
                 .lineLimit(typeSize.isAccessibilitySize ? nil : 2).fixedSize(horizontal: false, vertical: true)
         }
         // Nur bei „noch X Tage“ zusätzlich nennen; beim Datum steht es schon im Text.

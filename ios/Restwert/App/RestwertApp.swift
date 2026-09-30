@@ -815,8 +815,12 @@ final class NotificationHandler: NSObject, UIApplicationDelegate, UNUserNotifica
             let quiet = UserDefaults.standard.bool(forKey: "appLock") || UserDefaults.standard.bool(forKey: "codeLock")
             copy.title = quiet ? "Ein Gutschein läuft bald ab" : text.title
             copy.body = quiet ? "Öffne Restwert, um ihn zu sehen." : text.body
+            // Mit Schutz auch in den Zusatzdaten kein Ladenname.
+            if quiet { copy.userInfo.removeValue(forKey: "name") }
+            // Fester Kalender-Zeitpunkt (nicht „in 24 h ab jetzt“): bleibt gleich, falls die Mitteilung später still umgeschrieben wird.
+            let comps = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: fire)
             let request = UNNotificationRequest(identifier: "\(raw)-snooze", content: copy,
-                                                trigger: UNTimeIntervalNotificationTrigger(timeInterval: 24 * 3600, repeats: false))
+                                                trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
             try? await center.add(request)
         } else {
             await MainActor.run {

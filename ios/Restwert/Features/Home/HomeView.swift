@@ -484,7 +484,10 @@ private struct TotalHeader: View {
             // Kompakt: die Karte ist Überblick, die Liste darunter das Eigentliche.
             VStack(alignment: .leading, spacing: 0) {
                 Text("Guthaben").font(.scaled(15, weight: .semibold)).opacity(0.75)
+                // Natürliche Breite: Im Knopf bot das Layout mal weniger Breite an, dann schrumpfte der Betrag über
+                // minimumScaleFactor auf die halbe Größe (bei großer Schrift je nach Bestand verschieden groß).
                 AmountText(value: total, size: big ? 48 : 34)
+                    .fixedSize()
                     .animation(.snappy, value: total)
             }
             .padding(.horizontal, Layout.ticketInset).padding(.top, Layout.inset).padding(.bottom, Layout.group)

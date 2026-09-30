@@ -129,7 +129,7 @@ struct SettingsView: View {
             }
 
             Section { accountSection } footer: {
-                Text("Ohne eigenes Konto und ohne unseren Server: Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deiner iCloud. Den Schlüssel hat nur dein iCloud-Schlüsselbund – diese Sync-Daten können weder wir noch Apple lesen. Das iCloud-Backup deines \(Device.name)s kann Apple dagegen öffnen, solange „Erweiterter Datenschutz“ aus ist.")
+                Text("Ohne Konto bei uns und ohne unseren Server: Mit iCloud-Sync liegen deine Gutscheine verschlüsselt in deiner iCloud. Den Schlüssel hat nur dein iCloud-Schlüsselbund – diese Sync-Daten können weder wir noch Apple lesen. Das iCloud-Backup deines \(Device.name)s kann Apple dagegen öffnen, solange „Erweiterter Datenschutz“ aus ist.")
             }
 
             Section {
@@ -446,6 +446,10 @@ struct SettingsView: View {
             // Apple gibt den Namen nur bei der ersten Anmeldung heraus – hier lässt er sich jederzeit setzen.
             HStack(spacing: 12) {
                 Text("Vorname").font(.scaled(16))
+                if nameLocked {
+                    // Sichtbar gesperrt (nicht nur für VoiceOver): Tippen fragt nach Face ID.
+                    Image(systemName: "lock.fill").font(.scaled(13)).foregroundStyle(Color.ink2).accessibilityHidden(true)
+                }
                 TextField("Wie dürfen wir dich nennen?", text: $nameDraft)
                     // Bei eingeschaltetem Schutz erst nach Face ID änderbar (wie Abmelden).
                     .disabled(nameLocked)

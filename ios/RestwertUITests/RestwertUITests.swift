@@ -114,10 +114,11 @@ final class RestwertUITests: XCTestCase {
            screen == "start" || screen == "checkout" { return true }
         // Logo-Kürzel („MK“) sind Bildzeichen in fester Größe; der Ladenname daneben wächst mit.
         if issue.auditType == .dynamicType, let frame = issue.element?.frame,
-           abs(frame.width - 44) < 1, abs(frame.height - 44) < 1 { return true }
+           abs(frame.width - 44) < 1, abs(frame.height - 44) < 1,
+           let label = issue.element?.label, (1...4).contains(label.count) { return true }
         // Inhalte unter der schwebenden Tab-Leiste und in ihrer Kanten-Weichzeichnung (iOS 26 blendet den Inhalt
         // darüber aus, zusammen ≈ 160 pt vom unteren Rand) misst der Audit gegen Glas bzw. Verlauf, nicht gegen die App.
-        if issue.auditType == .contrast, let frame = issue.element?.frame,
+        if issue.auditType == .contrast, screen != "checkout", let frame = issue.element?.frame,
            frame.maxY > XCUIApplication().frame.maxY - 160 { return true }
         // Kontrastbefund ohne Element: kommt und geht mit dem Glas der Tab-Leiste (Hintergrund darunter wechselt);
         // nicht zuordenbar. Befunde mit Element (echte App-Texte) lassen den Test weiter scheitern.

@@ -792,13 +792,8 @@ final class Store {
                 c.title = title
                 c.body = later ? "Zieh den Einkauf ab, damit dein Guthaben stimmt." : "Öffne Restwert, um ihn zu sehen."
                 c.userInfo.removeValue(forKey: "name")
-                // Denselben Zeitpunkt behalten: ein Intervall-Auslöser liefe sonst ab jetzt neu.
-                var trigger = r.trigger
-                if let interval = r.trigger as? UNTimeIntervalNotificationTrigger, let fire = interval.nextTriggerDate() {
-                    trigger = UNCalendarNotificationTrigger(dateMatching: Calendar.current.dateComponents(
-                        [.year, .month, .day, .hour, .minute, .second], from: fire), repeats: false)
-                }
-                try? await center.add(UNNotificationRequest(identifier: r.identifier, content: c, trigger: trigger))
+                // Beide Nachfragen planen mit festem Kalender-Zeitpunkt: derselbe Auslöser behält den Zeitpunkt.
+                try? await center.add(UNNotificationRequest(identifier: r.identifier, content: c, trigger: r.trigger))
             }
         }
         guard enabled else { return }
