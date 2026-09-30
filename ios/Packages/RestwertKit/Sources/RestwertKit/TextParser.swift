@@ -24,6 +24,9 @@ public struct CardDraft: Sendable, Equatable {
     public var discountValue: Double?
     /// Angebot ohne Betrag oder Prozent, z. B. „2 für 1“ oder „Gratis Kaffee“.
     public var benefit: String?
+    /// Kaufdatum, wenn es auf dem Gutschein bzw. der Hülle steht („19.07.2023“, „gekauft am …“). Daraus rechnet
+    /// die App die Frist (z. B. drei Jahre ab Ende des Kaufjahres), statt ab heute.
+    public var purchased: Date?
 
     public init(merchantID: String? = nil, number: String? = nil, pin: String? = nil, value: Double? = nil, expires: Date? = nil, percent: Double? = nil, customName: String? = nil) {
         self.merchantID = merchantID; self.number = number; self.pin = pin; self.value = value; self.expires = expires; self.percent = percent
@@ -121,6 +124,7 @@ public enum TextParser {
             if let own { d.value = own } else if d.benefit != nil { d.valueIsItemValue = true } else { d.value = nil }
         }
         d.number = code(in: t, excluding: d.pin)
+        if d.expires == nil { d.purchased = purchaseDate(in: t, now: now) }
         return d
     }
 
@@ -145,7 +149,7 @@ public enum TextParser {
     /// („THE / NORT! / FACEN“ beim gestapelten North-Face-Logo).
     static let merchantAliases: [String: String] = [
         // Logo-Bruchstücke dürfen durch bis zu zwei andere Zeilen getrennt sein (Reihenfolge der Texterkennung).
-        "northface": #"(?i)\b(?:the\s+)?north\s*face\b|\bNORT\w?\W{0,2}\s*\n(?:[^\n]*\n){0,2}\s*FACE\w?\b"#,
+        "northface": #"(?i)\b(?:the\s+)?north\s*face\b|\bNORTH\b|\bNORT\w?\W{0,2}\s*\n(?:[^\n]*\n){0,2}\s*FACE\w?\b"#,
     ]
 
     /// Laden im Text. Liegen mehrere Gutscheine im Bild (oder nennt der Text einen anderen Laden), gewinnt der Laden,
@@ -190,7 +194,7 @@ public enum TextParser {
             .compactMap { parseMoney($0[1]) }.filter { $0 > 0 && $0 <= 90 }
         guard let first = hits.first else { return nil }
         // Nur mit Rabatt-Kontext; „Code“ steht in fast jedem Gutscheintext und zählt nicht
-        let signal = #"(?i)\b(?:rabatt\w*|nachlass|sparen|spare|off|reduziert|ermäßigung|ermaessigung|günstiger|guenstiger|weniger|discount|coupons?)\b|%\s*auf\s+(?:alles|den\s+(?:gesamten\s+)?Einkauf|das\s+gesamte|die\s+gesamte|den\s+gesamten)"#
+        let signal = #"(?i)\b(?:rabatt\w*|nachlass|sparen|spare|off|reduziert|ermäßigung|ermaessigung|günstiger|guenstiger|weniger|discount|coupons?)\b|%\*?\s*(?:\n\s*)?auf\s+(?:alles|fast\s+alles|vieles|viele\w*|ausgewählte\w*|ausgewaehlte\w*|das\s+(?:ganze|gesamte)\s+Sortiment|den\s+(?:gesamten\s+)?Einkauf|dein\w*\s+Einkauf|Ihr\w*\s+Einkauf|das\s+gesamte|die\s+gesamte|den\s+gesamten)"#
         return matches(signal, in: untaxed).isEmpty ? nil : first
     }
 
@@ -341,6 +345,24 @@ public enum TextParser {
             all += matches(#"(?i)(?<![\d.])"# + pattern, in: s).compactMap { make(Array($0.dropFirst())) }
         }
         return all.filter { $0 > now && plausible($0) }.max().map { ($0, false) }
+    }
+
+    /// Kaufdatum: beschriftet („Kaufdatum“, „gekauft am“, „ausgestellt am“) oder – ohne Ablaufdatum im Text – ein
+    /// einzelnes vergangenes Datum der letzten sechs Jahre (auf Karten oft handschriftlich auf der Hülle).
+    public static func purchaseDate(in s: String, now: Date = .now) -> Date? {
+        let lead = #"(?i)(?:kauf\w*|gekauft|ausgestellt|ausstellungs\w*|erworben|verkauft)[^\d\n]{0,20}?"#
+        var labeled: [Date] = []
+        for (pattern, make) in fullDatePatterns {
+            labeled += matches(lead + pattern, in: s).compactMap { make(Array($0.dropFirst())) }
+        }
+        if let d = labeled.first(where: { $0 <= now }) { return d }
+        let earliest = Calendar.current.date(byAdding: .year, value: -6, to: now) ?? now
+        var past: [Date] = []
+        for (pattern, make) in fullDatePatterns {
+            past += matches(#"(?<![\d.])"# + pattern, in: s).compactMap { make(Array($0.dropFirst())) }
+        }
+        past = past.filter { $0 <= now && $0 >= earliest }
+        return Set(past).count == 1 ? past.first : nil
     }
 
     /// Vollständige Daten in allen üblichen Schreibweisen, jeweils mit Umrechnung der Gruppen.

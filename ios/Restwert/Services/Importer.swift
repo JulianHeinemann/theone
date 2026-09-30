@@ -65,12 +65,25 @@ nonisolated struct ScanOutcome: Sendable, Equatable {
         self.source = source
         self.received = received
         draft = ScanDraft.merge(text: text, smart: smart, now: received ?? .now)
+        // Kaufdatum auf dem Gutschein (z. B. handschriftlich auf der Hülle): als „Wann gekauft“ übernehmen,
+        // damit die Frist ab dem Kaufjahr zählt und nicht ab heute.
+        if received == nil, let bought = draft.purchased {
+            self.received = bought
+            draft = ScanDraft.merge(text: text, smart: smart, now: bought)
+        }
     }
+
+    /// Laden aus einem schon gespeicherten Gutschein mit gleichem Nummernanfang (z. B. wenn das Logo nicht lesbar ist).
+    struct LearnedMerchant: Equatable, Sendable { let id: String; let name: String }
+    var learnedMerchant: LearnedMerchant? { didSet { refreshDraft() } }
 
     private mutating func refreshDraft() {
         let now = received ?? .now
         let front = ScanDraft.merge(text: text, smart: smart, now: now)
         draft = hasBack ? ScanDraft.combine(front: front, back: ScanDraft.merge(text: backText, smart: backSmart, now: now)) : front
+        if draft.merchantID == nil, let learned = learnedMerchant {
+            if learned.id == "other" { draft.customName = learned.name } else { draft.merchantID = learned.id; draft.customName = nil }
+        }
     }
 
     /// Rückseite anhängen (oder eine frühere ersetzen): Angaben zusammenführen, der bessere Barcode beider Seiten gewinnt.

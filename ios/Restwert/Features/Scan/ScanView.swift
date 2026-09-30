@@ -601,6 +601,14 @@ struct ScanView: View {
             return
         }
         var result = result
+        // Laden nicht lesbar (z. B. stilisiertes Logo): Gleicher Nummernanfang wie ein gespeicherter Gutschein?
+        // Kartennummern einer Kette beginnen meist gleich – dann denselben Laden vorschlagen (bei derselben Karte ohnehin).
+        if result.draft.merchantID == nil,
+           let code = (result.barcode ?? result.draft.number)?.filter(\.isNumber), code.count >= 12,
+           let known = store.cards.first(where: { !$0.isExample && !$0.issuedByMe && $0.number.filter(\.isNumber).count >= 12
+               && $0.number.filter(\.isNumber).prefix(8) == code.prefix(8) }) {
+            result.learnedMerchant = .init(id: known.merchantID, name: known.name)
+        }
         // Schon gespeichert? Dann nicht doppelt anlegen, sondern öffnen anbieten.
         if let code = result.displayCode, let dup = CardQueries.duplicate(of: code, in: store.cards) {
             result.duplicateName = dup.name

@@ -332,4 +332,28 @@ struct CouponRound16Tests {
         #expect(TextParser.merchant(in: app) == "northface")
         #expect(TextParser.merchant(in: "Douglas Geschenkkarte\n4099875102233441") == "douglas")
     }
+
+    @Test("Kaufdatum auf der Hülle: vergangenes Datum ohne „gültig bis“ ist das Kaufdatum (Foto des Inhabers)")
+    func purchaseDateFromSleeve() {
+        let now = Calendar.current.date(from: DateComponents(year: 2026, month: 9, day: 30))!
+        let ocr = "19.07.2023\n25€\n1110030100000042\nan richt regen Bargeld eingelöst"
+        let d = TextParser.parse(ocr, now: now)
+        #expect(d.expires == nil)
+        #expect(d.purchased == Calendar.current.date(from: DateComponents(year: 2023, month: 7, day: 19)))
+        #expect(TextParser.purchaseDate(in: "Gekauft am 03.05.2025, gültig bis 31.12.2028", now: now) != nil)
+        // Zwei verschiedene unbeschriftete Daten: kein Raten.
+        #expect(TextParser.purchaseDate(in: "01.02.2024\n05.06.2025", now: now) == nil)
+        #expect(TextParser.merchant(in: "NORTH\n25€") == "northface")
+    }
+
+    @Test("Douglas-Beilage „20 %* AUF VIELES … ab 49 € Bestellwert“ ist ein Coupon (Foto des Inhabers)")
+    func douglasTwentyPercent() {
+        let text = "DOUGLAS\n20 %*\nAUF VIELES\nJetzt online einlösen -\nab 49 € Bestellwert\nBitte lösen Sie die elektronische Gutscheinkarte ab und erfüllen Sie sich Ihren\npersönlichen Geschenkwunsch bei Douglas oder unter www.douglas.de."
+        let d = ScanDraft.merge(text: text, smart: nil)
+        #expect(d.merchantID == "douglas")
+        #expect(d.percent == 20)
+        #expect(d.minOrder == 49)
+        #expect(d.isDiscount && d.suggestedKind == .coupon)
+        #expect(TextParser.percent(in: "Noch 10 % offen") == nil)
+    }
 }
