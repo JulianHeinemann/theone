@@ -120,7 +120,9 @@ final class AppleAccount {
         let state = await withCheckedContinuation { (cont: CheckedContinuation<ASAuthorizationAppleIDProvider.CredentialState, Never>) in
             ASAuthorizationAppleIDProvider().getCredentialState(forUserID: id) { state, _ in cont.resume(returning: state) }
         }
-        if state == .revoked || state == .notFound { signOut(forget: true) }
+        // Nur ein echter Widerruf meldet ab. „.notFound“ kann vorübergehend sein (z. B. neues Gerät, keine
+        // Verbindung zu Apple); dann bleibt die Anmeldung, bis Apple sie wirklich als widerrufen meldet.
+        if state == .revoked { signOut(forget: true) }
     }
 
     /// Merkliste nur mit Prüfsumme der Kennung: die Apple-Kennung selbst liegt ausschließlich im Schlüsselbund.

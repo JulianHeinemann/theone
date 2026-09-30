@@ -128,6 +128,8 @@ struct MerchantMark: View {
                     .strokeBorder(style.isDark ? Color.white.opacity(scheme == .dark ? 0.22 : 0) : Color.black.opacity(0.1), lineWidth: 1)
             }
             .accessibilityHidden(true)
+            // Kennung für den Barrierefreiheits-Audit: Logo-Kürzel in fester Größe (der Name daneben wächst mit).
+            .accessibilityIdentifier("merchantMark")
     }
 }
 

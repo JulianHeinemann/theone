@@ -52,6 +52,27 @@ final class RestwertUITests: XCTestCase {
         let number = app.staticTexts.containing(NSPredicate(format: "label CONTAINS '6280'")).firstMatch
         XCTAssertTrue(number.exists, "Kartennummer von der Rückseite erwartet")
         XCTAssertTrue(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'PIN'")).firstMatch.exists)
+        // Bis zum Ende: hinzufügen, speichern – der Gutschein steht mit 25 € in der Liste.
+        // Der breite Knopf im Ergebnis (nicht der gleichnamige Tab „Hinzufügen“ der Tab-Leiste).
+        let add = app.buttons.matching(NSPredicate(format: "label == 'Hinzufügen'")).allElementsBoundByIndex
+            .first { $0.frame.width > 250 && $0.isHittable }
+        XCTAssertNotNil(add, app.debugDescription)
+        add?.tap()
+        let save = app.buttons["Speichern"]
+        XCTAssertTrue(save.waitForExistence(timeout: 15), app.debugDescription)
+        // Barcode nicht gelesen: Die App fragt nach der Art (bewusst kein stiller Vorschlag) – hier Code 128.
+        let choose = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Bitte wählen'")).firstMatch
+        if choose.waitForExistence(timeout: 3) {
+            choose.tap()
+            // Menütexte nutzen geschützte Leerzeichen: per Teiltext suchen.
+            let code128 = app.buttons.matching(NSPredicate(format: "label CONTAINS '128'")).firstMatch
+            XCTAssertTrue(code128.waitForExistence(timeout: 5), app.debugDescription)
+            code128.tap()
+        }
+        save.tap()
+        // Bestätigung „„Buchhandlung Seitenweise“ gespeichert“: der Gutschein ist angelegt.
+        let saved = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Seitenweise' AND label CONTAINS 'gespeichert'")).firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 10), "Gutschein wurde nicht gespeichert")
     }
 
     // MARK: Barrierefreiheit (Apple-Audit: Kontrast, Beschriftungen, Trefferflächen, Dynamic Type, Abschneiden)
@@ -79,6 +100,14 @@ final class RestwertUITests: XCTestCase {
         let app = launch(base + ["-demoScreen", "checkout"])
         XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 10))
         // Erst prüfen, wenn Einblendungen und Animationen fertig sind (sonst misst der Audit Zwischenbilder).
+        sleep(2)
+        try app.performAccessibilityAudit(for: .all, Self.knownIssues)
+    }
+
+    func testAccessibilityAuditSettingsXL() throws {
+        Self.screen = "settings"
+        let app = launch(base + ["-demoScreen", "settings", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"])
+        XCTAssertTrue(app.staticTexts["Schutz"].waitForExistence(timeout: 10))
         sleep(2)
         try app.performAccessibilityAudit(for: .all, Self.knownIssues)
     }
@@ -113,9 +142,7 @@ final class RestwertUITests: XCTestCase {
         if issue.auditType == .dynamicType, issue.compactDescription.contains("partially"),
            screen == "start" || screen == "checkout" { return true }
         // Logo-Kürzel („MK“) sind Bildzeichen in fester Größe; der Ladenname daneben wächst mit.
-        if issue.auditType == .dynamicType, let frame = issue.element?.frame,
-           abs(frame.width - 44) < 1, abs(frame.height - 44) < 1,
-           let label = issue.element?.label, (1...4).contains(label.count) { return true }
+        if issue.auditType == .dynamicType, issue.element?.identifier == "merchantMark" { return true }
         // Inhalte unter der schwebenden Tab-Leiste und in ihrer Kanten-Weichzeichnung (iOS 26 blendet den Inhalt
         // darüber aus, zusammen ≈ 160 pt vom unteren Rand) misst der Audit gegen Glas bzw. Verlauf, nicht gegen die App.
         if issue.auditType == .contrast, screen != "checkout", let frame = issue.element?.frame,

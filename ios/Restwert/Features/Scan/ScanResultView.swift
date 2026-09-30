@@ -279,7 +279,8 @@ struct ScanResultView: View {
             t.append(Tile(label: "Code", value: code, wide: code.filter { !$0.isWhitespace }.count > 12))
             // Bei breitem Code auch die Barcode-Kachel breit darunter: Code steht zuerst, wie auf der Karte.
             let wideCode = code.filter { !$0.isWhitespace }.count > 12
-            t.append(Tile(label: "Barcode an der Kasse", value: formatText, wide: wideCode))
+            // Nicht gelesen: hervorgehoben, denn im nächsten Schritt ist eine Entscheidung nötig.
+            t.append(Tile(label: "Barcode an der Kasse", value: formatText, alert: outcome.resolvedFormat?.origin == .merchant, wide: wideCode))
             // PIN nach Code und Barcode (auch wenn diese breit darunter stehen).
             if let pin = draft.pin { t.append(Tile(label: "PIN", value: String(repeating: "•", count: pin.count), wide: wideCode)) }
         } else {

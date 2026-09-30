@@ -1,9 +1,10 @@
-UI-Tests (XCUITest) – Lauf vom 30.09.2026, Simulator iPhone 17 Pro, iOS 26
+UI-Tests (XCUITest) – Lauf vom 30.09.2026, Simulator iPhone 17 Pro, iOS 26 (zweimal hintereinander grün)
 
 Passed   testAccessibilityAuditCheckout()  (10s)
-Passed   testAccessibilityAuditCheckoutXL()  (10s)
-Passed   testAccessibilityAuditSettings()  (11s)
-Passed   testAccessibilityAuditStart()  (16s)
+Passed   testAccessibilityAuditCheckoutXL()  (9s)
+Passed   testAccessibilityAuditSettings()  (10s)
+Passed   testAccessibilityAuditSettingsXL()  (9s)
+Passed   testAccessibilityAuditStart()  (14s)
 Passed   testAccessibilityAuditStartXL()  (12s)
-Passed   testFrontAndBackAreMerged()  (16s)
+Passed   testFrontAndBackAreMerged()  (24s)
 Passed   testOnboardingSkipLandsOnSignInThenLater()  (6s)

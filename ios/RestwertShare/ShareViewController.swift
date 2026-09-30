@@ -66,7 +66,7 @@ final class ShareModel {
                    let thumb = await Self.thumbnail(url) { thumbnails.append(thumb) }
             } else if let text = await Self.text(provider), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 let url = dir.appending(path: SharedInbox.fileName(batch: batch, index: i, extension: "txt"))
-                if (try? Data(text.utf8).write(to: url, options: .atomic)) != nil {
+                if (try? Data(text.utf8).write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])) != nil {
                     texts += 1
                     preview = preview ?? Self.preview(of: text)
                 }
@@ -150,7 +150,7 @@ final class ShareModel {
         }
         guard let data, let image = UIImage(data: data), let jpeg = image.jpegData(compressionQuality: 0.9) else { return false }
         let url = dir.appending(path: SharedInbox.fileName(batch: batch, index: index, extension: "jpg"))
-        return (try? jpeg.write(to: url, options: .atomic)) != nil
+        return (try? jpeg.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])) != nil
     }
 
     /// Markierter Text (Mail, Notizen, Nachrichten) oder eine geteilte Textdatei.

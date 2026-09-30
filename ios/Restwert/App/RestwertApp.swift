@@ -268,7 +268,7 @@ struct MainTabView: View {
                 ToastView(toast: toast) { if router.toast?.id == toast.id { router.toast = nil } }
                     .id(toast.id)
                     .padding(.horizontal, 16)
-                    .padding(toastAtBottom ? .bottom : .top, toastAtBottom ? 96 : 8)
+                    .padding(toastAtBottom ? .bottom : .top, toastAtBottom ? 96 : 12)
                     .transition(reduceMotion ? .opacity : .move(edge: toastAtBottom ? .bottom : .top).combined(with: .opacity))
             }
         }
