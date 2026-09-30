@@ -310,4 +310,26 @@ struct CouponRound16Tests {
         let d = TextParser.parse("GESCHENKGUTSCHEIN\nBuchhandlung Seitenweise\nWert: 25,00 €")
         #expect(d.value == 25 && !d.isDiscount)
     }
+
+    @Test("The North Face: gestapeltes Logo erkannt, fremde Douglas-Karte im Bild gewinnt nicht (Foto des Inhabers)")
+    func northFacePhoto() {
+        let ocr = """
+        ason sie die bloktronische Gutscheinkarte ab und erfallen Sie sich ihren
+        persönlichen Geschenkwunsch bei Douglas oder unter www.douglas.de.
+        NOR
+        25€
+        NORT!
+        FACEN
+        1110030100000042
+        Kauf erfolgte.
+        verbleibende
+        Ende des Jahres, in dem der Keuf erfoigte und nur in dem Land, in dem del
+        """
+        #expect(TextParser.merchant(in: ocr) == "northface")
+        #expect(TextParser.merchant(in: "THE NORTH FACE\nGeschenkkarte") == "northface")
+        // Reihenfolge, wie die Texterkennung der App dieses Foto liest (Kartennummer zwischen den Logo-Teilen).
+        let app = "persönlichen Geschenkwunsch bei Douglas oder unter www.douglas.de.\nason sie die Gutscheinkarte ab\nNOR\n25€\nNORT!\n1110030100000042\nFACEN\nEnde des Jahres"
+        #expect(TextParser.merchant(in: app) == "northface")
+        #expect(TextParser.merchant(in: "Douglas Geschenkkarte\n4099875102233441") == "douglas")
+    }
 }

@@ -137,6 +137,7 @@ public struct Merchant: Identifiable, Hashable, Sendable {
         Merchant("penny", "Penny", .untested, .code128, "https://kartenwelt.penny.de/faq", check: .info, "Barcode nur über Drittanbieter-Apps belegt."),
         Merchant("galeria", "Galeria", .untested, .code128, "https://www.galeria.de/service/geschenkkarten/kartenwert-abrufen", check: .form, "PDF-Giftcard existiert, Nutzung auf dem Bildschirm in der Filiale nicht belegt."),
         Merchant("adidas", "Adidas", .untested, .code128, "https://wbiprod.storedvalue.com/wbir/clients/adidas?lng=de", check: .form, "Im Store wird der Barcode gescannt. Vom Bildschirm nicht belegt."),
+        Merchant("northface", "The North Face", .untested, .code128, nil, "Geschenkkarte mit Barcode auf der Rückseite. Guthaben im Geschäft erfragen. Gilt nur in dem Land, in dem sie gekauft wurde."),
         Merchant("sephora", "Sephora", .untested, .code128, "https://geschenkgutschein.sephora.de/ecard/balance/consult3", check: .form, "eGift existiert. Gilt nicht in Galeria-Shops."),
     ]
 

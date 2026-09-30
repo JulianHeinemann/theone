@@ -141,12 +141,32 @@ public enum TextParser {
         matches(p, in: s).first.flatMap { $0.count > 1 ? $0[1] : nil }
     }
 
+    /// Weitere Schreibweisen je Händler – auch Bruchstücke stilisierter Logos, wie die Texterkennung sie liest
+    /// („THE / NORT! / FACEN“ beim gestapelten North-Face-Logo).
+    static let merchantAliases: [String: String] = [
+        // Logo-Bruchstücke dürfen durch bis zu zwei andere Zeilen getrennt sein (Reihenfolge der Texterkennung).
+        "northface": #"(?i)\b(?:the\s+)?north\s*face\b|\bNORT\w?\W{0,2}\s*\n(?:[^\n]*\n){0,2}\s*FACE\w?\b"#,
+    ]
+
+    /// Laden im Text. Liegen mehrere Gutscheine im Bild (oder nennt der Text einen anderen Laden), gewinnt der Laden,
+    /// dessen Nennung der Kartennummer am nächsten steht – Marke und Code stehen auf derselben Karte.
     public static func merchant(in s: String) -> String? {
+        let lines = s.components(separatedBy: "\n")
+        var hits: [(id: String, line: Int)] = []
+        func firstLine(_ pattern: String) -> Int? {
+            guard let r = s.range(of: pattern, options: .regularExpression) else { return nil }
+            return s[..<r.lowerBound].filter { $0 == "\n" }.count
+        }
         for m in Merchant.all {
             let name = NSRegularExpression.escapedPattern(for: m.name)
-            if !matches("(?i)(?<![A-Za-z0-9])\(name)(?![A-Za-z0-9])", in: s).isEmpty { return m.id }
+            let own = firstLine("(?i)(?<![A-Za-z0-9])\(name)(?![A-Za-z0-9])")
+            let alias = merchantAliases[m.id].flatMap(firstLine)
+            if let line = [own, alias].compactMap({ $0 }).min() { hits.append((m.id, line)) }
         }
-        return nil
+        guard hits.count > 1 else { return hits.first?.id }
+        let codeLine = lines.firstIndex { $0.filter(\.isNumber).count >= 8 && $0.filter(\.isLetter).count <= 3 }
+        guard let codeLine else { return hits.first?.id }
+        return hits.min { abs($0.line - codeLine) < abs($1.line - codeLine) }?.id
     }
 
     /// Text ohne Steuerangaben („inkl. 19 % MwSt“, „MwSt. 19 %“): Prozent darin ist kein Rabatt.

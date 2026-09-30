@@ -74,6 +74,7 @@ nonisolated struct MerchantBrand: Sendable {
         "zara": .init(0x52525B, 0xFFFFFF, "ZARA"),
         "tkmaxx": .init(0xD6001C, 0xFFFFFF, "TK"),
         "decathlon": .init(0x3643BA, 0xFFFFFF, "D"),
+        "northface": .init(0x111111, 0xFFFFFF, "TNF"),
         "douglas": .init(0x9BDCCB, 0x111111, "D"),
         "hm": .init(0xE50010, 0xFFFFFF, "H&M"),
         "rossmann": .init(0xC3002F, 0xFFFFFF, "R"),
