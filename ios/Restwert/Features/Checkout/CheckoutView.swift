@@ -283,6 +283,8 @@ struct CheckoutView: View {
                     Text(card.kind.isValueBased ? "Guthaben \(card.balance.euro)" : card.headline)
                         .font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
                 }
+                // Kopf höchstens Stufe 1: sonst schiebt ein langer Ladenname „PIN zeigen“ bei XL unter die Leiste.
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 Spacer()
             }
             .padding(Layout.inset)
@@ -326,18 +328,22 @@ struct CheckoutView: View {
                     // Geschützt: nur ein Weg (auf den Code tippen), kein „Vollbild“-Versprechen vor dem Entsperren.
                     if !(codeLock && hidden) && !card.issuedByMe { Text("Tippen für Vollbild").font(.scaled(13)).foregroundStyle(Color.ink2) }
                     if card.photo != nil {
-                        Button("Original-Foto zeigen", systemImage: "photo") {
+                        Button {
                             // Auf dem Foto steht der Code: bei Code-Schutz erst entsperren.
                             if codeLock && !numberShown {
                                 Task { if await DeviceSecurity.revealCode(of: card.name, spoken: card.number) { numberShown = true; showPhotoFull = true } }
                             } else { showPhotoFull = true }
+                        } label: {
+                            // Trefferfläche mindestens 44 pt hoch und über die Breite (vorher nur die Textzeile).
+                            Label("Original-Foto zeigen", systemImage: "photo")
+                                .frame(maxWidth: .infinity, minHeight: Layout.tap).contentShape(.rect)
                         }
                             .font(.scaled(15, weight: .medium)).foregroundStyle(Color.ink2)
-                            .frame(minHeight: Layout.tap)
                             .disabled(photoImage == nil)
                     }
                     // Vor dem Entsperren nichts versprechen, was noch nicht zu sehen ist.
-                    if !(codeLock && hidden) && !card.issuedByMe {
+                    // Bei sehr großer Schrift entfällt der Hinweis (Platz für „PIN zeigen“); die Helligkeit geht trotzdem hoch.
+                    if !(codeLock && hidden) && !card.issuedByMe && !checkoutTypeSize.isAccessibilitySize {
                         Label("Helligkeit automatisch erhöht", systemImage: "checkmark.circle")
                             .font(.scaled(13)).foregroundStyle(Color.ink2)
                     }

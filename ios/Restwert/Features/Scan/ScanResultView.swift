@@ -278,7 +278,8 @@ struct ScanResultView: View {
             // Bei breitem Code auch die Barcode-Kachel breit darunter: Code steht zuerst, wie auf der Karte.
             let wideCode = code.filter { !$0.isWhitespace }.count > 12
             t.append(Tile(label: "Barcode an der Kasse", value: formatText, wide: wideCode))
-            if let pin = draft.pin { t.append(Tile(label: "PIN", value: String(repeating: "•", count: pin.count))) }
+            // PIN nach Code und Barcode (auch wenn diese breit darunter stehen).
+            if let pin = draft.pin { t.append(Tile(label: "PIN", value: String(repeating: "•", count: pin.count), wide: wideCode)) }
         } else {
             // Papiergutschein ohne Code: keine leeren „–“-Kacheln, sondern sagen, was an der Kasse passiert.
             t.append(Tile(label: "An der Kasse", value: outcome.photo != nil ? "Foto zeigen" : "Code eintragen"))

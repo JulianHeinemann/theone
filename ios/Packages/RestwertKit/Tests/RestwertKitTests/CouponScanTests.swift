@@ -285,4 +285,17 @@ struct CouponRound16Tests {
         #expect(ScanDraft.suggestsBack(text: "Code 1234-5678\nPIN auf der Rückseite freirubbeln", hasCode: true, hasPin: false))
         #expect(!ScanDraft.suggestsBack(text: "Code 1234-5678\nPIN 4821", hasCode: true, hasPin: true))
     }
+
+    @Test("Artikelwert nur, wenn der Betrag hinter „im Wert von“/„Wert bis“ steht")
+    func round20() {
+        let a = TextParser.parse("COUPON\nPizzeria Roma\n2 für 1 Pizza\nWert bis 12 €")
+        #expect(a.benefit == "2 für 1")
+        #expect(a.isDiscount)
+        let b = TextParser.parse("Gutschein 50 €\nCafé Krone\n+ Gratis Kaffee im Wert von 3,50 €")
+        #expect(b.value == 50)
+        #expect(!b.isDiscount)
+        #expect(TextParser.benefit(in: "Tischreservierungen: 4 für 2") == nil)
+        #expect(ScanDraft.suggestsBack(text: "Kinogutscheinkarte 20 €", hasCode: false, hasPin: false))
+        #expect(!ScanDraft.suggestsBack(text: "Speisekarte", hasCode: false, hasPin: false))
+    }
 }

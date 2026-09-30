@@ -67,6 +67,13 @@ final class Store {
             self.fileURL = dir.appending(path: "restwert.json")
         }
         photoFiles = PhotoFiles(directory: self.fileURL.deletingLastPathComponent().appending(path: "photos"))
+        #if DEBUG
+        // Nur für UI-Tests: `-uiTestFreshData YES` startet mit den Beispielen statt mit alten Testdaten.
+        if UserDefaults.standard.bool(forKey: "uiTestFreshData") {
+            try? FileManager.default.removeItem(at: self.fileURL)
+            try? FileManager.default.removeItem(at: photoFiles.directory)
+        }
+        #endif
         load()
         // Beim Aktivwerden Erinnerungen nachplanen (es passen nur 60 ins System, spätere rücken so nach),
         // das Widget im Hintergrund auffrischen und nicht lesbare Fotos erneut versuchen.
@@ -778,11 +785,20 @@ final class Store {
         // und Betrag neu anlegen – sie stünden sonst weiter lesbar auf dem Sperrbildschirm.
         if UserDefaults.standard.bool(forKey: "appLock") || UserDefaults.standard.bool(forKey: "codeLock") {
             for r in await center.pendingNotificationRequests() where r.identifier.hasSuffix("-later") || r.identifier.hasSuffix("-snooze") {
-                guard let c = r.content.mutableCopy() as? UNMutableNotificationContent else { continue }
                 let later = r.identifier.hasSuffix("-later")
-                c.title = later ? "Hast du mit einem Gutschein bezahlt?" : "Ein Gutschein läuft bald ab"
+                let title = later ? "Hast du mit einem Gutschein bezahlt?" : "Ein Gutschein läuft bald ab"
+                // Schon still: nicht neu anlegen (sonst begänne die 24-h-Frist bei jedem Start von vorn).
+                guard r.content.title != title, let c = r.content.mutableCopy() as? UNMutableNotificationContent else { continue }
+                c.title = title
                 c.body = later ? "Zieh den Einkauf ab, damit dein Guthaben stimmt." : "Öffne Restwert, um ihn zu sehen."
-                try? await center.add(UNNotificationRequest(identifier: r.identifier, content: c, trigger: r.trigger))
+                c.userInfo.removeValue(forKey: "name")
+                // Denselben Zeitpunkt behalten: ein Intervall-Auslöser liefe sonst ab jetzt neu.
+                var trigger = r.trigger
+                if let interval = r.trigger as? UNTimeIntervalNotificationTrigger, let fire = interval.nextTriggerDate() {
+                    trigger = UNCalendarNotificationTrigger(dateMatching: Calendar.current.dateComponents(
+                        [.year, .month, .day, .hour, .minute, .second], from: fire), repeats: false)
+                }
+                try? await center.add(UNNotificationRequest(identifier: r.identifier, content: c, trigger: trigger))
             }
         }
         guard enabled else { return }

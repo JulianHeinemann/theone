@@ -168,7 +168,7 @@ public enum ScanDraft {
     /// ein handgeschriebener Gutschein oder eine Speisekarte hat keine Rückseite mit Nummer. Sonst, wenn der Text
     /// auf PIN, Rubbelfeld oder Rückseite verweist und die PIN noch fehlt.
     public static func suggestsBack(text: String, hasCode: Bool, hasPin: Bool) -> Bool {
-        if !hasCode, text.range(of: #"(?i)\b(?:(?:geschenk|guthaben|gutschein|kunden|wert|prepaid|bonus)karte|karte|kartennummer|gift\s?card|card)\b"#,
+        if !hasCode, text.range(of: #"(?i)\b(?:\w*(?:geschenk|guthaben|gutschein|kunden|wert|prepaid|bonus)karte|karte|kartennummer|gift\s?card|card)\b"#,
                                 options: .regularExpression) != nil { return true }
         return !hasPin && text.range(of: #"(?i)\b(?:PIN|Rubbel\w*|freirubbeln|Rückseite|Rueckseite)\b"#, options: .regularExpression) != nil
     }

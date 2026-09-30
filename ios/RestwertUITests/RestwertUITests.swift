@@ -11,7 +11,7 @@ final class RestwertUITests: XCTestCase {
         .appending(path: "docs/evaluation/testgutscheine")
 
     nonisolated(unsafe) static var screen = ""
-    private let base = ["-onboarded", "YES", "-appLock", "NO", "-codeLock", "NO", "-pinLock", "NO", "-askedNotifyAfterSave", "YES"]
+    private let base = ["-uiTestFreshData", "YES", "-onboarded", "YES", "-appLock", "NO", "-codeLock", "NO", "-pinLock", "NO", "-askedNotifyAfterSave", "YES"]
 
     override func setUp() async throws {
         continueAfterFailure = false
@@ -83,6 +83,26 @@ final class RestwertUITests: XCTestCase {
         try app.performAccessibilityAudit(for: .all, Self.knownIssues)
     }
 
+    // MARK: Sehr große Schrift (Bedienungshilfen XL): Kontrast, Beschriftungen, Trefferflächen, abgeschnittener Text
+
+    func testAccessibilityAuditStartXL() throws {
+        Self.screen = "start"
+        let app = launch(base + ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"])
+        XCTAssertTrue(app.staticTexts["Guthaben"].waitForExistence(timeout: 10))
+        sleep(2)
+        try app.performAccessibilityAudit(for: .all, Self.knownIssues)
+    }
+
+    func testAccessibilityAuditCheckoutXL() throws {
+        Self.screen = "checkout"
+        let app = launch(base + ["-demoScreen", "checkout", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXL"])
+        XCTAssertTrue(app.navigationBars.firstMatch.waitForExistence(timeout: 10))
+        // „PIN zeigen“ bei größter Schrift ohne Scrollen erreichbar (über der Knopfleiste).
+        XCTAssertTrue(app.buttons["PIN zeigen"].isHittable, "PIN zeigen bei XL nicht erreichbar")
+        sleep(2)
+        try app.performAccessibilityAudit(for: .all, Self.knownIssues)
+    }
+
     /// Bewusst hingenommene Befunde des Audits (mit Begründung), alle anderen lassen den Test scheitern.
     @MainActor private static func knownIssues(_ issue: XCUIAccessibilityAuditIssue) throws -> Bool {
         // Systemelemente (Tab-Leiste, Suchfeld, Statusleiste) gehören nicht der App.
@@ -90,11 +110,13 @@ final class RestwertUITests: XCTestCase {
             || element.elementType == .statusBar { return true }
         // Bewusst: Guthabenkarte und „Läuft bald ab“ wachsen nur bis Bedienungshilfen-Stufe 1, damit der Kasse-Knopf
         // bei größter Schrift über der Tab-Leiste bleibt (Wunsch aus den Beta-Runden). Das meldet der Audit als „teilweise“.
-        if issue.auditType == .dynamicType, issue.compactDescription.contains("partially") { return true }
+        if issue.auditType == .dynamicType, issue.compactDescription.contains("partially"),
+           screen == "start" || screen == "checkout" { return true }
         // Logo-Kürzel („MK“) sind Bildzeichen in fester Größe; der Ladenname daneben wächst mit.
-        if issue.auditType == .dynamicType, let label = issue.element?.label, label.count <= 4,
-           label == label.uppercased() { return true }
-        // Inhalte, die gerade unter der schwebenden Tab-Leiste liegen, misst der Audit gegen deren Glas.
+        if issue.auditType == .dynamicType, let frame = issue.element?.frame,
+           abs(frame.width - 44) < 1, abs(frame.height - 44) < 1 { return true }
+        // Inhalte unter der schwebenden Tab-Leiste und in ihrer Kanten-Weichzeichnung (iOS 26 blendet den Inhalt
+        // darüber aus, zusammen ≈ 160 pt vom unteren Rand) misst der Audit gegen Glas bzw. Verlauf, nicht gegen die App.
         if issue.auditType == .contrast, let frame = issue.element?.frame,
            frame.maxY > XCUIApplication().frame.maxY - 160 { return true }
         // Kontrastbefund ohne Element: kommt und geht mit dem Glas der Tab-Leiste (Hintergrund darunter wechselt);

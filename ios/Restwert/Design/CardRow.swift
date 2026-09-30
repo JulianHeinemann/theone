@@ -95,8 +95,9 @@ struct CardRow: View {
         VStack(alignment: .leading, spacing: 3) {
             // Name einzeilig; Zusatz-Etiketten stehen in der zweiten Zeile, damit der Name nicht umbricht.
             HStack(spacing: 6) {
+                // Bei sehr großer Schrift umbrechen statt abschneiden (Audit „Text clipped“).
                 Text(card.name).font(.scaled(16, weight: .semibold)).foregroundStyle(Color.ink)
-                    .lineLimit(1).truncationMode(.tail).layoutPriority(1)
+                    .lineLimit(typeSize.isAccessibilitySize ? 3 : 1).truncationMode(.tail).layoutPriority(1)
                 if card.forGifting {
                     Image(systemName: "gift").font(.scaled(13)).foregroundStyle(Color.ink2)
                         .accessibilityLabel("zum Verschenken")
@@ -125,7 +126,7 @@ struct CardRow: View {
         if card.issuedByMe {
             // Mit Code-Ende: zwei gleiche Gutscheine für dieselbe Familie bleiben unterscheidbar.
             Text((card.issuedTo.isEmpty ? "\(lead)selbst ausgestellt" : "\(lead)für \(card.issuedTo)") + (card.number.count >= 4 ? " · …\(card.number.suffix(4))" : "")).font(.scaled(13, weight: .semibold)).foregroundStyle(Color.ink2)
-                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                .lineLimit(typeSize.isAccessibilitySize ? nil : 2).fixedSize(horizontal: false, vertical: true)
         }
         // Nur bei „noch X Tage“ zusätzlich nennen; beim Datum steht es schon im Text.
         if due.estimated && due.level != .calm {
