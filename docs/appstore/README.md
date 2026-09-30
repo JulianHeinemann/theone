@@ -79,6 +79,7 @@ Erste Version im App Store.
 
 `screenshots/` enthält 7 Bilder in 1320 × 2868 (6,9", Pflichtgröße; Apple skaliert sie für kleinere iPhones). Nur iPhone – keine iPad-Bilder nötig.
 In dieser Reihenfolge hochladen: 01_start, 02_checkout, 03_scan, 04_detail, 05_radar, 06_keypad, 07_start_dunkel.
+`screenshots-6.5/` sind dieselben Bilder in 1284 × 2778 (6,5"), falls App Store Connect diese Größe verlangt.
 `screenshots/raw/` sind die unbearbeiteten Simulator-Aufnahmen. Neu erzeugen: `cd ios && scripts/store-screens.sh`.
 
 Alle Läden in Bildern, Beispielen und Einstieg sind erfunden (Modehaus Kranz, Wohnwerk, Buchhandlung Seitenweise, Parfümerie Blüte, Kaufhaus Lindner, Café Krone, Café am Markt, Schreibwaren Stahl, KM Kaffee) – keine echten Marken (Richtlinie 5.2.1).
